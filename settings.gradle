@@ -1,0 +1,3 @@
+rootProject.name = 'okdownload-root'
+
+include ':okdownload', ':okdownload-process', ':okdownload-connection-okhttp', ':app-okdownloader', ':okdownload-breakpoint-sqlite', ':okdownload-kotlin-enhance', ':benchmark'

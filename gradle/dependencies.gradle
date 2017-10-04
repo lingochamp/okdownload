@@ -1,0 +1,52 @@
+ext {
+    compileSdkVersion = 25
+    buildToolsVersion = '25.0.2'
+    minSdkVersion = 14
+    targetSdkVersion = 25
+    sourceCompatibilityVersion = JavaVersion.VERSION_1_7
+    targetCompatibilityVersion = JavaVersion.VERSION_1_7
+    kotlin_version = '1.1.50'
+    anko_version = '0.10.1'
+    coroutines_version = '0.18'
+    supportLibrariesVersion = '25.3.1'
+
+    dep = [
+            androidPlugin               : 'com.android.tools.build:gradle:3.0.0-beta6',
+            supportV4                   : "com.android.support:support-v4:$supportLibrariesVersion",
+            supportAnnotations          : "com.android.support:support-annotations:$supportLibrariesVersion",
+            junit                       : 'junit:junit:4.12',
+            fest                        : 'org.easytesting:fest-assert-core:2.0M10',
+            festAndroid                 : 'com.squareup:fest-android:1.0.6',
+            robolectric                 : 'org.robolectric:robolectric:3.3.2',
+            assertj                     : 'org.assertj:assertj-core:2.8.0',
+            mockito                     : 'org.mockito:mockito-core:2.10.0',
+
+            kotlin                      : "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version",
+            kotlinPlugin                : "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version",
+            kotlinxCoroutines           : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version",
+
+            // anko commons
+            ankoSdk                     : "org.jetbrains.anko:anko-sdk25:$anko_version",
+            ankoV7Commons               : "org.jetbrains.anko:anko-appcompat-v7-commons:$anko_version",
+            // anko layouts
+            ankoV7                      : "org.jetbrains.anko:anko-appcompat-v7:$anko_version",
+            ankoSdk25Coroutines         : "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version",
+            ankoCoroutines              : "org.jetbrains.anko:anko-coroutines:$anko_version",
+            ankoCardviewV7              : "org.jetbrains.anko:anko-cardview-v7:$anko_version",
+            // anko design
+            ankoDesign                  : "org.jetbrains.anko:anko-design:$anko_version",
+            ankoDesignCoroutines        : "org.jetbrains.anko:anko-design-coroutines:$anko_version",
+            // anko recyclerView
+            ankoRecyclerviewV7          : "org.jetbrains.anko:anko-recyclerview-v7:$anko_version",
+            ankoRecyclerviewV7Coroutines: "org.jetbrains.anko:anko-recyclerview-v7-coroutines:$anko_version",
+
+            // for application
+            supportV7                   : "com.android.support:appcompat-v7:$supportLibrariesVersion",
+            supportDesign               : "com.android.support:design:$supportLibrariesVersion",
+            supportCardview             : "com.android.support:cardview-v7:$supportLibrariesVersion",
+            supportConstraintLayout     : "com.android.support.constraint:constraint-layout:1.0.2"
+
+    ]
+
+    isCi = "true" == System.getenv('CI')
+}

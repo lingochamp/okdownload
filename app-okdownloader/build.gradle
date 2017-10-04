@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    compileOptions {
+        sourceCompatibility rootProject.ext.sourceCompatibilityVersion
+        targetCompatibility rootProject.ext.targetCompatibilityVersion
+    }
+
+    lintOptions {
+        lintConfig file('lint.xml')
+        textOutput 'stdout'
+        textReport true
+    }
+
+    defaultConfig {
+        applicationId "cn.dreamtobe.app.okdownloader"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile dep.kotlin
+    //noinspection GradleDependency source code is not available on 26
+    compile dep.supportDesign
+    //noinspection GradleDependency source code is not available on 26
+    compile dep.supportV7
+
+    // Appcompat-v7 (only Anko Commons)
+    compile dep.ankoSdk
+    compile dep.ankoV7Commons
+
+    // Appcompat-v7 (Anko Layouts)
+    compile dep.ankoV7
+    compile dep.ankoSdk25Coroutines
+    compile dep.ankoCoroutines
+
+    // CardView-v7
+    compile dep.ankoCardviewV7
+    //noinspection GradleDependency
+    compile dep.supportCardview
+
+    // Design
+    compile dep.ankoDesign
+    compile dep.ankoDesignCoroutines
+
+    // RecyclerView-v7
+    compile dep.ankoRecyclerviewV7
+    compile dep.ankoRecyclerviewV7Coroutines
+    compile dep.kotlinxCoroutines
+
+    compile dep.supportConstraintLayout
+    testCompile dep.junit
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
