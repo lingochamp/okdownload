@@ -28,6 +28,8 @@ dependencies {
     testCompile dep.junit
     testCompile dep.mockito
     testCompile dep.assertj
+    testCompile dep.robolectric
+
     compile dep.supportAnnotations
 }
 
