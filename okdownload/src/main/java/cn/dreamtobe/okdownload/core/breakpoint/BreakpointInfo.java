@@ -27,7 +27,7 @@ public class BreakpointInfo {
     public final Profile profile;
     final List<BlockInfo> blockInfoList;
 
-    BreakpointInfo(int id, Profile profile) {
+    public BreakpointInfo(int id, Profile profile) {
         this.id = id;
         this.profile = profile;
         this.blockInfoList = new ArrayList<>();
@@ -58,7 +58,7 @@ public class BreakpointInfo {
         String etag;
         public final Uri uri;
 
-        Profile(String url, Uri uri) {
+        public Profile(String url, Uri uri) {
             this.url = url;
             this.uri = uri;
         }

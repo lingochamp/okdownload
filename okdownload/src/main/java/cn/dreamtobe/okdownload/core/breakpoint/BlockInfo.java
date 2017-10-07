@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BlockInfo {
     public final long startOffset;
     public final long contentLength;
-    public final AtomicLong currentOffset;
+    private final AtomicLong currentOffset;
 
     public BlockInfo(long startOffset, long contentLength, long currentOffset) {
         this.startOffset = startOffset;

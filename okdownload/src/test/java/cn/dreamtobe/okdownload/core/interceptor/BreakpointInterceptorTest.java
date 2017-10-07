@@ -27,11 +27,16 @@ import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
+import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -54,7 +59,7 @@ public class BreakpointInterceptorTest {
     @Before
     public void setup() {
         initMocks(this);
-        interceptor = new BreakpointInterceptor();
+        interceptor = spy(new BreakpointInterceptor());
     }
 
     @Test
@@ -62,21 +67,60 @@ public class BreakpointInterceptorTest {
         final DownloadChain mockChain = mock(DownloadChain.class);
         interceptor.interceptConnect(mockChain);
 
+        final BreakpointStore store = OkDownload.with().breakpointStore;
+        verify(store).update(mockChain.getInfo());
         verify(mockChain).processConnect();
+    }
+
+    @Test
+    public void interceptConnect_otherBlockPark_unpark() throws IOException {
+        final DownloadChain mockChain = mock(DownloadChain.class);
+        when(mockChain.isOtherBlockPark()).thenReturn(true);
+        when(mockChain.processConnect()).thenReturn(mock(DownloadConnection.Connected.class));
+        doNothing().when(interceptor).splitBlock(anyInt(), eq(mockChain));
+
+        interceptor.interceptConnect(mockChain);
+
+        verify(mockChain).unparkOtherBlock();
+    }
+
+    @Test
+    public void splitBlock() throws IOException {
+        final DownloadChain mockChain = mock(DownloadChain.class);
+        when(mockChain.getResponseContentLength()).thenReturn(6666L);
+
+        final BreakpointInfo info = spy(new BreakpointInfo(0,
+                new BreakpointInfo.Profile("", null)));
+        when(mockChain.getInfo()).thenReturn(info);
+
+        interceptor.splitBlock(5, mockChain);
+
+        assertThat(info.getBlockCount()).isEqualTo(5);
+        long totalLength = 0;
+        for (int i = 0; i < 5; i++) {
+            final BlockInfo blockInfo = info.getBlock(i);
+            totalLength += blockInfo.contentLength;
+        }
+        assertThat(totalLength).isEqualTo(6666L);
+
+        final BlockInfo lastBlockInfo = info.getBlock(4);
+        assertThat(lastBlockInfo.startOffset + lastBlockInfo.contentLength).isEqualTo(6666L);
     }
 
     @Test
     public void interceptFetch_finish() throws IOException {
         final DownloadChain mockChain = mock(DownloadChain.class);
+        final BlockInfo blockInfo = new BlockInfo(0, 10, 0);
 
+        when(mockChain.getResponseContentLength()).thenReturn(new Long(10));
         when(mockChain.getInfo()).thenReturn(mockInfo);
-        when(mockInfo.getBlock(anyInt())).thenReturn(mock(BlockInfo.class));
-        when(mockChain.loopFetch()).thenReturn(new Long(-1));
+        when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);
+        when(mockChain.loopFetch()).thenReturn(1L, 1L, 2L, 1L, 5L, -1L);
 
         final long contentLength = interceptor.interceptFetch(mockChain);
-        verify(mockChain).loopFetch();
+        verify(mockChain, times(6)).loopFetch();
 
-        assertThat(contentLength).isEqualTo(0);
+        assertThat(contentLength).isEqualTo(10);
     }
 
     @Test(expected = IOException.class)

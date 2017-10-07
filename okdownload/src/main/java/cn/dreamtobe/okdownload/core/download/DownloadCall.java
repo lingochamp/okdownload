@@ -39,10 +39,6 @@ import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 import cn.dreamtobe.okdownload.task.DownloadTask;
 
-/**
- * Created by Jacksgong on 28/09/2017.
- */
-
 public class DownloadCall {
     static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
@@ -69,8 +65,8 @@ public class DownloadCall {
         // init cache
         final DownloadCache cache = new DownloadCache(task);
 
-        final DownloadStrategy breakpointStrategy = OkDownload.with().downloadStrategy;
-        if (breakpointStrategy.isAvailable(task, info)) {
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        if (downloadStrategy.isAvailable(task, info)) {
             // resume task
             final int blockCount = info.getBlockCount();
             final List<Callable<Object>> blockChainList = new ArrayList<>(info.getBlockCount());
@@ -89,7 +85,7 @@ public class DownloadCall {
             final DownloadChain firstChain = DownloadChain.createFirstBlockChain(parkThread, task, info, cache);
             final Future firstBlockFuture = startFirstBlock(firstChain);
             if (!firstChain.isFinished()) {
-                LockSupport.park();
+                parkForFirstConnection();
             }
 
             // start after unpark on BreakpointInterceptor#interceptConnect
@@ -106,6 +102,10 @@ public class DownloadCall {
                 }
             }
         }
+    }
+
+    void parkForFirstConnection() {
+        LockSupport.park();
     }
 
     void startBlocks(Collection<? extends Callable<Object>> tasks) throws InterruptedException {

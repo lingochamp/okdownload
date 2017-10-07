@@ -18,10 +18,6 @@ package cn.dreamtobe.okdownload.core.connection;
 
 import java.io.IOException;
 
-/**
- * Created by Jacksgong on 24/09/2017.
- */
-
 public class DownloadUrlConnection implements DownloadConnection {
     @Override
     public void addHeader(String name, String value) {
@@ -34,7 +30,6 @@ public class DownloadUrlConnection implements DownloadConnection {
 
     @Override
     public void release() {
-
     }
 
     public static class Factory implements DownloadConnection.Factory {

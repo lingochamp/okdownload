@@ -19,10 +19,14 @@ package cn.dreamtobe.okdownload.core.download;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
@@ -30,9 +34,11 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.task.DownloadTask;
 
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -62,8 +68,15 @@ public class DownloadCallTest {
         initMocks(this);
         call = spy(DownloadCall.create(mockTask));
         doNothing().when(call).startBlocks(any(Collection.class));
-    }
 
+        final Future mockFuture = mock(Future.class);
+        doReturn(mockFuture).when(call).startFirstBlock(any(DownloadChain.class));
+        when(mockFuture.isDone()).thenReturn(true);
+
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
+                .thenReturn(true);
+    }
 
     @Test
     public void start_getBeforeCreate() throws IOException, InterruptedException {
@@ -88,6 +101,43 @@ public class DownloadCallTest {
         call.start();
 
         verify(mockStore).createAndInsert(mockTask);
+    }
+
+    @Test
+    public void start_availableResume_startAllBlocks() throws InterruptedException {
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
+                .thenReturn(true);
+
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore;
+        when(mockStore.get(anyInt())).thenReturn(mockInfo);
+        when(mockInfo.getBlockCount()).thenReturn(3);
+
+        call.start();
+
+        ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
+
+        verify(call).startBlocks(captor.capture());
+        assertThat(captor.getValue()).hasSize(3);
+    }
+
+    @Test
+    public void start_notAvailableResume_startFirstAndOthers() throws InterruptedException {
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
+                .thenReturn(false);
+
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore;
+        when(mockStore.get(anyInt())).thenReturn(mockInfo);
+        when(mockInfo.getBlockCount()).thenReturn(3);
+        doNothing().when(call).parkForFirstConnection();
+
+        call.start();
+
+        verify(call).startFirstBlock(any(DownloadChain.class));
+        ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
+        verify(call).startBlocks(captor.capture());
+        assertThat(captor.getValue()).hasSize(2);
     }
 
 }

@@ -170,14 +170,14 @@ public class DownloadChain implements Runnable {
 
     private AtomicBoolean finished = new AtomicBoolean(false);
 
-    public boolean isFinished() {
+    boolean isFinished() {
         return finished.get();
     }
 
     @Override
     public void run() {
         if (isFinished()) {
-            throw new IllegalAccessError();
+            throw new IllegalAccessError("The chain has been finished!");
         }
 
         try {
