@@ -40,32 +40,27 @@ dependencies {
     compile dep.supportDesign
     //noinspection GradleDependency source code is not available on 26
     compile dep.supportV7
-
     // Appcompat-v7 (only Anko Commons)
     compile dep.ankoSdk
     compile dep.ankoV7Commons
-
     // Appcompat-v7 (Anko Layouts)
     compile dep.ankoV7
     compile dep.ankoSdk25Coroutines
     compile dep.ankoCoroutines
-
     // CardView-v7
     compile dep.ankoCardviewV7
     //noinspection GradleDependency
     compile dep.supportCardview
-
     // Design
     compile dep.ankoDesign
     compile dep.ankoDesignCoroutines
-
     // RecyclerView-v7
     compile dep.ankoRecyclerviewV7
     compile dep.ankoRecyclerviewV7Coroutines
     compile dep.kotlinxCoroutines
-
     compile dep.supportConstraintLayout
     testCompile dep.junit
+    compile project(':okdownload')
 }
 
 kotlin {
