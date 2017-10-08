@@ -25,18 +25,12 @@ import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.connection.DownloadUrlConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
-import cn.dreamtobe.okdownload.core.dispatcher.DefaultCallbackDispatcher;
-import cn.dreamtobe.okdownload.core.dispatcher.DefaultDownloadDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
 import cn.dreamtobe.okdownload.core.file.DownloadOutputStream;
 import cn.dreamtobe.okdownload.core.file.DownloadUriOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 import cn.dreamtobe.okdownload.task.DownloadTask;
-
-/**
- * Created by Jacksgong on 19/09/2017.
- */
 
 public class OkDownload {
 
@@ -150,11 +144,11 @@ public class OkDownload {
 
         public OkDownload build() {
             if (downloadDispatcher == null) {
-                downloadDispatcher = new DefaultDownloadDispatcher();
+                downloadDispatcher = new DownloadDispatcher();
             }
 
             if (callbackDispatcher == null) {
-                callbackDispatcher = new DefaultCallbackDispatcher();
+                callbackDispatcher = new CallbackDispatcher();
             }
 
             if (breakpointStore == null) {

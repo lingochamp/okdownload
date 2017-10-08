@@ -8,8 +8,6 @@ import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.connection.DownloadUrlConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
-import cn.dreamtobe.okdownload.core.dispatcher.DefaultCallbackDispatcher;
-import cn.dreamtobe.okdownload.core.dispatcher.DefaultDownloadDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
 import cn.dreamtobe.okdownload.core.file.DownloadOutputStream;
@@ -36,8 +34,8 @@ public class OkDownloadTest {
         OkDownload.Builder builder = new OkDownload.Builder();
         OkDownload okDownload = builder.build();
 
-        assertThat(okDownload.downloadDispatcher).isInstanceOf(DefaultDownloadDispatcher.class);
-        assertThat(okDownload.callbackDispatcher).isInstanceOf(DefaultCallbackDispatcher.class);
+        assertThat(okDownload.downloadDispatcher).isInstanceOf(DownloadDispatcher.class);
+        assertThat(okDownload.callbackDispatcher).isInstanceOf(CallbackDispatcher.class);
         assertThat(okDownload.breakpointStore).isInstanceOf(BreakpointStoreOnCache.class);
         assertThat(okDownload.connectionFactory).isInstanceOf(DownloadUrlConnection.Factory.class);
         assertThat(okDownload.outputStreamFactory).isInstanceOf(DownloadOutputStream.Factory.class);

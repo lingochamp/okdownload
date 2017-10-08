@@ -21,10 +21,6 @@ import android.support.annotation.Nullable;
 
 import cn.dreamtobe.okdownload.task.DownloadTask;
 
-/**
- * Created by Jacksgong on 19/09/2017.
- */
-
 public interface BreakpointStore {
 
     @Nullable

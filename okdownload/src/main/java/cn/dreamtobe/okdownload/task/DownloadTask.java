@@ -37,6 +37,9 @@ public class DownloadTask {
     private volatile HashMap<String, List<String>> headerMapFields;
 
 
+    /**
+     * This value more larger the priority more high.
+     */
     private int priority;
     private DownloadListener listener;
 
@@ -79,6 +82,10 @@ public class DownloadTask {
         return uri;
     }
 
+    public String getPath() {
+        return uri.getPath();
+    }
+
     public int getReadBufferSize() {
         return this.optimizer.getReadBufferSize();
     }
@@ -90,16 +97,15 @@ public class DownloadTask {
 
     public void execute(DownloadListener listener) {
         this.listener = listener;
-        listener.taskStart(this);
-//        try {
-//            DownloadCall.create(this).start();
-//        } finally {
-//            OkDownload.with().downloadDispatcher.finish(this);
-//        }
+        OkDownload.with().downloadDispatcher.execute(this);
     }
 
     public DownloadListener getListener() {
         return this.listener;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     void validId() {

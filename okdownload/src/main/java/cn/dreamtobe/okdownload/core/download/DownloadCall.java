@@ -16,6 +16,8 @@
 
 package cn.dreamtobe.okdownload.core.download;
 
+import android.support.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +32,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
+import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.NamedRunnable;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
@@ -39,22 +43,29 @@ import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 import cn.dreamtobe.okdownload.task.DownloadTask;
 
-public class DownloadCall {
+public class DownloadCall extends NamedRunnable implements Comparable<DownloadCall> {
     static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             ThreadUtil.threadFactory("OkDownload Block", false));
 
-    private DownloadTask task;
+    public final DownloadTask task;
+    public final boolean asyncExecuted;
 
-    private DownloadCall(DownloadTask task) {
+    private DownloadCall(DownloadTask task, boolean asyncExecuted) {
+        super(task.getPath());
         this.task = task;
+        this.asyncExecuted = asyncExecuted;
     }
 
-    public static DownloadCall create(DownloadTask task) {
-        return new DownloadCall(task);
+    public static DownloadCall create(DownloadTask task, boolean asyncExecuted) {
+        return new DownloadCall(task, asyncExecuted);
     }
 
-    public void start() throws InterruptedException {
+    @Override
+    public void execute() throws InterruptedException {
+        final DownloadListener listener = task.getListener();
+        listener.taskStart(task);
+
         // get store
         final BreakpointStore store = OkDownload.with().breakpointStore;
         BreakpointInfo info = store.get(task.getId());
@@ -104,6 +115,15 @@ public class DownloadCall {
         }
     }
 
+    @Override
+    protected void canceled(InterruptedException e) {
+    }
+
+    @Override
+    protected void finished() {
+        OkDownload.with().downloadDispatcher.finish(this);
+    }
+
     void parkForFirstConnection() {
         LockSupport.park();
     }
@@ -114,6 +134,11 @@ public class DownloadCall {
 
     Future<?> startFirstBlock(DownloadChain firstChain) {
         return EXECUTOR.submit(firstChain);
+    }
+
+    @Override
+    public int compareTo(@NonNull DownloadCall o) {
+        return o.task.getPriority() - task.getPriority();
     }
 
 
@@ -129,11 +154,11 @@ public class DownloadCall {
             return outputStream;
         }
 
-        public void setRedirectLocation(String redirectLocation) {
+        void setRedirectLocation(String redirectLocation) {
             this.redirectLocation = redirectLocation;
         }
 
-        public String getRedirectLocation() {
+        String getRedirectLocation() {
             return redirectLocation;
         }
     }

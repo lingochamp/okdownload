@@ -36,7 +36,7 @@ public interface DownloadListener {
 
     void connectEnd(DownloadTask task, int blockIndex, DownloadConnection connection);
 
-    void downloadFromBegining(DownloadTask task, BreakpointInfo info, ResumeFailedCause cause);
+    void downloadFromBeginning(DownloadTask task, BreakpointInfo info, ResumeFailedCause cause);
 
     void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info);
 
@@ -58,7 +58,7 @@ public interface DownloadListener {
         error,
         stop,
         fileBusy,
-        sameIdBusy,
+        sameTaskBusy,
     }
 }
 

@@ -16,6 +16,8 @@
 
 package cn.dreamtobe.okdownload.core.download;
 
+import android.net.Uri;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,10 +30,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
+import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 import cn.dreamtobe.okdownload.task.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -40,7 +44,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,13 +63,16 @@ public class DownloadCallTest {
         OkDownload.setSingletonInstance(new OkDownload.Builder()
                 .breakpointStore(mock(BreakpointStore.class))
                 .downloadStrategy(mock(DownloadStrategy.class))
+                .downloadDispatcher(mock(DownloadDispatcher.class))
                 .build());
     }
 
     @Before
     public void setUp() throws InterruptedException {
         initMocks(this);
-        call = spy(DownloadCall.create(mockTask));
+        when(mockTask.getUri()).thenReturn(mock(Uri.class));
+        when(mockTask.getListener()).thenReturn(mock(DownloadListener.class));
+        call = spy(DownloadCall.create(mockTask, false));
         doNothing().when(call).startBlocks(any(Collection.class));
 
         final Future mockFuture = mock(Future.class);
@@ -79,32 +85,19 @@ public class DownloadCallTest {
     }
 
     @Test
-    public void start_getBeforeCreate() throws IOException, InterruptedException {
-        final BreakpointStore mockStore = OkDownload.with().breakpointStore;
-
-        when(mockStore.get(anyInt())).thenReturn(mockInfo);
-
-        call.start();
-
-        verify(mockStore).get(anyInt());
-        verify(mockStore, never()).createAndInsert(null);
-        verify(mockStore, never()).createAndInsert(any(DownloadTask.class));
-    }
-
-    @Test
-    public void start_createIfNon() throws IOException, InterruptedException {
+    public void execute_createIfNon() throws IOException, InterruptedException {
         final BreakpointStore mockStore = OkDownload.with().breakpointStore;
 
         when(mockStore.get(anyInt())).thenReturn(null);
         when(mockStore.createAndInsert(mockTask)).thenReturn(mockInfo);
 
-        call.start();
+        call.execute();
 
         verify(mockStore).createAndInsert(mockTask);
     }
 
     @Test
-    public void start_availableResume_startAllBlocks() throws InterruptedException {
+    public void execute_availableResume_startAllBlocks() throws InterruptedException {
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
         when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
                 .thenReturn(true);
@@ -113,7 +106,7 @@ public class DownloadCallTest {
         when(mockStore.get(anyInt())).thenReturn(mockInfo);
         when(mockInfo.getBlockCount()).thenReturn(3);
 
-        call.start();
+        call.execute();
 
         ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
 
@@ -122,7 +115,7 @@ public class DownloadCallTest {
     }
 
     @Test
-    public void start_notAvailableResume_startFirstAndOthers() throws InterruptedException {
+    public void execute_notAvailableResume_startFirstAndOthers() throws InterruptedException {
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
         when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
                 .thenReturn(false);
@@ -132,12 +125,19 @@ public class DownloadCallTest {
         when(mockInfo.getBlockCount()).thenReturn(3);
         doNothing().when(call).parkForFirstConnection();
 
-        call.start();
+        call.execute();
 
         verify(call).startFirstBlock(any(DownloadChain.class));
         ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
         verify(call).startBlocks(captor.capture());
         assertThat(captor.getValue()).hasSize(2);
+    }
+
+    @Test
+    public void finished_callToDispatch() {
+        call.finished();
+
+        verify(OkDownload.with().downloadDispatcher).finish(call);
     }
 
 }
