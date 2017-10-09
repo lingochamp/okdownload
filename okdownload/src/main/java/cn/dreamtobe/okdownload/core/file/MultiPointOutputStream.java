@@ -16,19 +16,130 @@
 
 package cn.dreamtobe.okdownload.core.file;
 
-import java.io.IOException;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.util.SparseArray;
 
-/**
- * Created by Jacksgong on 29/09/2017.
- */
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
+import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
 public class MultiPointOutputStream {
+    private final static ExecutorService fileIOExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+            60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+            ThreadUtil.threadFactory("OkDownload file io", false));
 
-    public MultiPointOutputStream(int downloadId, int readBufferSize) {
+    private SparseArray<DownloadOutputStream> outputStreamMap = new SparseArray<>();
 
+    private SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
+    private AtomicLong allNoSyncLength = new AtomicLong();
+    private AtomicLong lastSyncTimestamp = new AtomicLong();
+
+    private final Uri uri;
+    private final int flushBufferSize;
+    private final int syncBufferSize;
+    private final int syncBufferIntervalMills;
+    private final BreakpointInfo info;
+    private final BreakpointStore store;
+
+    private boolean syncRunning;
+
+    public MultiPointOutputStream(Uri uri, int flushBufferSize,
+                                  int syncBufferSize, int syncBufferIntervalMills,
+                                  BreakpointInfo info) {
+        this.uri = uri;
+        this.flushBufferSize = flushBufferSize;
+        this.syncBufferSize = syncBufferSize;
+        this.syncBufferIntervalMills = syncBufferIntervalMills;
+        this.info = info;
+
+        this.store = OkDownload.with().breakpointStore;
     }
 
-    public synchronized void write(int blockIndex, byte[] bytes, int length) throws IOException {
-        // strategy sync
+    public void write(int blockIndex, byte[] bytes, int length) throws IOException {
+        outputStream(blockIndex).write(bytes, 0, length);
+
+        // because we add the length value after flush and sync,
+        // so the length only possible less than or equal to the real persist length.
+        allNoSyncLength.addAndGet(length);
+        noSyncLengthMap.get(blockIndex).addAndGet(length);
+
+        inspectAndPersist();
+    }
+
+    private void inspectAndPersist() {
+        if (!syncRunning && isNeedPersist()) {
+            syncRunning = true;
+            fileIOExecutor.execute(syncRunnable);
+        }
+    }
+
+    private final Runnable syncRunnable = new Runnable() {
+        @Override
+        public void run() {
+            boolean success;
+            final int size = outputStreamMap.size();
+            SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+            try {
+                for (int i = 0; i < size; i++) {
+                    final int blockIndex = outputStreamMap.keyAt(i);
+                    // because we get no sync length value before flush and sync,
+                    // so the length only possible less than or equal to the real persist length.
+                    increaseLengthMap.put(blockIndex, noSyncLengthMap.get(blockIndex).get());
+                    final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
+                    outputStream.flushAndSync();
+                }
+                success = true;
+            } catch (IOException ignored) {
+                success = false;
+            }
+
+            if (success) {
+                long allIncreaseLength = 0;
+                for (int i = 0; i < size; i++) {
+                    final int blockIndex = increaseLengthMap.keyAt(i);
+                    final long noSyncLength = increaseLengthMap.valueAt(i);
+                    store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
+                    allIncreaseLength += noSyncLength;
+                    noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
+                }
+                allNoSyncLength.addAndGet(-allIncreaseLength);
+                lastSyncTimestamp.set(SystemClock.uptimeMillis());
+            }
+
+            syncRunning = false;
+        }
+    };
+
+    private boolean isNeedPersist() {
+        return allNoSyncLength.get() >= syncBufferSize
+                && SystemClock.uptimeMillis() - lastSyncTimestamp.get() >= syncBufferIntervalMills;
+    }
+
+    public void close(int blockIndex) throws IOException {
+        outputStream(blockIndex).close();
+    }
+
+    private synchronized DownloadOutputStream outputStream(int blockIndex) throws FileNotFoundException {
+        DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
+        if (outputStream == null) {
+            outputStream = OkDownload.with().outputStreamFactory.create(
+                    OkDownload.with().context,
+                    uri,
+                    flushBufferSize);
+            outputStreamMap.put(blockIndex, outputStream);
+            noSyncLengthMap.put(blockIndex, new AtomicLong());
+        }
+
+        return outputStream;
     }
 }

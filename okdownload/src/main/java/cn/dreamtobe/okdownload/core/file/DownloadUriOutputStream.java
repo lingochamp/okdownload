@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.util.LogUtil;
 
 /**
@@ -43,13 +42,13 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     private ParcelFileDescriptor pdf;
     private BufferedOutputStream out;
 
-    public DownloadUriOutputStream(Context context, Uri uri) throws FileNotFoundException {
+    public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws FileNotFoundException {
         pdf = context.getContentResolver().openFileDescriptor(uri, "rw");
         if (pdf == null) throw new IllegalArgumentException();
 
         final FileOutputStream fos = new FileOutputStream(pdf.getFileDescriptor());
         channel = fos.getChannel();
-        out = new BufferedOutputStream(fos, OkDownload.with().processFileStrategy.buffSize());
+        out = new BufferedOutputStream(fos, bufferSize);
     }
 
     @Override
@@ -91,7 +90,7 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
             }
         } else {
             LogUtil.w(tag,
-                    "it can't pre-allocate length(" + newLength + ") on the sdk " +
+                    "It can't pre-allocate length(" + newLength + ") on the sdk " +
                             "version(" + Build.VERSION.SDK_INT + ")");
         }
     }
@@ -99,13 +98,13 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     public static class Factory implements DownloadOutputStream.Factory {
 
         @Override
-        public DownloadOutputStream create(Context context, File file) throws FileNotFoundException {
-            return new DownloadUriOutputStream(context, Uri.fromFile(file));
+        public DownloadOutputStream create(Context context, File file, int flushBufferSize) throws FileNotFoundException {
+            return new DownloadUriOutputStream(context, Uri.fromFile(file), flushBufferSize);
         }
 
         @Override
-        public DownloadOutputStream create(Context context, Uri uri) throws FileNotFoundException {
-            return new DownloadUriOutputStream(context, uri);
+        public DownloadOutputStream create(Context context, Uri uri, int flushBufferSize) throws FileNotFoundException {
+            return new DownloadUriOutputStream(context, uri, flushBufferSize);
         }
     }
 }

@@ -18,23 +18,18 @@ package cn.dreamtobe.okdownload.core.file;
 
 import android.net.Uri;
 
-/**
- * Created by Jacksgong on 24/09/2017.
- */
-
 public class DefaultProcessFileStrategy implements ProcessFileStrategy {
+
     @Override
     public DownloadOutputStream createProcessFile(Uri targetFileUri) {
         return null;
     }
 
     @Override
-    public void renameToTargetFile(DownloadOutputStream processOutputStream, Uri targetFileUri) {
-
+    public void completeProcessFile(DownloadOutputStream processOutputStream, Uri targetFileUri) {
     }
 
     @Override
-    public int buffSize() {
-        return 0;
+    public void discardProcess(Uri targetFileUri) {
     }
 }

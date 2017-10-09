@@ -41,8 +41,8 @@ public interface DownloadOutputStream {
     void setLength(long newLength) throws IOException;
 
     interface Factory {
-        DownloadOutputStream create(Context context, File file) throws FileNotFoundException;
+        DownloadOutputStream create(Context context, File file, int flushBufferSize) throws FileNotFoundException;
 
-        DownloadOutputStream create(Context context, Uri uri) throws FileNotFoundException;
+        DownloadOutputStream create(Context context, Uri uri, int flushBufferSize) throws FileNotFoundException;
     }
 }

@@ -25,7 +25,7 @@ import android.net.Uri;
 public interface ProcessFileStrategy {
     DownloadOutputStream createProcessFile(Uri targetFileUri);
 
-    void renameToTargetFile(DownloadOutputStream processOutputStream, Uri targetFileUri);
+    void completeProcessFile(DownloadOutputStream processOutputStream, Uri targetFileUri);
 
-    int buffSize();
+    void discardProcess(Uri targetFileUri);
 }

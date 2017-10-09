@@ -74,7 +74,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         }
 
         // init cache
-        final DownloadCache cache = new DownloadCache(task);
+        final DownloadCache cache = new DownloadCache(task, info);
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
         if (downloadStrategy.isAvailable(task, info)) {
@@ -146,8 +146,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         private String redirectLocation;
         final MultiPointOutputStream outputStream;
 
-        DownloadCache(DownloadTask task) {
-            this.outputStream = new MultiPointOutputStream(task.getId(), task.getReadBufferSize());
+        DownloadCache(DownloadTask task, BreakpointInfo info) {
+            this.outputStream = new MultiPointOutputStream(task.getUri(), task.getFlushBufferSize(),
+                    task.getSyncBufferSize(), task.getSyncBufferIntervalMills(), info);
         }
 
         MultiPointOutputStream getOutputStream() {
