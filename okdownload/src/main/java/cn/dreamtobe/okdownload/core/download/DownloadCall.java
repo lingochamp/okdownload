@@ -32,7 +32,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.NamedRunnable;
@@ -40,6 +39,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
@@ -63,12 +63,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Override
     public void execute() throws InterruptedException {
-        final DownloadListener listener = task.getListener();
-        listener.taskStart(task);
+        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher;
+        dispatcher.dispatch().taskStart(task);
 
         // get store
         final BreakpointStore store = OkDownload.with().breakpointStore;
         BreakpointInfo info = store.get(task.getId());
+        dispatcher.dispatch().breakpointData(task, info);
         if (info == null) {
             info = store.createAndInsert(task);
         }

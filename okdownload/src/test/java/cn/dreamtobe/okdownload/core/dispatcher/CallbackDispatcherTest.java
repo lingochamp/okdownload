@@ -41,7 +41,7 @@ public class CallbackDispatcherTest {
         final DownloadListener mockListener = mock(DownloadListener.class);
         when(mockTask.getListener()).thenReturn(mockListener);
 
-        final DownloadListener result = dispatcher.dispatch(mockTask);
+        final DownloadListener result = dispatcher.dispatch();
 
         assertThat(result).isEqualTo(mockListener);
     }

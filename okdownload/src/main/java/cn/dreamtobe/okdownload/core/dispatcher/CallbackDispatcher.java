@@ -18,6 +18,7 @@ package cn.dreamtobe.okdownload.core.dispatcher;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 
 import cn.dreamtobe.okdownload.DownloadListener;
@@ -28,128 +29,132 @@ import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 // Dispatch callback to listeners
 public class CallbackDispatcher {
 
-    private boolean isCallbackToUIThread = false;
-
-    public void setCallbackToUIThread(final boolean isCallbackToUIThread) {
-        this.isCallbackToUIThread = isCallbackToUIThread;
-    }
-
-    public DownloadListener dispatch(DownloadTask task) {
-        if (isCallbackToUIThread) {
-            return new UIThreadDownloadListener(task.getListener());
-        } else {
-            return task.getListener();
-        }
+    public DownloadListener dispatch() {
+        return TRANSMIT;
     }
 
     // Just transmit to the main looper.
-    class UIThreadDownloadListener implements DownloadListener {
+    final static DownloadListener TRANSMIT = new DownloadListener() {
         private Handler uiHandler = new Handler(Looper.getMainLooper());
-        private final DownloadListener realListener;
-
-        UIThreadDownloadListener(DownloadListener listener) {
-            this.realListener = listener;
-        }
 
         @Override
         public void taskStart(final DownloadTask task) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.taskStart(task);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().taskStart(task); }
+                });
+            } else {
+                task.getListener().taskStart(task);
+            }
+
         }
 
         @Override
         public void breakpointData(final DownloadTask task, @Nullable final BreakpointInfo info) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.breakpointData(task, info);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().breakpointData(task, info); }
+                });
+            } else {
+                task.getListener().breakpointData(task, info);
+            }
         }
 
         @Override
-        public void connectStart(final DownloadTask task, final int blockIndex, final DownloadConnection connection) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.connectStart(task, blockIndex, connection);
-                }
-            });
+        public void connectStart(final DownloadTask task, final int blockIndex) {
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().connectStart(task, blockIndex); }
+                });
+            } else {
+                task.getListener().connectStart(task, blockIndex);
+            }
         }
 
         @Override
-        public void connectEnd(final DownloadTask task, final int blockIndex, final DownloadConnection connection) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.connectEnd(task, blockIndex, connection);
-                }
-            });
+        public void connectEnd(final DownloadTask task, final int blockIndex, final DownloadConnection connection, final DownloadConnection.Connected connected) {
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().connectEnd(task, blockIndex, connection, connected); }
+                });
+            } else {
+                task.getListener().connectEnd(task, blockIndex, connection, connected);
+            }
         }
 
         @Override
         public void downloadFromBeginning(final DownloadTask task, final BreakpointInfo info, final ResumeFailedCause cause) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.downloadFromBeginning(task, info, cause);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().downloadFromBeginning(task, info, cause); }
+                });
+            } else {
+                task.getListener().downloadFromBeginning(task, info, cause);
+            }
         }
 
         @Override
         public void downloadFromBreakpoint(final DownloadTask task, final BreakpointInfo info) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.downloadFromBreakpoint(task, info);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().downloadFromBreakpoint(task, info); }
+                });
+            } else {
+                task.getListener().downloadFromBreakpoint(task, info);
+            }
         }
 
         @Override
         public void fetchStart(final DownloadTask task, final int blockIndex, final long contentLength) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.fetchStart(task, blockIndex, contentLength);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().fetchStart(task, blockIndex, contentLength); }
+                });
+            } else {
+                task.getListener().fetchStart(task, blockIndex, contentLength);
+            }
         }
 
         @Override
-        public void fetchProgress(final DownloadTask task, final int blockIndex, final long downloadedBytes) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.fetchProgress(task, blockIndex, downloadedBytes);
-                }
-            });
+        public void fetchProgress(final DownloadTask task, final int blockIndex, final long fetchedBytes) {
+            final long minInterval = task.getMinIntervalMillisCallbackProcess();
+            if (minInterval > 0 &&
+                    SystemClock.uptimeMillis() - task.getLastCallbackProcessTimestamp() < minInterval) {
+                return;
+            }
+
+            if (minInterval > 0) task.setLastCallbackProcessTimestamp(SystemClock.uptimeMillis());
+
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().fetchProgress(task, blockIndex, fetchedBytes); }
+                });
+            } else {
+                task.getListener().fetchProgress(task, blockIndex, fetchedBytes);
+            }
         }
 
         @Override
         public void fetchEnd(final DownloadTask task, final int blockIndex, final long contentLength) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.fetchEnd(task, blockIndex, contentLength);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().fetchEnd(task, blockIndex, contentLength); }
+                });
+            } else {
+                task.getListener().fetchEnd(task, blockIndex, contentLength);
+            }
         }
 
         @Override
         public void taskEnd(final DownloadTask task, final EndCause cause, @Nullable final Exception realCause) {
-            uiHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    realListener.taskEnd(task, cause, realCause);
-                }
-            });
+            if (task.isAutoCallbackToUIThread()) {
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { task.getListener().taskEnd(task, cause, realCause); }
+                });
+            } else {
+                task.getListener().taskEnd(task, cause, realCause);
+            }
         }
-    }
+    };
 
 }

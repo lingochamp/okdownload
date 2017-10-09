@@ -23,6 +23,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
@@ -32,6 +33,12 @@ import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTEN
  */
 
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
+
+    private final BreakpointStore store;
+
+    public BreakpointInterceptor() {
+        store = OkDownload.with().breakpointStore;
+    }
 
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
@@ -88,10 +95,10 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
+        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher;
         final int blockIndex = chain.blockIndex;
         final BreakpointInfo breakpointInfo = chain.getInfo();
         final BlockInfo blockInfo = breakpointInfo.getBlock(blockIndex);
-        final BreakpointStore store = OkDownload.with().breakpointStore;
 
         final long contentLength = chain.getResponseContentLength();
 
@@ -106,7 +113,6 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
             fetchLength += processFetchLength;
             blockInfo.processCurrentOffset(processFetchLength);
-            store.onProcessCurrentOffset(breakpointInfo, blockIndex, processFetchLength);
         }
 
         if (fetchLength != contentLength) {

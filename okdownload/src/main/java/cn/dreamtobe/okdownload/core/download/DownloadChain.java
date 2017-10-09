@@ -26,6 +26,7 @@ import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.interceptor.BreakpointInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.FetchDataInterceptor;
@@ -39,7 +40,6 @@ public class DownloadChain implements Runnable {
 
     public final static int CHUNKED_CONTENT_LENGTH = -1;
 
-    public final int downloadId;
     public final int blockIndex;
     public final DownloadTask task;
     private final BreakpointInfo info;
@@ -68,7 +68,6 @@ public class DownloadChain implements Runnable {
                           DownloadCall.DownloadCache cache) {
         this.blockIndex = blockIndex;
         this.task = task;
-        this.downloadId = task.getId();
         this.cache = cache;
         this.info = info;
     }
@@ -103,7 +102,7 @@ public class DownloadChain implements Runnable {
         return this.cache.getOutputStream();
     }
 
-    public DownloadConnection getConnection() {
+    public DownloadConnection getConnection() throws IOException {
         if (connection == null) {
             final String url;
             final String redirectLocation = cache.getRedirectLocation();
@@ -121,7 +120,9 @@ public class DownloadChain implements Runnable {
     }
 
     void start() throws IOException {
+        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher;
         // connect chain
+        dispatcher.dispatch().connectStart(task, blockIndex);
         final RetryInterceptor retryInterceptor = new RetryInterceptor();
         final BreakpointInterceptor breakpointInterceptor = new BreakpointInterceptor();
         connectInterceptorList.add(retryInterceptor);
@@ -132,16 +133,19 @@ public class DownloadChain implements Runnable {
 
         connectIndex = 0;
         final DownloadConnection.Connected connected = processConnect();
+        dispatcher.dispatch().connectEnd(task, blockIndex, getConnection(), connected);
 
+        dispatcher.dispatch().fetchStart(task, blockIndex, getResponseContentLength());
         // fetch chain
         final FetchDataInterceptor fetchDataInterceptor =
                 new FetchDataInterceptor(blockIndex, connected.getInputStream(),
-                        getOutputStream(), task.getReadBufferSize());
+                        getOutputStream(), task);
         fetchInterceptorList.add(retryInterceptor);
         fetchInterceptorList.add(breakpointInterceptor);
         fetchInterceptorList.add(fetchDataInterceptor);
 
-        processConnect();
+        final long totalFetchedBytes = processFetch();
+        dispatcher.dispatch().fetchEnd(task, blockIndex, totalFetchedBytes);
     }
 
     public void setResponseContentLength(long responseContentLength) {

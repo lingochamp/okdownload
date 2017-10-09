@@ -119,13 +119,13 @@ public class DownloadDispatcher {
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher;
         for (DownloadCall call : calls) {
             if (call.task == task) {
-                callbackDispatcher.dispatch(task)
+                callbackDispatcher.dispatch()
                         .taskEnd(task, DownloadListener.EndCause.sameTaskBusy, null);
                 return true;
             }
 
             if (new File(call.task.getPath()).equals(new File(task.getPath()))) {
-                callbackDispatcher.dispatch(task)
+                callbackDispatcher.dispatch()
                         .taskEnd(task, DownloadListener.EndCause.fileBusy, null);
                 return true;
             }

@@ -21,6 +21,9 @@ import android.support.annotation.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 
+import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
@@ -31,16 +34,20 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
     private final byte[] readBuffer;
     private final MultiPointOutputStream outputStream;
     private final int blockIndex;
+    private final DownloadTask task;
+    private final CallbackDispatcher dispatcher;
 
     public FetchDataInterceptor(int blockIndex,
                                 @NonNull InputStream inputStream,
                                 @NonNull MultiPointOutputStream outputStream,
-                                int readBufferSize) {
+                                DownloadTask task) {
         this.blockIndex = blockIndex;
         this.inputStream = inputStream;
-        this.readBuffer = new byte[readBufferSize];
+        this.readBuffer = new byte[task.getReadBufferSize()];
         this.outputStream = outputStream;
 
+        this.task = task;
+        this.dispatcher = OkDownload.with().callbackDispatcher;
     }
 
     @Override
@@ -50,6 +57,8 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
 
         // write to file
         outputStream.write(blockIndex, readBuffer, fetchLength);
+
+        this.dispatcher.dispatch().fetchProgress(task, blockIndex, fetchLength);
 
         return fetchLength;
     }

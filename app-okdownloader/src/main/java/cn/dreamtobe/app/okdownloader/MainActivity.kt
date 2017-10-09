@@ -8,7 +8,7 @@ import cn.dreamtobe.okdownload.DownloadListener
 import cn.dreamtobe.okdownload.OkDownload
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection
-import cn.dreamtobe.okdownload.task.DownloadTask
+import cn.dreamtobe.okdownload.DownloadTask
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.Exception
 
@@ -38,22 +38,21 @@ class MainActivity : AppCompatActivity() {
 
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
 
-        OkDownload.with().callbackDispatcher.setCallbackToUIThread(true)
         OkDownload.obtainTask("", application.cacheDir)
                 .enqueue(object : DownloadListener {
+                    override fun connectStart(task: DownloadTask?, blockIndex: Int) {
+                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                    }
+
+                    override fun connectEnd(task: DownloadTask?, blockIndex: Int, connection: DownloadConnection?, connected: DownloadConnection.Connected?) {
+                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                    }
+
                     override fun taskStart(task: DownloadTask?) {
                         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                     }
 
                     override fun breakpointData(task: DownloadTask?, info: BreakpointInfo?) {
-                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                    }
-
-                    override fun connectStart(task: DownloadTask?, blockIndex: Int, connection: DownloadConnection?) {
-                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                    }
-
-                    override fun connectEnd(task: DownloadTask?, blockIndex: Int, connection: DownloadConnection?) {
                         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                     }
 
@@ -69,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                     }
 
-                    override fun fetchProgress(task: DownloadTask?, blockIndex: Int, downloadedBytes: Long) {
+                    override fun fetchProgress(task: DownloadTask?, blockIndex: Int, fetchedBytes: Long) {
                         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                     }
 
