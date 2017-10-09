@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import cn.dreamtobe.okdownload.DownloadListener;
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;

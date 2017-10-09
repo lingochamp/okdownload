@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutorService;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 import static cn.dreamtobe.okdownload.DownloadListener.EndCause.sameTaskBusy;
 import static org.assertj.core.api.Java6Assertions.assertThat;

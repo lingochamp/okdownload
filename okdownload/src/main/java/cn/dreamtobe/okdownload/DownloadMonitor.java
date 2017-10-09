@@ -18,12 +18,6 @@ package cn.dreamtobe.okdownload;
 
 import android.support.annotation.Nullable;
 
-import cn.dreamtobe.okdownload.task.DownloadTask;
-
-/**
- * Created by Jacksgong on 24/09/2017.
- */
-
 public interface DownloadMonitor {
     void start(DownloadTask task);
 

@@ -21,9 +21,9 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 
 import cn.dreamtobe.okdownload.DownloadListener;
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.task.DownloadTask;
 
 // Dispatch callback to listeners
 public class CallbackDispatcher {

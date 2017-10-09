@@ -20,7 +20,7 @@ import android.util.SparseArray;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 public class BreakpointStoreOnCache implements BreakpointStore {
     private AtomicInteger identifyGenerator = new AtomicInteger(1);
@@ -35,10 +35,6 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     @Override
     public BreakpointInfo createAndInsert(DownloadTask task) {
         return null;
-    }
-
-    @Override
-    public void onProcessCurrentOffset(BreakpointInfo info, int blockIndex, long fetchLength) {
     }
 
     @Override

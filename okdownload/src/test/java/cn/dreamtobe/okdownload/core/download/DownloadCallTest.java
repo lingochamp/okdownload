@@ -36,7 +36,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;

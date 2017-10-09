@@ -20,21 +20,15 @@ import android.support.annotation.Nullable;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.task.DownloadTask;
 
-/**
- * Created by Jacksgong on 19/09/2017.
- */
-
-// simple listener
 public interface DownloadListener {
     void taskStart(DownloadTask task);
 
     void breakpointData(DownloadTask task, @Nullable BreakpointInfo info);
 
-    void connectStart(DownloadTask task, int blockIndex, DownloadConnection connection);
+    void connectStart(DownloadTask task, int blockIndex);
 
-    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection connection);
+    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection connection, DownloadConnection.Connected connected);
 
     void downloadFromBeginning(DownloadTask task, BreakpointInfo info, ResumeFailedCause cause);
 
@@ -42,7 +36,7 @@ public interface DownloadListener {
 
     void fetchStart(DownloadTask task, int blockIndex, long contentLength);
 
-    void fetchProgress(DownloadTask task, int blockIndex, long downloadedBytes);
+    void fetchProgress(DownloadTask task, int blockIndex, long fetchedBytes);
 
     void fetchEnd(DownloadTask task, int blockIndex, long contentLength);
 

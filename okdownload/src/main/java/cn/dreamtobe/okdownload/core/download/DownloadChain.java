@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
@@ -33,7 +34,6 @@ import cn.dreamtobe.okdownload.core.interceptor.RetryInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.connect.CallServerInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.connect.HeaderInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.connect.RedirectInterceptor;
-import cn.dreamtobe.okdownload.task.DownloadTask;
 
 public class DownloadChain implements Runnable {
 

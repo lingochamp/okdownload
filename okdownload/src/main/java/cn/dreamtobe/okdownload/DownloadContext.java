@@ -16,12 +16,6 @@
 
 package cn.dreamtobe.okdownload;
 
-import cn.dreamtobe.okdownload.task.DownloadTask;
-
-/**
- * Created by Jacksgong on 19/09/2017.
- */
-
 public interface DownloadContext {
 
     void bind(DownloadTask task);

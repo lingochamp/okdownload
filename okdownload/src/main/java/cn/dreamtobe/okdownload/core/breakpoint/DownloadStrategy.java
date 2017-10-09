@@ -20,7 +20,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 public class DownloadStrategy {
 
@@ -34,7 +34,7 @@ public class DownloadStrategy {
     private final static long FOUR_CONNECTION_UPPER_LIMIT = 100 * 1024 * 1024; // 100MB
 
     public boolean isAvailable(DownloadTask task, BreakpointInfo info) {
-        return info.getBlockCount() > 0 && new File(task.getUri().getPath()).exists();
+        return info.getBlockCount() > 0 && new File(task.getPath()).exists();
     }
 
     public int determineBlockCount(DownloadTask task, long totalLength, Map<String, List<String>> responseHeaderFields) {

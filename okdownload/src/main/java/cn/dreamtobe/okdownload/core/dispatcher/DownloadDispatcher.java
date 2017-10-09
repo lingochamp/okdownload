@@ -34,7 +34,7 @@ import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 public class DownloadDispatcher {
     // same id will be discard

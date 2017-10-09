@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 import cn.dreamtobe.okdownload.DownloadListener;
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.NamedRunnable;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
@@ -41,7 +42,6 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
-import cn.dreamtobe.okdownload.task.DownloadTask;
 
 public class DownloadCall extends NamedRunnable implements Comparable<DownloadCall> {
     static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,

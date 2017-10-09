@@ -23,6 +23,8 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
+import cn.dreamtobe.okdownload.DownloadTask;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 

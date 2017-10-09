@@ -19,7 +19,7 @@ package cn.dreamtobe.okdownload.core.breakpoint;
 
 import android.support.annotation.Nullable;
 
-import cn.dreamtobe.okdownload.task.DownloadTask;
+import cn.dreamtobe.okdownload.DownloadTask;
 
 public interface BreakpointStore {
 
@@ -28,7 +28,7 @@ public interface BreakpointStore {
 
     BreakpointInfo createAndInsert(DownloadTask task);
 
-    void onProcessCurrentOffset(BreakpointInfo info, int blockIndex, long fetchLength);
+    void onSyncToFilesystemSuccess(BreakpointInfo info, int blockIndex, long increaseLength);
 
     boolean update(BreakpointInfo breakpointInfo);
 
