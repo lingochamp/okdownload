@@ -27,6 +27,9 @@ import java.util.Map;
  */
 
 public interface DownloadConnection {
+
+    int NO_RESPONSE_CODE = 0;
+
     void addHeader(String name, String value);
 
     /**
@@ -70,6 +73,6 @@ public interface DownloadConnection {
     }
 
     interface Factory {
-        DownloadConnection create(String url);
+        DownloadConnection create(String url) throws IOException;
     }
 }

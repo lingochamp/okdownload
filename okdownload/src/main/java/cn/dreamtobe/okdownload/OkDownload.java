@@ -19,6 +19,8 @@ package cn.dreamtobe.okdownload;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import java.io.File;
+
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
@@ -62,6 +64,10 @@ public class OkDownload {
 
     public static DownloadTask obtainTask(String url, Uri fileUri) {
         return new DownloadTask(url, fileUri);
+    }
+
+    public static DownloadTask obtainTask(String url, File file) {
+        return new DownloadTask(url, Uri.fromFile(file));
     }
 
     public void setMonitor(DownloadMonitor monitor) {
