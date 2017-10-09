@@ -93,7 +93,9 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     @Override
     public void release() {
-        // TODO: 08/10/2017 how to close url-connection
+        if (connection instanceof HttpURLConnection) {
+            ((HttpURLConnection) connection).disconnect();
+        }
     }
 
     public static class Factory implements DownloadConnection.Factory {
