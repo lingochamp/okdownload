@@ -16,6 +16,7 @@
 
 package cn.dreamtobe.okdownload;
 
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
@@ -32,7 +33,6 @@ import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
 import cn.dreamtobe.okdownload.core.file.DownloadOutputStream;
 import cn.dreamtobe.okdownload.core.file.DownloadUriOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
-import cn.dreamtobe.okdownload.task.DownloadTask;
 
 public class OkDownload {
 
@@ -46,13 +46,16 @@ public class OkDownload {
     public final ProcessFileStrategy processFileStrategy;
     public final DownloadStrategy downloadStrategy;
 
+    public final Context context;
+
     DownloadMonitor monitor;
     boolean lenience = false;
 
-    OkDownload(DownloadDispatcher downloadDispatcher, CallbackDispatcher callbackDispatcher,
+    OkDownload(Context context, DownloadDispatcher downloadDispatcher, CallbackDispatcher callbackDispatcher,
                BreakpointStore breakpointStore, DownloadConnection.Factory connectionFactory,
                DownloadOutputStream.Factory outputStreamFactory,
                ProcessFileStrategy processFileStrategy, DownloadStrategy downloadStrategy) {
+        this.context = context;
         this.downloadDispatcher = downloadDispatcher;
         this.callbackDispatcher = callbackDispatcher;
         this.breakpointStore = breakpointStore;
@@ -78,7 +81,10 @@ public class OkDownload {
         if (SINGLETON == null) {
             synchronized (OkDownload.class) {
                 if (SINGLETON == null) {
-                    SINGLETON = new Builder().build();
+                    if (OkDownloadProvider.context == null) {
+                        throw new IllegalStateException("context == null");
+                    }
+                    SINGLETON = new Builder(OkDownloadProvider.context).build();
                 }
             }
         }
@@ -107,6 +113,11 @@ public class OkDownload {
         private DownloadStrategy downloadStrategy;
         private DownloadOutputStream.Factory outputStreamFactory;
         private DownloadMonitor monitor;
+        private final Context context;
+
+        public Builder(Context context) {
+            this.context = context.getApplicationContext();
+        }
 
         public Builder downloadDispatcher(DownloadDispatcher downloadDispatcher) {
             this.downloadDispatcher = downloadDispatcher;
@@ -177,7 +188,7 @@ public class OkDownload {
                 downloadStrategy = new DownloadStrategy();
             }
 
-            OkDownload okDownload = new OkDownload(downloadDispatcher, callbackDispatcher,
+            OkDownload okDownload = new OkDownload(context, downloadDispatcher, callbackDispatcher,
                     breakpointStore, connectionFactory, outputStreamFactory, processFileStrategy,
                     downloadStrategy);
 
