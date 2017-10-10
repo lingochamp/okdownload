@@ -14,27 +14,32 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.task;
+package cn.dreamtobe.okdownload;
 
 import android.net.Uri;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
-import cn.dreamtobe.okdownload.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 public class DownloadTaskTest {
 
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        TestUtils.mockOkDownload();
+    }
+
     @Test
     public void addHeader() throws Exception {
-        final String mockUrl = "mock url";
-        final Uri fileUri = mock(Uri.class);
-        DownloadTask task = new DownloadTask(mockUrl, fileUri);
+        final String url = "mock url";
+        final Uri mockFileUri = mock(Uri.class);
+        DownloadTask.Builder builder = new DownloadTask.Builder(url, mockFileUri);
 
 
         final String mockKey1 = "mock key1";
@@ -42,12 +47,12 @@ public class DownloadTaskTest {
         final String mockValue1 = "mock value1";
         final String mockValue2 = "mock value2";
 
-        task.addHeader(mockKey1, mockValue1);
-        task.addHeader(mockKey1, mockValue2);
+        builder.addHeader(mockKey1, mockValue1);
+        builder.addHeader(mockKey1, mockValue2);
 
-        task.addHeader(mockKey2, mockValue2);
+        builder.addHeader(mockKey2, mockValue2);
 
-        final Map<String, List<String>> headerMap = task.getHeaderMapFields();
+        final Map<String, List<String>> headerMap = builder.build().getHeaderMapFields();
         assertThat(headerMap).isNotNull();
 
         assertThat(headerMap).containsKey(mockKey1).containsKey(mockKey2);

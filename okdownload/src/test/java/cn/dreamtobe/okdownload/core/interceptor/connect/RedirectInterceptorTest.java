@@ -17,6 +17,7 @@
 package cn.dreamtobe.okdownload.core.interceptor.connect;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 
+import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
@@ -38,17 +40,23 @@ public class RedirectInterceptorTest {
 
     private RedirectInterceptor interceptor;
 
-    @Mock
-    private DownloadChain mockChain;
-    @Mock
-    private DownloadConnection.Connected mockConnected;
+    @Mock private DownloadChain mockChain;
+    @Mock private DownloadConnection.Connected mockConnected;
+
+
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        TestUtils.mockOkDownload();
+    }
 
     @Before
     public void setup() throws IOException {
         interceptor = new RedirectInterceptor();
+
         initMocks(this);
         when(mockChain.processConnect()).thenReturn(mockConnected);
     }
+
 
     @Test(expected = ProtocolException.class)
     public void interceptConnect_redirectMaxTimes_exception() throws IOException {

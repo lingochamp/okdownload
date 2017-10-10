@@ -18,20 +18,28 @@ package cn.dreamtobe.okdownload.core.dispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.TestUtils;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class CallbackDispatcherTest {
 
     private CallbackDispatcher dispatcher;
 
     @Before
     public void setup() {
+        TestUtils.initProvider();
         dispatcher = new CallbackDispatcher();
     }
 
@@ -41,8 +49,8 @@ public class CallbackDispatcherTest {
         final DownloadListener mockListener = mock(DownloadListener.class);
         when(mockTask.getListener()).thenReturn(mockListener);
 
-        final DownloadListener result = dispatcher.dispatch();
+        dispatcher.dispatch().taskStart(mockTask);
 
-        assertThat(result).isEqualTo(mockListener);
+        verify(mockListener).taskStart(mockTask);
     }
 }

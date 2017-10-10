@@ -116,7 +116,7 @@ public class DownloadDispatcher {
     }
 
     private boolean inspectForConflict(DownloadTask task, Collection<DownloadCall> calls) {
-        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher;
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
         for (DownloadCall call : calls) {
             if (call.task == task) {
                 callbackDispatcher.dispatch()

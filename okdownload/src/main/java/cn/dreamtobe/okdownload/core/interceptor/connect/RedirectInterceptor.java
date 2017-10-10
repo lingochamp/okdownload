@@ -72,7 +72,7 @@ public class RedirectInterceptor implements Interceptor.Connect {
                 connection.release();
             }
 
-            connection = OkDownload.with().connectionFactory.create(url);
+            connection = OkDownload.with().connectionFactory().create(url);
             chain.setConnection(connection);
             chain.setRedirectLocation(url);
 

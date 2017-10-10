@@ -114,13 +114,13 @@ public class DownloadChain implements Runnable {
                 url = info.profile.url;
             }
 
-            connection = OkDownload.with().connectionFactory.create(url);
+            connection = OkDownload.with().connectionFactory().create(url);
         }
         return connection;
     }
 
     void start() throws IOException {
-        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher;
+        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         // connect chain
         dispatcher.dispatch().connectStart(task, blockIndex);
         final RetryInterceptor retryInterceptor = new RetryInterceptor();

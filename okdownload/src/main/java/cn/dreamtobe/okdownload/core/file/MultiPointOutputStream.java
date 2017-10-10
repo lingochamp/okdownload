@@ -62,7 +62,7 @@ public class MultiPointOutputStream {
         this.syncBufferIntervalMills = syncBufferIntervalMills;
         this.info = info;
 
-        this.store = OkDownload.with().breakpointStore;
+        this.store = OkDownload.with().breakpointStore();
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
@@ -132,8 +132,8 @@ public class MultiPointOutputStream {
     private synchronized DownloadOutputStream outputStream(int blockIndex) throws FileNotFoundException {
         DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
         if (outputStream == null) {
-            outputStream = OkDownload.with().outputStreamFactory.create(
-                    OkDownload.with().context,
+            outputStream = OkDownload.with().outputStreamFactory().create(
+                    OkDownload.with().context(),
                     uri,
                     flushBufferSize);
             outputStreamMap.put(blockIndex, outputStream);

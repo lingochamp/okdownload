@@ -17,10 +17,7 @@
 package cn.dreamtobe.okdownload;
 
 import android.content.Context;
-import android.net.Uri;
 import android.support.annotation.NonNull;
-
-import java.io.File;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
@@ -36,17 +33,17 @@ import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 public class OkDownload {
 
-    private static volatile OkDownload SINGLETON;
+    static volatile OkDownload singleton;
 
-    public final DownloadDispatcher downloadDispatcher;
-    public final CallbackDispatcher callbackDispatcher;
-    public final BreakpointStore breakpointStore;
-    public final DownloadConnection.Factory connectionFactory;
-    public final DownloadOutputStream.Factory outputStreamFactory;
-    public final ProcessFileStrategy processFileStrategy;
-    public final DownloadStrategy downloadStrategy;
+    private final DownloadDispatcher downloadDispatcher;
+    private final CallbackDispatcher callbackDispatcher;
+    private final BreakpointStore breakpointStore;
+    private final DownloadConnection.Factory connectionFactory;
+    private final DownloadOutputStream.Factory outputStreamFactory;
+    private final ProcessFileStrategy processFileStrategy;
+    private final DownloadStrategy downloadStrategy;
 
-    public final Context context;
+    final Context context;
 
     DownloadMonitor monitor;
     boolean lenience = false;
@@ -65,42 +62,50 @@ public class OkDownload {
         this.downloadStrategy = downloadStrategy;
     }
 
-    public static DownloadTask obtainTask(String url, Uri fileUri) {
-        return new DownloadTask(url, fileUri);
-    }
+    public DownloadDispatcher downloadDispatcher() { return downloadDispatcher; }
 
-    public static DownloadTask obtainTask(String url, File file) {
-        return new DownloadTask(url, Uri.fromFile(file));
-    }
+    public CallbackDispatcher callbackDispatcher() { return callbackDispatcher; }
+
+    public BreakpointStore breakpointStore() { return breakpointStore; }
+
+    public DownloadConnection.Factory connectionFactory() { return connectionFactory; }
+
+    public DownloadOutputStream.Factory outputStreamFactory() { return outputStreamFactory; }
+
+    public ProcessFileStrategy processFileStrategy() { return processFileStrategy; }
+
+    public DownloadStrategy downloadStrategy() { return downloadStrategy; }
+
+    public Context context() { return this.context; }
 
     public void setMonitor(DownloadMonitor monitor) {
         this.monitor = monitor;
     }
 
     public static OkDownload with() {
-        if (SINGLETON == null) {
+        if (singleton == null) {
             synchronized (OkDownload.class) {
-                if (SINGLETON == null) {
+                if (singleton == null) {
                     if (OkDownloadProvider.context == null) {
                         throw new IllegalStateException("context == null");
                     }
-                    SINGLETON = new Builder(OkDownloadProvider.context).build();
+                    singleton = new Builder(OkDownloadProvider.context).build();
                 }
             }
         }
-        return SINGLETON;
+        return singleton;
     }
 
     public static void setSingletonInstance(@NonNull OkDownload okDownload) {
-        if (SINGLETON != null) {
+        if (singleton != null) {
             throw new IllegalArgumentException(("OkDownload must be null."));
         }
 
         synchronized (OkDownload.class) {
-            if (SINGLETON != null) {
+            if (singleton != null) {
                 throw new IllegalArgumentException(("OkDownload must be null."));
             }
-            SINGLETON = okDownload;
+            singleton = okDownload;
         }
     }
 

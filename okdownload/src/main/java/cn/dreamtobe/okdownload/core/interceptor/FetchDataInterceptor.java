@@ -47,7 +47,7 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
         this.outputStream = outputStream;
 
         this.task = task;
-        this.dispatcher = OkDownload.with().callbackDispatcher;
+        this.dispatcher = OkDownload.with().callbackDispatcher();
     }
 
     @Override

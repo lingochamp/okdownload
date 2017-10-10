@@ -1,6 +1,9 @@
 package cn.dreamtobe.okdownload;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
@@ -15,7 +18,11 @@ import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.robolectric.RuntimeEnvironment.application;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class OkDownloadTest {
 
     @Test(expected = IllegalArgumentException.class)
@@ -31,16 +38,16 @@ public class OkDownloadTest {
 
     @Test
     public void create_NoParam() {
-        OkDownload.Builder builder = new OkDownload.Builder();
+        OkDownload.Builder builder = new OkDownload.Builder(application);
         OkDownload okDownload = builder.build();
 
-        assertThat(okDownload.downloadDispatcher).isInstanceOf(DownloadDispatcher.class);
-        assertThat(okDownload.callbackDispatcher).isInstanceOf(CallbackDispatcher.class);
-        assertThat(okDownload.breakpointStore).isInstanceOf(BreakpointStoreOnCache.class);
-        assertThat(okDownload.connectionFactory).isInstanceOf(DownloadUrlConnection.Factory.class);
-        assertThat(okDownload.outputStreamFactory).isInstanceOf(DownloadOutputStream.Factory.class);
-        assertThat(okDownload.processFileStrategy).isInstanceOf(DefaultProcessFileStrategy.class);
-        assertThat(okDownload.downloadStrategy).isInstanceOf(DownloadStrategy.class);
+        assertThat(okDownload.downloadDispatcher()).isInstanceOf(DownloadDispatcher.class);
+        assertThat(okDownload.callbackDispatcher()).isInstanceOf(CallbackDispatcher.class);
+        assertThat(okDownload.breakpointStore()).isInstanceOf(BreakpointStoreOnCache.class);
+        assertThat(okDownload.connectionFactory()).isInstanceOf(DownloadUrlConnection.Factory.class);
+        assertThat(okDownload.outputStreamFactory()).isInstanceOf(DownloadOutputStream.Factory.class);
+        assertThat(okDownload.processFileStrategy()).isInstanceOf(DefaultProcessFileStrategy.class);
+        assertThat(okDownload.downloadStrategy()).isInstanceOf(DownloadStrategy.class);
     }
 
     @Test
@@ -55,7 +62,7 @@ public class OkDownloadTest {
         final DownloadMonitor mockMonitor = mock(DownloadMonitor.class);
 
         OkDownload.Builder builder =
-                new OkDownload.Builder()
+                new OkDownload.Builder(application)
                         .downloadDispatcher(mockDownloadDispatcher)
                         .callbackDispatcher(mockCallbackDispatcher)
                         .breakpointStore(mockBreakpointStore)
@@ -67,13 +74,15 @@ public class OkDownloadTest {
 
         OkDownload okDownload = builder.build();
 
-        assertThat(okDownload.downloadDispatcher).isEqualTo(mockDownloadDispatcher);
-        assertThat(okDownload.callbackDispatcher).isEqualTo(mockCallbackDispatcher);
-        assertThat(okDownload.breakpointStore).isEqualTo(mockBreakpointStore);
-        assertThat(okDownload.connectionFactory).isEqualTo(mockConnectionFactory);
-        assertThat(okDownload.outputStreamFactory).isEqualTo(mockOutputFactory);
-        assertThat(okDownload.processFileStrategy).isEqualTo(mockProcessFileStrategy);
-        assertThat(okDownload.downloadStrategy).isEqualTo(mockDownloadStrategy);
+        assertThat(okDownload.downloadDispatcher()).isEqualTo(mockDownloadDispatcher);
+        assertThat(okDownload.callbackDispatcher()).isEqualTo(mockCallbackDispatcher);
+        assertThat(okDownload.breakpointStore()).isEqualTo(mockBreakpointStore);
+        assertThat(okDownload.connectionFactory()).isEqualTo(mockConnectionFactory);
+        assertThat(okDownload.outputStreamFactory()).isEqualTo(mockOutputFactory);
+        assertThat(okDownload.processFileStrategy()).isEqualTo(mockProcessFileStrategy);
+        assertThat(okDownload.downloadStrategy()).isEqualTo(mockDownloadStrategy);
         assertThat(okDownload.monitor).isEqualTo(mockMonitor);
     }
+
+
 }

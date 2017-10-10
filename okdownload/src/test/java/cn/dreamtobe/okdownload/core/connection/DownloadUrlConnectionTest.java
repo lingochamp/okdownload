@@ -33,7 +33,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 public class DownloadUrlConnectionTest {
 
-
     @Mock
     private Proxy mockProxy;
 
@@ -44,7 +43,7 @@ public class DownloadUrlConnectionTest {
     private URL mockURL;
 
     @Before
-    public void setUp() throws Exception {
+    public void setup() throws Exception {
         initMocks(this);
 
         Mockito.when(mockURL.openConnection()).thenReturn(mockConnection);

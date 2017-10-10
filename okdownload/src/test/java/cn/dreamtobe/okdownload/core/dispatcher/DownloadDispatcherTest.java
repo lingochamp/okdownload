@@ -17,16 +17,20 @@
 package cn.dreamtobe.okdownload.core.dispatcher;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import cn.dreamtobe.okdownload.DownloadListener;
-import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.TestUtils;
+import cn.dreamtobe.okdownload.core.download.DownloadCall;
 
 import static cn.dreamtobe.okdownload.DownloadListener.EndCause.sameTaskBusy;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -46,6 +50,11 @@ public class DownloadDispatcherTest {
 
     private List<DownloadCall> runningAsyncCalls;
     private List<DownloadCall> runningSyncCalls;
+
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        TestUtils.mockOkDownload();
+    }
 
     @Before
     public void setup() {
@@ -94,8 +103,7 @@ public class DownloadDispatcherTest {
     }
 
     private void verifyTaskEnd(DownloadTask task, DownloadListener.EndCause cause, Exception realCause) {
-        final DownloadListener listener = task.getListener();
-        verify(listener).taskEnd(task, cause, realCause);
+        verify(OkDownload.with().callbackDispatcher().dispatch()).taskEnd(task, cause, realCause);
     }
 
     @Test

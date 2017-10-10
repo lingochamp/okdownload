@@ -63,11 +63,11 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Override
     public void execute() throws InterruptedException {
-        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher;
+        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         dispatcher.dispatch().taskStart(task);
 
         // get store
-        final BreakpointStore store = OkDownload.with().breakpointStore;
+        final BreakpointStore store = OkDownload.with().breakpointStore();
         BreakpointInfo info = store.get(task.getId());
         dispatcher.dispatch().breakpointData(task, info);
         if (info == null) {
@@ -77,7 +77,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         // init cache
         final DownloadCache cache = new DownloadCache(task, info);
 
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         if (downloadStrategy.isAvailable(task, info)) {
             // resume task
             final int blockCount = info.getBlockCount();
@@ -122,7 +122,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Override
     protected void finished() {
-        OkDownload.with().downloadDispatcher.finish(this);
+        OkDownload.with().downloadDispatcher().finish(this);
     }
 
     void parkForFirstConnection() {

@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
@@ -48,12 +49,9 @@ public class BreakpointInterceptorTest {
     @Mock
     private BreakpointInfo mockInfo;
 
-
     @BeforeClass
-    public static void setupClass() {
-        OkDownload.setSingletonInstance(new OkDownload.Builder()
-                .breakpointStore(mock(BreakpointStore.class))
-                .build());
+    public static void setupClass() throws IOException {
+        TestUtils.mockOkDownload();
     }
 
     @Before
@@ -67,7 +65,7 @@ public class BreakpointInterceptorTest {
         final DownloadChain mockChain = mock(DownloadChain.class);
         interceptor.interceptConnect(mockChain);
 
-        final BreakpointStore store = OkDownload.with().breakpointStore;
+        final BreakpointStore store = OkDownload.with().breakpointStore();
         verify(store).update(mockChain.getInfo());
         verify(mockChain).processConnect();
     }

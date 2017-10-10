@@ -37,7 +37,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
     private final BreakpointStore store;
 
     public BreakpointInterceptor() {
-        store = OkDownload.with().breakpointStore;
+        store = OkDownload.with().breakpointStore();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             final long contentLength = chain.getResponseContentLength();
             if (contentLength != CHUNKED_CONTENT_LENGTH) {
                 // split
-                final int blockCount = OkDownload.with().downloadStrategy.determineBlockCount(chain.task,
+                final int blockCount = OkDownload.with().downloadStrategy().determineBlockCount(chain.task,
                         contentLength, connected.getResponseHeaderFields());
                 splitBlock(blockCount, chain);
             }
@@ -61,7 +61,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         // update for connected.
-        final BreakpointStore store = OkDownload.with().breakpointStore;
+        final BreakpointStore store = OkDownload.with().breakpointStore();
         store.update(chain.getInfo());
 
         return connected;
@@ -95,7 +95,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
-        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher;
+        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         final int blockIndex = chain.blockIndex;
         final BreakpointInfo breakpointInfo = chain.getInfo();
         final BlockInfo blockInfo = breakpointInfo.getBlock(blockIndex);

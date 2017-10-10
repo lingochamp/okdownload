@@ -76,7 +76,7 @@ public class DownloadTask {
         this.autoCallbackToUIThread = autoCallbackToUIThread;
         this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
         this.headerMapFields = headerMapFields;
-        this.id = OkDownload.with().breakpointStore.createId(this);
+        this.id = OkDownload.with().breakpointStore().createId(this);
     }
 
     @Nullable
@@ -154,12 +154,12 @@ public class DownloadTask {
 
     public void enqueue(DownloadListener listener) {
         this.listener = listener;
-        OkDownload.with().downloadDispatcher.enqueue(this);
+        OkDownload.with().downloadDispatcher().enqueue(this);
     }
 
     public void execute(DownloadListener listener) {
         this.listener = listener;
-        OkDownload.with().downloadDispatcher.execute(this);
+        OkDownload.with().downloadDispatcher().execute(this);
     }
 
     public DownloadListener getListener() {

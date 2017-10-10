@@ -31,12 +31,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import cn.dreamtobe.okdownload.DownloadListener;
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
-import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
-import cn.dreamtobe.okdownload.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,16 +59,12 @@ public class DownloadCallTest {
     private BreakpointInfo mockInfo;
 
     @BeforeClass
-    public static void setupClass() {
-        OkDownload.setSingletonInstance(new OkDownload.Builder()
-                .breakpointStore(mock(BreakpointStore.class))
-                .downloadStrategy(mock(DownloadStrategy.class))
-                .downloadDispatcher(mock(DownloadDispatcher.class))
-                .build());
+    public static void setupClass() throws IOException {
+        TestUtils.mockOkDownload();
     }
 
     @Before
-    public void setUp() throws InterruptedException {
+    public void setup() throws InterruptedException {
         initMocks(this);
         when(mockTask.getUri()).thenReturn(mock(Uri.class));
         when(mockTask.getListener()).thenReturn(mock(DownloadListener.class));
@@ -79,14 +75,14 @@ public class DownloadCallTest {
         doReturn(mockFuture).when(call).startFirstBlock(any(DownloadChain.class));
         when(mockFuture.isDone()).thenReturn(true);
 
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
                 .thenReturn(true);
     }
 
     @Test
     public void execute_createIfNon() throws IOException, InterruptedException {
-        final BreakpointStore mockStore = OkDownload.with().breakpointStore;
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
 
         when(mockStore.get(anyInt())).thenReturn(null);
         when(mockStore.createAndInsert(mockTask)).thenReturn(mockInfo);
@@ -98,11 +94,11 @@ public class DownloadCallTest {
 
     @Test
     public void execute_availableResume_startAllBlocks() throws InterruptedException {
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
                 .thenReturn(true);
 
-        final BreakpointStore mockStore = OkDownload.with().breakpointStore;
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
         when(mockStore.get(anyInt())).thenReturn(mockInfo);
         when(mockInfo.getBlockCount()).thenReturn(3);
 
@@ -116,11 +112,11 @@ public class DownloadCallTest {
 
     @Test
     public void execute_notAvailableResume_startFirstAndOthers() throws InterruptedException {
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy;
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
                 .thenReturn(false);
 
-        final BreakpointStore mockStore = OkDownload.with().breakpointStore;
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
         when(mockStore.get(anyInt())).thenReturn(mockInfo);
         when(mockInfo.getBlockCount()).thenReturn(3);
         doNothing().when(call).parkForFirstConnection();
@@ -137,7 +133,7 @@ public class DownloadCallTest {
     public void finished_callToDispatch() {
         call.finished();
 
-        verify(OkDownload.with().downloadDispatcher).finish(call);
+        verify(OkDownload.with().downloadDispatcher()).finish(call);
     }
 
 }

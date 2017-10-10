@@ -37,6 +37,10 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         return null;
     }
 
+    @Override public void onSyncToFilesystemSuccess(BreakpointInfo info, int blockIndex, long increaseLength) {
+
+    }
+
     @Override
     public boolean update(BreakpointInfo breakpointInfo) {
         final BreakpointInfo onCacheOne = this.breakpointMap.get(breakpointInfo.id);
