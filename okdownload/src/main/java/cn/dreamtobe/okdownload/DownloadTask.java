@@ -164,6 +164,10 @@ public class DownloadTask {
         OkDownload.with().downloadDispatcher().execute(this);
     }
 
+    public void cancel() {
+        OkDownload.with().downloadDispatcher().cancel(this);
+    }
+
     public DownloadListener getListener() {
         return this.listener;
     }

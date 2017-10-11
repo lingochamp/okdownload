@@ -97,6 +97,49 @@ public class DownloadDispatcher {
         syncRunCall(call);
     }
 
+    public synchronized void cancelAll() {
+        for (DownloadCall call : readyAsyncCalls) {
+            call.cancel();
+        }
+
+        for (DownloadCall call : runningAsyncCalls) {
+            call.cancel();
+        }
+
+        for (DownloadCall call : runningSyncCalls) {
+            call.cancel();
+        }
+    }
+
+    public synchronized boolean cancel(DownloadTask task) {
+        for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
+            DownloadCall call = i.next();
+            if (call.task == task) {
+                // cancel manually from queue.
+                i.remove();
+                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task, EndCause.CANCELED,
+                        null);
+                return true;
+            }
+        }
+
+        for (DownloadCall call : runningAsyncCalls) {
+            if (call.task == task) {
+                call.cancel();
+                return true;
+            }
+        }
+
+        for (DownloadCall call : runningSyncCalls) {
+            if (call.task == task) {
+                call.cancel();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // this method convenient for unit-test.
     void syncRunCall(DownloadCall call) {
         call.run();
