@@ -73,4 +73,12 @@ public class BreakpointInfo {
     public Uri getUri() {
         return uri;
     }
+
+    public BreakpointInfo copy() {
+        final BreakpointInfo info = new BreakpointInfo(id, url, uri);
+        for (BlockInfo blockInfo : blockInfoList) {
+            info.blockInfoList.add(blockInfo.copy());
+        }
+        return info;
+    }
 }

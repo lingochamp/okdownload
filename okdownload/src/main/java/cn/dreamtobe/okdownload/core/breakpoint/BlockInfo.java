@@ -18,10 +18,6 @@ package cn.dreamtobe.okdownload.core.breakpoint;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Created by Jacksgong on 19/09/2017.
- */
-
 public class BlockInfo {
     public final long startOffset;
     public final long contentLength;
@@ -39,5 +35,9 @@ public class BlockInfo {
 
     public void increaseCurrentOffset(long increaseLength) {
         this.currentOffset.addAndGet(increaseLength);
+    }
+
+    public BlockInfo copy() {
+        return new BlockInfo(startOffset, contentLength, currentOffset.get());
     }
 }

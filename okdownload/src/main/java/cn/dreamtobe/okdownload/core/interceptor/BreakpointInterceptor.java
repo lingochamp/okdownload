@@ -56,7 +56,9 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
         // update for connected.
         final BreakpointStore store = OkDownload.with().breakpointStore();
-        store.update(chain.getInfo());
+        if (!store.update(chain.getInfo())) {
+            throw new IOException("Update store failed!");
+        }
 
         return connected;
     }

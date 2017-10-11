@@ -119,6 +119,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 dispatcher.dispatch().taskEnd(task, EndCause.CANCELED, null);
             } else {
                 dispatcher.dispatch().taskEnd(task, EndCause.COMPLETE, null);
+                store.completeDownload(task.getId());
             }
             break;
         }

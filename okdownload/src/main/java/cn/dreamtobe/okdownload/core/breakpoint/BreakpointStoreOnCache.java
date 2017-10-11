@@ -16,6 +16,7 @@
 
 package cn.dreamtobe.okdownload.core.breakpoint;
 
+import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,25 +34,26 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     }
 
     @Override
-    public BreakpointInfo createAndInsert(DownloadTask task) {
+    public BreakpointInfo createAndInsert(@NonNull DownloadTask task) {
         return null;
     }
 
-    @Override public void onSyncToFilesystemSuccess(BreakpointInfo info, int blockIndex,
+    @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
                                                     long increaseLength) {
-        info.getBlock(blockIndex).increaseCurrentOffset(increaseLength);
+        final BreakpointInfo onCacheOne = this.breakpointMap.get(info.id);
+        if (info != onCacheOne) throw new IllegalArgumentException("Info not on store!");
+
+        onCacheOne.getBlock(blockIndex).increaseCurrentOffset(increaseLength);
     }
 
     @Override
-    public boolean update(BreakpointInfo breakpointInfo) {
+    public boolean update(@NonNull BreakpointInfo breakpointInfo) {
         final BreakpointInfo onCacheOne = this.breakpointMap.get(breakpointInfo.id);
         if (onCacheOne != null) {
-            onCacheOne.etag = breakpointInfo.etag;
-            onCacheOne.blockInfoList.clear();
-            // we don't need to deep clone this list, because of the block info only contain val
-            // params.
-            // todo maybe we need crash when  add all failed.
-            onCacheOne.blockInfoList.addAll(breakpointInfo.blockInfoList);
+            if (onCacheOne == breakpointInfo) return true;
+
+            // replace
+            this.breakpointMap.put(breakpointInfo.id, breakpointInfo.copy());
             return true;
         }
 
@@ -68,7 +70,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     }
 
     @Override
-    public int createId(DownloadTask task) {
+    public int createId(@NonNull DownloadTask task) {
         return identifyGenerator.getAndIncrement();
     }
 }

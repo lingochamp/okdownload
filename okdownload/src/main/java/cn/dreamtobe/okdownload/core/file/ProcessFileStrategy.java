@@ -18,10 +18,6 @@ package cn.dreamtobe.okdownload.core.file;
 
 import android.net.Uri;
 
-/**
- * Created by Jacksgong on 24/09/2017.
- */
-
 public interface ProcessFileStrategy {
     DownloadOutputStream createProcessFile(Uri targetFileUri);
 

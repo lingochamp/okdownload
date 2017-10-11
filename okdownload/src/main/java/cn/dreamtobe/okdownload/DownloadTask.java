@@ -60,7 +60,7 @@ public class DownloadTask {
     private volatile SparseArray<Object> keyTagMap;
     private Object tag;
 
-    private AtomicLong lastCallbackProcessTimestamp;
+    private final AtomicLong lastCallbackProcessTimestamp;
 
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
@@ -76,6 +76,7 @@ public class DownloadTask {
         this.autoCallbackToUIThread = autoCallbackToUIThread;
         this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
         this.headerMapFields = headerMapFields;
+        this.lastCallbackProcessTimestamp = new AtomicLong();
         this.id = OkDownload.with().breakpointStore().createId(this);
     }
 
