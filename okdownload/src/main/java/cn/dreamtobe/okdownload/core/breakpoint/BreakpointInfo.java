@@ -24,12 +24,16 @@ import java.util.List;
 
 public class BreakpointInfo {
     final int id;
-    public final Profile profile;
+    public final String url;
+    String etag;
+    public final Uri uri;
+
     final List<BlockInfo> blockInfoList;
 
-    public BreakpointInfo(int id, Profile profile) {
+    public BreakpointInfo(int id, String url, Uri uri) {
         this.id = id;
-        this.profile = profile;
+        this.url = url;
+        this.uri = uri;
         this.blockInfoList = new ArrayList<>();
     }
 
@@ -53,23 +57,20 @@ public class BreakpointInfo {
         return blockInfoList.size();
     }
 
-    public static class Profile {
-        public final String url;
-        String etag;
-        public final Uri uri;
+    public void setEtag(String etag) {
+        this.etag = etag;
+    }
 
-        public Profile(String url, Uri uri) {
-            this.url = url;
-            this.uri = uri;
-        }
+    public @Nullable
+    String getEtag() {
+        return this.etag;
+    }
 
-        public void setEtag(String etag) {
-            this.etag = etag;
-        }
+    public String getUrl() {
+        return url;
+    }
 
-        public @Nullable
-        String getEtag() {
-            return this.etag;
-        }
+    public Uri getUri() {
+        return uri;
     }
 }

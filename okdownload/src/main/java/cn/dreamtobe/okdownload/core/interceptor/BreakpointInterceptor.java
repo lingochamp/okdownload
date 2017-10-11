@@ -23,26 +23,20 @@ import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.exception.CanceledException;
 
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
-/**
- * The number 2 interceptor.
- */
-
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
-
-    private final BreakpointStore store;
-
-    public BreakpointInterceptor() {
-        store = OkDownload.with().breakpointStore();
-    }
 
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         final DownloadConnection.Connected connected = chain.processConnect();
+
+        if (chain.getCache().isInterrupt()) {
+            throw CanceledException.SIGNAL;
+        }
 
         // handle first connect.
         if (chain.isOtherBlockPark()) {
@@ -53,7 +47,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             if (contentLength != CHUNKED_CONTENT_LENGTH) {
                 // split
                 final int blockCount = OkDownload.with().downloadStrategy().determineBlockCount(chain.task,
-                        contentLength, connected.getResponseHeaderFields());
+                        contentLength, connected);
                 splitBlock(blockCount, chain);
             }
 
@@ -95,7 +89,6 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
-        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         final int blockIndex = chain.blockIndex;
         final BreakpointInfo breakpointInfo = chain.getInfo();
         final BlockInfo blockInfo = breakpointInfo.getBlock(blockIndex);
@@ -112,7 +105,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             }
 
             fetchLength += processFetchLength;
-            blockInfo.processCurrentOffset(processFetchLength);
+            blockInfo.increaseCurrentOffset(processFetchLength);
         }
 
         if (fetchLength != contentLength) {

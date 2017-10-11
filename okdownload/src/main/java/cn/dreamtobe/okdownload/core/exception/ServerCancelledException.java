@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.core.interceptor.connect;
+package cn.dreamtobe.okdownload.core.exception;
 
 import java.io.IOException;
 
-import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
+public class ServerCancelledException extends IOException {
+    private final int responseCode;
 
-public class CallServerInterceptor implements Interceptor.Connect {
-    @Override
-    public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
-        return chain.getConnectionOrCreate().execute();
+    public ServerCancelledException(int responseCode) {
+        super("Response code can't handled on internal: " + responseCode);
+        this.responseCode = responseCode;
+    }
+
+    public int getResponseCode() {
+        return responseCode;
     }
 }

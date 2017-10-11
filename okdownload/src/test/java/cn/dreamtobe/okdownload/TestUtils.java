@@ -23,6 +23,8 @@ import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
+import cn.dreamtobe.okdownload.core.download.DownloadCall;
+import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -50,5 +52,16 @@ public class TestUtils {
 
     public static void initProvider() {
         OkDownloadProvider.context = application;
+    }
+
+    public static DownloadChain mockDownloadChain() throws IOException {
+        final DownloadChain mockChain = mock(DownloadChain.class);
+        doReturn(mock(DownloadConnection.Connected.class)).when(mockChain).processConnect();
+
+        final DownloadCall.DownloadCache mockCache = mock(DownloadCall.DownloadCache.class);
+        when(mockCache.isInterrupt()).thenReturn(false);
+        when(mockChain.getCache()).thenReturn(mockCache);
+        
+        return mockChain;
     }
 }

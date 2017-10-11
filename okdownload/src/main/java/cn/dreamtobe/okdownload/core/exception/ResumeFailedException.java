@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.core.interceptor.connect;
+package cn.dreamtobe.okdownload.core.exception;
 
 import java.io.IOException;
 
-import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
+import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
 
-public class CallServerInterceptor implements Interceptor.Connect {
-    @Override
-    public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
-        return chain.getConnectionOrCreate().execute();
+public class ResumeFailedException extends IOException {
+    private final ResumeFailedCause resumeFailedCause;
+
+    public ResumeFailedException(ResumeFailedCause cause) {
+        this.resumeFailedCause = cause;
+    }
+
+    public ResumeFailedCause getResumeFailedCause() {
+        return resumeFailedCause;
     }
 }

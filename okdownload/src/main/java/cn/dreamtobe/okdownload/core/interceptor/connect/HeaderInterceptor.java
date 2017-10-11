@@ -22,10 +22,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.exception.CanceledException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 import cn.dreamtobe.okdownload.core.util.LogUtil;
 
@@ -37,7 +40,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         final BreakpointInfo info = chain.getInfo();
-        final DownloadConnection connection = chain.getConnection();
+        final DownloadConnection connection = chain.getConnectionOrCreate();
 
         // add user customize header
         final Map<String, List<String>> userRequestHeaderField = chain.task.getHeaderMapFields();
@@ -66,19 +69,27 @@ public class HeaderInterceptor implements Interceptor.Connect {
         connection.addHeader("Range", range);
 
         // add etag if exist
-        final BreakpointInfo.Profile profile = info.profile;
-        final String etag = profile.getEtag();
+        final String etag = info.getEtag();
         if (!TextUtils.isEmpty(etag)) {
             connection.addHeader("If-Match", etag);
         }
 
+        if (chain.getCache().isInterrupt()) {
+            throw CanceledException.SIGNAL;
+        }
+
         DownloadConnection.Connected connected = chain.processConnect();
 
-        // etag
-        final String newEtag = connected.getResponseHeaderField("Etag");
-        if (!TextUtils.isEmpty(newEtag) && !newEtag.equals(etag)) {
-            info.profile.setEtag(etag);
+        if (chain.getCache().isInterrupt()) {
+            throw CanceledException.SIGNAL;
         }
+
+        // if precondition failed.
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = OkDownload.with()
+                .downloadStrategy().resumeAvailableResponseCheck(connected, blockIndex, info);
+        responseCheck.inspect();
+
+        info.setEtag(etag);
         // content-length
         final String contentLengthStr = connected.getResponseHeaderField("Content-Length");
         long contentLength;

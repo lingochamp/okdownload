@@ -38,14 +38,14 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     }
 
     @Override public void onSyncToFilesystemSuccess(BreakpointInfo info, int blockIndex, long increaseLength) {
-
+        info.getBlock(blockIndex).increaseCurrentOffset(increaseLength);
     }
 
     @Override
     public boolean update(BreakpointInfo breakpointInfo) {
         final BreakpointInfo onCacheOne = this.breakpointMap.get(breakpointInfo.id);
         if (onCacheOne != null) {
-            onCacheOne.profile.etag = breakpointInfo.profile.etag;
+            onCacheOne.etag = breakpointInfo.etag;
             onCacheOne.blockInfoList.clear();
             // we don't need to deep clone this list, because of the block info only contain val params.
             // todo maybe we need crash when  add all failed.
@@ -58,6 +58,10 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
     @Override
     public void completeDownload(int id) {
+        breakpointMap.remove(id);
+    }
+
+    @Override public void discard(int id) {
         breakpointMap.remove(id);
     }
 

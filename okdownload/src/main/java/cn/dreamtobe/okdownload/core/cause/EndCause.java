@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.core.interceptor.connect;
+package cn.dreamtobe.okdownload.core.cause;
 
-import java.io.IOException;
-
-import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
-
-public class CallServerInterceptor implements Interceptor.Connect {
-    @Override
-    public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
-        return chain.getConnectionOrCreate().execute();
-    }
+public enum EndCause {
+    COMPLETE,
+    ERROR,
+    CANCELED,
+    FILE_BUSY,
+    SAME_TASK_BUSY,
 }

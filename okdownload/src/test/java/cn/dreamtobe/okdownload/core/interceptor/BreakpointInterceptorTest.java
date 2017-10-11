@@ -24,13 +24,14 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.OkDownload;
-import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
+import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
+import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -46,23 +47,26 @@ public class BreakpointInterceptorTest {
 
     private BreakpointInterceptor interceptor;
 
-    @Mock
-    private BreakpointInfo mockInfo;
+    @Mock private BreakpointInfo mockInfo;
+
+    private DownloadChain mockChain;
 
     @BeforeClass
     public static void setupClass() throws IOException {
-        TestUtils.mockOkDownload();
+        mockOkDownload();
     }
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         initMocks(this);
+
+        mockChain = mockDownloadChain();
+
         interceptor = spy(new BreakpointInterceptor());
     }
 
     @Test
     public void interceptConnect_process() throws IOException {
-        final DownloadChain mockChain = mock(DownloadChain.class);
         interceptor.interceptConnect(mockChain);
 
         final BreakpointStore store = OkDownload.with().breakpointStore();
@@ -72,7 +76,6 @@ public class BreakpointInterceptorTest {
 
     @Test
     public void interceptConnect_otherBlockPark_unpark() throws IOException {
-        final DownloadChain mockChain = mock(DownloadChain.class);
         when(mockChain.isOtherBlockPark()).thenReturn(true);
         when(mockChain.processConnect()).thenReturn(mock(DownloadConnection.Connected.class));
         doNothing().when(interceptor).splitBlock(anyInt(), eq(mockChain));
@@ -84,11 +87,9 @@ public class BreakpointInterceptorTest {
 
     @Test
     public void splitBlock() throws IOException {
-        final DownloadChain mockChain = mock(DownloadChain.class);
         when(mockChain.getResponseContentLength()).thenReturn(6666L);
 
-        final BreakpointInfo info = spy(new BreakpointInfo(0,
-                new BreakpointInfo.Profile("", null)));
+        final BreakpointInfo info = spy(new BreakpointInfo(0, "", null));
         when(mockChain.getInfo()).thenReturn(info);
 
         interceptor.splitBlock(5, mockChain);
@@ -107,7 +108,6 @@ public class BreakpointInterceptorTest {
 
     @Test
     public void interceptFetch_finish() throws IOException {
-        final DownloadChain mockChain = mock(DownloadChain.class);
         final BlockInfo blockInfo = new BlockInfo(0, 10, 0);
 
         when(mockChain.getResponseContentLength()).thenReturn(new Long(10));
@@ -123,7 +123,6 @@ public class BreakpointInterceptorTest {
 
     @Test(expected = IOException.class)
     public void interceptFetch_contentLengthNotMatch_exception() throws IOException {
-        final DownloadChain mockChain = mock(DownloadChain.class);
         final BlockInfo blockInfo = new BlockInfo(0, 1, 0);
 
         when(mockChain.getInfo()).thenReturn(mockInfo);

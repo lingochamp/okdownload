@@ -19,23 +19,32 @@ package cn.dreamtobe.okdownload.core.interceptor;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
+import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
-
-/**
- * The number 1 interceptor.
- */
+import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
+import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
 
 public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
     @Override
-    public DownloadConnection.Connected interceptConnect(DownloadChain chain) {
+    public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
+        final DownloadCall.DownloadCache cache = chain.getCache();
+
+
         try {
+            if (cache.isInterrupt()) {
+                throw new IOException("Canceled");
+            }
             return chain.processConnect();
         } catch (IOException e) {
-            e.printStackTrace();
+            handleException(e, cache);
+            final DownloadConnection connection = chain.getConnection();
+            if (connection != null) {
+                connection.release();
+            }
+            throw e;
         }
-
-        throw new IllegalStateException();
     }
 
     @Override
@@ -43,9 +52,23 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
         try {
             return chain.processFetch();
         } catch (IOException e) {
+            handleException(e, chain.getCache());
+            throw e;
+        } finally {
+            chain.getOutputStream().close(chain.blockIndex);
+        }
+    }
+
+    private static void handleException(IOException e, DownloadCall.DownloadCache cache) {
+        if (e instanceof ResumeFailedException) {
+            cache.setPreconditionFailed(e);
+        } else if (e instanceof ServerCancelledException) {
+            cache.setServerCanceled(e);
+        } else if (!(e instanceof CanceledException)) {
+            cache.setUnknownError(e);
             e.printStackTrace();
         }
 
-        throw new IllegalStateException();
+        // canceled here.
     }
 }

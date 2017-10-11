@@ -37,7 +37,7 @@ public class BlockInfo {
         return this.currentOffset.get();
     }
 
-    public void processCurrentOffset(long fetchLength) {
-        this.currentOffset.addAndGet(fetchLength);
+    public void increaseCurrentOffset(long increaseLength) {
+        this.currentOffset.addAndGet(increaseLength);
     }
 }

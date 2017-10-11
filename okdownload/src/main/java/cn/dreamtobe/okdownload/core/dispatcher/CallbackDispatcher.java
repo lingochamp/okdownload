@@ -24,6 +24,8 @@ import android.support.annotation.Nullable;
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.cause.EndCause;
+import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 
 // Dispatch callback to listeners

@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.core.interceptor.connect;
+package cn.dreamtobe.okdownload.core.exception;
 
 import java.io.IOException;
 
-import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
-
-public class CallServerInterceptor implements Interceptor.Connect {
-    @Override
-    public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
-        return chain.getConnectionOrCreate().execute();
+public class CanceledException extends IOException {
+    private CanceledException() {
+        super("Canceled");
     }
+
+    public static CanceledException SIGNAL = new CanceledException() {
+        @Override public StackTraceElement[] getStackTrace() {
+            throw new IllegalAccessError("Stack is ignored for signal");
+        }
+
+        @Override public void printStackTrace() {
+            throw new IllegalAccessError("Stack is ignored for signal");
+        }
+    };
 }

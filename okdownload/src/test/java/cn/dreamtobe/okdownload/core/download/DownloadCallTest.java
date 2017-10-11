@@ -75,13 +75,12 @@ public class DownloadCallTest {
         doReturn(mockFuture).when(call).startFirstBlock(any(DownloadChain.class));
         when(mockFuture.isDone()).thenReturn(true);
 
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
-        when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
-                .thenReturn(true);
     }
 
     @Test
     public void execute_createIfNon() throws IOException, InterruptedException {
+        mockLocalCheck(true);
+
         final BreakpointStore mockStore = OkDownload.with().breakpointStore();
 
         when(mockStore.get(anyInt())).thenReturn(null);
@@ -94,9 +93,7 @@ public class DownloadCallTest {
 
     @Test
     public void execute_availableResume_startAllBlocks() throws InterruptedException {
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
-        when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
-                .thenReturn(true);
+        mockLocalCheck(true);
 
         final BreakpointStore mockStore = OkDownload.with().breakpointStore();
         when(mockStore.get(anyInt())).thenReturn(mockInfo);
@@ -112,9 +109,7 @@ public class DownloadCallTest {
 
     @Test
     public void execute_notAvailableResume_startFirstAndOthers() throws InterruptedException {
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
-        when(downloadStrategy.isAvailable(any(DownloadTask.class), any(BreakpointInfo.class)))
-                .thenReturn(false);
+        mockLocalCheck(false);
 
         final BreakpointStore mockStore = OkDownload.with().breakpointStore();
         when(mockStore.get(anyInt())).thenReturn(mockInfo);
@@ -134,6 +129,14 @@ public class DownloadCallTest {
         call.finished();
 
         verify(OkDownload.with().downloadDispatcher()).finish(call);
+    }
+
+    private void mockLocalCheck(boolean isAvailable) {
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
+        DownloadStrategy.ResumeAvailableLocalCheck localCheck = mock(DownloadStrategy.ResumeAvailableLocalCheck.class);
+        when(localCheck.isAvailable()).thenReturn(isAvailable);
+        when(downloadStrategy.resumeAvailableLocalCheck(any(DownloadTask.class), any(BreakpointInfo.class)))
+                .thenReturn(localCheck);
     }
 
 }

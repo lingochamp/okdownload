@@ -16,11 +16,26 @@
 
 package cn.dreamtobe.okdownload.core.breakpoint;
 
+import android.text.TextUtils;
+
 import java.io.File;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
+import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
+import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
+import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
+
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.FILE_NOT_EXIST;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREATED_RANGE_NOT_FROM_0;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETAG_CHANGED;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRECONDITION_FAILED;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_RESET_RANGE_NOT_FROM_0;
 
 public class DownloadStrategy {
 
@@ -33,11 +48,17 @@ public class DownloadStrategy {
     // 4 connection: [50MB, 100MB)
     private final static long FOUR_CONNECTION_UPPER_LIMIT = 100 * 1024 * 1024; // 100MB
 
-    public boolean isAvailable(DownloadTask task, BreakpointInfo info) {
-        return info.getBlockCount() > 0 && new File(task.getPath()).exists();
+    public ResumeAvailableLocalCheck resumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
+        return new ResumeAvailableLocalCheck(task, info);
     }
 
-    public int determineBlockCount(DownloadTask task, long totalLength, Map<String, List<String>> responseHeaderFields) {
+    public ResumeAvailableResponseCheck resumeAvailableResponseCheck(DownloadConnection.Connected connected,
+                                                                     int blockIndex,
+                                                                     BreakpointInfo info) {
+        return new ResumeAvailableResponseCheck(connected, blockIndex, info);
+    }
+
+    public int determineBlockCount(DownloadTask task, long totalLength, DownloadConnection.Connected connected) {
         if (totalLength < ONE_CONNECTION_UPPER_LIMIT) {
             return 1;
         }
@@ -55,5 +76,109 @@ public class DownloadStrategy {
         }
 
         return 5;
+    }
+
+    public static class ResumeAvailableLocalCheck {
+        private final boolean isAvailable;
+        private final boolean fileExist;
+        private final boolean infoRight;
+        private final DownloadTask task;
+        private final BreakpointInfo info;
+
+        protected ResumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
+            this.fileExist = new File(task.getPath()).exists();
+            this.infoRight = info.getBlockCount() > 0;
+            this.isAvailable = infoRight && fileExist;
+
+            this.task = task;
+            this.info = info;
+        }
+
+        public boolean isAvailable() {
+            return this.isAvailable;
+        }
+
+        public void callbackCause() {
+            final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
+            if (isAvailable) {
+                dispatcher.dispatch().downloadFromBreakpoint(task, info);
+            } else if (!fileExist) {
+                dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
+            } else if (!infoRight) {
+                dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
+            } else {
+                throw new IllegalStateException();
+            }
+        }
+    }
+
+    public static class ResumeAvailableResponseCheck {
+        private DownloadConnection.Connected connected;
+        private BreakpointInfo info;
+        private int blockIndex;
+
+        protected ResumeAvailableResponseCheck(DownloadConnection.Connected connected, int blockIndex, BreakpointInfo info) {
+            this.connected = connected;
+            this.info = info;
+            this.blockIndex = blockIndex;
+        }
+
+        public void inspect() throws IOException {
+            final BlockInfo blockInfo = info.getBlock(blockIndex);
+            boolean isServerCancelled = false;
+            ResumeFailedCause resumeFailedCause = null;
+
+            final int code = connected.getResponseCode();
+            final String etag = info.getEtag();
+            final String newEtag = connected.getResponseHeaderField("Etag");
+
+            do {
+                if (code == HttpURLConnection.HTTP_PRECON_FAILED) {
+                    resumeFailedCause = RESPONSE_PRECONDITION_FAILED;
+                    break;
+                }
+
+                if (!TextUtils.isEmpty(newEtag) && !newEtag.equals(etag)) {
+                    // etag changed.
+                    resumeFailedCause = RESPONSE_ETAG_CHANGED;
+                    break;
+                }
+
+                if (code == HttpURLConnection.HTTP_CREATED && blockInfo.getCurrentOffset() != 0) {
+                    // The request has been fulfilled and has resulted in one or more new resources being created.
+                    // mark this case is precondition failed for
+                    // 1. checkout whether accept partial
+                    // 2. 201 means new resources so range must be from beginning otherwise it can't match
+                    // local range.
+                    resumeFailedCause = RESPONSE_CREATED_RANGE_NOT_FROM_0;
+                    break;
+                }
+
+                if (code == HttpURLConnection.HTTP_RESET && blockInfo.getCurrentOffset() != 0) {
+                    resumeFailedCause = RESPONSE_RESET_RANGE_NOT_FROM_0;
+                    break;
+                }
+
+                if (code != HttpURLConnection.HTTP_PARTIAL && code != HttpURLConnection.HTTP_OK) {
+                    isServerCancelled = true;
+                    break;
+                }
+
+                if (code == HttpURLConnection.HTTP_OK && blockInfo.getCurrentOffset() != 0) {
+                    isServerCancelled = true;
+                    break;
+                }
+            } while (false);
+
+            if (resumeFailedCause != null) {
+                // resume failed, relaunch from beginning.
+                throw new ResumeFailedException(resumeFailedCause);
+            }
+
+            if (isServerCancelled) {
+                // server cancelled, end task.
+                throw new ServerCancelledException(code);
+            }
+        }
     }
 }

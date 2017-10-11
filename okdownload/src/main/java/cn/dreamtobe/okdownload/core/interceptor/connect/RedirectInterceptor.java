@@ -23,6 +23,7 @@ import java.net.ProtocolException;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.exception.CanceledException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 
 public class RedirectInterceptor implements Interceptor.Connect {
@@ -49,8 +50,12 @@ public class RedirectInterceptor implements Interceptor.Connect {
         int redirectCount = 0;
 
         String url;
-        DownloadConnection connection = chain.getConnection();
+        DownloadConnection connection = chain.getConnectionOrCreate();
         while (true) {
+
+            if (chain.getCache().isInterrupt()) {
+                throw CanceledException.SIGNAL;
+            }
 
             final DownloadConnection.Connected connected = chain.processConnect();
             final int code = connected.getResponseCode();

@@ -25,6 +25,7 @@ import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.exception.CanceledException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
 public class FetchDataInterceptor implements Interceptor.Fetch {
@@ -52,6 +53,10 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
 
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
+        if (chain.getCache().isInterrupt()) {
+            throw CanceledException.SIGNAL;
+        }
+
         // fetch
         int fetchLength = inputStream.read(readBuffer);
 

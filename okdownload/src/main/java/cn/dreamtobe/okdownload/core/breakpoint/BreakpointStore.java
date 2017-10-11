@@ -34,5 +34,7 @@ public interface BreakpointStore {
 
     void completeDownload(int id);
 
+    void discard(int id);
+
     int createId(DownloadTask task);
 }

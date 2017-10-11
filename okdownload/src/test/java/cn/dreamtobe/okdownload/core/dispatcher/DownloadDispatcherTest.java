@@ -30,9 +30,10 @@ import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.TestUtils;
+import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 
-import static cn.dreamtobe.okdownload.DownloadListener.EndCause.sameTaskBusy;
+import static cn.dreamtobe.okdownload.core.cause.EndCause.SAME_TASK_BUSY;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -97,12 +98,12 @@ public class DownloadDispatcherTest {
         assertThat(runningAsyncCalls).containsOnlyOnce(runningAsyncCall);
         assertThat(runningSyncCalls).containsOnlyOnce(runningSyncCall);
 
-        verifyTaskEnd(mockReadyTask, sameTaskBusy, null);
-        verifyTaskEnd(mockRunningAsyncTask, sameTaskBusy, null);
-        verifyTaskEnd(mockRunningSyncTask, sameTaskBusy, null);
+        verifyTaskEnd(mockReadyTask, SAME_TASK_BUSY, null);
+        verifyTaskEnd(mockRunningAsyncTask, SAME_TASK_BUSY, null);
+        verifyTaskEnd(mockRunningSyncTask, SAME_TASK_BUSY, null);
     }
 
-    private void verifyTaskEnd(DownloadTask task, DownloadListener.EndCause cause, Exception realCause) {
+    private void verifyTaskEnd(DownloadTask task, EndCause cause, Exception realCause) {
         verify(OkDownload.with().callbackDispatcher().dispatch()).taskEnd(task, cause, realCause);
     }
 

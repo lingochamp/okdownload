@@ -25,10 +25,11 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 
-import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
+import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
+import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static cn.dreamtobe.okdownload.core.interceptor.connect.RedirectInterceptor.MAX_REDIRECT_TIMES;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -40,13 +41,14 @@ public class RedirectInterceptorTest {
 
     private RedirectInterceptor interceptor;
 
-    @Mock private DownloadChain mockChain;
+    private DownloadChain mockChain;
+
     @Mock private DownloadConnection.Connected mockConnected;
 
 
     @BeforeClass
     public static void setupClass() throws IOException {
-        TestUtils.mockOkDownload();
+        mockOkDownload();
     }
 
     @Before
@@ -54,6 +56,8 @@ public class RedirectInterceptorTest {
         interceptor = new RedirectInterceptor();
 
         initMocks(this);
+
+        mockChain = mockDownloadChain();
         when(mockChain.processConnect()).thenReturn(mockConnected);
     }
 

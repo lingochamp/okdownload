@@ -30,11 +30,11 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import cn.dreamtobe.okdownload.DownloadListener;
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
-import cn.dreamtobe.okdownload.DownloadTask;
 
 public class DownloadDispatcher {
     // same id will be discard
@@ -120,13 +120,13 @@ public class DownloadDispatcher {
         for (DownloadCall call : calls) {
             if (call.task == task) {
                 callbackDispatcher.dispatch()
-                        .taskEnd(task, DownloadListener.EndCause.sameTaskBusy, null);
+                        .taskEnd(task, EndCause.SAME_TASK_BUSY, null);
                 return true;
             }
 
             if (new File(call.task.getPath()).equals(new File(task.getPath()))) {
                 callbackDispatcher.dispatch()
-                        .taskEnd(task, DownloadListener.EndCause.fileBusy, null);
+                        .taskEnd(task, EndCause.FILE_BUSY, null);
                 return true;
             }
         }

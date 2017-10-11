@@ -16,6 +16,9 @@
 
 package cn.dreamtobe.okdownload.core.download;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +30,7 @@ import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
+import cn.dreamtobe.okdownload.core.exception.CanceledException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.interceptor.BreakpointInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.FetchDataInterceptor;
@@ -94,6 +98,10 @@ public class DownloadChain implements Runnable {
         this.connection = connection;
     }
 
+    public DownloadCall.DownloadCache getCache() {
+        return cache;
+    }
+
     public void setRedirectLocation(String location) {
         this.cache.setRedirectLocation(location);
     }
@@ -102,7 +110,11 @@ public class DownloadChain implements Runnable {
         return this.cache.getOutputStream();
     }
 
-    public DownloadConnection getConnection() throws IOException {
+    @Nullable public DownloadConnection getConnection() {
+        return this.connection;
+    }
+
+    @NonNull public DownloadConnection getConnectionOrCreate() throws IOException {
         if (connection == null) {
             final String url;
             final String redirectLocation = cache.getRedirectLocation();
@@ -111,7 +123,7 @@ public class DownloadChain implements Runnable {
             } else if (info == null) {
                 throw new IllegalArgumentException("Invoke getConnection must after breakpoint interceptor!");
             } else {
-                url = info.profile.url;
+                url = info.getUrl();
             }
 
             connection = OkDownload.with().connectionFactory().create(url);
@@ -133,7 +145,11 @@ public class DownloadChain implements Runnable {
 
         connectIndex = 0;
         final DownloadConnection.Connected connected = processConnect();
-        dispatcher.dispatch().connectEnd(task, blockIndex, getConnection(), connected);
+        if (cache.isInterrupt()) {
+            throw CanceledException.SIGNAL;
+        }
+
+        dispatcher.dispatch().connectEnd(task, blockIndex, getConnectionOrCreate(), connected);
 
         dispatcher.dispatch().fetchStart(task, blockIndex, getResponseContentLength());
         // fetch chain
@@ -187,6 +203,7 @@ public class DownloadChain implements Runnable {
         try {
             start();
         } catch (IOException e) {
+            // cancelled.
             e.printStackTrace();
         } finally {
             finished.set(true);

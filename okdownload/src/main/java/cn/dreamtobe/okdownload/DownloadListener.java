@@ -19,6 +19,8 @@ package cn.dreamtobe.okdownload;
 import android.support.annotation.Nullable;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.cause.EndCause;
+import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 
 public interface DownloadListener {
@@ -41,19 +43,6 @@ public interface DownloadListener {
     void fetchEnd(DownloadTask task, int blockIndex, long contentLength);
 
     void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause);
-
-    enum ResumeFailedCause {
-        fileNotExist,
-        etagNotMatch
-    }
-
-    enum EndCause {
-        complete,
-        error,
-        stop,
-        fileBusy,
-        sameTaskBusy,
-    }
 }
 
 

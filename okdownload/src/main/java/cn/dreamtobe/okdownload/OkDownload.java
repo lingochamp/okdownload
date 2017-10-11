@@ -16,6 +16,7 @@
 
 package cn.dreamtobe.okdownload;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
@@ -33,7 +34,7 @@ import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 public class OkDownload {
 
-    static volatile OkDownload singleton;
+    @SuppressLint("StaticFieldLeak") static volatile OkDownload singleton;
 
     private final DownloadDispatcher downloadDispatcher;
     private final CallbackDispatcher callbackDispatcher;
