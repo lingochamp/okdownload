@@ -30,7 +30,8 @@ public interface DownloadListener {
 
     void connectStart(DownloadTask task, int blockIndex);
 
-    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection connection, DownloadConnection.Connected connected);
+    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection connection,
+                    DownloadConnection.Connected connected);
 
     void downloadFromBeginning(DownloadTask task, BreakpointInfo info, ResumeFailedCause cause);
 

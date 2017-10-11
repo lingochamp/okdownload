@@ -42,7 +42,8 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     private ParcelFileDescriptor pdf;
     private BufferedOutputStream out;
 
-    public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws FileNotFoundException {
+    public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws
+            FileNotFoundException {
         pdf = context.getContentResolver().openFileDescriptor(uri, "rw");
         if (pdf == null) throw new IllegalArgumentException();
 
@@ -84,26 +85,28 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
             try {
                 Os.ftruncate(pdf.getFileDescriptor(), newLength);
             } catch (ErrnoException e) {
-                LogUtil.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk" +
-                        " version(" + Build.VERSION.SDK_INT + "), because of " + e);
+                LogUtil.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
+                        + " version(" + Build.VERSION.SDK_INT + "), because of " + e);
                 e.printStackTrace();
             }
         } else {
             LogUtil.w(tag,
-                    "It can't pre-allocate length(" + newLength + ") on the sdk " +
-                            "version(" + Build.VERSION.SDK_INT + ")");
+                    "It can't pre-allocate length(" + newLength + ") on the sdk "
+                            + "version(" + Build.VERSION.SDK_INT + ")");
         }
     }
 
     public static class Factory implements DownloadOutputStream.Factory {
 
         @Override
-        public DownloadOutputStream create(Context context, File file, int flushBufferSize) throws FileNotFoundException {
+        public DownloadOutputStream create(Context context, File file, int flushBufferSize) throws
+                FileNotFoundException {
             return new DownloadUriOutputStream(context, Uri.fromFile(file), flushBufferSize);
         }
 
         @Override
-        public DownloadOutputStream create(Context context, Uri uri, int flushBufferSize) throws FileNotFoundException {
+        public DownloadOutputStream create(Context context, Uri uri, int flushBufferSize) throws
+                FileNotFoundException {
             return new DownloadUriOutputStream(context, uri, flushBufferSize);
         }
     }

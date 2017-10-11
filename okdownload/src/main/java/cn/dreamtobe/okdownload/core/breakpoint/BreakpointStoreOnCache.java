@@ -37,7 +37,8 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         return null;
     }
 
-    @Override public void onSyncToFilesystemSuccess(BreakpointInfo info, int blockIndex, long increaseLength) {
+    @Override public void onSyncToFilesystemSuccess(BreakpointInfo info, int blockIndex,
+                                                    long increaseLength) {
         info.getBlock(blockIndex).increaseCurrentOffset(increaseLength);
     }
 
@@ -47,7 +48,8 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         if (onCacheOne != null) {
             onCacheOne.etag = breakpointInfo.etag;
             onCacheOne.blockInfoList.clear();
-            // we don't need to deep clone this list, because of the block info only contain val params.
+            // we don't need to deep clone this list, because of the block info only contain val
+            // params.
             // todo maybe we need crash when  add all failed.
             onCacheOne.blockInfoList.addAll(breakpointInfo.blockInfoList);
             return true;

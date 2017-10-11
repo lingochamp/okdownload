@@ -46,8 +46,8 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             final long contentLength = chain.getResponseContentLength();
             if (contentLength != CHUNKED_CONTENT_LENGTH) {
                 // split
-                final int blockCount = OkDownload.with().downloadStrategy().determineBlockCount(chain.task,
-                        contentLength, connected);
+                final int blockCount = OkDownload.with().downloadStrategy()
+                        .determineBlockCount(chain.task, contentLength, connected);
                 splitBlock(blockCount, chain);
             }
 
@@ -64,8 +64,8 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
     void splitBlock(int blockCount, DownloadChain chain) throws IOException {
         final long totalLength = chain.getResponseContentLength();
         if (blockCount < 1) {
-            throw new IOException("Block Count from strategy determine must be larger than 0, " +
-                    "the current one is " + blockCount);
+            throw new IOException("Block Count from strategy determine must be larger than 0, "
+                    + "the current one is " + blockCount);
         }
 
         final BreakpointInfo info = chain.getInfo();
@@ -109,19 +109,19 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         if (fetchLength != contentLength) {
-            throw new IOException("Fetch-length isn't equal to the response content-length, " +
-                    fetchLength + "!= " + contentLength);
+            throw new IOException("Fetch-length isn't equal to the response content-length, "
+                    + fetchLength + "!= " + contentLength);
         }
 
         final long blockLength = startOffset + fetchLength;
         if (blockLength != blockInfo.contentLength) {
-            throw new IOException("Local block length is not match required one, " + blockLength +
-                    " != " + blockInfo.contentLength);
+            throw new IOException("Local block length is not match required one, " + blockLength
+                    + " != " + blockInfo.contentLength);
         }
 
         if (blockInfo.getCurrentOffset() != blockInfo.contentLength) {
-            throw new IOException("The current offset on block-info isn't update correct, " +
-                    blockInfo.getCurrentOffset() + " != " + blockInfo.contentLength);
+            throw new IOException("The current offset on block-info isn't update correct, "
+                    + blockInfo.getCurrentOffset() + " != " + blockInfo.contentLength);
         }
 
         return fetchLength;

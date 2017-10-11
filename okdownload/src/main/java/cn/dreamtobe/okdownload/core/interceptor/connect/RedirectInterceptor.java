@@ -29,21 +29,21 @@ import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 public class RedirectInterceptor implements Interceptor.Connect {
 
     /**
-     * How many redirects and auth challenges should we attempt? Chrome follows 21 redirects; Firefox,
-     * curl, and wget follow 20; Safari follows 16; and HTTP/1.0 recommends 5.
+     * How many redirects and auth challenges should we attempt? Chrome follows 21 redirects;
+     * Firefox, curl, and wget follow 20; Safari follows 16; and HTTP/1.0 recommends 5.
      */
-    final static int MAX_REDIRECT_TIMES = 10;
+    static final int MAX_REDIRECT_TIMES = 10;
 
     /**
      * The target resource resides temporarily under a different URI and the user agent MUST NOT
      * change the request method if it performs an automatic redirection to that URI.
      */
-    private final static int HTTP_TEMPORARY_REDIRECT = 307;
+    private static final int HTTP_TEMPORARY_REDIRECT = 307;
     /**
      * The target resource has been assigned a new permanent URI and any future references to this
      * resource ought to use one of the enclosed URIs.
      */
-    private final static int HTTP_PERMANENT_REDIRECT = 308;
+    private static final int HTTP_PERMANENT_REDIRECT = 308;
 
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
@@ -70,7 +70,8 @@ public class RedirectInterceptor implements Interceptor.Connect {
 
             url = connected.getResponseHeaderField("Location");
             if (url == null) {
-                throw new ProtocolException("Response code is " + code + " but can't find Location field");
+                throw new ProtocolException(
+                        "Response code is " + code + " but can't find Location field");
             }
 
             if (connection != null) {

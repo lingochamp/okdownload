@@ -23,7 +23,7 @@ public class CanceledException extends IOException {
         super("Canceled");
     }
 
-    public static CanceledException SIGNAL = new CanceledException() {
+    public static final CanceledException SIGNAL = new CanceledException() {
         @Override public StackTraceElement[] getStackTrace() {
             throw new IllegalAccessError("Stack is ignored for signal");
         }

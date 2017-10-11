@@ -42,7 +42,7 @@ import cn.dreamtobe.okdownload.core.interceptor.connect.RedirectInterceptor;
 
 public class DownloadChain implements Runnable {
 
-    public final static int CHUNKED_CONTENT_LENGTH = -1;
+    public static final int CHUNKED_CONTENT_LENGTH = -1;
 
     public final int blockIndex;
     public final DownloadTask task;
@@ -60,7 +60,8 @@ public class DownloadChain implements Runnable {
         return new DownloadChain(blockIndex, task, info, cache);
     }
 
-    static DownloadChain createFirstBlockChain(Thread parkThread, DownloadTask task, BreakpointInfo info,
+    static DownloadChain createFirstBlockChain(Thread parkThread, DownloadTask task,
+                                               BreakpointInfo info,
                                                DownloadCall.DownloadCache cache) {
         final DownloadChain chain = new DownloadChain(0, task, info, cache);
         chain.parkThread = parkThread;
@@ -121,7 +122,8 @@ public class DownloadChain implements Runnable {
             if (redirectLocation != null) {
                 url = redirectLocation;
             } else if (info == null) {
-                throw new IllegalArgumentException("Invoke getConnection must after breakpoint interceptor!");
+                throw new IllegalArgumentException(
+                        "Invoke getConnection must after breakpoint interceptor!");
             } else {
                 url = info.getUrl();
             }

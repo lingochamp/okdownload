@@ -42,7 +42,8 @@ public class DownloadDispatcher {
     // assemble breakpoint and start chain on block dispatcher
 
     int maxTaskCount = 15;
-    // for sort performance(not need to copy one array), using ArrayList instead of deque(for add on top, remove on bottom).
+    // for sort performance(not need to copy one array), using ArrayList instead of deque(for add
+    // on top, remove on bottom).
     private final List<DownloadCall> readyAsyncCalls;
 
     private final List<DownloadCall> runningAsyncCalls;
@@ -52,7 +53,8 @@ public class DownloadDispatcher {
     ExecutorService executorService;
 
     public DownloadDispatcher() {
-        this(new ArrayList<DownloadCall>(), new ArrayList<DownloadCall>(), new ArrayList<DownloadCall>());
+        this(new ArrayList<DownloadCall>(), new ArrayList<DownloadCall>(),
+                new ArrayList<DownloadCall>());
     }
 
     DownloadDispatcher(List<DownloadCall> readyAsyncCalls, List<DownloadCall> runningAsyncCalls,

@@ -35,7 +35,7 @@ import cn.dreamtobe.okdownload.core.util.LogUtil;
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
 public class HeaderInterceptor implements Interceptor.Connect {
-    private final static String TAG = "HeaderInterceptor";
+    private static final String TAG = "HeaderInterceptor";
 
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
@@ -98,13 +98,14 @@ public class HeaderInterceptor implements Interceptor.Connect {
         if (contentLength < 0) {
             // no content length
             final String transferEncoding = connected.getResponseHeaderField("Transfer-Encoding");
-            final boolean isEncodingChunked = transferEncoding != null && transferEncoding.equals("chunked");
+            final boolean isEncodingChunked =
+                    transferEncoding != null && transferEncoding.equals("chunked");
             if (!isEncodingChunked) {
-                LogUtil.w(TAG, "Transfer-Encoding isn't chunked but there is no " +
-                        "valid Content-Length either!");
+                LogUtil.w(TAG, "Transfer-Encoding isn't chunked but there is no "
+                        + "valid Content-Length either!");
                 if (contentLength != CHUNKED_CONTENT_LENGTH) {
-                    LogUtil.w(TAG, "Content-Length[" + contentLength + " is not be " +
-                            "recognized, so we change to chunked mark.");
+                    LogUtil.w(TAG, "Content-Length[" + contentLength + " is not be "
+                            + "recognized, so we change to chunked mark.");
                     contentLength = CHUNKED_CONTENT_LENGTH;
                 }
             } else {

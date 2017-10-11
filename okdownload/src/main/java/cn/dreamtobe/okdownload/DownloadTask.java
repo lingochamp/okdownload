@@ -132,17 +132,19 @@ public class DownloadTask {
         return tag;
     }
 
-    public long getLastCallbackProcessTimestamp() {
+    public long getLastCallbackProcessTs() {
         return lastCallbackProcessTimestamp.get();
     }
 
-    public void setLastCallbackProcessTimestamp(long lastCallbackProcessTimestamp) {
+    public void setLastCallbackProcessTs(long lastCallbackProcessTimestamp) {
         this.lastCallbackProcessTimestamp.set(lastCallbackProcessTimestamp);
     }
 
     public synchronized void addTag(int key, Object value) {
         if (keyTagMap == null) {
-            synchronized (this) { if (keyTagMap == null) keyTagMap = new SparseArray<>(); }
+            synchronized (this) {
+                if (keyTagMap == null) keyTagMap = new SparseArray<>();
+            }
         }
 
         keyTagMap.put(key, value);
@@ -259,8 +261,9 @@ public class DownloadTask {
         }
 
         public Builder setSyncBufferIntervalMillis(int syncBufferIntervalMillis) {
-            if (syncBufferIntervalMillis < 0)
+            if (syncBufferIntervalMillis < 0) {
                 throw new IllegalArgumentException("Value must be positive!");
+            }
 
             this.syncBufferIntervalMillis = syncBufferIntervalMillis;
             return this;

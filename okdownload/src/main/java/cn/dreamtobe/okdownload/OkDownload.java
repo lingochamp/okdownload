@@ -49,8 +49,9 @@ public class OkDownload {
     DownloadMonitor monitor;
     boolean lenience = false;
 
-    OkDownload(Context context, DownloadDispatcher downloadDispatcher, CallbackDispatcher callbackDispatcher,
-               BreakpointStore breakpointStore, DownloadConnection.Factory connectionFactory,
+    OkDownload(Context context, DownloadDispatcher downloadDispatcher,
+               CallbackDispatcher callbackDispatcher, BreakpointStore breakpointStore,
+               DownloadConnection.Factory connectionFactory,
                DownloadOutputStream.Factory outputStreamFactory,
                ProcessFileStrategy processFileStrategy, DownloadStrategy downloadStrategy) {
         this.context = context;

@@ -105,7 +105,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (cache.isPreconditionFailed) {
                 store.discard(task.getId());
                 // try again from beginning.
-                dispatcher.dispatch().downloadFromBeginning(task, info, ((ResumeFailedException) cache.realCause).getResumeFailedCause());
+                dispatcher.dispatch().downloadFromBeginning(task, info,
+                        ((ResumeFailedException) cache.realCause).getResumeFailedCause());
                 retryFromBeginning = true;
                 continue;
             }
@@ -123,13 +124,15 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         }
     }
 
-    private void start(final DownloadCache cache, BreakpointInfo info, boolean isResumeAvailableFromLocalCheck) throws InterruptedException {
+    private void start(final DownloadCache cache, BreakpointInfo info,
+                       boolean isResumeAvailableFromLocalCheck) throws InterruptedException {
         if (isResumeAvailableFromLocalCheck) {
             // resume task
             final int blockCount = info.getBlockCount();
             final List<Callable<Object>> blockChainList = new ArrayList<>(info.getBlockCount());
             for (int i = 0; i < blockCount; i++) {
-                blockChainList.add(Executors.callable(DownloadChain.createChain(i, task, info, cache)));
+                blockChainList.add(
+                        Executors.callable(DownloadChain.createChain(i, task, info, cache)));
             }
 
             if (cache.isInterrupt()) {
@@ -144,7 +147,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             info.addBlock(new BlockInfo(0, 0, 0));
             // block until first block get response.
             final Thread parkThread = Thread.currentThread();
-            final DownloadChain firstChain = DownloadChain.createFirstBlockChain(parkThread, task, info, cache);
+            final DownloadChain firstChain = DownloadChain.createFirstBlockChain(parkThread, task,
+                    info, cache);
             if (cache.isInterrupt()) {
                 return;
             }
@@ -161,7 +165,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             final int blockCount = info.getBlockCount();
             final List<Callable<Object>> blockChainList = new ArrayList<>(info.getBlockCount() - 1);
             for (int i = 1; i < blockCount; i++) {
-                blockChainList.add(Executors.callable(DownloadChain.createChain(i, task, info, cache)));
+                blockChainList.add(
+                        Executors.callable(DownloadChain.createChain(i, task, info, cache)));
             }
             startBlocks(blockChainList);
             if (!firstBlockFuture.isDone()) {
@@ -207,7 +212,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         volatile boolean isUserCanceled;
         volatile boolean isServerCanceled;
         volatile boolean isUnknownError;
-        volatile private IOException realCause;
+        private volatile IOException realCause;
 
         DownloadCache(DownloadTask task, BreakpointInfo info) {
             this.outputStream = new MultiPointOutputStream(task.getUri(), task.getFlushBufferSize(),

@@ -34,7 +34,8 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
 public class MultiPointOutputStream {
-    private final static ExecutorService fileIOExecutor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+    private static final ExecutorService FILE_IO_EXECUTOR = new ThreadPoolExecutor(0,
+            Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             ThreadUtil.threadFactory("OkDownload file io", false));
 
@@ -79,7 +80,7 @@ public class MultiPointOutputStream {
     private void inspectAndPersist() {
         if (!syncRunning && isNeedPersist()) {
             syncRunning = true;
-            fileIOExecutor.execute(syncRunnable);
+            FILE_IO_EXECUTOR.execute(syncRunnable);
         }
     }
 
@@ -129,7 +130,8 @@ public class MultiPointOutputStream {
         outputStream(blockIndex).close();
     }
 
-    private synchronized DownloadOutputStream outputStream(int blockIndex) throws FileNotFoundException {
+    private synchronized DownloadOutputStream outputStream(int blockIndex) throws
+            FileNotFoundException {
         DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
         if (outputStream == null) {
             outputStream = OkDownload.with().outputStreamFactory().create(

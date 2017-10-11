@@ -40,25 +40,28 @@ import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_RESE
 public class DownloadStrategy {
 
     // 1 connection: [0, 1MB)
-    private final static long ONE_CONNECTION_UPPER_LIMIT = 1024 * 1024; // 1MB
+    private static final long ONE_CONNECTION_UPPER_LIMIT = 1024 * 1024; // 1MB
     // 2 connection: [1MB, 5MB)
-    private final static long TWO_CONNECTION_UPPER_LIMIT = 5 * 1024 * 1024; // 5MB
+    private static final long TWO_CONNECTION_UPPER_LIMIT = 5 * 1024 * 1024; // 5MB
     // 3 connection: [5MB, 50MB)
-    private final static long THREE_CONNECTION_UPPER_LIMIT = 50 * 1024 * 1024; // 50MB
+    private static final long THREE_CONNECTION_UPPER_LIMIT = 50 * 1024 * 1024; // 50MB
     // 4 connection: [50MB, 100MB)
-    private final static long FOUR_CONNECTION_UPPER_LIMIT = 100 * 1024 * 1024; // 100MB
+    private static final long FOUR_CONNECTION_UPPER_LIMIT = 100 * 1024 * 1024; // 100MB
 
-    public ResumeAvailableLocalCheck resumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
+    public ResumeAvailableLocalCheck resumeAvailableLocalCheck(DownloadTask task,
+                                                               BreakpointInfo info) {
         return new ResumeAvailableLocalCheck(task, info);
     }
 
-    public ResumeAvailableResponseCheck resumeAvailableResponseCheck(DownloadConnection.Connected connected,
-                                                                     int blockIndex,
-                                                                     BreakpointInfo info) {
+    public ResumeAvailableResponseCheck resumeAvailableResponseCheck(
+            DownloadConnection.Connected connected,
+            int blockIndex,
+            BreakpointInfo info) {
         return new ResumeAvailableResponseCheck(connected, blockIndex, info);
     }
 
-    public int determineBlockCount(DownloadTask task, long totalLength, DownloadConnection.Connected connected) {
+    public int determineBlockCount(DownloadTask task, long totalLength,
+                                   DownloadConnection.Connected connected) {
         if (totalLength < ONE_CONNECTION_UPPER_LIMIT) {
             return 1;
         }
@@ -117,7 +120,8 @@ public class DownloadStrategy {
         private BreakpointInfo info;
         private int blockIndex;
 
-        protected ResumeAvailableResponseCheck(DownloadConnection.Connected connected, int blockIndex, BreakpointInfo info) {
+        protected ResumeAvailableResponseCheck(DownloadConnection.Connected connected,
+                                               int blockIndex, BreakpointInfo info) {
             this.connected = connected;
             this.info = info;
             this.blockIndex = blockIndex;
@@ -145,11 +149,12 @@ public class DownloadStrategy {
                 }
 
                 if (code == HttpURLConnection.HTTP_CREATED && blockInfo.getCurrentOffset() != 0) {
-                    // The request has been fulfilled and has resulted in one or more new resources being created.
+                    // The request has been fulfilled and has resulted in one or more new resources
+                    // being created.
                     // mark this case is precondition failed for
                     // 1. checkout whether accept partial
-                    // 2. 201 means new resources so range must be from beginning otherwise it can't match
-                    // local range.
+                    // 2. 201 means new resources so range must be from beginning otherwise it can't
+                    // match local range.
                     resumeFailedCause = RESPONSE_CREATED_RANGE_NOT_FROM_0;
                     break;
                 }
