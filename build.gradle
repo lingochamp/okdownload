@@ -26,6 +26,10 @@ subprojects {
     afterEvaluate {
         tasks.findByName('check').dependsOn('checkstyle')
     }
+
+    checkstyle {
+        toolVersion = '6.18'
+    }
 }
 
 apply from: rootProject.file('gradle/dependencies.gradle')
@@ -33,9 +37,10 @@ apply from: rootProject.file('gradle/dependencies.gradle')
 buildscript {
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta7'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.50"
     }
 }
@@ -43,6 +48,7 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        google()
     }
 }
 
