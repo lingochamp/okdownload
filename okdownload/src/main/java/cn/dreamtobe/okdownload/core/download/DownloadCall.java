@@ -125,6 +125,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             } else if (cache.isUserCanceled) {
                 // user cancel
                 dispatcher.dispatch().taskEnd(task, EndCause.CANCELED, null);
+            } else if (cache.isFileBusyAfterRun) {
+                dispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
             } else {
                 dispatcher.dispatch().taskEnd(task, EndCause.COMPLETE, null);
                 store.completeDownload(task.getId());
@@ -222,6 +224,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         volatile boolean isUserCanceled;
         volatile boolean isServerCanceled;
         volatile boolean isUnknownError;
+        volatile boolean isFileBusyAfterRun;
         private volatile IOException realCause;
 
         DownloadCache(@NonNull MultiPointOutputStream outputStream) {
@@ -241,7 +244,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         }
 
         public boolean isInterrupt() {
-            return isPreconditionFailed || isUserCanceled || isServerCanceled || isUnknownError;
+            return isPreconditionFailed || isUserCanceled || isServerCanceled || isUnknownError
+                    || isFileBusyAfterRun;
         }
 
         public void setPreconditionFailed(IOException realCause) {
@@ -251,6 +255,10 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
         void setUserCanceled() {
             this.isUserCanceled = true;
+        }
+
+        public void setFileBusyAfterRun() {
+            this.isFileBusyAfterRun = true;
         }
 
         public void setServerCanceled(IOException realCause) {

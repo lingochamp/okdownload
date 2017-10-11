@@ -192,9 +192,7 @@ public class DownloadChain implements Runnable {
 
     private AtomicBoolean finished = new AtomicBoolean(false);
 
-    boolean isFinished() {
-        return finished.get();
-    }
+    boolean isFinished() { return finished.get(); }
 
     @Override
     public void run() {

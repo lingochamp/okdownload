@@ -80,8 +80,9 @@ public class DownloadStrategy {
 
     private static final Pattern TMP_FILE_NAME_PATTERN = Pattern.compile(".*\\\\|/([\\w|.]*)\\??");
 
-    public void inspectFilename(@Nullable String responseFileName, @NonNull DownloadTask task,
-                                @NonNull DownloadConnection.Connected connected) throws
+    public void validFilename(@Nullable String responseFileName,
+                              @NonNull DownloadTask task,
+                              @NonNull DownloadConnection.Connected connected) throws
             IOException {
         if (TextUtils.isEmpty(task.getFilename())) {
             final String filename = determineFilename(responseFileName, task, connected);

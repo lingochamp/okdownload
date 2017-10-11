@@ -33,6 +33,7 @@ import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
@@ -95,7 +96,8 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         final String contentDisposition = connected.getResponseHeaderField("Content-Disposition");
         final String responseFilename = parseContentDisposition(contentDisposition);
-        strategy.inspectFilename(responseFilename, chain.task, connected);
+        strategy.validFilename(responseFilename, chain.task, connected);
+        inspectFileConflictAfterRun(chain);
 
         info.setEtag(etag);
 
@@ -124,6 +126,12 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         chain.setResponseContentLength(contentLength);
         return connected;
+    }
+
+    private void inspectFileConflictAfterRun(DownloadChain chain) throws IOException {
+        if (OkDownload.with().downloadDispatcher().isFileConflictAfterRun(chain.task)) {
+            throw FileBusyAfterRunException.SIGNAL;
+        }
     }
 
     private static final Pattern CONTENT_DISPOSITION_PATTERN =

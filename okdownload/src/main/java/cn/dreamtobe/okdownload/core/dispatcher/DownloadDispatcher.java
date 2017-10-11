@@ -17,6 +17,7 @@
 package cn.dreamtobe.okdownload.core.dispatcher;
 
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.File;
@@ -62,7 +63,6 @@ public class DownloadDispatcher {
         this.readyAsyncCalls = readyAsyncCalls;
         this.runningAsyncCalls = runningAsyncCalls;
         this.runningSyncCalls = runningSyncCalls;
-
     }
 
     synchronized ExecutorService executorService() {
@@ -94,6 +94,7 @@ public class DownloadDispatcher {
 
         final DownloadCall call = DownloadCall.create(task, false);
         runningSyncCalls.add(call);
+
         syncRunCall(call);
     }
 
@@ -153,6 +154,32 @@ public class DownloadDispatcher {
         if (asyncExecuted) processCalls();
     }
 
+    public synchronized boolean isFileConflictAfterRun(@NonNull DownloadTask task) {
+        final String path = task.getPath();
+        if (path == null) return false;
+
+        // Other one is running, cancel the current task.
+        for (DownloadCall syncCall : runningSyncCalls) {
+            if (syncCall.task == task) continue;
+
+            final String otherPath = syncCall.task.getPath();
+            if (otherPath != null && new File(path).equals(new File(otherPath))) {
+                return true;
+            }
+        }
+
+        for (DownloadCall asyncCall : runningAsyncCalls) {
+            if (asyncCall.task == task) continue;
+
+            final String otherPath = asyncCall.task.getPath();
+            if (otherPath != null && new File(path).equals(new File(otherPath))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private boolean inspectForConflict(DownloadTask task) {
         return inspectForConflict(task, readyAsyncCalls)
                 || inspectForConflict(task, runningAsyncCalls)
@@ -169,9 +196,10 @@ public class DownloadDispatcher {
                 return true;
             }
 
-            if (new File(call.task.getPath()).equals(new File(task.getPath()))) {
-                callbackDispatcher.dispatch()
-                        .taskEnd(task, EndCause.FILE_BUSY, null);
+            final String path = call.task.getPath();
+            final String taskPah = task.getPath();
+            if (path != null && taskPah != null && new File(path).equals(new File(taskPah))) {
+                callbackDispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
                 return true;
             }
         }
@@ -187,6 +215,14 @@ public class DownloadDispatcher {
             DownloadCall call = i.next();
 
             i.remove();
+
+            final DownloadTask task = call.task;
+            if (isFileConflictAfterRun(task)) {
+                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task, EndCause.FILE_BUSY,
+                        null);
+                continue;
+            }
+
             runningAsyncCalls.add(call);
             executorService().execute(call);
 

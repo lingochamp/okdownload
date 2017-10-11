@@ -22,6 +22,7 @@ import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
 
@@ -64,11 +65,11 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
             cache.setPreconditionFailed(e);
         } else if (e instanceof ServerCancelledException) {
             cache.setServerCanceled(e);
-        } else if (!(e instanceof CanceledException)) {
+        } else if (e == FileBusyAfterRunException.SIGNAL) {
+            cache.setFileBusyAfterRun();
+        } else if (!(e != CanceledException.SIGNAL)) {
             cache.setUnknownError(e);
             e.printStackTrace();
         }
-
-        // canceled here.
     }
 }
