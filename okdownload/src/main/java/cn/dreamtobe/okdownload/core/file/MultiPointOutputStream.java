@@ -21,6 +21,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -29,16 +30,18 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
-import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
 public class MultiPointOutputStream {
+    private static final String TAG = "MultiPointOutputStream";
     private static final ExecutorService FILE_IO_EXECUTOR = new ThreadPoolExecutor(0,
             Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-            ThreadUtil.threadFactory("OkDownload file io", false));
+            Util.threadFactory("OkDownload file io", false));
 
     private SparseArray<DownloadOutputStream> outputStreamMap = new SparseArray<>();
 
@@ -46,22 +49,21 @@ public class MultiPointOutputStream {
     private AtomicLong allNoSyncLength = new AtomicLong();
     private AtomicLong lastSyncTimestamp = new AtomicLong();
 
-    private final Uri uri;
     private final int flushBufferSize;
     private final int syncBufferSize;
     private final int syncBufferIntervalMills;
     private final BreakpointInfo info;
+    private final DownloadTask task;
     private final BreakpointStore store;
 
     private boolean syncRunning;
 
-    public MultiPointOutputStream(@NonNull Uri uri, int flushBufferSize,
-                                  int syncBufferSize, int syncBufferIntervalMills,
+    public MultiPointOutputStream(@NonNull DownloadTask task,
                                   @NonNull BreakpointInfo info) {
-        this.uri = uri;
-        this.flushBufferSize = flushBufferSize;
-        this.syncBufferSize = syncBufferSize;
-        this.syncBufferIntervalMills = syncBufferIntervalMills;
+        this.task = task;
+        this.flushBufferSize = task.getFlushBufferSize();
+        this.syncBufferSize = task.getSyncBufferSize();
+        this.syncBufferIntervalMills = task.getSyncBufferIntervalMills();
         this.info = info;
 
         this.store = OkDownload.with().breakpointStore();
@@ -132,7 +134,27 @@ public class MultiPointOutputStream {
     }
 
     private synchronized DownloadOutputStream outputStream(int blockIndex) throws
-            FileNotFoundException {
+            IOException {
+        final String path = task.getPath();
+        if (path == null) throw new FileNotFoundException("Filename is not ready!");
+        final File file = new File(path);
+
+        final File parentFile = file.getParentFile();
+        if (!parentFile.exists() && file.getParentFile().mkdirs()) {
+            throw new IOException("Create parent folder failed!");
+        }
+
+        if (file.createNewFile()) {
+            Util.d(TAG, "Create new file: " + file.getName());
+        }
+
+        final Uri uri;
+        if (task.isUriIsDirectory()) {
+            uri = Uri.parse(file.toString());
+        } else {
+            uri = task.getUri();
+        }
+
         DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
         if (outputStream == null) {
             outputStream = OkDownload.with().outputStreamFactory().create(

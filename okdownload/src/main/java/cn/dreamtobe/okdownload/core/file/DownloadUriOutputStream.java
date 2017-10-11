@@ -30,7 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-import cn.dreamtobe.okdownload.core.util.LogUtil;
+import cn.dreamtobe.okdownload.core.Util;
 
 /**
  * The output stream for uri.
@@ -85,12 +85,12 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
             try {
                 Os.ftruncate(pdf.getFileDescriptor(), newLength);
             } catch (ErrnoException e) {
-                LogUtil.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
+                Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
                         + " version(" + Build.VERSION.SDK_INT + "), because of " + e);
                 e.printStackTrace();
             }
         } else {
-            LogUtil.w(tag,
+            Util.w(tag,
                     "It can't pre-allocate length(" + newLength + ") on the sdk "
                             + "version(" + Build.VERSION.SDK_INT + ")");
         }

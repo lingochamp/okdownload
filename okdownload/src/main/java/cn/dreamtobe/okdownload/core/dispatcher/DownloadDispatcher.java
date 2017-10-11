@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
-import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
 public class DownloadDispatcher {
     // same id will be discard
@@ -69,7 +69,7 @@ public class DownloadDispatcher {
         if (executorService == null) {
             executorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                     60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-                    ThreadUtil.threadFactory("OkDownload Download", false));
+                    Util.threadFactory("OkDownload Download", false));
         }
 
         return executorService;

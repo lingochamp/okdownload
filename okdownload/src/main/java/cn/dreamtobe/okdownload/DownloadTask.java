@@ -18,8 +18,10 @@ package cn.dreamtobe.okdownload;
 
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.SparseArray;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,11 +29,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
-public class DownloadTask {
+public class DownloadTask implements Cloneable {
     private final int id;
     private final String url;
     private final Uri uri;
+    private final boolean isUriIsDirectory;
     private final HashMap<String, List<String>> headerMapFields;
 
 
@@ -62,10 +66,12 @@ public class DownloadTask {
 
     private final AtomicLong lastCallbackProcessTimestamp;
 
+    private final DownloadStrategy.FilenameHolder filenameHolder;
+
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
-                        HashMap<String, List<String>> headerMapFields) {
+                        HashMap<String, List<String>> headerMapFields, @Nullable String filename) {
         this.url = url;
         this.uri = uri;
         this.priority = priority;
@@ -78,13 +84,30 @@ public class DownloadTask {
         this.headerMapFields = headerMapFields;
         this.lastCallbackProcessTimestamp = new AtomicLong();
         this.id = OkDownload.with().breakpointStore().createId(this);
+
+        final File file = new File(uri.getPath());
+        if (file.isFile()) {
+            if (!TextUtils.isEmpty(filename) && !file.getName().equals(filename)) {
+                throw new IllegalArgumentException("Uri already provided filename!");
+            }
+
+            filename = file.getName();
+            isUriIsDirectory = false;
+        } else {
+            isUriIsDirectory = true;
+        }
+
+        if (filename == null || filename.length() == 0) {
+            filenameHolder = new DownloadStrategy.FilenameHolder();
+        } else {
+            filenameHolder = new DownloadStrategy.FilenameHolder(filename);
+        }
     }
 
     @Nullable
     public Map<String, List<String>> getHeaderMapFields() {
         return this.headerMapFields;
     }
-
 
     /**
      * This id can be used on {@link BreakpointStore}
@@ -93,12 +116,32 @@ public class DownloadTask {
         return this.id;
     }
 
+    @Nullable public String getFilename() {
+        return filenameHolder.get();
+    }
+
+    public DownloadStrategy.FilenameHolder getFilenameHolder() {
+        return filenameHolder;
+    }
+
     public Uri getUri() {
         return uri;
     }
 
-    public String getPath() {
-        return uri.getPath();
+    public boolean isUriIsDirectory() {
+        return isUriIsDirectory;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    @Nullable public String getPath() {
+        final String filename = filenameHolder.get();
+        if (filename == null) return null;
+
+        return isUriIsDirectory
+                ? new File(uri.getPath(), filename).getAbsolutePath() : uri.getPath();
     }
 
     public int getReadBufferSize() {
@@ -214,6 +257,8 @@ public class DownloadTask {
         private boolean autoCallbackToUIThread = true;
         private int minIntervalMillisCallbackProcess = 320/* millis **/;
 
+        private String filename;
+
         public Builder setAutoCallbackToUIThread(boolean autoCallbackToUIThread) {
             this.autoCallbackToUIThread = autoCallbackToUIThread;
             return this;
@@ -274,11 +319,16 @@ public class DownloadTask {
             return this;
         }
 
+        public Builder setFilename(String filename) {
+            this.filename = filename;
+            return this;
+        }
+
         public DownloadTask build() {
             return new DownloadTask(url, uri, priority, readBufferSize, flushBufferSize,
                     syncBufferSize, syncBufferIntervalMillis,
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
-                    headerMapFields);
+                    headerMapFields, filename);
         }
     }
 }

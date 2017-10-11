@@ -27,6 +27,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DownloadTaskTest {
 
@@ -39,6 +40,7 @@ public class DownloadTaskTest {
     public void addHeader() throws Exception {
         final String url = "mock url";
         final Uri mockFileUri = mock(Uri.class);
+        when(mockFileUri.getPath()).thenReturn("mock path");
         DownloadTask.Builder builder = new DownloadTask.Builder(url, mockFileUri);
 
 

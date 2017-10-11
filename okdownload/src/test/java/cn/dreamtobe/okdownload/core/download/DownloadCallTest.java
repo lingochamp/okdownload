@@ -35,7 +35,7 @@ import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
-import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
+import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -132,11 +132,12 @@ public class DownloadCallTest {
     }
 
     private void mockLocalCheck(boolean isAvailable) {
-        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
-        DownloadStrategy.ResumeAvailableLocalCheck localCheck = mock(DownloadStrategy.ResumeAvailableLocalCheck.class);
+        final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
+        ProcessFileStrategy.ResumeAvailableLocalCheck localCheck = mock(
+                ProcessFileStrategy.ResumeAvailableLocalCheck.class);
         when(localCheck.isAvailable()).thenReturn(isAvailable);
-        when(downloadStrategy.resumeAvailableLocalCheck(any(DownloadTask.class), any(BreakpointInfo.class)))
-                .thenReturn(localCheck);
+        doReturn(localCheck).when(fileStrategy).resumeAvailableLocalCheck(any(DownloadTask.class),
+                any(BreakpointInfo.class));
     }
 
 }

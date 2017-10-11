@@ -20,13 +20,12 @@ import java.io.IOException;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
-import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -57,7 +56,7 @@ public class TestUtils {
         doReturn(mock(DownloadConnection.class)).when(connectionFactory).create(anyString());
         when(mockOkDownload.connectionFactory()).thenReturn(connectionFactory);
 
-        final ProcessFileStrategy fileStrategy = spy(new DefaultProcessFileStrategy());
+        final ProcessFileStrategy fileStrategy = spy(new ProcessFileStrategy());
         when(mockOkDownload.processFileStrategy()).thenReturn(fileStrategy);
     }
 
@@ -73,7 +72,7 @@ public class TestUtils {
         when(mockCache.isInterrupt()).thenReturn(false);
         when(mockChain.getCache()).thenReturn(mockCache);
         when(mockChain.getInfo()).thenReturn(mock(BreakpointInfo.class));
-        
+
         return mockChain;
     }
 }

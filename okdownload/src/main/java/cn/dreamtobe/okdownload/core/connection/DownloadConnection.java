@@ -22,10 +22,6 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by Jacksgong on 19/09/2017.
- */
-
 public interface DownloadConnection {
 
     int NO_RESPONSE_CODE = 0;

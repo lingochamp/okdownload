@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.core.util;
+package cn.dreamtobe.okdownload.core;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ThreadFactory;
 
-/**
- * Created by Jacksgong on 28/09/2017.
- */
+public class Util {
 
-public class ThreadUtil {
+    public static void w(String tag, String msg) { Log.w(tag, msg); }
+    public static void d(String tag, String msg) { Log.d(tag, msg); }
+
     public static ThreadFactory threadFactory(final String name, final boolean daemon) {
         return new ThreadFactory() {
             @Override
@@ -36,4 +41,21 @@ public class ThreadUtil {
         };
     }
 
+    @Nullable public static String md5(String string) {
+        byte[] hash = null;
+        try {
+            hash = MessageDigest.getInstance("MD5").digest(string.getBytes("UTF-8"));
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ignored) { }
+
+        if (hash != null) {
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                if ((b & 0xFF) < 0x10) hex.append("0");
+                hex.append(Integer.toHexString(b & 0xFF));
+            }
+            return hex.toString();
+        }
+
+        return null;
+    }
 }

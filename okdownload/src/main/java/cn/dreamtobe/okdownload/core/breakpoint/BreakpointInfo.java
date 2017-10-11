@@ -17,6 +17,7 @@
 package cn.dreamtobe.okdownload.core.breakpoint;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class BreakpointInfo {
 
     final List<BlockInfo> blockInfoList;
 
-    public BreakpointInfo(int id, String url, Uri uri) {
+    public BreakpointInfo(int id, @NonNull String url, @NonNull Uri uri) {
         this.id = id;
         this.url = url;
         this.uri = uri;

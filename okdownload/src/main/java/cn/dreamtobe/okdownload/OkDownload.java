@@ -22,12 +22,11 @@ import android.support.annotation.NonNull;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
-import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.connection.DownloadUrlConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
-import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.file.DownloadOutputStream;
 import cn.dreamtobe.okdownload.core.file.DownloadUriOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
@@ -188,7 +187,7 @@ public class OkDownload {
             }
 
             if (processFileStrategy == null) {
-                processFileStrategy = new DefaultProcessFileStrategy();
+                processFileStrategy = new ProcessFileStrategy();
             }
 
             if (downloadStrategy == null) {

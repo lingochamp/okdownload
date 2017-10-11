@@ -37,21 +37,20 @@ import java.util.concurrent.locks.LockSupport;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.NamedRunnable;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
-import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
-import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
 public class DownloadCall extends NamedRunnable implements Comparable<DownloadCall> {
     static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-            ThreadUtil.threadFactory("OkDownload Block", false));
+            Util.threadFactory("OkDownload Block", false));
 
     public final DownloadTask task;
     public final boolean asyncExecuted;
@@ -90,22 +89,21 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
 
             final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
-            final MultiPointOutputStream outputStream = fileStrategy.createProcessStream(
-                    task.getUri(), task.getFlushBufferSize(),
-                    task.getSyncBufferSize(), task.getSyncBufferIntervalMills(), info);
+            final MultiPointOutputStream outputStream = fileStrategy.createProcessStream(task,
+                    info);
             final DownloadCache cache = new DownloadCache(outputStream);
             this.cache = cache;
 
             if (retryFromBeginning) {
                 try {
-                    fileStrategy.discardProcess(task.getUri());
+                    fileStrategy.discardProcess(task);
                     start(cache, info, false);
                 } catch (IOException e) {
                     cache.setUnknownError(e);
                 }
             } else {
-                final DownloadStrategy.ResumeAvailableLocalCheck localCheck =
-                        okDownload.downloadStrategy().resumeAvailableLocalCheck(task, info);
+                final ProcessFileStrategy.ResumeAvailableLocalCheck localCheck =
+                        okDownload.processFileStrategy().resumeAvailableLocalCheck(task, info);
 
                 localCheck.callbackCause();
 
@@ -130,7 +128,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             } else {
                 dispatcher.dispatch().taskEnd(task, EndCause.COMPLETE, null);
                 store.completeDownload(task.getId());
-                fileStrategy.completeProcessStream(outputStream, task.getUri());
+                fileStrategy.completeProcessStream(outputStream, task);
             }
             break;
         }

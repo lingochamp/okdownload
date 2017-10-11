@@ -16,20 +16,84 @@
 
 package cn.dreamtobe.okdownload.core.file;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import java.io.File;
 import java.io.IOException;
 
+import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
-public interface ProcessFileStrategy {
-    MultiPointOutputStream createProcessStream(@NonNull Uri uri, int flushBufferSize,
-                                               int syncBufferSize, int syncBufferIntervalMills,
-                                               @NonNull BreakpointInfo info);
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.FILE_NOT_EXIST;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
 
-    void completeProcessStream(@NonNull MultiPointOutputStream processOutputStream,
-                               @NonNull Uri targetFileUri);
+public class ProcessFileStrategy {
+    @NonNull public MultiPointOutputStream createProcessStream(@NonNull DownloadTask task,
+                                                               @NonNull BreakpointInfo info) {
+        return new MultiPointOutputStream(task, info);
+    }
 
-    void discardProcess(@NonNull Uri targetFileUri) throws IOException;
+    public void completeProcessStream(@NonNull MultiPointOutputStream processOutputStream,
+                                      @NonNull DownloadTask task) {
+    }
+
+    public void discardProcess(@NonNull DownloadTask task) throws IOException {
+        // Remove target file.
+        final String path = task.getPath();
+        // Do nothing, because the filename hasn't found yet.
+        if (path == null) return;
+
+        final File file = new File(path);
+        if (file.exists()) {
+            if (!file.delete()) {
+                throw new IOException("Delete file failed!");
+            }
+        }
+    }
+
+    /**
+     * @see DownloadStrategy#resumeAvailableResponseCheck
+     */
+    public ResumeAvailableLocalCheck resumeAvailableLocalCheck(DownloadTask task,
+                                                               BreakpointInfo info) {
+        return new ResumeAvailableLocalCheck(task, info);
+    }
+
+    public static class ResumeAvailableLocalCheck {
+        private final boolean isAvailable;
+        private final boolean fileExist;
+        private final boolean infoRight;
+        private final DownloadTask task;
+        private final BreakpointInfo info;
+
+        protected ResumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
+            final String filePath = task.getPath();
+            this.fileExist = filePath != null && new File(filePath).exists();
+            this.infoRight = info.getBlockCount() > 0;
+            this.isAvailable = infoRight && fileExist;
+
+            this.task = task;
+            this.info = info;
+        }
+
+        public boolean isAvailable() {
+            return this.isAvailable;
+        }
+
+        public void callbackCause() {
+            final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
+            if (isAvailable) {
+                dispatcher.dispatch().downloadFromBreakpoint(task, info);
+            } else if (!fileExist) {
+                dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
+            } else if (!infoRight) {
+                dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
+            } else {
+                throw new IllegalStateException();
+            }
+        }
+    }
 }

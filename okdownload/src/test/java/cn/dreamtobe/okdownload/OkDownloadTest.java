@@ -7,12 +7,11 @@ import org.robolectric.annotation.Config;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
-import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.connection.DownloadUrlConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
-import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.file.DownloadOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
@@ -46,7 +45,7 @@ public class OkDownloadTest {
         assertThat(okDownload.breakpointStore()).isInstanceOf(BreakpointStoreOnCache.class);
         assertThat(okDownload.connectionFactory()).isInstanceOf(DownloadUrlConnection.Factory.class);
         assertThat(okDownload.outputStreamFactory()).isInstanceOf(DownloadOutputStream.Factory.class);
-        assertThat(okDownload.processFileStrategy()).isInstanceOf(DefaultProcessFileStrategy.class);
+        assertThat(okDownload.processFileStrategy()).isInstanceOf(ProcessFileStrategy.class);
         assertThat(okDownload.downloadStrategy()).isInstanceOf(DownloadStrategy.class);
     }
 

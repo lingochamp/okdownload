@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.core.breakpoint;
+package cn.dreamtobe.okdownload.core.download;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.dreamtobe.okdownload.DownloadTask;
-import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
+import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
 
-import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.FILE_NOT_EXIST;
-import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREATED_RANGE_NOT_FROM_0;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETAG_CHANGED;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRECONDITION_FAILED;
@@ -48,11 +49,6 @@ public class DownloadStrategy {
     private static final long THREE_CONNECTION_UPPER_LIMIT = 50 * 1024 * 1024; // 50MB
     // 4 connection: [50MB, 100MB)
     private static final long FOUR_CONNECTION_UPPER_LIMIT = 100 * 1024 * 1024; // 100MB
-
-    public ResumeAvailableLocalCheck resumeAvailableLocalCheck(DownloadTask task,
-                                                               BreakpointInfo info) {
-        return new ResumeAvailableLocalCheck(task, info);
-    }
 
     public ResumeAvailableResponseCheck resumeAvailableResponseCheck(
             DownloadConnection.Connected connected,
@@ -82,38 +78,67 @@ public class DownloadStrategy {
         return 5;
     }
 
-    public static class ResumeAvailableLocalCheck {
-        private final boolean isAvailable;
-        private final boolean fileExist;
-        private final boolean infoRight;
-        private final DownloadTask task;
-        private final BreakpointInfo info;
+    private static final Pattern TMP_FILE_NAME_PATTERN = Pattern.compile(".*\\\\|/([\\w|.]*)\\??");
 
-        protected ResumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
-            this.fileExist = new File(task.getPath()).exists();
-            this.infoRight = info.getBlockCount() > 0;
-            this.isAvailable = infoRight && fileExist;
+    public void inspectFilename(@Nullable String responseFileName, @NonNull DownloadTask task,
+                                @NonNull DownloadConnection.Connected connected) throws
+            IOException {
+        if (TextUtils.isEmpty(task.getFilename())) {
+            final String filename = determineFilename(responseFileName, task, connected);
+            // Double check avoid changed by other block.
+            if (TextUtils.isEmpty(task.getFilename())) {
+                task.getFilenameHolder().set(filename);
+            }
 
-            this.task = task;
-            this.info = info;
-        }
-
-        public boolean isAvailable() {
-            return this.isAvailable;
-        }
-
-        public void callbackCause() {
-            final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
-            if (isAvailable) {
-                dispatcher.dispatch().downloadFromBreakpoint(task, info);
-            } else if (!fileExist) {
-                dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
-            } else if (!infoRight) {
-                dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
-            } else {
-                throw new IllegalStateException();
+            // Check whether filename has been changed by other block and the filename isn't unify.
+            if (!filename.equals(task.getFilename())) {
+                throw new IOException("Filename can't unify!");
             }
         }
+    }
+
+    protected String determineFilename(@Nullable String responseFileName,
+                                       @NonNull DownloadTask task,
+                                       @NonNull DownloadConnection.Connected connected) throws
+            IOException {
+
+        if (responseFileName == null || responseFileName.length() == 0) {
+
+            final String url = task.getUrl();
+            Matcher m = TMP_FILE_NAME_PATTERN.matcher(url);
+            String fileName = null;
+            while (m.find()) {
+                fileName = m.group(1);
+            }
+
+            if (fileName == null || fileName.length() == 0) {
+                fileName = Util.md5(url);
+            }
+
+            if (fileName == null) {
+                throw new IOException("Can't find valid filename.");
+            }
+
+            return fileName;
+        }
+
+        return responseFileName;
+    }
+
+    public static class FilenameHolder {
+        private volatile String filename;
+
+        public FilenameHolder() { }
+
+        public FilenameHolder(@NonNull String filename) {
+            this.filename = filename;
+        }
+
+        void set(@NonNull String filename) {
+            this.filename = filename;
+        }
+
+        @Nullable public String get() { return filename; }
     }
 
     public static class ResumeAvailableResponseCheck {

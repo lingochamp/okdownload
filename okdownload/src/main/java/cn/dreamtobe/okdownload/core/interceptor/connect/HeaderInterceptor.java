@@ -16,21 +16,24 @@
 
 package cn.dreamtobe.okdownload.core.interceptor.connect;
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
-import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.exception.CanceledException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
-import cn.dreamtobe.okdownload.core.util.LogUtil;
 
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
@@ -85,11 +88,17 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         // if precondition failed.
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = OkDownload.with()
-                .downloadStrategy().resumeAvailableResponseCheck(connected, blockIndex, info);
+        final DownloadStrategy strategy = OkDownload.with().downloadStrategy();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                strategy.resumeAvailableResponseCheck(connected, blockIndex, info);
         responseCheck.inspect();
 
+        final String contentDisposition = connected.getResponseHeaderField("Content-Disposition");
+        final String responseFilename = parseContentDisposition(contentDisposition);
+        strategy.inspectFilename(responseFilename, chain.task, connected);
+
         info.setEtag(etag);
+
         // content-length
         final String contentLengthStr = connected.getResponseHeaderField("Content-Length");
         long contentLength;
@@ -101,10 +110,10 @@ public class HeaderInterceptor implements Interceptor.Connect {
             final boolean isEncodingChunked =
                     transferEncoding != null && transferEncoding.equals("chunked");
             if (!isEncodingChunked) {
-                LogUtil.w(TAG, "Transfer-Encoding isn't chunked but there is no "
+                Util.w(TAG, "Transfer-Encoding isn't chunked but there is no "
                         + "valid Content-Length either!");
                 if (contentLength != CHUNKED_CONTENT_LENGTH) {
-                    LogUtil.w(TAG, "Content-Length[" + contentLength + " is not be "
+                    Util.w(TAG, "Content-Length[" + contentLength + " is not be "
                             + "recognized, so we change to chunked mark.");
                     contentLength = CHUNKED_CONTENT_LENGTH;
                 }
@@ -115,6 +124,33 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         chain.setResponseContentLength(contentLength);
         return connected;
+    }
+
+    private static final Pattern CONTENT_DISPOSITION_PATTERN =
+            Pattern.compile("attachment;\\s*filename\\s*=\\s*\"([^\"]*)\"");
+
+    /**
+     * The same to com.android.providers.downloads.Helpers#parseContentDisposition.
+     * </p>
+     * Parse the Content-Disposition HTTP Header. The format of the header
+     * is defined here: http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html
+     * This header provides a filename for content that is going to be
+     * downloaded to the file system. We only support the attachment type.
+     */
+    @Nullable static String parseContentDisposition(String contentDisposition) {
+        if (contentDisposition == null) {
+            return null;
+        }
+
+        try {
+            Matcher m = CONTENT_DISPOSITION_PATTERN.matcher(contentDisposition);
+            if (m.find()) {
+                return m.group(1);
+            }
+        } catch (IllegalStateException ex) {
+            // This function is defined as returning null when it can't parse the header
+        }
+        return null;
     }
 
 }
