@@ -33,11 +33,11 @@ import java.util.concurrent.Future;
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
-import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 
+import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -60,7 +60,7 @@ public class DownloadCallTest {
 
     @BeforeClass
     public static void setupClass() throws IOException {
-        TestUtils.mockOkDownload();
+        mockOkDownload();
     }
 
     @Before

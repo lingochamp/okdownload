@@ -17,11 +17,19 @@
 package cn.dreamtobe.okdownload.core.file;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+
+import java.io.IOException;
+
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 
 public interface ProcessFileStrategy {
-    DownloadOutputStream createProcessFile(Uri targetFileUri);
+    MultiPointOutputStream createProcessStream(@NonNull Uri uri, int flushBufferSize,
+                                               int syncBufferSize, int syncBufferIntervalMills,
+                                               @NonNull BreakpointInfo info);
 
-    void completeProcessFile(DownloadOutputStream processOutputStream, Uri targetFileUri);
+    void completeProcessStream(@NonNull MultiPointOutputStream processOutputStream,
+                               @NonNull Uri targetFileUri);
 
-    void discardProcess(Uri targetFileUri);
+    void discardProcess(@NonNull Uri targetFileUri) throws IOException;
 }

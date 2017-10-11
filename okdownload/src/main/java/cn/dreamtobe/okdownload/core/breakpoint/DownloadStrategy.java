@@ -16,6 +16,7 @@
 
 package cn.dreamtobe.okdownload.core.breakpoint;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.File;
@@ -60,8 +61,8 @@ public class DownloadStrategy {
         return new ResumeAvailableResponseCheck(connected, blockIndex, info);
     }
 
-    public int determineBlockCount(DownloadTask task, long totalLength,
-                                   DownloadConnection.Connected connected) {
+    public int determineBlockCount(@NonNull DownloadTask task, long totalLength,
+                                   @NonNull DownloadConnection.Connected connected) {
         if (totalLength < ONE_CONNECTION_UPPER_LIMIT) {
             return 1;
         }

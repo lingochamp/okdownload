@@ -17,19 +17,37 @@
 package cn.dreamtobe.okdownload.core.file;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+
+import java.io.File;
+import java.io.IOException;
+
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 
 public class DefaultProcessFileStrategy implements ProcessFileStrategy {
 
     @Override
-    public DownloadOutputStream createProcessFile(Uri targetFileUri) {
-        return null;
+    public MultiPointOutputStream createProcessStream(@NonNull Uri uri, int flushBufferSize,
+                                                      int syncBufferSize,
+                                                      int syncBufferIntervalMills,
+                                                      @NonNull BreakpointInfo info) {
+        return new MultiPointOutputStream(uri, flushBufferSize, syncBufferSize,
+                syncBufferIntervalMills, info);
     }
 
     @Override
-    public void completeProcessFile(DownloadOutputStream processOutputStream, Uri targetFileUri) {
+    public void completeProcessStream(@NonNull MultiPointOutputStream processOutputStream,
+                                      @NonNull Uri targetFileUri) {
     }
 
     @Override
-    public void discardProcess(Uri targetFileUri) {
+    public void discardProcess(@NonNull Uri targetFileUri) throws IOException {
+        // remove target file.
+        final File file = new File(targetFileUri.getPath());
+        if (file.exists()) {
+            if (!file.delete()) {
+                throw new IOException("Delete file failed!");
+            }
+        }
     }
 }

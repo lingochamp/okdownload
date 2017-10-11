@@ -45,6 +45,7 @@ import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
+import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 import cn.dreamtobe.okdownload.core.util.ThreadUtil;
 
 public class DownloadCall extends NamedRunnable implements Comparable<DownloadCall> {
@@ -88,11 +89,20 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 info = store.createAndInsert(task);
             }
 
-            final DownloadCache cache = new DownloadCache(task, info);
+            final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
+            final MultiPointOutputStream outputStream = fileStrategy.createProcessStream(
+                    task.getUri(), task.getFlushBufferSize(),
+                    task.getSyncBufferSize(), task.getSyncBufferIntervalMills(), info);
+            final DownloadCache cache = new DownloadCache(outputStream);
             this.cache = cache;
 
             if (retryFromBeginning) {
-                start(cache, info, false);
+                try {
+                    fileStrategy.discardProcess(task.getUri());
+                    start(cache, info, false);
+                } catch (IOException e) {
+                    cache.setUnknownError(e);
+                }
             } else {
                 final DownloadStrategy.ResumeAvailableLocalCheck localCheck =
                         okDownload.downloadStrategy().resumeAvailableLocalCheck(task, info);
@@ -120,6 +130,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             } else {
                 dispatcher.dispatch().taskEnd(task, EndCause.COMPLETE, null);
                 store.completeDownload(task.getId());
+                fileStrategy.completeProcessStream(outputStream, task.getUri());
             }
             break;
         }
@@ -215,9 +226,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         volatile boolean isUnknownError;
         private volatile IOException realCause;
 
-        DownloadCache(DownloadTask task, BreakpointInfo info) {
-            this.outputStream = new MultiPointOutputStream(task.getUri(), task.getFlushBufferSize(),
-                    task.getSyncBufferSize(), task.getSyncBufferIntervalMills(), info);
+        DownloadCache(@NonNull MultiPointOutputStream outputStream) {
+            this.outputStream = outputStream;
         }
 
         MultiPointOutputStream getOutputStream() {

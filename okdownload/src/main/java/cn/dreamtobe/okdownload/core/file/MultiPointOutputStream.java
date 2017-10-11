@@ -18,6 +18,7 @@ package cn.dreamtobe.okdownload.core.file;
 
 import android.net.Uri;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
 import java.io.FileNotFoundException;
@@ -54,9 +55,9 @@ public class MultiPointOutputStream {
 
     private boolean syncRunning;
 
-    public MultiPointOutputStream(Uri uri, int flushBufferSize,
+    public MultiPointOutputStream(@NonNull Uri uri, int flushBufferSize,
                                   int syncBufferSize, int syncBufferIntervalMills,
-                                  BreakpointInfo info) {
+                                  @NonNull BreakpointInfo info) {
         this.uri = uri;
         this.flushBufferSize = flushBufferSize;
         this.syncBufferSize = syncBufferSize;

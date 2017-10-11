@@ -18,6 +18,7 @@ package cn.dreamtobe.okdownload;
 
 import java.io.IOException;
 
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
@@ -25,10 +26,14 @@ import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.file.DefaultProcessFileStrategy;
+import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.robolectric.RuntimeEnvironment.application;
 
@@ -37,17 +42,23 @@ public class TestUtils {
         final OkDownload mockOkDownload = mock(OkDownload.class);
         OkDownload.singleton = mockOkDownload;
 
-        when(mockOkDownload.breakpointStore()).thenReturn(mock(BreakpointStore.class));
+        final BreakpointStore store = mock(BreakpointStore.class);
+        when(store.update(any(BreakpointInfo.class))).thenReturn(true);
+        when(mockOkDownload.breakpointStore()).thenReturn(store);
+
         when(mockOkDownload.downloadStrategy()).thenReturn(mock(DownloadStrategy.class));
         when(mockOkDownload.downloadDispatcher()).thenReturn(mock(DownloadDispatcher.class));
 
-        final CallbackDispatcher mockCallbackDispatcher = mock(CallbackDispatcher.class);
-        doReturn(mock(DownloadListener.class)).when(mockCallbackDispatcher).dispatch();
-        when(mockOkDownload.callbackDispatcher()).thenReturn(mockCallbackDispatcher);
+        final CallbackDispatcher callbackDispatcher = mock(CallbackDispatcher.class);
+        doReturn(mock(DownloadListener.class)).when(callbackDispatcher).dispatch();
+        when(mockOkDownload.callbackDispatcher()).thenReturn(callbackDispatcher);
 
-        final DownloadConnection.Factory mockConnectionFactory = mock(DownloadConnection.Factory.class);
-        doReturn(mock(DownloadConnection.class)).when(mockConnectionFactory).create(anyString());
-        when(mockOkDownload.connectionFactory()).thenReturn(mockConnectionFactory);
+        final DownloadConnection.Factory connectionFactory = mock(DownloadConnection.Factory.class);
+        doReturn(mock(DownloadConnection.class)).when(connectionFactory).create(anyString());
+        when(mockOkDownload.connectionFactory()).thenReturn(connectionFactory);
+
+        final ProcessFileStrategy fileStrategy = spy(new DefaultProcessFileStrategy());
+        when(mockOkDownload.processFileStrategy()).thenReturn(fileStrategy);
     }
 
     public static void initProvider() {
@@ -61,6 +72,7 @@ public class TestUtils {
         final DownloadCall.DownloadCache mockCache = mock(DownloadCall.DownloadCache.class);
         when(mockCache.isInterrupt()).thenReturn(false);
         when(mockChain.getCache()).thenReturn(mockCache);
+        when(mockChain.getInfo()).thenReturn(mock(BreakpointInfo.class));
         
         return mockChain;
     }
