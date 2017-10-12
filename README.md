@@ -3,6 +3,26 @@
 A flexible and powerful downloader engine.
 
 
+---
+
+## Why rewrite downloader
+
+- FileDownloader framework is not easy to write unit-test, it is not testable framework, so it is not stable enough.
+- The core library of FileDownloader is too complex and not pure enough.
+
+## Compare to FileDownloader
+
+- Unit test coverage is very high.
+- Simpler interface.
+- Task priority support.
+- Uri file to store output-stream.
+- The core library is Pure and light.
+- More flexible callback mechanism and listener.
+- More flexible to expand each part of OkDownload.
+- Fewer threads to do same thing without drop performance.
+- File-IO thread pool is independent of Network-IO thread pool.
+- Make sense auto filename from url if can't find from response header.
+
 ## LICENSE
 
 ```
