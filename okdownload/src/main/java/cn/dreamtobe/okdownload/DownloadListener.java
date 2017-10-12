@@ -28,10 +28,9 @@ public interface DownloadListener {
 
     void breakpointData(DownloadTask task, @Nullable BreakpointInfo info);
 
-    void connectStart(DownloadTask task, int blockIndex);
+    void connectStart(DownloadTask task, int blockIndex, DownloadConnection connection);
 
-    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection connection,
-                    DownloadConnection.Connected connected);
+    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection.Connected connected);
 
     void downloadFromBeginning(DownloadTask task, BreakpointInfo info, ResumeFailedCause cause);
 

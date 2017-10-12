@@ -136,7 +136,6 @@ public class DownloadChain implements Runnable {
     void start() throws IOException {
         final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         // connect chain
-        dispatcher.dispatch().connectStart(task, blockIndex);
         final RetryInterceptor retryInterceptor = new RetryInterceptor();
         final BreakpointInterceptor breakpointInterceptor = new BreakpointInterceptor();
         connectInterceptorList.add(retryInterceptor);
@@ -150,8 +149,6 @@ public class DownloadChain implements Runnable {
         if (cache.isInterrupt()) {
             throw CanceledException.SIGNAL;
         }
-
-        dispatcher.dispatch().connectEnd(task, blockIndex, getConnectionOrCreate(), connected);
 
         dispatcher.dispatch().fetchStart(task, blockIndex, getResponseContentLength());
         // fetch chain

@@ -81,8 +81,12 @@ public class HeaderInterceptor implements Interceptor.Connect {
             throw CanceledException.SIGNAL;
         }
 
+        OkDownload.with().callbackDispatcher().dispatch().connectStart(chain.task, blockIndex,
+                connection);
         DownloadConnection.Connected connected = chain.processConnect();
 
+        OkDownload.with().callbackDispatcher().dispatch().connectEnd(chain.task, blockIndex,
+                connected);
         if (chain.getCache().isInterrupt()) {
             throw CanceledException.SIGNAL;
         }

@@ -64,30 +64,30 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void connectStart(final DownloadTask task, final int blockIndex) {
+            public void connectStart(final DownloadTask task, final int blockIndex,
+                                     final DownloadConnection connection) {
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
-                            task.getListener().connectStart(task, blockIndex);
+                            task.getListener().connectStart(task, blockIndex, connection);
                         }
                     });
                 } else {
-                    task.getListener().connectStart(task, blockIndex);
+                    task.getListener().connectStart(task, blockIndex, connection);
                 }
             }
 
             @Override
             public void connectEnd(final DownloadTask task, final int blockIndex,
-                                   final DownloadConnection connection,
                                    final DownloadConnection.Connected connected) {
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
-                            task.getListener().connectEnd(task, blockIndex, connection, connected);
+                            task.getListener().connectEnd(task, blockIndex, connected);
                         }
                     });
                 } else {
-                    task.getListener().connectEnd(task, blockIndex, connection, connected);
+                    task.getListener().connectEnd(task, blockIndex, connected);
                 }
             }
 

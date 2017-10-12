@@ -36,6 +36,10 @@ public interface DownloadConnection {
 
     void release();
 
+    Map<String, List<String>> getRequestProperties();
+
+    String getRequestProperty(String key);
+
     interface Connected {
         int getResponseCode() throws IOException;
 
@@ -64,8 +68,6 @@ public interface DownloadConnection {
          * if there is no such field in the header.
          */
         String getResponseHeaderField(String name);
-
-        void release();
     }
 
     interface Factory {

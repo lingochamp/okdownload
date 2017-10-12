@@ -98,6 +98,14 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         }
     }
 
+    @Override public Map<String, List<String>> getRequestProperties() {
+        return connection.getRequestProperties();
+    }
+
+    @Override public String getRequestProperty(String key) {
+        return connection.getRequestProperty(key);
+    }
+
     public static class Factory implements DownloadConnection.Factory {
 
         private final Configuration configuration;

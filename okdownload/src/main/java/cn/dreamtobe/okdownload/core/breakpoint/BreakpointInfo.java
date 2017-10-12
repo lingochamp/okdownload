@@ -28,13 +28,13 @@ import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
 public class BreakpointInfo {
     final int id;
-    public final String url;
-    String etag;
+    private final String url;
+    private String etag;
 
-    final String parentPath;
-    final DownloadStrategy.FilenameHolder filenameHolder;
+    private final String parentPath;
+    private final DownloadStrategy.FilenameHolder filenameHolder;
 
-    final List<BlockInfo> blockInfoList;
+    private final List<BlockInfo> blockInfoList;
 
     public BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
                           @Nullable String filename) {
@@ -48,10 +48,6 @@ public class BreakpointInfo {
         } else {
             filenameHolder = new DownloadStrategy.FilenameHolder(filename);
         }
-    }
-
-    public boolean isLastBlock(int blockIndex) {
-        return blockInfoList.size() == blockIndex + 1;
     }
 
     public void addBlock(BlockInfo blockInfo) {
