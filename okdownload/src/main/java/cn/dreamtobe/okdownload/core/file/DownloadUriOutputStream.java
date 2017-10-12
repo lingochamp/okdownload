@@ -32,10 +32,6 @@ import java.nio.channels.FileChannel;
 
 import cn.dreamtobe.okdownload.core.Util;
 
-/**
- * The output stream for uri.
- */
-
 public class DownloadUriOutputStream implements DownloadOutputStream {
 
     private FileChannel channel;

@@ -19,7 +19,7 @@ package cn.dreamtobe.okdownload.core.interceptor;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
-import cn.dreamtobe.okdownload.core.download.DownloadCall;
+import cn.dreamtobe.okdownload.core.download.DownloadCache;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.exception.CanceledException;
 import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
@@ -30,7 +30,7 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
 
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
-        final DownloadCall.DownloadCache cache = chain.getCache();
+        final DownloadCache cache = chain.getCache();
 
 
         try {
@@ -60,14 +60,14 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
         }
     }
 
-    private static void handleException(IOException e, DownloadCall.DownloadCache cache) {
+    private static void handleException(IOException e, DownloadCache cache) {
         if (e instanceof ResumeFailedException) {
             cache.setPreconditionFailed(e);
         } else if (e instanceof ServerCancelledException) {
             cache.setServerCanceled(e);
         } else if (e == FileBusyAfterRunException.SIGNAL) {
             cache.setFileBusyAfterRun();
-        } else if (!(e != CanceledException.SIGNAL)) {
+        } else if (e != CanceledException.SIGNAL) {
             cache.setUnknownError(e);
             e.printStackTrace();
         }

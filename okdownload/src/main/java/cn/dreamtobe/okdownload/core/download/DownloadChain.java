@@ -45,42 +45,42 @@ public class DownloadChain implements Runnable {
     public static final int CHUNKED_CONTENT_LENGTH = -1;
 
     public final int blockIndex;
-    public final DownloadTask task;
-    private final BreakpointInfo info;
+
+    @NonNull public final DownloadTask task;
+    @NonNull private final BreakpointInfo info;
+    @NonNull private final DownloadCache cache;
+    @Nullable private Thread parkThread;
+
+    final List<Interceptor.Connect> connectInterceptorList = new ArrayList<>();
+    final List<Interceptor.Fetch> fetchInterceptorList = new ArrayList<>();
+    int connectIndex = 0;
+    int fetchIndex = 0;
+
     private long responseContentLength;
-
-    private DownloadCall.DownloadCache cache;
-
     private DownloadConnection connection;
 
-    private Thread parkThread;
-
-    static DownloadChain createChain(int blockIndex, DownloadTask task, BreakpointInfo info,
-                                     DownloadCall.DownloadCache cache) {
+    static DownloadChain createChain(int blockIndex, DownloadTask task,
+                                     @NonNull BreakpointInfo info,
+                                     DownloadCache cache) {
         return new DownloadChain(blockIndex, task, info, cache);
     }
 
     static DownloadChain createFirstBlockChain(Thread parkThread, DownloadTask task,
-                                               BreakpointInfo info,
-                                               DownloadCall.DownloadCache cache) {
+                                               @NonNull BreakpointInfo info,
+                                               DownloadCache cache) {
         final DownloadChain chain = new DownloadChain(0, task, info, cache);
         chain.parkThread = parkThread;
 
         return chain;
     }
 
-    private DownloadChain(int blockIndex, DownloadTask task, BreakpointInfo info,
-                          DownloadCall.DownloadCache cache) {
+    private DownloadChain(int blockIndex, DownloadTask task, @NonNull BreakpointInfo info,
+                          DownloadCache cache) {
         this.blockIndex = blockIndex;
         this.task = task;
         this.cache = cache;
         this.info = info;
     }
-
-    private List<Interceptor.Connect> connectInterceptorList = new ArrayList<>();
-    private List<Interceptor.Fetch> fetchInterceptorList = new ArrayList<>();
-    private int connectIndex = 0;
-    private int fetchIndex = 0;
 
     public boolean isOtherBlockPark() {
         return parkThread != null;
@@ -95,11 +95,11 @@ public class DownloadChain implements Runnable {
         return this.info;
     }
 
-    public void setConnection(DownloadConnection connection) {
+    public void setConnection(@NonNull DownloadConnection connection) {
         this.connection = connection;
     }
 
-    public DownloadCall.DownloadCache getCache() {
+    public DownloadCache getCache() {
         return cache;
     }
 
@@ -121,9 +121,6 @@ public class DownloadChain implements Runnable {
             final String redirectLocation = cache.getRedirectLocation();
             if (redirectLocation != null) {
                 url = redirectLocation;
-            } else if (info == null) {
-                throw new IllegalArgumentException(
-                        "Invoke getConnection must after breakpoint interceptor!");
             } else {
                 url = info.getUrl();
             }
@@ -159,6 +156,7 @@ public class DownloadChain implements Runnable {
         fetchInterceptorList.add(breakpointInterceptor);
         fetchInterceptorList.add(fetchDataInterceptor);
 
+        fetchIndex = 0;
         final long totalFetchedBytes = processFetch();
         dispatcher.dispatch().fetchEnd(task, blockIndex, totalFetchedBytes);
     }

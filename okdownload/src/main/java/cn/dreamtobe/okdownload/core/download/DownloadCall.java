@@ -43,15 +43,15 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
-import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 public class DownloadCall extends NamedRunnable implements Comparable<DownloadCall> {
-    static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+    private static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload Block", false));
 
+    static final int MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED = 1;
     public final DownloadTask task;
     public final boolean asyncExecuted;
 
@@ -75,23 +75,26 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     @Override
     public void execute() throws InterruptedException {
         boolean retry = false;
+        int retryCount = 0;
+
+        final OkDownload okDownload = OkDownload.with();
+        final CallbackDispatcher dispatcher = okDownload.callbackDispatcher();
+        final BreakpointStore store = okDownload.breakpointStore();
+        final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
+
+        dispatcher.dispatch().taskStart(task);
         while (true) {
-            final OkDownload okDownload = OkDownload.with();
-            final CallbackDispatcher dispatcher = okDownload.callbackDispatcher();
-            dispatcher.dispatch().taskStart(task);
 
             // get store
-            final BreakpointStore store = okDownload.breakpointStore();
             BreakpointInfo info = store.get(task.getId());
             dispatcher.dispatch().breakpointData(task, info);
             if (info == null) {
                 info = store.createAndInsert(task);
             }
 
-            final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
             final MultiPointOutputStream outputStream = fileStrategy.createProcessStream(task,
                     info);
-            final DownloadCache cache = new DownloadCache(outputStream);
+            final DownloadCache cache = createCache(outputStream);
             this.cache = cache;
 
             if (retry) {
@@ -115,22 +118,24 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 start(cache, info, localCheck.isAvailable());
             }
 
-            if (cache.isPreconditionFailed) {
+            if (cache.isPreconditionFailed()
+                    && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.discard(task.getId());
                 // try again from beginning.
                 dispatcher.dispatch().downloadFromBeginning(task, info,
-                        ((ResumeFailedException) cache.realCause).getResumeFailedCause());
+                        cache.getResumeFailedCause());
                 retry = true;
                 continue;
             }
 
-            if (cache.isServerCanceled || cache.isUnknownError) {
+            if (cache.isServerCanceled() || cache.isUnknownError()
+                    || cache.isPreconditionFailed()) {
                 // error
-                dispatcher.dispatch().taskEnd(task, EndCause.ERROR, cache.realCause);
-            } else if (cache.isUserCanceled) {
+                dispatcher.dispatch().taskEnd(task, EndCause.ERROR, cache.getRealCause());
+            } else if (cache.isUserCanceled()) {
                 // user cancel
                 dispatcher.dispatch().taskEnd(task, EndCause.CANCELED, null);
-            } else if (cache.isFileBusyAfterRun) {
+            } else if (cache.isFileBusyAfterRun()) {
                 dispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
             } else {
                 dispatcher.dispatch().taskEnd(task, EndCause.COMPLETE, null);
@@ -141,8 +146,18 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         }
     }
 
-    private void start(final DownloadCache cache, BreakpointInfo info,
-                       boolean isResumeAvailableFromLocalCheck) throws InterruptedException {
+    // this method is convenient for unit-test.
+    DownloadCache createCache(MultiPointOutputStream outputStream) {
+        return new DownloadCache(outputStream);
+    }
+
+    // this method is convenient for unit-test.
+    int getPriority() {
+        return task.getPriority();
+    }
+
+    void start(final DownloadCache cache, BreakpointInfo info,
+               boolean isResumeAvailableFromLocalCheck) throws InterruptedException {
         if (isResumeAvailableFromLocalCheck) {
             // resume task
             final int blockCount = info.getBlockCount();
@@ -159,7 +174,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             startBlocks(blockChainList);
         } else {
             // new task
-            info.resetBlockInfos();
+            info.resetInfo();
+
             // add 0 task first.
             info.addBlock(new BlockInfo(0, 0, 0));
             // block until first block get response.
@@ -218,62 +234,6 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Override
     public int compareTo(@NonNull DownloadCall o) {
-        return o.task.getPriority() - task.getPriority();
-    }
-
-    public static class DownloadCache {
-        private String redirectLocation;
-        final MultiPointOutputStream outputStream;
-
-        volatile boolean isPreconditionFailed;
-        volatile boolean isUserCanceled;
-        volatile boolean isServerCanceled;
-        volatile boolean isUnknownError;
-        volatile boolean isFileBusyAfterRun;
-        private volatile IOException realCause;
-
-        DownloadCache(@NonNull MultiPointOutputStream outputStream) {
-            this.outputStream = outputStream;
-        }
-
-        MultiPointOutputStream getOutputStream() {
-            return outputStream;
-        }
-
-        void setRedirectLocation(String redirectLocation) {
-            this.redirectLocation = redirectLocation;
-        }
-
-        String getRedirectLocation() {
-            return redirectLocation;
-        }
-
-        public boolean isInterrupt() {
-            return isPreconditionFailed || isUserCanceled || isServerCanceled || isUnknownError
-                    || isFileBusyAfterRun;
-        }
-
-        public void setPreconditionFailed(IOException realCause) {
-            this.isPreconditionFailed = true;
-            this.realCause = realCause;
-        }
-
-        void setUserCanceled() {
-            this.isUserCanceled = true;
-        }
-
-        public void setFileBusyAfterRun() {
-            this.isFileBusyAfterRun = true;
-        }
-
-        public void setServerCanceled(IOException realCause) {
-            this.isServerCanceled = true;
-            this.realCause = realCause;
-        }
-
-        public void setUnknownError(IOException realCause) {
-            this.isUnknownError = true;
-            this.realCause = realCause;
-        }
+        return o.getPriority() - getPriority();
     }
 }

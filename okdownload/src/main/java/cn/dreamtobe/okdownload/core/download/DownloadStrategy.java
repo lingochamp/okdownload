@@ -94,15 +94,16 @@ public class DownloadStrategy {
             IOException {
         if (Util.isEmpty(task.getFilename())) {
             final String filename = determineFilename(responseFileName, task, connected);
+
             // Double check avoid changed by other block.
             if (Util.isEmpty(task.getFilename())) {
-                task.getFilenameHolder().set(filename);
-                info.getFilenameHolder().set(filename);
-            }
+                synchronized (task) {
+                    if (Util.isEmpty(task.getFilename())) {
+                        task.getFilenameHolder().set(filename);
+                        info.getFilenameHolder().set(filename);
+                    }
 
-            // Check whether filename has been changed by other block and the filename isn't unify.
-            if (!filename.equals(task.getFilename())) {
-                throw new IOException("Filename can't unify!");
+                }
             }
         }
     }
@@ -152,12 +153,12 @@ public class DownloadStrategy {
     }
 
     public static class ResumeAvailableResponseCheck {
-        private DownloadConnection.Connected connected;
-        private BreakpointInfo info;
+        @NonNull private DownloadConnection.Connected connected;
+        @NonNull private BreakpointInfo info;
         private int blockIndex;
 
-        protected ResumeAvailableResponseCheck(DownloadConnection.Connected connected,
-                                               int blockIndex, BreakpointInfo info) {
+        protected ResumeAvailableResponseCheck(@NonNull DownloadConnection.Connected connected,
+                                               int blockIndex, @NonNull BreakpointInfo info) {
             this.connected = connected;
             this.info = info;
             this.blockIndex = blockIndex;
@@ -218,7 +219,7 @@ public class DownloadStrategy {
 
             if (isServerCancelled) {
                 // server cancelled, end task.
-                throw new ServerCancelledException(code);
+                throw new ServerCancelledException(code, blockInfo.getCurrentOffset());
             }
         }
     }

@@ -29,10 +29,11 @@ import java.util.concurrent.ExecutorService;
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
-import cn.dreamtobe.okdownload.TestUtils;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.download.DownloadCall;
 
+import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
+import static cn.dreamtobe.okdownload.core.cause.EndCause.FILE_BUSY;
 import static cn.dreamtobe.okdownload.core.cause.EndCause.SAME_TASK_BUSY;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,16 +55,17 @@ public class DownloadDispatcherTest {
 
     @BeforeClass
     public static void setupClass() throws IOException {
-        TestUtils.mockOkDownload();
+        mockOkDownload();
     }
 
     @Before
     public void setup() {
         readyAsyncCalls = new ArrayList<>();
-        runningAsyncCalls = new ArrayList<>();
+        runningAsyncCalls = spy(new ArrayList<DownloadCall>());
         runningSyncCalls = spy(new ArrayList<DownloadCall>());
 
-        dispatcher = spy(new DownloadDispatcher(readyAsyncCalls, runningAsyncCalls, runningSyncCalls));
+        dispatcher = spy(
+                new DownloadDispatcher(readyAsyncCalls, runningAsyncCalls, runningSyncCalls));
 
         doReturn(mock(ExecutorService.class)).when(dispatcher).executorService();
         doNothing().when(dispatcher).syncRunCall(any(DownloadCall.class));
@@ -101,6 +103,22 @@ public class DownloadDispatcherTest {
         verifyTaskEnd(mockReadyTask, SAME_TASK_BUSY, null);
         verifyTaskEnd(mockRunningAsyncTask, SAME_TASK_BUSY, null);
         verifyTaskEnd(mockRunningSyncTask, SAME_TASK_BUSY, null);
+
+
+        final DownloadTask mockFileBusyTask1 = mockTask();
+        doReturn(mockReadyTask.getPath()).when(mockFileBusyTask1).getPath();
+        dispatcher.enqueue(mockFileBusyTask1);
+        verifyTaskEnd(mockFileBusyTask1, FILE_BUSY, null);
+
+        final DownloadTask mockFileBusyTask2 = mockTask();
+        doReturn(mockRunningAsyncTask.getPath()).when(mockFileBusyTask2).getPath();
+        dispatcher.execute(mockFileBusyTask2);
+        verifyTaskEnd(mockFileBusyTask2, FILE_BUSY, null);
+
+        final DownloadTask mockFileBusyTask3 = mockTask();
+        doReturn(mockRunningSyncTask.getPath()).when(mockFileBusyTask3).getPath();
+        dispatcher.enqueue(mockFileBusyTask3);
+        verifyTaskEnd(mockFileBusyTask3, FILE_BUSY, null);
     }
 
     private void verifyTaskEnd(DownloadTask task, EndCause cause, Exception realCause) {
@@ -164,6 +182,38 @@ public class DownloadDispatcherTest {
         verify(dispatcher).syncRunCall(call);
     }
 
+    @Test
+    public void cancelAll() {
+        readyAsyncCalls.add(mock(DownloadCall.class));
+        readyAsyncCalls.add(mock(DownloadCall.class));
+        readyAsyncCalls.add(mock(DownloadCall.class));
+        readyAsyncCalls.add(mock(DownloadCall.class));
+
+        runningAsyncCalls.add(mock(DownloadCall.class));
+        runningAsyncCalls.add(mock(DownloadCall.class));
+        runningAsyncCalls.add(mock(DownloadCall.class));
+        runningAsyncCalls.add(mock(DownloadCall.class));
+
+        runningSyncCalls.add(mock(DownloadCall.class));
+        runningSyncCalls.add(mock(DownloadCall.class));
+        runningSyncCalls.add(mock(DownloadCall.class));
+        runningSyncCalls.add(mock(DownloadCall.class));
+
+        dispatcher.cancelAll();
+
+        for (DownloadCall call : readyAsyncCalls) {
+            verify(call).cancel();
+        }
+
+        for (DownloadCall call : runningAsyncCalls) {
+            verify(call).cancel();
+        }
+
+        for (DownloadCall call : runningSyncCalls) {
+            verify(call).cancel();
+        }
+    }
+
     @Test(expected = AssertionError.class)
     public void finish_removeFailed_exception() {
         dispatcher.finish(mock(DownloadCall.class));
@@ -178,10 +228,34 @@ public class DownloadDispatcherTest {
 
         dispatcher.finish(mockRunningCall);
 
+        verify(runningAsyncCalls).remove(mockRunningCall);
+
         assertThat(runningAsyncCalls).containsExactly(mockReadyCall);
         assertThat(readyAsyncCalls).isEmpty();
 
         final ExecutorService executorService = dispatcher.executorService();
         verify(executorService).execute(mockReadyCall);
+    }
+
+    @Test
+    public void isFileConflictAfterRun() {
+        final DownloadTask mockAsyncTask = mockTask();
+        final DownloadTask samePathTask = mockTask();
+        doReturn(mockAsyncTask.getPath()).when(samePathTask).getPath();
+        runningAsyncCalls.add(DownloadCall.create(mockAsyncTask, true));
+
+        boolean isConflict = dispatcher.isFileConflictAfterRun(samePathTask);
+        assertThat(isConflict).isTrue();
+
+        final DownloadTask mockSyncTask = mockTask();
+        doReturn(mockSyncTask.getPath()).when(samePathTask).getPath();
+        runningSyncCalls.add(DownloadCall.create(mockSyncTask, false));
+
+        isConflict = dispatcher.isFileConflictAfterRun(samePathTask);
+        assertThat(isConflict).isTrue();
+
+        final DownloadTask noSamePathTask = mockTask();
+        isConflict = dispatcher.isFileConflictAfterRun(noSamePathTask);
+        assertThat(isConflict).isFalse();
     }
 }

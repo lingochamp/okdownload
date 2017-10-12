@@ -190,5 +190,5 @@ public class CallbackDispatcher {
     }
 
     // Just transmit to the main looper.
-    final DownloadListener transmit;
+    private final DownloadListener transmit;
 }

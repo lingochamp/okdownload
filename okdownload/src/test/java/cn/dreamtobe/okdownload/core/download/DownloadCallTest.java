@@ -35,16 +35,22 @@ import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
+import cn.dreamtobe.okdownload.core.cause.EndCause;
+import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
+import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
+import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -95,10 +101,6 @@ public class DownloadCallTest {
     public void execute_availableResume_startAllBlocks() throws InterruptedException {
         mockLocalCheck(true);
 
-        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
-        when(mockStore.get(anyInt())).thenReturn(mockInfo);
-        when(mockInfo.getBlockCount()).thenReturn(3);
-
         call.execute();
 
         ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
@@ -111,11 +113,6 @@ public class DownloadCallTest {
     public void execute_notAvailableResume_startFirstAndOthers() throws InterruptedException {
         mockLocalCheck(false);
 
-        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
-        when(mockStore.get(anyInt())).thenReturn(mockInfo);
-        when(mockInfo.getBlockCount()).thenReturn(3);
-        doNothing().when(call).parkForFirstConnection();
-
         call.execute();
 
         verify(call).startFirstBlock(any(DownloadChain.class));
@@ -125,10 +122,115 @@ public class DownloadCallTest {
     }
 
     @Test
+    public void execute_filenameOnStore_validFilename() throws InterruptedException {
+        mockLocalCheck(true);
+
+        final String filename = "valid-filename";
+        when(mockInfo.getFilename()).thenReturn(filename);
+
+        call.execute();
+
+        verify(OkDownload.with().downloadStrategy()).validFilenameFromResume(filename, mockTask);
+    }
+
+    @Test
+    public void execute_preconditionFailed() throws InterruptedException {
+        mockLocalCheck(true);
+
+        final DownloadCache mockCache = mock(DownloadCache.class);
+        doReturn(mockCache).when(call).createCache(any(MultiPointOutputStream.class));
+        when(mockCache.isPreconditionFailed()).thenReturn(true, false);
+        final ResumeFailedCause resumeFailedCause = mock(ResumeFailedCause.class);
+        doReturn(resumeFailedCause).when(mockCache).getResumeFailedCause();
+
+        call.execute();
+
+        verify(call).start(mockCache, mockInfo, true);
+        verify(call).start(mockCache, mockInfo, false);
+
+        // only callback on the first time
+        final ProcessFileStrategy.ResumeAvailableLocalCheck mockLocalCheck = OkDownload.with()
+                .processFileStrategy().resumeAvailableLocalCheck(mockTask, mockInfo);
+        verify(mockLocalCheck).callbackCause();
+        final CallbackDispatcher mockCallbackDispatcher = OkDownload.with().callbackDispatcher();
+        verify(mockCallbackDispatcher.dispatch()).downloadFromBeginning(mockTask, mockInfo,
+                resumeFailedCause);
+    }
+
+    @Test
+    public void execute_preconditionFailedMaxTimes() throws InterruptedException, IOException {
+        // re-mock for test static ref.
+        mockOkDownload();
+        mockLocalCheck(false);
+
+        final DownloadCache mockCache = mock(DownloadCache.class);
+        doReturn(mockCache).when(call).createCache(any(MultiPointOutputStream.class));
+        when(mockCache.isPreconditionFailed()).thenReturn(true);
+
+        call.execute();
+
+        verify(call, times(DownloadCall.MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED + 1)).start(
+                mockCache, mockInfo, false);
+
+        // only once.
+        verify(OkDownload.with().callbackDispatcher().dispatch()).taskStart(mockTask);
+    }
+
+    @Test
+    public void execute_end() throws InterruptedException, IOException {
+        // re-mock for test static ref.
+        mockOkDownload();
+        mockLocalCheck(false);
+
+        final ProcessFileStrategy mockFileStrategy = OkDownload.with().processFileStrategy();
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
+        final DownloadCache mockCache = mock(DownloadCache.class);
+        doReturn(mockCache).when(call).createCache(any(MultiPointOutputStream.class));
+        final IOException mockIOException = mock(IOException.class);
+        when(mockCache.getRealCause()).thenReturn(mockIOException);
+
+        final DownloadListener mockListener = OkDownload.with().callbackDispatcher().dispatch();
+
+        call.execute();
+        verify(mockListener).taskEnd(mockTask, EndCause.COMPLETE, null);
+        verify(mockStore).completeDownload(mockTask.getId());
+        verify(mockFileStrategy).completeProcessStream(any(MultiPointOutputStream.class),
+                eq(mockTask));
+
+        when(mockCache.isFileBusyAfterRun()).thenReturn(true);
+        call.execute();
+        verify(mockListener).taskEnd(mockTask, EndCause.FILE_BUSY, null);
+
+
+        when(mockCache.isUserCanceled()).thenReturn(true);
+        call.execute();
+        verify(mockListener).taskEnd(mockTask, EndCause.CANCELED, null);
+
+        when(mockCache.isServerCanceled()).thenReturn(true);
+        call.execute();
+        verify(mockListener).taskEnd(mockTask, EndCause.ERROR, mockIOException);
+
+        when(mockCache.isServerCanceled()).thenReturn(false);
+        when(mockCache.isUnknownError()).thenReturn(true);
+        call.execute();
+        verify(mockListener, times(2)).taskEnd(mockTask, EndCause.ERROR, mockIOException);
+    }
+
+    @Test
     public void finished_callToDispatch() {
         call.finished();
 
         verify(OkDownload.with().downloadDispatcher()).finish(call);
+    }
+
+    @Test
+    public void compareTo() {
+        final DownloadCall compareCall = mock(DownloadCall.class);
+        when(compareCall.getPriority()).thenReturn(6);
+        when(call.getPriority()).thenReturn(3);
+
+        final int result = call.compareTo(compareCall);
+        assertThat(result).isEqualTo(3);
     }
 
     private void mockLocalCheck(boolean isAvailable) {
@@ -138,6 +240,13 @@ public class DownloadCallTest {
         when(localCheck.isAvailable()).thenReturn(isAvailable);
         doReturn(localCheck).when(fileStrategy).resumeAvailableLocalCheck(any(DownloadTask.class),
                 any(BreakpointInfo.class));
+
+
+        final BreakpointStore mockStore = OkDownload.with().breakpointStore();
+        when(mockStore.get(anyInt())).thenReturn(mockInfo);
+        when(mockInfo.getBlockCount()).thenReturn(3);
+
+        doNothing().when(call).parkForFirstConnection();
     }
 
 }

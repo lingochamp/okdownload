@@ -23,13 +23,14 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
 import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
-import cn.dreamtobe.okdownload.core.download.DownloadCall;
+import cn.dreamtobe.okdownload.core.download.DownloadCache;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -58,6 +59,7 @@ public class TestUtils {
 
         final ProcessFileStrategy fileStrategy = spy(new ProcessFileStrategy());
         when(mockOkDownload.processFileStrategy()).thenReturn(fileStrategy);
+        doNothing().when(fileStrategy).discardProcess(any(DownloadTask.class));
     }
 
     public static void initProvider() {
@@ -68,7 +70,7 @@ public class TestUtils {
         final DownloadChain mockChain = mock(DownloadChain.class);
         doReturn(mock(DownloadConnection.Connected.class)).when(mockChain).processConnect();
 
-        final DownloadCall.DownloadCache mockCache = mock(DownloadCall.DownloadCache.class);
+        final DownloadCache mockCache = mock(DownloadCache.class);
         when(mockCache.isInterrupt()).thenReturn(false);
         when(mockChain.getCache()).thenReturn(mockCache);
         when(mockChain.getInfo()).thenReturn(mock(BreakpointInfo.class));

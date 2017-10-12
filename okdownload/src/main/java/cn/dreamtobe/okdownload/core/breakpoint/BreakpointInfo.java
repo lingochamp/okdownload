@@ -58,6 +58,11 @@ public class BreakpointInfo {
         return blockInfoList.get(blockIndex);
     }
 
+    public void resetInfo() {
+        this.blockInfoList.clear();
+        this.etag = null;
+    }
+
     public void resetBlockInfos() {
         this.blockInfoList.clear();
     }

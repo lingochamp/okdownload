@@ -23,10 +23,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-/**
- * Created by Jacksgong on 29/09/2017.
- */
-
 public interface DownloadOutputStream {
     void write(byte[] b, int off, int len) throws IOException;
 
