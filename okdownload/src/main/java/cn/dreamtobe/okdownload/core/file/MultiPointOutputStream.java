@@ -24,15 +24,19 @@ import android.util.SparseArray;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.Util;
+import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 
@@ -70,6 +74,7 @@ public class MultiPointOutputStream {
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
+
         outputStream(blockIndex).write(bytes, 0, length);
 
         // because we add the length value after flush and sync,
@@ -78,6 +83,36 @@ public class MultiPointOutputStream {
         noSyncLengthMap.get(blockIndex).addAndGet(length);
 
         inspectAndPersist();
+    }
+
+    private List<Thread> parkThreadList = new ArrayList<>();
+    private static final long WAIT_SYNC_NANO = TimeUnit.MILLISECONDS.toNanos(100);
+
+    public void interceptComplete(int blockIndex) throws IOException {
+        final BlockInfo blockInfo = info.getBlock(blockIndex);
+
+        final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
+        if (noSyncLength.get() > 0) {
+            // sync to store
+            if (syncRunning) {
+                // wait for sync
+                parkThreadList.add(Thread.currentThread());
+                while (true) {
+                    LockSupport.parkNanos(WAIT_SYNC_NANO);
+                    if (!syncRunning || noSyncLength.get() == 0) break;
+                }
+
+            } else {
+                // sync once
+                syncRunning = true;
+                syncRunnable.run();
+            }
+        }
+
+        if (blockInfo.getCurrentOffset() != blockInfo.contentLength) {
+            throw new IOException("The current offset on block-info isn't update correct, "
+                    + blockInfo.getCurrentOffset() + " != " + blockInfo.contentLength);
+        }
     }
 
     private void inspectAndPersist() {
@@ -121,6 +156,10 @@ public class MultiPointOutputStream {
             }
 
             syncRunning = false;
+            for (Thread thread : parkThreadList) {
+                LockSupport.unpark(thread);
+            }
+            parkThreadList.clear();
         }
     };
 

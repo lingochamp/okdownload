@@ -107,7 +107,6 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             }
 
             fetchLength += processFetchLength;
-            blockInfo.increaseCurrentOffset(processFetchLength);
         }
 
         if (fetchLength != contentLength) {
@@ -119,11 +118,6 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         if (blockLength != blockInfo.contentLength) {
             throw new IOException("Local block length is not match required one, " + blockLength
                     + " != " + blockInfo.contentLength);
-        }
-
-        if (blockInfo.getCurrentOffset() != blockInfo.contentLength) {
-            throw new IOException("The current offset on block-info isn't update correct, "
-                    + blockInfo.getCurrentOffset() + " != " + blockInfo.contentLength);
         }
 
         return fetchLength;
