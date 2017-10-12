@@ -28,7 +28,13 @@ import java.util.concurrent.ThreadFactory;
 public class Util {
 
     public static void w(String tag, String msg) { Log.w(tag, msg); }
+
     public static void d(String tag, String msg) { Log.d(tag, msg); }
+
+    // For avoid mock whole android framework methods on unit-test.
+    public static boolean isEmpty(@Nullable CharSequence str) {
+        return str == null || str.length() == 0;
+    }
 
     public static ThreadFactory threadFactory(final String name, final boolean daemon) {
         return new ThreadFactory() {

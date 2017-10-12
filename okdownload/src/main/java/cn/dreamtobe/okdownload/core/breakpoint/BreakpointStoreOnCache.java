@@ -36,7 +36,8 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     @Override
     public BreakpointInfo createAndInsert(@NonNull DownloadTask task) {
         final int id = task.getId();
-        BreakpointInfo info = new BreakpointInfo(id, task.getUrl(), task.getUri());
+        BreakpointInfo info = new BreakpointInfo(id, task.getUrl(), task.getParentPath(),
+                task.getFilename());
         breakpointMap.put(id, info);
         return info;
     }

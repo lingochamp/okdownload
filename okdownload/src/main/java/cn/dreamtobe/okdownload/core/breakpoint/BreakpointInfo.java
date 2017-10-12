@@ -16,26 +16,38 @@
 
 package cn.dreamtobe.okdownload.core.breakpoint;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import cn.dreamtobe.okdownload.core.Util;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
 public class BreakpointInfo {
     final int id;
     public final String url;
     String etag;
-    public final Uri uri;
+
+    final String parentPath;
+    final DownloadStrategy.FilenameHolder filenameHolder;
 
     final List<BlockInfo> blockInfoList;
 
-    public BreakpointInfo(int id, @NonNull String url, @NonNull Uri uri) {
+    public BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
+                          @Nullable String filename) {
         this.id = id;
         this.url = url;
-        this.uri = uri;
+        this.parentPath = parentPath;
         this.blockInfoList = new ArrayList<>();
+
+        if (Util.isEmpty(filename)) {
+            filenameHolder = new DownloadStrategy.FilenameHolder();
+        } else {
+            filenameHolder = new DownloadStrategy.FilenameHolder(filename);
+        }
     }
 
     public boolean isLastBlock(int blockIndex) {
@@ -71,12 +83,21 @@ public class BreakpointInfo {
         return url;
     }
 
-    public Uri getUri() {
-        return uri;
+    public String getFilename() {
+        return filenameHolder.get();
+    }
+
+    public DownloadStrategy.FilenameHolder getFilenameHolder() {
+        return filenameHolder;
+    }
+
+    public String getPath() {
+        final String filename = this.filenameHolder.get();
+        return filename == null ? null : new File(parentPath, filename).getAbsolutePath();
     }
 
     public BreakpointInfo copy() {
-        final BreakpointInfo info = new BreakpointInfo(id, url, uri);
+        final BreakpointInfo info = new BreakpointInfo(id, url, parentPath, filenameHolder.get());
         for (BlockInfo blockInfo : blockInfoList) {
             info.blockInfoList.add(blockInfo.copy());
         }

@@ -17,8 +17,8 @@
 package cn.dreamtobe.okdownload;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.util.SparseArray;
 
 import java.io.File;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
@@ -87,7 +88,7 @@ public class DownloadTask implements Cloneable {
 
         final File file = new File(uri.getPath());
         if (file.isFile()) {
-            if (!TextUtils.isEmpty(filename) && !file.getName().equals(filename)) {
+            if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
                 throw new IllegalArgumentException("Uri already provided filename!");
             }
 
@@ -97,7 +98,7 @@ public class DownloadTask implements Cloneable {
             isUriIsDirectory = true;
         }
 
-        if (filename == null || filename.length() == 0) {
+        if (Util.isEmpty(filename)) {
             filenameHolder = new DownloadStrategy.FilenameHolder();
         } else {
             filenameHolder = new DownloadStrategy.FilenameHolder(filename);
@@ -134,6 +135,12 @@ public class DownloadTask implements Cloneable {
 
     public String getUrl() {
         return url;
+    }
+
+    @NonNull public String getParentPath() {
+        if (isUriIsDirectory) return uri.getPath();
+
+        return new File(uri.getPath()).getParent();
     }
 
     @Nullable public String getPath() {

@@ -16,8 +16,6 @@
 
 package cn.dreamtobe.okdownload.core.interceptor;
 
-import android.net.Uri;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -91,7 +89,7 @@ public class BreakpointInterceptorTest {
     public void splitBlock() throws IOException {
         when(mockChain.getResponseContentLength()).thenReturn(6666L);
 
-        final BreakpointInfo info = spy(new BreakpointInfo(0, "", mock(Uri.class)));
+        final BreakpointInfo info = spy(new BreakpointInfo(0, "", "", null));
         when(mockChain.getInfo()).thenReturn(info);
 
         interceptor.splitBlock(5, mockChain);

@@ -71,8 +71,18 @@ public class ProcessFileStrategy {
 
         protected ResumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
             final String filePath = task.getPath();
-            this.fileExist = filePath != null && new File(filePath).exists();
-            this.infoRight = info.getBlockCount() > 0;
+
+            File fileOnTask = null;
+            if (filePath == null) {
+                this.fileExist = false;
+            } else {
+                fileOnTask = new File(filePath);
+                this.fileExist = fileOnTask.exists();
+            }
+
+            final String pathOnInfo = info.getPath();
+            this.infoRight = info.getBlockCount() > 0 && pathOnInfo != null
+                    && new File(pathOnInfo).equals(fileOnTask);
             this.isAvailable = infoRight && fileExist;
 
             this.task = task;

@@ -18,7 +18,6 @@ package cn.dreamtobe.okdownload.core.download;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -80,15 +79,25 @@ public class DownloadStrategy {
 
     private static final Pattern TMP_FILE_NAME_PATTERN = Pattern.compile(".*\\\\|/([\\w|.]*)\\??");
 
-    public void validFilename(@Nullable String responseFileName,
-                              @NonNull DownloadTask task,
-                              @NonNull DownloadConnection.Connected connected) throws
+    public void validFilenameFromResume(@NonNull String filenameOnStore,
+                                        @NonNull DownloadTask task) {
+        final String filename = task.getFilename();
+        if (Util.isEmpty(filename)) {
+            task.getFilenameHolder().set(filenameOnStore);
+        }
+    }
+
+    public void validFilenameFromResponse(@Nullable String responseFileName,
+                                          @NonNull DownloadTask task,
+                                          @NonNull BreakpointInfo info,
+                                          @NonNull DownloadConnection.Connected connected) throws
             IOException {
-        if (TextUtils.isEmpty(task.getFilename())) {
+        if (Util.isEmpty(task.getFilename())) {
             final String filename = determineFilename(responseFileName, task, connected);
             // Double check avoid changed by other block.
-            if (TextUtils.isEmpty(task.getFilename())) {
+            if (Util.isEmpty(task.getFilename())) {
                 task.getFilenameHolder().set(filename);
+                info.getFilenameHolder().set(filename);
             }
 
             // Check whether filename has been changed by other block and the filename isn't unify.
@@ -103,24 +112,24 @@ public class DownloadStrategy {
                                        @NonNull DownloadConnection.Connected connected) throws
             IOException {
 
-        if (responseFileName == null || responseFileName.length() == 0) {
+        if (Util.isEmpty(responseFileName)) {
 
             final String url = task.getUrl();
             Matcher m = TMP_FILE_NAME_PATTERN.matcher(url);
-            String fileName = null;
+            String filename = null;
             while (m.find()) {
-                fileName = m.group(1);
+                filename = m.group(1);
             }
 
-            if (fileName == null || fileName.length() == 0) {
-                fileName = Util.md5(url);
+            if (Util.isEmpty(filename)) {
+                filename = Util.md5(url);
             }
 
-            if (fileName == null) {
+            if (filename == null) {
                 throw new IOException("Can't find valid filename.");
             }
 
-            return fileName;
+            return filename;
         }
 
         return responseFileName;
@@ -169,7 +178,7 @@ public class DownloadStrategy {
                     break;
                 }
 
-                if (!TextUtils.isEmpty(newEtag) && !newEtag.equals(etag)) {
+                if (!Util.isEmpty(newEtag) && !newEtag.equals(etag)) {
                     // etag changed.
                     resumeFailedCause = RESPONSE_ETAG_CHANGED;
                     break;

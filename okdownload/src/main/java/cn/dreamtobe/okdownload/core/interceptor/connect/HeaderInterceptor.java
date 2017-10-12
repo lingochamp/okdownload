@@ -17,7 +17,6 @@
 package cn.dreamtobe.okdownload.core.interceptor.connect;
 
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -74,7 +73,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         // add etag if exist
         final String etag = info.getEtag();
-        if (!TextUtils.isEmpty(etag)) {
+        if (!Util.isEmpty(etag)) {
             connection.addHeader("If-Match", etag);
         }
 
@@ -96,7 +95,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         final String contentDisposition = connected.getResponseHeaderField("Content-Disposition");
         final String responseFilename = parseContentDisposition(contentDisposition);
-        strategy.validFilename(responseFilename, chain.task, connected);
+        strategy.validFilenameFromResponse(responseFilename, chain.task, info, connected);
         inspectFileConflictAfterRun(chain);
 
         info.setEtag(etag);
@@ -104,7 +103,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
         // content-length
         final String contentLengthStr = connected.getResponseHeaderField("Content-Length");
         long contentLength;
-        if (TextUtils.isEmpty(contentLengthStr)) contentLength = CHUNKED_CONTENT_LENGTH;
+        if (Util.isEmpty(contentLengthStr)) contentLength = CHUNKED_CONTENT_LENGTH;
         else contentLength = Long.parseLong(contentLengthStr);
         if (contentLength < 0) {
             // no content length

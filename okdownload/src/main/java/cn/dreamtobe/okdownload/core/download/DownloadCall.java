@@ -74,7 +74,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Override
     public void execute() throws InterruptedException {
-        boolean retryFromBeginning = false;
+        boolean retry = false;
         while (true) {
             final OkDownload okDownload = OkDownload.with();
             final CallbackDispatcher dispatcher = okDownload.callbackDispatcher();
@@ -94,7 +94,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             final DownloadCache cache = new DownloadCache(outputStream);
             this.cache = cache;
 
-            if (retryFromBeginning) {
+            if (retry) {
                 try {
                     fileStrategy.discardProcess(task);
                     start(cache, info, false);
@@ -102,6 +102,11 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                     cache.setUnknownError(e);
                 }
             } else {
+                final String filenameOnStore = info.getFilename();
+                if (!Util.isEmpty(filenameOnStore)) {
+                    okDownload.downloadStrategy().validFilenameFromResume(filenameOnStore, task);
+                }
+
                 final ProcessFileStrategy.ResumeAvailableLocalCheck localCheck =
                         okDownload.processFileStrategy().resumeAvailableLocalCheck(task, info);
 
@@ -115,7 +120,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 // try again from beginning.
                 dispatcher.dispatch().downloadFromBeginning(task, info,
                         ((ResumeFailedException) cache.realCause).getResumeFailedCause());
-                retryFromBeginning = true;
+                retry = true;
                 continue;
             }
 
