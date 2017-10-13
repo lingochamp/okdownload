@@ -37,6 +37,7 @@ import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREA
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETAG_CHANGED;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRECONDITION_FAILED;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_RESET_RANGE_NOT_FROM_0;
+import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
 public class DownloadStrategy {
 
@@ -75,6 +76,16 @@ public class DownloadStrategy {
         }
 
         return 5;
+    }
+
+    public boolean isSplitBlock(final long contentLength,
+                                @NonNull DownloadConnection.Connected connected) throws
+            IOException {
+        // chunked
+        if (contentLength == CHUNKED_CONTENT_LENGTH) return false;
+
+        // partial, support range
+        return connected.getResponseCode() == HttpURLConnection.HTTP_PARTIAL;
     }
 
     private static final Pattern TMP_FILE_NAME_PATTERN = Pattern.compile(".*\\\\|/([\\w|.]*)\\??");

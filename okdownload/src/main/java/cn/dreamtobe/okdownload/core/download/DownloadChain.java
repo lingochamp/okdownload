@@ -46,7 +46,7 @@ public class DownloadChain implements Runnable {
 
     public final int blockIndex;
 
-    @NonNull public final DownloadTask task;
+    @NonNull private final DownloadTask task;
     @NonNull private final BreakpointInfo info;
     @NonNull private final DownloadCache cache;
     @Nullable private Thread parkThread;
@@ -91,7 +91,11 @@ public class DownloadChain implements Runnable {
         parkThread = null;
     }
 
-    public BreakpointInfo getInfo() {
+    @NonNull public DownloadTask getTask() {
+        return task;
+    }
+
+    @NonNull public BreakpointInfo getInfo() {
         return this.info;
     }
 
@@ -99,7 +103,7 @@ public class DownloadChain implements Runnable {
         this.connection = connection;
     }
 
-    public DownloadCache getCache() {
+    @NonNull public DownloadCache getCache() {
         return cache;
     }
 

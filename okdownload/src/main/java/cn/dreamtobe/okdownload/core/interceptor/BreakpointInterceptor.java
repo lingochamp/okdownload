@@ -26,8 +26,6 @@ import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.exception.CanceledException;
 
-import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
-
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
     @Override
@@ -44,10 +42,10 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             if (chain.blockIndex != 0) throw new IOException();
 
             final long contentLength = chain.getResponseContentLength();
-            if (contentLength != CHUNKED_CONTENT_LENGTH) {
+            if (OkDownload.with().downloadStrategy().isSplitBlock(contentLength, connected)) {
                 // split
                 final int blockCount = OkDownload.with().downloadStrategy()
-                        .determineBlockCount(chain.task, contentLength, connected);
+                        .determineBlockCount(chain.getTask(), contentLength, connected);
                 splitBlock(blockCount, chain);
             }
 

@@ -74,9 +74,7 @@ public class RedirectInterceptor implements Interceptor.Connect {
                         "Response code is " + code + " but can't find Location field");
             }
 
-            if (connection != null) {
-                connection.release();
-            }
+            connection.release();
 
             connection = OkDownload.with().connectionFactory().create(url);
             chain.setConnection(connection);

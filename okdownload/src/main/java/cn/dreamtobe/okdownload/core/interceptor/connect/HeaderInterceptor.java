@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
@@ -44,9 +45,10 @@ public class HeaderInterceptor implements Interceptor.Connect {
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         final BreakpointInfo info = chain.getInfo();
         final DownloadConnection connection = chain.getConnectionOrCreate();
+        final DownloadTask task = chain.getTask();
 
         // add user customize header
-        final Map<String, List<String>> userRequestHeaderField = chain.task.getHeaderMapFields();
+        final Map<String, List<String>> userRequestHeaderField = task.getHeaderMapFields();
         if (userRequestHeaderField != null) {
             for (Map.Entry<String, List<String>> entry : userRequestHeaderField.entrySet()) {
                 String key = entry.getKey();
@@ -81,11 +83,11 @@ public class HeaderInterceptor implements Interceptor.Connect {
             throw CanceledException.SIGNAL;
         }
 
-        OkDownload.with().callbackDispatcher().dispatch().connectStart(chain.task, blockIndex,
+        OkDownload.with().callbackDispatcher().dispatch().connectStart(task, blockIndex,
                 connection);
         DownloadConnection.Connected connected = chain.processConnect();
 
-        OkDownload.with().callbackDispatcher().dispatch().connectEnd(chain.task, blockIndex,
+        OkDownload.with().callbackDispatcher().dispatch().connectEnd(task, blockIndex,
                 connected);
         if (chain.getCache().isInterrupt()) {
             throw CanceledException.SIGNAL;
@@ -99,7 +101,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         final String contentDisposition = connected.getResponseHeaderField("Content-Disposition");
         final String responseFilename = parseContentDisposition(contentDisposition);
-        strategy.validFilenameFromResponse(responseFilename, chain.task, info, connected);
+        strategy.validFilenameFromResponse(responseFilename, task, info, connected);
         inspectFileConflictAfterRun(chain);
 
         info.setEtag(etag);
@@ -132,7 +134,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
     }
 
     private void inspectFileConflictAfterRun(DownloadChain chain) throws IOException {
-        if (OkDownload.with().downloadDispatcher().isFileConflictAfterRun(chain.task)) {
+        if (OkDownload.with().downloadDispatcher().isFileConflictAfterRun(chain.getTask())) {
             throw FileBusyAfterRunException.SIGNAL;
         }
     }

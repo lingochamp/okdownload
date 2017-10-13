@@ -74,6 +74,8 @@ public class TestUtils {
         when(mockCache.isInterrupt()).thenReturn(false);
         when(mockChain.getCache()).thenReturn(mockCache);
         when(mockChain.getInfo()).thenReturn(mock(BreakpointInfo.class));
+        when(mockChain.getTask()).thenReturn(mock(DownloadTask.class));
+        when(mockChain.getConnectionOrCreate()).thenReturn(mock(DownloadConnection.class));
 
         return mockChain;
     }

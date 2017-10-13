@@ -37,6 +37,7 @@ import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREA
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETAG_CHANGED;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRECONDITION_FAILED;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_RESET_RANGE_NOT_FROM_0;
+import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -150,6 +151,51 @@ public class DownloadStrategyTest {
 
     private DownloadStrategy.ResumeAvailableResponseCheck resumeAvailableResponseCheck() {
         return strategy.resumeAvailableResponseCheck(connected, 0, info);
+    }
+
+    @Test
+    public void determineBlockCount() {
+        // less than 1M
+        assertThat(strategy.determineBlockCount(task, 500, connected)).isEqualTo(1);
+        assertThat(strategy.determineBlockCount(task, 900 * 1024, connected)).isEqualTo(1);
+
+        // less than 5M
+        assertThat(strategy.determineBlockCount(task, 2 * 1024 * 1024, connected)).isEqualTo(2);
+        assertThat(strategy.determineBlockCount(task, (long) (4.9 * 1024 * 1024),
+                connected)).isEqualTo(2);
+
+        // less than 50M
+        assertThat(strategy.determineBlockCount(task, 18 * 1024 * 1024, connected)).isEqualTo(3);
+        assertThat(strategy.determineBlockCount(task, 49 * 1024 * 1024, connected)).isEqualTo(3);
+
+
+        // less than 100M
+        assertThat(strategy.determineBlockCount(task, 66 * 1024 * 1024, connected)).isEqualTo(4);
+        assertThat(strategy.determineBlockCount(task, 99 * 1024 * 1024, connected)).isEqualTo(4);
+
+        // more than 100M
+        assertThat(strategy.determineBlockCount(task, 1000 * 1024 * 1024, connected)).isEqualTo(5);
+        assertThat(strategy.determineBlockCount(task, 5323L * 1024 * 1024, connected)).isEqualTo(5);
+    }
+
+    @Test
+    public void isSplitBlock() throws IOException {
+        assertThat(strategy.isSplitBlock(CHUNKED_CONTENT_LENGTH, connected)).isFalse();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
+        assertThat(strategy.isSplitBlock(0, connected)).isFalse();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_CREATED);
+        assertThat(strategy.isSplitBlock(0, connected)).isFalse();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_RESET);
+        assertThat(strategy.isSplitBlock(0, connected)).isFalse();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_UNAVAILABLE);
+        assertThat(strategy.isSplitBlock(0, connected)).isFalse();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_PARTIAL);
+        assertThat(strategy.isSplitBlock(0, connected)).isTrue();
     }
 
     @Test

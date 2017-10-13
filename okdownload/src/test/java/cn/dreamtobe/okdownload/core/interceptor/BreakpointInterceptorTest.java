@@ -23,19 +23,23 @@ import org.mockito.Mock;
 
 import java.io.IOException;
 
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -83,6 +87,26 @@ public class BreakpointInterceptorTest {
         interceptor.interceptConnect(mockChain);
 
         verify(mockChain).unparkOtherBlock();
+    }
+
+    @Test
+    public void interceptConnect_otherBlockPark_split() throws IOException {
+        final long contentLength = 66666L;
+        final int blockCount = 6;
+
+        when(mockChain.isOtherBlockPark()).thenReturn(true);
+        when(mockChain.getResponseContentLength()).thenReturn(contentLength);
+        final DownloadStrategy strategy = OkDownload.with().downloadStrategy();
+        doReturn(true).when(strategy)
+                .isSplitBlock(eq(contentLength), any(DownloadConnection.Connected.class));
+
+        doReturn(blockCount).when(strategy)
+                .determineBlockCount(any(DownloadTask.class), eq(contentLength),
+                        any(DownloadConnection.Connected.class));
+        doNothing().when(interceptor).splitBlock(eq(blockCount), eq(mockChain));
+
+        interceptor.interceptConnect(mockChain);
+        verify(interceptor).splitBlock(eq(blockCount), eq(mockChain));
     }
 
     @Test
