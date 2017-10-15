@@ -29,6 +29,7 @@ import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -46,7 +47,12 @@ public class TestUtils {
         when(store.update(any(BreakpointInfo.class))).thenReturn(true);
         when(mockOkDownload.breakpointStore()).thenReturn(store);
 
-        when(mockOkDownload.downloadStrategy()).thenReturn(mock(DownloadStrategy.class));
+        final DownloadStrategy strategy = mock(DownloadStrategy.class);
+        when(mockOkDownload.downloadStrategy()).thenReturn(strategy);
+        when(strategy.resumeAvailableResponseCheck(any(DownloadConnection.Connected.class),
+                anyInt(), any(BreakpointInfo.class)))
+                .thenReturn(mock(DownloadStrategy.ResumeAvailableResponseCheck.class));
+
         when(mockOkDownload.downloadDispatcher()).thenReturn(mock(DownloadDispatcher.class));
 
         final CallbackDispatcher callbackDispatcher = mock(CallbackDispatcher.class);

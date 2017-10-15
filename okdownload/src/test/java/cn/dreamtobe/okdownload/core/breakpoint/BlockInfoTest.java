@@ -27,7 +27,7 @@ public class BlockInfoTest {
 
     @Before
     public void setup() {
-        info = new BlockInfo(0, 0, 0);
+        info = new BlockInfo(0, 1000);
     }
 
     @Test
@@ -44,5 +44,19 @@ public class BlockInfoTest {
 
         assertThat(info.getCurrentOffset()).isEqualTo(1);
         assertThat(copy.getCurrentOffset()).isEqualTo(2);
+    }
+
+    @Test
+    public void getRangeRight() {
+        BlockInfo info = new BlockInfo(0, 3, 1);
+        assertThat(info.getRangeRight()).isEqualTo(3);
+
+        info = new BlockInfo(12, 6, 2);
+        assertThat(info.getRangeRight()).isEqualTo(18);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void construct_illegalArgument() {
+        new BlockInfo(1, 5, 7);
     }
 }

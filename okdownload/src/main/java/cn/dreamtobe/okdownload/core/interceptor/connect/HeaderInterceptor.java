@@ -60,15 +60,15 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         // add range header
-        final int blockIndex = chain.blockIndex;
+        final int blockIndex = chain.getBlockIndex();
         final BlockInfo blockInfo = info.getBlock(blockIndex);
         if (blockInfo == null) {
             throw new IOException("No block-info found on " + blockIndex);
         }
 
-        String range = "bytes=" + blockInfo.getCurrentOffset() + "-";
+        String range = "bytes=" + blockInfo.getRangeLeft() + "-";
         if (blockIndex > 0 && blockIndex < info.getBlockCount() - 1) {
-            range += blockInfo.contentLength;
+            range += blockInfo.getRangeRight();
         }
 
         connection.addHeader("Range", range);

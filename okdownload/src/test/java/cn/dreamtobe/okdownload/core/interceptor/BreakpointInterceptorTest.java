@@ -122,17 +122,17 @@ public class BreakpointInterceptorTest {
         long totalLength = 0;
         for (int i = 0; i < 5; i++) {
             final BlockInfo blockInfo = info.getBlock(i);
-            totalLength += blockInfo.contentLength;
+            totalLength += blockInfo.getContentLength();
         }
         assertThat(totalLength).isEqualTo(6666L);
 
         final BlockInfo lastBlockInfo = info.getBlock(4);
-        assertThat(lastBlockInfo.startOffset + lastBlockInfo.contentLength).isEqualTo(6666L);
+        assertThat(lastBlockInfo.getRangeRight()).isEqualTo(6666L);
     }
 
     @Test
     public void interceptFetch_finish() throws IOException {
-        final BlockInfo blockInfo = new BlockInfo(0, 10, 0);
+        final BlockInfo blockInfo = new BlockInfo(0, 10);
 
         when(mockChain.getResponseContentLength()).thenReturn(new Long(10));
         when(mockChain.getInfo()).thenReturn(mockInfo);
@@ -147,7 +147,7 @@ public class BreakpointInterceptorTest {
 
     @Test(expected = IOException.class)
     public void interceptFetch_contentLengthNotMatch_exception() throws IOException {
-        final BlockInfo blockInfo = new BlockInfo(0, 1, 0);
+        final BlockInfo blockInfo = new BlockInfo(0, 1);
 
         when(mockChain.getInfo()).thenReturn(mockInfo);
         when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);

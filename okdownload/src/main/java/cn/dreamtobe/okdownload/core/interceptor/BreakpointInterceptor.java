@@ -39,7 +39,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         // handle first connect.
         if (chain.isOtherBlockPark()) {
             // only can on the first block.
-            if (chain.blockIndex != 0) throw new IOException();
+            if (chain.getBlockIndex() != 0) throw new IOException();
 
             final long contentLength = chain.getResponseContentLength();
             if (OkDownload.with().downloadStrategy().isSplitBlock(contentLength, connected)) {
@@ -82,14 +82,14 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
                 contentLength = eachLength;
             }
 
-            final BlockInfo blockInfo = new BlockInfo(startOffset, contentLength, startOffset);
+            final BlockInfo blockInfo = new BlockInfo(startOffset, contentLength);
             info.addBlock(blockInfo);
         }
     }
 
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
-        final int blockIndex = chain.blockIndex;
+        final int blockIndex = chain.getBlockIndex();
         final BreakpointInfo breakpointInfo = chain.getInfo();
         final BlockInfo blockInfo = breakpointInfo.getBlock(blockIndex);
 
@@ -113,9 +113,9 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         final long blockLength = startOffset + fetchLength;
-        if (blockLength != blockInfo.contentLength) {
+        if (blockLength != blockInfo.getContentLength()) {
             throw new IOException("Local block length is not match required one, " + blockLength
-                    + " != " + blockInfo.contentLength);
+                    + " != " + blockInfo.getContentLength());
         }
 
         return fetchLength;

@@ -16,14 +16,28 @@
 
 package cn.dreamtobe.okdownload.core.breakpoint;
 
+import android.support.annotation.IntRange;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BlockInfo {
-    public final long startOffset;
-    public final long contentLength;
+    @IntRange(from = 0)
+    private final long startOffset;
+    @IntRange(from = 0)
+    private final long contentLength;
     private final AtomicLong currentOffset;
 
-    public BlockInfo(long startOffset, long contentLength, long currentOffset) {
+    public BlockInfo(long startOffset, long contentLength) {
+        this(startOffset, contentLength, 0);
+    }
+
+    public BlockInfo(long startOffset, long contentLength, @IntRange(from = 0) long currentOffset) {
+        if (currentOffset > contentLength) throw new IllegalArgumentException();
+
+        if (startOffset < 0 || contentLength < 0 || currentOffset < 0) {
+            throw new IllegalArgumentException();
+        }
+
         this.startOffset = startOffset;
         this.contentLength = contentLength;
         this.currentOffset = new AtomicLong(currentOffset);
@@ -33,7 +47,23 @@ public class BlockInfo {
         return this.currentOffset.get();
     }
 
-    public void increaseCurrentOffset(long increaseLength) {
+    public long getRangeLeft() {
+        return startOffset + currentOffset.get();
+    }
+
+    public long getContentLength() {
+        return contentLength;
+    }
+
+    public boolean isNotFull() {
+        return currentOffset.get() != contentLength;
+    }
+
+    public long getRangeRight() {
+        return startOffset + contentLength;
+    }
+
+    public void increaseCurrentOffset(@IntRange(from = 1) long increaseLength) {
         this.currentOffset.addAndGet(increaseLength);
     }
 

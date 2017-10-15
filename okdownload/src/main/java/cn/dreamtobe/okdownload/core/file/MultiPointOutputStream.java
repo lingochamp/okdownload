@@ -109,9 +109,9 @@ public class MultiPointOutputStream {
             }
         }
 
-        if (blockInfo.getCurrentOffset() != blockInfo.contentLength) {
+        if (blockInfo.isNotFull()) {
             throw new IOException("The current offset on block-info isn't update correct, "
-                    + blockInfo.getCurrentOffset() + " != " + blockInfo.contentLength);
+                    + blockInfo.getCurrentOffset() + " != " + blockInfo.getContentLength());
         }
     }
 

@@ -27,9 +27,35 @@ import java.util.concurrent.ThreadFactory;
 
 public class Util {
 
-    public static void w(String tag, String msg) { Log.w(tag, msg); }
+    public interface Logger {
+        void w(String tag, String msg);
 
-    public static void d(String tag, String msg) { Log.d(tag, msg); }
+        void d(String tag, String msg);
+    }
+
+    private static Logger logger;
+
+    public static void setLogger(Logger l) {
+        logger = l;
+    }
+
+    public static void w(String tag, String msg) {
+        if (logger != null) {
+            logger.w(tag, msg);
+            return;
+        }
+
+        Log.w(tag, msg);
+    }
+
+    public static void d(String tag, String msg) {
+        if (logger != null) {
+            logger.d(tag, msg);
+            return;
+        }
+
+        Log.d(tag, msg);
+    }
 
     // For avoid mock whole android framework methods on unit-test.
     public static boolean isEmpty(@Nullable CharSequence str) {
@@ -47,11 +73,13 @@ public class Util {
         };
     }
 
-    @Nullable public static String md5(String string) {
+    @Nullable
+    public static String md5(String string) {
         byte[] hash = null;
         try {
             hash = MessageDigest.getInstance("MD5").digest(string.getBytes("UTF-8"));
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ignored) { }
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ignored) {
+        }
 
         if (hash != null) {
             StringBuilder hex = new StringBuilder(hash.length * 2);

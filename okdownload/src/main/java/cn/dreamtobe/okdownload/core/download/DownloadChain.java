@@ -44,7 +44,7 @@ public class DownloadChain implements Runnable {
 
     public static final int CHUNKED_CONTENT_LENGTH = -1;
 
-    public final int blockIndex;
+    private final int blockIndex;
 
     @NonNull private final DownloadTask task;
     @NonNull private final BreakpointInfo info;
@@ -97,6 +97,10 @@ public class DownloadChain implements Runnable {
 
     @NonNull public BreakpointInfo getInfo() {
         return this.info;
+    }
+
+    public int getBlockIndex() {
+        return blockIndex;
     }
 
     public void setConnection(@NonNull DownloadConnection connection) {

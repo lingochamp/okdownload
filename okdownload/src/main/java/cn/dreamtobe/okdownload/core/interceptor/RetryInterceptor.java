@@ -56,7 +56,7 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
             handleException(e, chain.getCache());
             throw e;
         } finally {
-            chain.getOutputStream().close(chain.blockIndex);
+            chain.getOutputStream().close(chain.getBlockIndex());
         }
     }
 

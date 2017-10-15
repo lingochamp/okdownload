@@ -177,7 +177,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             info.resetInfo();
 
             // add 0 task first.
-            info.addBlock(new BlockInfo(0, 0, 0));
+            info.addBlock(new BlockInfo(0, 0));
             // block until first block get response.
             final Thread parkThread = Thread.currentThread();
             final DownloadChain firstChain = DownloadChain.createFirstBlockChain(parkThread, task,
