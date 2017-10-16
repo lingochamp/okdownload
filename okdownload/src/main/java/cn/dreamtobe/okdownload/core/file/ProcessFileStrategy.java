@@ -29,6 +29,7 @@ import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.FILE_NOT_EXIST;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
+import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.OUTPUT_STREAM_NOT_SUPPORT;
 
 public class ProcessFileStrategy {
     @NonNull public MultiPointOutputStream createProcessStream(@NonNull DownloadTask task,
@@ -66,6 +67,7 @@ public class ProcessFileStrategy {
         private final boolean isAvailable;
         private final boolean fileExist;
         private final boolean infoRight;
+        private final boolean outputStreamNotSupport;
         private final DownloadTask task;
         private final BreakpointInfo info;
 
@@ -83,7 +85,9 @@ public class ProcessFileStrategy {
             final String pathOnInfo = info.getPath();
             this.infoRight = info.getBlockCount() > 0 && pathOnInfo != null
                     && new File(pathOnInfo).equals(fileOnTask);
-            this.isAvailable = infoRight && fileExist;
+            this.outputStreamNotSupport = info.getBlockCount() > 1
+                    && !OkDownload.with().outputStreamFactory().supportSeek();
+            this.isAvailable = infoRight && fileExist && outputStreamNotSupport;
 
             this.task = task;
             this.info = info;
@@ -101,6 +105,8 @@ public class ProcessFileStrategy {
                 dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
             } else if (!infoRight) {
                 dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
+            } else if (!outputStreamNotSupport) {
+                dispatcher.dispatch().downloadFromBeginning(task, info, OUTPUT_STREAM_NOT_SUPPORT);
             } else {
                 throw new IllegalStateException();
             }

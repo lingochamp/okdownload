@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
@@ -33,6 +34,7 @@ import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
 
+import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREATED_RANGE_NOT_FROM_0;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETAG_CHANGED;
 import static cn.dreamtobe.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRECONDITION_FAILED;
@@ -194,7 +196,14 @@ public class DownloadStrategyTest {
 
     @Test
     public void isSplitBlock() throws IOException {
+        mockOkDownload();
+
         assertThat(strategy.isSplitBlock(CHUNKED_CONTENT_LENGTH, connected)).isFalse();
+
+        when(OkDownload.with().outputStreamFactory().supportSeek()).thenReturn(false);
+        assertThat(strategy.isSplitBlock(0, connected)).isFalse();
+
+        when(OkDownload.with().outputStreamFactory().supportSeek()).thenReturn(true);
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
         assertThat(strategy.isSplitBlock(0, connected)).isFalse();

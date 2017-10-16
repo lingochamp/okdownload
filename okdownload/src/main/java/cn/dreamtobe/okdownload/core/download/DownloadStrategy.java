@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
@@ -83,6 +84,9 @@ public class DownloadStrategy {
             IOException {
         // chunked
         if (contentLength == CHUNKED_CONTENT_LENGTH) return false;
+
+        // output stream not support seek
+        if (!OkDownload.with().outputStreamFactory().supportSeek()) return false;
 
         // partial, support range
         return connected.getResponseCode() == HttpURLConnection.HTTP_PARTIAL;

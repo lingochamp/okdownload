@@ -26,6 +26,7 @@ import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 import cn.dreamtobe.okdownload.core.download.DownloadCache;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
+import cn.dreamtobe.okdownload.core.file.DownloadOutputStream;
 import cn.dreamtobe.okdownload.core.file.ProcessFileStrategy;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -66,6 +67,9 @@ public class TestUtils {
         final ProcessFileStrategy fileStrategy = spy(new ProcessFileStrategy());
         when(mockOkDownload.processFileStrategy()).thenReturn(fileStrategy);
         doNothing().when(fileStrategy).discardProcess(any(DownloadTask.class));
+
+        when(mockOkDownload.outputStreamFactory()).thenReturn(
+                mock(DownloadOutputStream.Factory.class));
     }
 
     public static void initProvider() {

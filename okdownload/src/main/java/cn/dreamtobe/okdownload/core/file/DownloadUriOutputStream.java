@@ -65,11 +65,6 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     }
 
     @Override
-    public boolean supportSeek() {
-        return true;
-    }
-
-    @Override
     public void seek(long offset) throws IOException {
         channel.position(offset);
     }
@@ -104,6 +99,10 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
         public DownloadOutputStream create(Context context, Uri uri, int flushBufferSize) throws
                 FileNotFoundException {
             return new DownloadUriOutputStream(context, uri, flushBufferSize);
+        }
+
+        @Override public boolean supportSeek() {
+            return true;
         }
     }
 }

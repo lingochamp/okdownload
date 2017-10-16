@@ -59,6 +59,7 @@ public class MultiPointOutputStream {
     private final BreakpointInfo info;
     private final DownloadTask task;
     private final BreakpointStore store;
+    private final boolean supportSeek;
 
     private boolean syncRunning;
 
@@ -71,6 +72,7 @@ public class MultiPointOutputStream {
         this.info = info;
 
         this.store = OkDownload.with().breakpointStore();
+        this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
@@ -200,6 +202,9 @@ public class MultiPointOutputStream {
                     OkDownload.with().context(),
                     uri,
                     flushBufferSize);
+            if (supportSeek) {
+                outputStream.seek(info.getBlock(blockIndex).getRangeLeft());
+            }
             outputStreamMap.put(blockIndex, outputStream);
             noSyncLengthMap.put(blockIndex, new AtomicLong());
         }

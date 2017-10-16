@@ -30,8 +30,6 @@ public interface DownloadOutputStream {
 
     void flushAndSync() throws IOException;
 
-    boolean supportSeek();
-
     void seek(long offset) throws IOException;
 
     void setLength(long newLength) throws IOException;
@@ -42,5 +40,7 @@ public interface DownloadOutputStream {
 
         DownloadOutputStream create(Context context, Uri uri, int flushBufferSize)
                 throws FileNotFoundException;
+
+        boolean supportSeek();
     }
 }
