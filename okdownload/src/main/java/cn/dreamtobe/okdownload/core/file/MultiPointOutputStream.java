@@ -60,6 +60,7 @@ public class MultiPointOutputStream {
     private final DownloadTask task;
     private final BreakpointStore store;
     private final boolean supportSeek;
+    private final boolean isPreAllocateLength;
 
     private boolean syncRunning;
 
@@ -73,6 +74,7 @@ public class MultiPointOutputStream {
 
         this.store = OkDownload.with().breakpointStore();
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
+        this.isPreAllocateLength = OkDownload.with().processFileStrategy().isPreAllocateLength();
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
@@ -174,6 +176,7 @@ public class MultiPointOutputStream {
         outputStream(blockIndex).close();
     }
 
+    private boolean firstOutputStream;
     private synchronized DownloadOutputStream outputStream(int blockIndex) throws
             IOException {
         final String path = task.getPath();
@@ -205,6 +208,11 @@ public class MultiPointOutputStream {
             if (supportSeek) {
                 outputStream.seek(info.getBlock(blockIndex).getRangeLeft());
             }
+
+            if (firstOutputStream && isPreAllocateLength) {
+                outputStream.setLength(info.getTotalLength());
+            }
+
             outputStreamMap.put(blockIndex, outputStream);
             noSyncLengthMap.put(blockIndex, new AtomicLong());
         }

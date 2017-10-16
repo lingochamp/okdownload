@@ -38,10 +38,20 @@ public class BreakpointInfoTest {
     @Test
     public void copyNotClone() {
         BreakpointInfo info = new BreakpointInfo(0, "", "", null);
-        info.addBlock(new BlockInfo(0, 0, 0));
+        info.addBlock(new BlockInfo(0, 0));
 
         final BreakpointInfo copy = info.copy();
 
         assertThat(info.getBlock(0)).isNotEqualTo(copy.getBlock(0));
+    }
+
+    @Test
+    public void getTotalLength() {
+        BreakpointInfo info = new BreakpointInfo(0, "", "", null);
+        info.addBlock(new BlockInfo(0, 10));
+        info.addBlock(new BlockInfo(10, 18, 2));
+        info.addBlock(new BlockInfo(28, 66, 20));
+
+        assertThat(info.getTotalLength()).isEqualTo(94);
     }
 }

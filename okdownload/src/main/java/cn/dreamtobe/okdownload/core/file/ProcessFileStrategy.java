@@ -63,6 +63,11 @@ public class ProcessFileStrategy {
         return new ResumeAvailableLocalCheck(task, info);
     }
 
+    public boolean isPreAllocateLength() {
+        // if support seek, enable pre-allocate length.
+        return OkDownload.with().outputStreamFactory().supportSeek();
+    }
+
     public static class ResumeAvailableLocalCheck {
         private final boolean isAvailable;
         private final boolean fileExist;
@@ -85,8 +90,13 @@ public class ProcessFileStrategy {
             final String pathOnInfo = info.getPath();
             this.infoRight = info.getBlockCount() > 0 && pathOnInfo != null
                     && new File(pathOnInfo).equals(fileOnTask);
-            this.outputStreamNotSupport = info.getBlockCount() > 1
-                    && !OkDownload.with().outputStreamFactory().supportSeek();
+
+            final boolean supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
+            this.outputStreamNotSupport = (info.getBlockCount() > 1 && !supportSeek)
+                    // pre-allocate but can't support seek, so can't resume, even though one block.
+                    || (info.getBlockCount() == 1 && !supportSeek
+                    && OkDownload.with().processFileStrategy().isPreAllocateLength());
+
             this.isAvailable = infoRight && fileExist && outputStreamNotSupport;
 
             this.task = task;
