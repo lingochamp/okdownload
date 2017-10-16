@@ -5,7 +5,7 @@ ext {
     targetSdkVersion = 26
     sourceCompatibilityVersion = JavaVersion.VERSION_1_7
     targetCompatibilityVersion = JavaVersion.VERSION_1_7
-    kotlin_version = '1.1.50'
+    kotlin_version = '1.1.51'
     anko_version = '0.10.1'
     coroutines_version = '0.18'
     supportLibrariesVersion = '26.0.2'
