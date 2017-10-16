@@ -22,7 +22,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
@@ -33,6 +38,7 @@ import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -101,5 +107,41 @@ public class HeaderInterceptorTest {
 
         assertThat(nameCaptor.getAllValues()).containsExactly("Range");
         assertThat(valueCaptor.getAllValues()).containsExactly("bytes=20-");
+    }
+
+    @Test
+    public void interceptConnect() throws IOException {
+        Map<String, List<String>> customHeader = new HashMap<>();
+        List<String> values = new ArrayList<>();
+        values.add("header1-value1");
+        values.add("header1-value2");
+        customHeader.put("header1", values);
+        values = new ArrayList<>();
+        values.add("header2-value");
+        customHeader.put("header2", values);
+
+        final DownloadChain chain = mockDownloadChain();
+        when(chain.getInfo().getBlock(0))
+                .thenReturn(new BlockInfo(0, 10));
+        final DownloadConnection connection = chain.getConnectionOrCreate();
+        final BreakpointInfo info = chain.getInfo();
+
+        final DownloadTask task = chain.getTask();
+        when(task.getHeaderMapFields()).thenReturn(customHeader);
+        when(info.getEtag()).thenReturn("etag1");
+
+        interceptor.interceptConnect(chain);
+
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(connection, times(5))
+                .addHeader(nameCaptor.capture(), valueCaptor.capture());
+
+        assertThat(nameCaptor.getAllValues())
+                .containsExactlyInAnyOrder("header1", "header1", "header2", "Range", "If-Match");
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("header1-value1", "header1-value2", "header2-value",
+                        "bytes=0-", "etag1");
     }
 }
