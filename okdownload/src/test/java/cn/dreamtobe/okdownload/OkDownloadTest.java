@@ -43,8 +43,10 @@ public class OkDownloadTest {
         assertThat(okDownload.downloadDispatcher()).isInstanceOf(DownloadDispatcher.class);
         assertThat(okDownload.callbackDispatcher()).isInstanceOf(CallbackDispatcher.class);
         assertThat(okDownload.breakpointStore()).isInstanceOf(BreakpointStoreOnCache.class);
-        assertThat(okDownload.connectionFactory()).isInstanceOf(DownloadUrlConnection.Factory.class);
-        assertThat(okDownload.outputStreamFactory()).isInstanceOf(DownloadOutputStream.Factory.class);
+        assertThat(okDownload.connectionFactory())
+                .isInstanceOf(DownloadUrlConnection.Factory.class);
+        assertThat(okDownload.outputStreamFactory())
+                .isInstanceOf(DownloadOutputStream.Factory.class);
         assertThat(okDownload.processFileStrategy()).isInstanceOf(ProcessFileStrategy.class);
         assertThat(okDownload.downloadStrategy()).isInstanceOf(DownloadStrategy.class);
     }
@@ -54,8 +56,10 @@ public class OkDownloadTest {
         final DownloadDispatcher mockDownloadDispatcher = mock(DownloadDispatcher.class);
         final CallbackDispatcher mockCallbackDispatcher = mock(CallbackDispatcher.class);
         final BreakpointStore mockBreakpointStore = mock(BreakpointStore.class);
-        final DownloadConnection.Factory mockConnectionFactory = mock(DownloadConnection.Factory.class);
-        final DownloadOutputStream.Factory mockOutputFactory = mock(DownloadOutputStream.Factory.class);
+        final DownloadConnection.Factory mockConnectionFactory =
+                mock(DownloadConnection.Factory.class);
+        final DownloadOutputStream.Factory mockOutputFactory =
+                mock(DownloadOutputStream.Factory.class);
         final ProcessFileStrategy mockProcessFileStrategy = mock(ProcessFileStrategy.class);
         final DownloadStrategy mockDownloadStrategy = mock(DownloadStrategy.class);
         final DownloadMonitor mockMonitor = mock(DownloadMonitor.class);

@@ -66,7 +66,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_PreconditionFailed() throws IOException {
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = resumeAvailableResponseCheck();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_PRECON_FAILED);
         expectResumeFailed(RESPONSE_PRECONDITION_FAILED);
@@ -76,7 +77,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_EtagChanged() throws IOException {
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = resumeAvailableResponseCheck();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
         when(connected.getResponseHeaderField("Etag")).thenReturn("new-etag");
@@ -87,7 +89,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_CreatedWithoutFrom0() throws IOException {
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = resumeAvailableResponseCheck();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_CREATED);
         final BlockInfo blockInfo = mock(BlockInfo.class);
@@ -100,7 +103,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_ResetWithoutFrom0() throws IOException {
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = resumeAvailableResponseCheck();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_RESET);
         final BlockInfo blockInfo = mock(BlockInfo.class);
@@ -114,7 +118,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_notPartialAndOk() throws IOException {
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = resumeAvailableResponseCheck();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(501);
         when(info.getBlock(0)).thenReturn(mock(BlockInfo.class));
@@ -126,7 +131,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_okNotFrom0() throws IOException {
-        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck = resumeAvailableResponseCheck();
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
         final BlockInfo blockInfo = mock(BlockInfo.class);
@@ -157,25 +163,33 @@ public class DownloadStrategyTest {
     public void determineBlockCount() {
         // less than 1M
         assertThat(strategy.determineBlockCount(task, 500, connected)).isEqualTo(1);
-        assertThat(strategy.determineBlockCount(task, 900 * 1024, connected)).isEqualTo(1);
+        assertThat(strategy.determineBlockCount(task, 900 * 1024, connected))
+                .isEqualTo(1);
 
         // less than 5M
-        assertThat(strategy.determineBlockCount(task, 2 * 1024 * 1024, connected)).isEqualTo(2);
+        assertThat(strategy.determineBlockCount(task, 2 * 1024 * 1024, connected))
+                .isEqualTo(2);
         assertThat(strategy.determineBlockCount(task, (long) (4.9 * 1024 * 1024),
                 connected)).isEqualTo(2);
 
         // less than 50M
-        assertThat(strategy.determineBlockCount(task, 18 * 1024 * 1024, connected)).isEqualTo(3);
-        assertThat(strategy.determineBlockCount(task, 49 * 1024 * 1024, connected)).isEqualTo(3);
+        assertThat(strategy.determineBlockCount(task, 18 * 1024 * 1024, connected))
+                .isEqualTo(3);
+        assertThat(strategy.determineBlockCount(task, 49 * 1024 * 1024, connected))
+                .isEqualTo(3);
 
 
         // less than 100M
-        assertThat(strategy.determineBlockCount(task, 66 * 1024 * 1024, connected)).isEqualTo(4);
-        assertThat(strategy.determineBlockCount(task, 99 * 1024 * 1024, connected)).isEqualTo(4);
+        assertThat(strategy.determineBlockCount(task, 66 * 1024 * 1024, connected))
+                .isEqualTo(4);
+        assertThat(strategy.determineBlockCount(task, 99 * 1024 * 1024, connected))
+                .isEqualTo(4);
 
         // more than 100M
-        assertThat(strategy.determineBlockCount(task, 1000 * 1024 * 1024, connected)).isEqualTo(5);
-        assertThat(strategy.determineBlockCount(task, 5323L * 1024 * 1024, connected)).isEqualTo(5);
+        assertThat(strategy.determineBlockCount(task, 1000 * 1024 * 1024, connected))
+                .isEqualTo(5);
+        assertThat(strategy.determineBlockCount(task, 5323L * 1024 * 1024, connected))
+                .isEqualTo(5);
     }
 
     @Test

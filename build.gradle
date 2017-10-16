@@ -13,6 +13,7 @@ subprojects {
     task('checkstyle', type: Checkstyle) {
         configFile rootProject.file('checkstyle.xml')
         source 'src/main/java'
+        source 'src/test/java'
         ignoreFailures false
         showViolations true
         include '**/*.java'
@@ -40,8 +41,8 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0-beta7'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.50"
+        classpath 'com.android.tools.build:gradle:3.0.0-rc1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.51"
     }
 }
 

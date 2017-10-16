@@ -151,11 +151,16 @@ public class DownloadChainTest {
         chain.fetchInterceptorList.add(fetch3);
 
         chain.fetchIndex = 0;
-        chain.loopFetch();//1
-        chain.loopFetch();//2
-        chain.loopFetch();//3
-        chain.loopFetch();//3
-        chain.loopFetch();//3
+        //1
+        chain.loopFetch();
+        //2
+        chain.loopFetch();
+        //3
+        chain.loopFetch();
+        //3
+        chain.loopFetch();
+        //3
+        chain.loopFetch();
 
         assertThat(chain.fetchIndex).isEqualTo(3);
         verify(fetch1).interceptFetch(chain);

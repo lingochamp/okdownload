@@ -92,8 +92,10 @@ public class RedirectInterceptorTest {
         }
 
         verify(mockChain, times(MAX_REDIRECT_TIMES)).processConnect();
-        verify(mockChain, times(MAX_REDIRECT_TIMES - 1)).setRedirectLocation(mockLocation);
-        verify(mockChain, times(MAX_REDIRECT_TIMES - 1)).setConnection(any(DownloadConnection.class));
+        verify(mockChain, times(MAX_REDIRECT_TIMES - 1))
+                .setRedirectLocation(mockLocation);
+        verify(mockChain, times(MAX_REDIRECT_TIMES - 1))
+                .setConnection(any(DownloadConnection.class));
     }
 
     @Test
