@@ -215,6 +215,8 @@ public class MultiPointOutputStream {
 
             outputStreamMap.put(blockIndex, outputStream);
             noSyncLengthMap.put(blockIndex, new AtomicLong());
+
+            firstOutputStream = false;
         }
 
         return outputStream;
