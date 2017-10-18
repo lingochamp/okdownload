@@ -72,7 +72,7 @@ public class ProcessFileStrategy {
         private final boolean isAvailable;
         private final boolean fileExist;
         private final boolean infoRight;
-        private final boolean outputStreamNotSupport;
+        private final boolean outputStreamSupport;
         private final DownloadTask task;
         private final BreakpointInfo info;
 
@@ -92,12 +92,13 @@ public class ProcessFileStrategy {
                     && new File(pathOnInfo).equals(fileOnTask);
 
             final boolean supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
-            this.outputStreamNotSupport = (info.getBlockCount() > 1 && !supportSeek)
+            this.outputStreamSupport = (info.getBlockCount() > 1 && supportSeek)
                     // pre-allocate but can't support seek, so can't resume, even though one block.
                     || (info.getBlockCount() == 1 && !supportSeek
-                    && OkDownload.with().processFileStrategy().isPreAllocateLength());
+                    && !OkDownload.with().processFileStrategy().isPreAllocateLength())
+                    || (info.getBlockCount() == 1 && supportSeek);
 
-            this.isAvailable = infoRight && fileExist && outputStreamNotSupport;
+            this.isAvailable = infoRight && fileExist && outputStreamSupport;
 
             this.task = task;
             this.info = info;
@@ -115,7 +116,7 @@ public class ProcessFileStrategy {
                 dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
             } else if (!infoRight) {
                 dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
-            } else if (!outputStreamNotSupport) {
+            } else if (!outputStreamSupport) {
                 dispatcher.dispatch().downloadFromBeginning(task, info, OUTPUT_STREAM_NOT_SUPPORT);
             } else {
                 throw new IllegalStateException();
