@@ -47,11 +47,11 @@ public class MultiPointOutputStream {
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload file io", false));
 
-    private SparseArray<DownloadOutputStream> outputStreamMap = new SparseArray<>();
+    final SparseArray<DownloadOutputStream> outputStreamMap = new SparseArray<>();
 
-    private SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
-    private AtomicLong allNoSyncLength = new AtomicLong();
-    private AtomicLong lastSyncTimestamp = new AtomicLong();
+    final SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
+    final AtomicLong allNoSyncLength = new AtomicLong();
+    private final AtomicLong lastSyncTimestamp = new AtomicLong();
 
     private final int flushBufferSize;
     private final int syncBufferSize;
@@ -62,7 +62,7 @@ public class MultiPointOutputStream {
     private final boolean supportSeek;
     private final boolean isPreAllocateLength;
 
-    private boolean syncRunning;
+    boolean syncRunning;
 
     public MultiPointOutputStream(@NonNull DownloadTask task,
                                   @NonNull BreakpointInfo info) {
@@ -177,7 +177,7 @@ public class MultiPointOutputStream {
     }
 
     private boolean firstOutputStream;
-    private synchronized DownloadOutputStream outputStream(int blockIndex) throws
+    synchronized DownloadOutputStream outputStream(int blockIndex) throws
             IOException {
         final String path = task.getPath();
         if (path == null) throw new FileNotFoundException("Filename is not ready!");
