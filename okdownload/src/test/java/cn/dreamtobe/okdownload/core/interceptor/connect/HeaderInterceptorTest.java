@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
@@ -36,7 +37,9 @@ import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
+import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -124,6 +127,7 @@ public class HeaderInterceptorTest {
         when(chain.getInfo().getBlock(0))
                 .thenReturn(new BlockInfo(0, 10));
         final DownloadConnection connection = chain.getConnectionOrCreate();
+        final DownloadConnection.Connected connected = chain.processConnect();
         final BreakpointInfo info = chain.getInfo();
 
         final DownloadTask task = chain.getTask();
@@ -143,5 +147,30 @@ public class HeaderInterceptorTest {
         assertThat(valueCaptor.getAllValues())
                 .containsExactlyInAnyOrder("header1-value1", "header1-value2", "header2-value",
                         "bytes=0-", "etag1");
+
+        verify(OkDownload.with().downloadStrategy())
+                .resumeAvailableResponseCheck(eq(connected), eq(0), eq(info));
+        verify(OkDownload.with().downloadStrategy()
+                .resumeAvailableResponseCheck(connected, 0, info)).inspect();
+        verify(OkDownload.with().downloadDispatcher()).isFileConflictAfterRun(eq(chain.getTask()));
+
+        ArgumentCaptor<Long> contentLengthCaptor = ArgumentCaptor.forClass(Long.class);
+        verify(chain).setResponseContentLength(contentLengthCaptor.capture());
+        assertThat(contentLengthCaptor.getValue()).isEqualTo(CHUNKED_CONTENT_LENGTH);
+
+        when(connected.getResponseHeaderField("Content-Length")).thenReturn("10");
+        interceptor.interceptConnect(chain);
+        verify(chain, times(2)).setResponseContentLength(contentLengthCaptor.capture());
+        assertThat(contentLengthCaptor.getAllValues()).containsOnly(-1L, 10L);
+    }
+
+    @Test
+    public void parseContentDisposition() {
+        String filename = HeaderInterceptor
+                .parseContentDisposition("attachment; ...filename ii=\"hello world\"");
+        assertThat(filename).isNull();
+        filename = HeaderInterceptor
+                .parseContentDisposition("attachment; filename=\"hello world\"");
+        assertThat(filename).isEqualTo("hello world");
     }
 }

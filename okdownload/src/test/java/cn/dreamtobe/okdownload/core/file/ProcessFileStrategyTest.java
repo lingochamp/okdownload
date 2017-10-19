@@ -46,7 +46,7 @@ public class ProcessFileStrategyTest {
 
     @Mock private DownloadTask task;
     @Mock private BreakpointInfo info;
-    final private String existPath = "./exist-path/";
+    private final String existPath = "./exist-path/";
 
     @Before
     public void setup() throws IOException {
