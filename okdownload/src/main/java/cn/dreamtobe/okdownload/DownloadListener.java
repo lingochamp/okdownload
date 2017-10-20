@@ -36,7 +36,6 @@ public interface DownloadListener {
 
     void connectEnd(DownloadTask task, int blockIndex, DownloadConnection.Connected connected);
 
-
     void fetchStart(DownloadTask task, int blockIndex, long contentLength);
 
     void fetchProgress(DownloadTask task, int blockIndex, long fetchedBytes);

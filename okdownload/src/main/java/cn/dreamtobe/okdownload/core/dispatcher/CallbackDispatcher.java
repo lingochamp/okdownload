@@ -136,14 +136,9 @@ public class CallbackDispatcher {
             @Override
             public void fetchProgress(final DownloadTask task, final int blockIndex,
                                       final long fetchedBytes) {
-                final long minInterval = task.getMinIntervalMillisCallbackProcess();
-                final long now = SystemClock.uptimeMillis();
-                if (minInterval > 0
-                        && now - TaskCallbackWrapper.getLastCallbackProcessTs(task) < minInterval) {
-                    return;
+                if (task.getMinIntervalMillisCallbackProcess() > 0) {
+                    TaskCallbackWrapper.setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
                 }
-
-                if (minInterval > 0) TaskCallbackWrapper.setLastCallbackProcessTs(task, now);
 
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
@@ -184,6 +179,13 @@ public class CallbackDispatcher {
                 }
             }
         };
+    }
+
+    public boolean isFetchProcessMoment(DownloadTask task) {
+        final long minInterval = task.getMinIntervalMillisCallbackProcess();
+        final long now = SystemClock.uptimeMillis();
+        return minInterval <= 0
+                || now - TaskCallbackWrapper.getLastCallbackProcessTs(task) >= minInterval;
     }
 
     public DownloadListener dispatch() {

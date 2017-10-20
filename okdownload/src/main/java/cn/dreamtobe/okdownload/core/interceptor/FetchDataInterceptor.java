@@ -51,6 +51,8 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
         this.dispatcher = OkDownload.with().callbackDispatcher();
     }
 
+    private long noCallbackFetchedBytes;
+
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
         if (chain.getCache().isInterrupt()) {
@@ -66,7 +68,11 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
         // write to file
         outputStream.write(blockIndex, readBuffer, fetchLength);
 
-        this.dispatcher.dispatch().fetchProgress(task, blockIndex, fetchLength);
+        noCallbackFetchedBytes += fetchLength;
+        if (this.dispatcher.isFetchProcessMoment(task)) {
+            this.dispatcher.dispatch().fetchProgress(task, blockIndex, noCallbackFetchedBytes);
+            noCallbackFetchedBytes = 0;
+        }
 
         return fetchLength;
     }
