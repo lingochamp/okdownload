@@ -1,2 +1,10 @@
-<manifest
-    package="cn.dreamtobe.okdownload"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="cn.dreamtobe.okdownload">
+
+    <application>
+        <provider
+            android:name=".OkDownloadProvider"
+            android:authorities="${applicationId}.cn.dreamtobe.okdownload"
+            android:exported="false"/>
+    </application>
+</manifest>
