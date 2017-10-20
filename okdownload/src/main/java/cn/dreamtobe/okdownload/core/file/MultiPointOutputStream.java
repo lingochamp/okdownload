@@ -194,7 +194,7 @@ public class MultiPointOutputStream {
 
         final Uri uri;
         if (task.isUriIsDirectory()) {
-            uri = Uri.parse(file.toString());
+            uri = Uri.fromFile(file);
         } else {
             uri = task.getUri();
         }
