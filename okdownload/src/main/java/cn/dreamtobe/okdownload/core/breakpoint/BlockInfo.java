@@ -70,4 +70,8 @@ public class BlockInfo {
     public BlockInfo copy() {
         return new BlockInfo(startOffset, contentLength, currentOffset.get());
     }
+
+    @Override public String toString() {
+        return "[" + startOffset + ", " + getRangeRight() + ")" + "-current:" + currentOffset;
+    }
 }

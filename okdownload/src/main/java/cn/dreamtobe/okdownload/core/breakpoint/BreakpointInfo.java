@@ -114,4 +114,10 @@ public class BreakpointInfo {
         }
         return info;
     }
+
+    @Override public String toString() {
+        return "id[" + id + "]" + " url[" + url + "]" + " etag[" + etag + "]"
+                + " parent path[" + parentPath + "]" + " filename[" + filenameHolder.get() + "]"
+                + " block(s):" + blockInfoList.toString();
+    }
 }
