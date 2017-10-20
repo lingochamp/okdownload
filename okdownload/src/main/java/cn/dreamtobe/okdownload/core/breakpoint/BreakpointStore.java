@@ -24,8 +24,7 @@ import cn.dreamtobe.okdownload.DownloadTask;
 
 public interface BreakpointStore {
 
-    @Nullable
-    BreakpointInfo get(int id);
+    @Nullable BreakpointInfo get(int id);
 
     BreakpointInfo createAndInsert(@NonNull DownloadTask task);
 

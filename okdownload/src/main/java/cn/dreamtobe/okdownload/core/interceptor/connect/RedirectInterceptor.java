@@ -23,7 +23,7 @@ import java.net.ProtocolException;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 
 public class RedirectInterceptor implements Interceptor.Connect {
@@ -54,7 +54,7 @@ public class RedirectInterceptor implements Interceptor.Connect {
         while (true) {
 
             if (chain.getCache().isInterrupt()) {
-                throw CanceledException.SIGNAL;
+                throw InterruptException.SIGNAL;
             }
 
             final DownloadConnection.Connected connected = chain.processConnect();

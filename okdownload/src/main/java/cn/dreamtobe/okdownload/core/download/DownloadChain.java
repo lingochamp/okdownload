@@ -30,7 +30,7 @@ import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
-import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import cn.dreamtobe.okdownload.core.interceptor.BreakpointInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.FetchDataInterceptor;
@@ -152,7 +152,7 @@ public class DownloadChain implements Runnable {
         connectIndex = 0;
         final DownloadConnection.Connected connected = processConnect();
         if (cache.isInterrupt()) {
-            throw CanceledException.SIGNAL;
+            throw InterruptException.SIGNAL;
         }
 
         dispatcher.dispatch().fetchStart(task, blockIndex, getResponseContentLength());
@@ -205,9 +205,8 @@ public class DownloadChain implements Runnable {
 
         try {
             start();
-        } catch (IOException e) {
-            // cancelled.
-            e.printStackTrace();
+        } catch (IOException ignored) {
+            // interrupt.
         } finally {
             finished.set(true);
         }

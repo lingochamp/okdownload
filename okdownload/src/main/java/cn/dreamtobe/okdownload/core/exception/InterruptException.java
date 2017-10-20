@@ -18,12 +18,12 @@ package cn.dreamtobe.okdownload.core.exception;
 
 import java.io.IOException;
 
-public class CanceledException extends IOException {
-    private CanceledException() {
-        super("Canceled");
+public class InterruptException extends IOException {
+    private InterruptException() {
+        super("Interrupted");
     }
 
-    public static final CanceledException SIGNAL = new CanceledException() {
+    public static final InterruptException SIGNAL = new InterruptException() {
         @Override public StackTraceElement[] getStackTrace() {
             throw new IllegalAccessError("Stack is ignored for signal");
         }

@@ -24,7 +24,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
-import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.InterruptException;
 
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
@@ -33,7 +33,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         final DownloadConnection.Connected connected = chain.processConnect();
 
         if (chain.getCache().isInterrupt()) {
-            throw CanceledException.SIGNAL;
+            throw InterruptException.SIGNAL;
         }
 
         // handle first connect.

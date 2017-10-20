@@ -32,7 +32,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
-import cn.dreamtobe.okdownload.core.exception.CanceledException;
+import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 
@@ -80,7 +80,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         if (chain.getCache().isInterrupt()) {
-            throw CanceledException.SIGNAL;
+            throw InterruptException.SIGNAL;
         }
 
         OkDownload.with().callbackDispatcher().dispatch().connectStart(task, blockIndex,
@@ -90,7 +90,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
         OkDownload.with().callbackDispatcher().dispatch().connectEnd(task, blockIndex,
                 connected);
         if (chain.getCache().isInterrupt()) {
-            throw CanceledException.SIGNAL;
+            throw InterruptException.SIGNAL;
         }
 
         // if precondition failed.
