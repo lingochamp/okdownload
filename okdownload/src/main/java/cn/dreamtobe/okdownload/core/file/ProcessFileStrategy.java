@@ -112,10 +112,10 @@ public class ProcessFileStrategy {
             final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
             if (isAvailable) {
                 dispatcher.dispatch().downloadFromBreakpoint(task, info);
-            } else if (!fileExist) {
-                dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
             } else if (!infoRight) {
                 dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
+            } else if (!fileExist) {
+                dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
             } else if (!outputStreamSupport) {
                 dispatcher.dispatch().downloadFromBeginning(task, info, OUTPUT_STREAM_NOT_SUPPORT);
             } else {
