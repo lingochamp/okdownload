@@ -91,10 +91,19 @@ public class ProcessFileStrategyTest {
 
         // file not exist
         when(task.getPath()).thenReturn(noExistPath);
+        when(info.getPath()).thenReturn(noExistPath);
         check = strategy.resumeAvailableLocalCheck(task, info);
         assertThat(check.isAvailable()).isFalse();
         check.callbackCause();
         verify(listener).downloadFromBeginning(eq(task), eq(info), eq(FILE_NOT_EXIST));
+
+        // no filename
+        when(task.getPath()).thenReturn(null);
+        when(info.getPath()).thenReturn(null);
+        check = strategy.resumeAvailableLocalCheck(task, info);
+        assertThat(check.isAvailable()).isFalse();
+        check.callbackCause();
+        verify(listener).downloadFromBeginning(eq(task), eq(info), eq(INFO_DIRTY));
 
         // info not right
         when(task.getPath()).thenReturn(existPath);
@@ -102,14 +111,14 @@ public class ProcessFileStrategyTest {
         check = strategy.resumeAvailableLocalCheck(task, info);
         assertThat(check.isAvailable()).isFalse();
         check.callbackCause();
-        verify(listener).downloadFromBeginning(eq(task), eq(info), eq(INFO_DIRTY));
+        verify(listener, times(2)).downloadFromBeginning(eq(task), eq(info), eq(INFO_DIRTY));
 
         when(info.getPath()).thenReturn(existPath);
         when(info.getBlockCount()).thenReturn(0);
         check = strategy.resumeAvailableLocalCheck(task, info);
         assertThat(check.isAvailable()).isFalse();
         check.callbackCause();
-        verify(listener, times(2)).downloadFromBeginning(eq(task), eq(info), eq(INFO_DIRTY));
+        verify(listener, times(3)).downloadFromBeginning(eq(task), eq(info), eq(INFO_DIRTY));
 
         // output stream not support
         when(info.getBlockCount()).thenReturn(3);

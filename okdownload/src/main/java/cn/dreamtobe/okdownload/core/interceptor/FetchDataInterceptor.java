@@ -60,7 +60,6 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
         // fetch
         int fetchLength = inputStream.read(readBuffer);
         if (fetchLength == -1) {
-            outputStream.interceptComplete(blockIndex);
             return fetchLength;
         }
 

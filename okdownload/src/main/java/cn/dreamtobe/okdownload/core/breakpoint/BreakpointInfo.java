@@ -54,6 +54,14 @@ public class BreakpointInfo {
         this.blockInfoList.add(blockInfo);
     }
 
+    public boolean isLastBlock(int blockIndex) {
+        return blockIndex == blockInfoList.size() - 1;
+    }
+
+    public boolean isSingleBlock() {
+        return blockInfoList.size() == 1;
+    }
+
     public BlockInfo getBlock(int blockIndex) {
         return blockInfoList.get(blockIndex);
     }

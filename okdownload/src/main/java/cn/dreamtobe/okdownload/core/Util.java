@@ -92,4 +92,9 @@ public class Util {
 
         return null;
     }
+
+    public static boolean isCorrectFull(long fetchedLength, long contentLength,
+                                        boolean isLastBlock) {
+        return fetchedLength != (isLastBlock ? contentLength : contentLength + 1);
+    }
 }

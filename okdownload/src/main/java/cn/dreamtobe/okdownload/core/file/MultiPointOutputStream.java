@@ -92,9 +92,7 @@ public class MultiPointOutputStream {
     private List<Thread> parkThreadList = new ArrayList<>();
     private static final long WAIT_SYNC_NANO = TimeUnit.MILLISECONDS.toNanos(100);
 
-    public void interceptComplete(int blockIndex) throws IOException {
-        final BlockInfo blockInfo = info.getBlock(blockIndex);
-
+    public void ensureSyncComplete(int blockIndex) {
         final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
         if (noSyncLength.get() > 0) {
             // sync to store
@@ -112,10 +110,15 @@ public class MultiPointOutputStream {
                 syncRunnable.run();
             }
         }
+    }
 
-        if (blockInfo.isNotFull()) {
+    public void inspectComplete(int blockIndex) throws IOException {
+        final BlockInfo blockInfo = info.getBlock(blockIndex);
+        if (Util.isCorrectFull(blockInfo.getCurrentOffset(), blockInfo.getContentLength(),
+                info.isLastBlock(blockIndex))) {
             throw new IOException("The current offset on block-info isn't update correct, "
-                    + blockInfo.getCurrentOffset() + " != " + blockInfo.getContentLength());
+                    + blockInfo.getCurrentOffset() + " != " + blockInfo.getContentLength()
+                    + " on " + blockIndex);
         }
     }
 
@@ -177,6 +180,7 @@ public class MultiPointOutputStream {
     }
 
     private boolean firstOutputStream;
+
     synchronized DownloadOutputStream outputStream(int blockIndex) throws
             IOException {
         final String path = task.getPath();

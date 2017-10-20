@@ -55,10 +55,6 @@ public class BlockInfo {
         return contentLength;
     }
 
-    public boolean isNotFull() {
-        return currentOffset.get() != contentLength;
-    }
-
     public long getRangeRight() {
         return startOffset + contentLength;
     }

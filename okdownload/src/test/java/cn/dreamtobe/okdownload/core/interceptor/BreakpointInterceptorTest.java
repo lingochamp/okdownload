@@ -31,6 +31,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
+import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
@@ -136,6 +137,7 @@ public class BreakpointInterceptorTest {
 
         when(mockChain.getResponseContentLength()).thenReturn(new Long(10));
         when(mockChain.getInfo()).thenReturn(mockInfo);
+        when(mockChain.getOutputStream()).thenReturn(mock(MultiPointOutputStream.class));
         when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);
         when(mockChain.loopFetch()).thenReturn(1L, 1L, 2L, 1L, 5L, -1L);
 
@@ -144,16 +146,4 @@ public class BreakpointInterceptorTest {
 
         assertThat(contentLength).isEqualTo(10);
     }
-
-    @Test(expected = IOException.class)
-    public void interceptFetch_contentLengthNotMatch_exception() throws IOException {
-        final BlockInfo blockInfo = new BlockInfo(0, 1);
-
-        when(mockChain.getInfo()).thenReturn(mockInfo);
-        when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);
-        when(mockChain.loopFetch()).thenReturn(new Long(-1));
-
-        interceptor.interceptFetch(mockChain);
-    }
-
 }

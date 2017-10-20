@@ -86,7 +86,7 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void interceptComplete() throws IOException {
+    public void ensureSyncComplete() throws IOException {
         final DownloadOutputStream outputStream = mock(DownloadOutputStream.class);
         doReturn(outputStream).when(multiPointOutputStream).outputStream(1);
         when(info.getBlock(1)).thenReturn(mock(BlockInfo.class));
@@ -97,10 +97,26 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
         multiPointOutputStream.outputStreamMap.put(1, mock(DownloadOutputStream.class));
 
-        multiPointOutputStream.interceptComplete(1);
+        multiPointOutputStream.ensureSyncComplete(1);
 
         verify(store).onSyncToFilesystemSuccess(info, 1, 10);
         assertThat(multiPointOutputStream.allNoSyncLength.get()).isZero();
         assertThat(multiPointOutputStream.noSyncLengthMap.get(1).get()).isZero();
+    }
+
+    @Test(expected = IOException.class)
+    public void inspectComplete_notFull() throws IOException {
+        final DownloadOutputStream outputStream = mock(DownloadOutputStream.class);
+        doReturn(outputStream).when(multiPointOutputStream).outputStream(1);
+        final BlockInfo blockInfo = mock(BlockInfo.class);
+        when(info.getBlock(1)).thenReturn(blockInfo);
+        multiPointOutputStream.syncRunning = false;
+        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong());
+
+        when(blockInfo.getContentLength()).thenReturn(10L);
+        when(blockInfo.getCurrentOffset()).thenReturn(10L);
+        when(info.isLastBlock(1)).thenReturn(false);
+
+        multiPointOutputStream.inspectComplete(1);
     }
 }

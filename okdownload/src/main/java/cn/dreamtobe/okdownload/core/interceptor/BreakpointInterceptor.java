@@ -25,6 +25,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.exception.InterruptException;
+import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
@@ -89,15 +90,16 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
     @Override
     public long interceptFetch(DownloadChain chain) throws IOException {
-        final int blockIndex = chain.getBlockIndex();
-        final BreakpointInfo breakpointInfo = chain.getInfo();
-        final BlockInfo blockInfo = breakpointInfo.getBlock(blockIndex);
-
         final long contentLength = chain.getResponseContentLength();
+        final int blockIndex = chain.getBlockIndex();
+        final BreakpointInfo info = chain.getInfo();
+        final long blockLength = info.getBlock(blockIndex).getContentLength();
+        final boolean isMultiBlock = !info.isSingleBlock();
 
         long fetchLength = 0;
-        final long startOffset = blockInfo.getCurrentOffset();
         long processFetchLength;
+        boolean isFirstBlockLenienceRule = false;
+
         while (true) {
             processFetchLength = chain.loopFetch();
             if (processFetchLength == -1) {
@@ -105,18 +107,27 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             }
 
             fetchLength += processFetchLength;
+            if (isMultiBlock && blockIndex == 0 && fetchLength >= blockLength + 1) {
+                isFirstBlockLenienceRule = true;
+                break;
+            }
         }
 
-        if (fetchLength != contentLength) {
-            throw new IOException("Fetch-length isn't equal to the response content-length, "
-                    + fetchLength + "!= " + contentLength);
+        // finish
+        final MultiPointOutputStream outputStream = chain.getOutputStream();
+        outputStream.ensureSyncComplete(blockIndex);
+
+        if (!isFirstBlockLenienceRule) {
+            // local persist data check.
+            outputStream.inspectComplete(blockIndex);
+
+            // response content length check.
+            if (fetchLength != contentLength) {
+                throw new IOException("Fetch-length isn't equal to the response content-length, "
+                        + fetchLength + "!= " + contentLength);
+            }
         }
 
-        final long blockLength = startOffset + fetchLength;
-        if (blockLength != blockInfo.getContentLength()) {
-            throw new IOException("Local block length is not match required one, " + blockLength
-                    + " != " + blockInfo.getContentLength());
-        }
 
         return fetchLength;
     }
