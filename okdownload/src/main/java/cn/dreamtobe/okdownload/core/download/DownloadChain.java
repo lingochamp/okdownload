@@ -209,6 +209,9 @@ public class DownloadChain implements Runnable {
             // interrupt.
         } finally {
             finished.set(true);
+            if (isOtherBlockPark()) {
+                unparkOtherBlock();
+            }
         }
     }
 
