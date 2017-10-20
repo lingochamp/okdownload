@@ -183,11 +183,11 @@ public class DownloadTask implements Cloneable {
         return tag;
     }
 
-    public long getLastCallbackProcessTs() {
+    long getLastCallbackProcessTs() {
         return lastCallbackProcessTimestamp.get();
     }
 
-    public void setLastCallbackProcessTs(long lastCallbackProcessTimestamp) {
+    void setLastCallbackProcessTs(long lastCallbackProcessTimestamp) {
         this.lastCallbackProcessTimestamp.set(lastCallbackProcessTimestamp);
     }
 

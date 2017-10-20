@@ -23,6 +23,7 @@ import android.support.annotation.Nullable;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.TaskCallbackWrapper;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
@@ -138,11 +139,11 @@ public class CallbackDispatcher {
                 final long minInterval = task.getMinIntervalMillisCallbackProcess();
                 final long now = SystemClock.uptimeMillis();
                 if (minInterval > 0
-                        && now - task.getLastCallbackProcessTs() < minInterval) {
+                        && now - TaskCallbackWrapper.getLastCallbackProcessTs(task) < minInterval) {
                     return;
                 }
 
-                if (minInterval > 0) task.setLastCallbackProcessTs(now);
+                if (minInterval > 0) TaskCallbackWrapper.setLastCallbackProcessTs(task, now);
 
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
