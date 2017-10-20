@@ -58,7 +58,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     @Nullable private volatile DownloadCache cache;
 
     private DownloadCall(DownloadTask task, boolean asyncExecuted) {
-        super(task.getPath());
+        super("download call: " + task.getId());
         this.task = task;
         this.asyncExecuted = asyncExecuted;
     }
