@@ -101,14 +101,14 @@ public class MultiPointOutputStream {
                 parkThreadList.add(Thread.currentThread());
                 while (true) {
                     LockSupport.parkNanos(WAIT_SYNC_NANO);
-                    if (!syncRunning || noSyncLength.get() == 0) break;
+                    if (!syncRunning) break;
                 }
-
-            } else {
-                // sync once
-                syncRunning = true;
-                syncRunnable.run();
             }
+
+            // sync once, make sure data has been synced.
+            syncRunning = true;
+            syncRunnable.run();
+
         }
     }
 
@@ -133,16 +133,25 @@ public class MultiPointOutputStream {
         @Override
         public void run() {
             boolean success;
-            final int size = outputStreamMap.size();
-            SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+            final int size;
+            synchronized (noSyncLengthMap) {
+                // make sure the length of noSyncLengthMap is equal to outputStreamMap
+                size = noSyncLengthMap.size();
+            }
+
+            final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+
             try {
                 for (int i = 0; i < size; i++) {
                     final int blockIndex = outputStreamMap.keyAt(i);
                     // because we get no sync length value before flush and sync,
                     // so the length only possible less than or equal to the real persist length.
-                    increaseLengthMap.put(blockIndex, noSyncLengthMap.get(blockIndex).get());
-                    final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
-                    outputStream.flushAndSync();
+                    final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
+                    if (noSyncLength > 0) {
+                        increaseLengthMap.put(blockIndex, noSyncLength);
+                        final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
+                        outputStream.flushAndSync();
+                    }
                 }
                 success = true;
             } catch (IOException ignored) {
@@ -150,8 +159,9 @@ public class MultiPointOutputStream {
             }
 
             if (success) {
+                final int increaseLengthSize = increaseLengthMap.size();
                 long allIncreaseLength = 0;
-                for (int i = 0; i < size; i++) {
+                for (int i = 0; i < increaseLengthSize; i++) {
                     final int blockIndex = increaseLengthMap.keyAt(i);
                     final long noSyncLength = increaseLengthMap.valueAt(i);
                     store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
@@ -217,8 +227,12 @@ public class MultiPointOutputStream {
                 outputStream.setLength(info.getTotalLength());
             }
 
-            outputStreamMap.put(blockIndex, outputStream);
-            noSyncLengthMap.put(blockIndex, new AtomicLong());
+
+            synchronized (noSyncLengthMap) {
+                // make sure the length of noSyncLengthMap is equal to outputStreamMap
+                outputStreamMap.put(blockIndex, outputStream);
+                noSyncLengthMap.put(blockIndex, new AtomicLong());
+            }
 
             firstOutputStream = false;
         }
