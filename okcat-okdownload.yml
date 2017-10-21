@@ -1,3 +1,15 @@
 # You can use 'okcat -y=okcat-okdownload' to parse okdownload logcat runtime more easily.
 # More detail about okcat please move to https://github.com/Jacksgong/okcat
 package: cn.dreamtobe.app.okdownloader
+
+trans-msg-map:
+        'taskEnd ' : 'TASK END'
+        'downloadFromBreakpoint ': 'RESUMABLE'
+
+
+hide-msg-list:
+        - 'fetchProgress'
+
+highlight-list:
+        - 'connectStart'
+        - 'fetchEnd'
