@@ -32,7 +32,7 @@ public class BlockInfo {
     }
 
     public BlockInfo(long startOffset, long contentLength, @IntRange(from = 0) long currentOffset) {
-        if (currentOffset > contentLength) throw new IllegalArgumentException();
+        if (currentOffset > contentLength + 1) throw new IllegalArgumentException();
 
         if (startOffset < 0 || contentLength < 0 || currentOffset < 0) {
             throw new IllegalArgumentException();
@@ -61,6 +61,10 @@ public class BlockInfo {
 
     public void increaseCurrentOffset(@IntRange(from = 1) long increaseLength) {
         this.currentOffset.addAndGet(increaseLength);
+    }
+
+    public void resetBlock() {
+        this.currentOffset.set(0);
     }
 
     public BlockInfo copy() {

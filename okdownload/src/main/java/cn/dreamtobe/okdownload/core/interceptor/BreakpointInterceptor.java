@@ -19,6 +19,7 @@ package cn.dreamtobe.okdownload.core.interceptor;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
@@ -107,7 +108,8 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             }
 
             fetchLength += processFetchLength;
-            if (isMultiBlock && blockIndex == 0 && fetchLength >= blockLength + 1) {
+            if (isMultiBlock && blockIndex == 0
+                    && Util.isFirstBlockMeetLenienceFull(fetchLength, blockLength)) {
                 isFirstBlockLenienceRule = true;
                 break;
             }

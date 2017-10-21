@@ -25,6 +25,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ThreadFactory;
 
+import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
+
 public class Util {
 
     public interface Logger {
@@ -95,6 +97,58 @@ public class Util {
 
     public static boolean isCorrectFull(long fetchedLength, long contentLength,
                                         boolean isLastBlock) {
-        return fetchedLength != (isLastBlock ? contentLength : contentLength + 1);
+        return fetchedLength == (isLastBlock ? contentLength : contentLength + 1);
+    }
+
+    public static boolean isFirstBlockMeetLenienceFull(long fetchedLength, long contentLength) {
+        return fetchedLength > contentLength;
+    }
+
+    public static boolean isBlockComplete(int blockIndex, int blockCount, BlockInfo info) {
+        if (blockCount == 1) {
+            return isCorrectFull(info.getCurrentOffset(), info.getContentLength(),
+                    true);
+        } else {
+            if (blockIndex == 0) {
+                // first block
+                return isFirstBlockMeetLenienceFull(info.getCurrentOffset(),
+                        info.getContentLength());
+            } else if (blockIndex < blockCount - 1) {
+                // middle blocks
+                return isCorrectFull(info.getCurrentOffset(), info.getContentLength(),
+                        false);
+            } else {
+                // last block
+                return isCorrectFull(info.getCurrentOffset(), info.getContentLength(),
+                        true);
+            }
+        }
+    }
+
+    public static void resetBlockIfDirty(int blockIndex, int blockCount, long totalLength,
+                                         BlockInfo info) {
+        boolean isDirty = false;
+
+        if (info.getCurrentOffset() < 0) {
+            isDirty = true;
+        } else if (blockCount == 1) {
+            if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;
+        } else {
+            if (blockIndex == 0) {
+                // first block
+                if (info.getCurrentOffset() > totalLength) isDirty = true;
+            } else if (blockIndex < blockCount - 1) {
+                // middle blocks
+                if (info.getCurrentOffset() > info.getContentLength() + 1) isDirty = true;
+            } else {
+                // last block
+                if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;
+            }
+        }
+
+        if (isDirty) {
+            w("resetBlockIfDirty", "block is dirty so have to reset: " + info);
+            info.resetBlock();
+        }
     }
 }

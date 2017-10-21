@@ -162,7 +162,12 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             // resume task
             final int blockCount = info.getBlockCount();
             final List<Callable<Object>> blockChainList = new ArrayList<>(info.getBlockCount());
+            final long totalLength = info.getTotalLength();
             for (int i = 0; i < blockCount; i++) {
+                final BlockInfo blockInfo = info.getBlock(i);
+                if (Util.isBlockComplete(i, blockCount, blockInfo)) continue;
+
+                Util.resetBlockIfDirty(i, blockCount, totalLength, blockInfo);
                 blockChainList.add(
                         Executors.callable(DownloadChain.createChain(i, task, info, cache)));
             }
