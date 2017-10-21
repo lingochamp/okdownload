@@ -32,16 +32,57 @@ public class SingleTaskDemo {
 
     private static final String TAG = "SingleTaskDemo";
 
-    public static void startAsync(Context context, String url) {
-        DownloadTask.Builder builder = new DownloadTask.Builder(url,
+    private DownloadTask task;
+    private final String demoUrl = "https://t.alipayobjects.com/L1/71/100/and/alipay_wap_main.apk";
+
+    public void startAsync(Context context) {
+        if (task != null) return;
+
+        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl,
                 Uri.fromFile(context.getExternalCacheDir()));
-        builder
+        task = builder
                 .setAutoCallbackToUIThread(false)
-                .build()
-                .enqueue(LISTENER);
+                .build();
+
+        task.enqueue(new SingleTaskListener() {
+            @Override public void taskEnd(DownloadTask task, EndCause cause,
+                                          @Nullable Exception realCause) {
+                super.taskEnd(task, cause, realCause);
+                SingleTaskDemo.this.task = null;
+            }
+        });
     }
 
-    private static final DownloadListener LISTENER = new DownloadListener() {
+    public void startSamePathTask_fileBusy(Uri path) {
+        final String otherUrl = "http://dldir1.qq.com/weixin/android/weixin6516android1120.apk";
+        DownloadTask.Builder builder = new DownloadTask.Builder(otherUrl, path);
+        final DownloadTask task = builder
+                .setAutoCallbackToUIThread(false)
+                // same filename to #startAsync
+                .setFilename("alipay_wap_main.apk")
+                .build();
+
+        task.enqueue(new SingleTaskListener());
+
+    }
+
+    public void startSameTask_sameTaskBusy(Uri path) {
+        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl, path);
+        DownloadTask task = builder
+                .setAutoCallbackToUIThread(false)
+                .build();
+
+        task.enqueue(new SingleTaskListener());
+    }
+
+    public void cancelTask() {
+        final DownloadTask task = this.task;
+        if (task == null) return;
+
+        task.cancel();
+    }
+
+    private class SingleTaskListener implements DownloadListener {
         @Override public void taskStart(DownloadTask task) {
             Log.d(TAG, "taskStart " + task.getId());
         }
@@ -98,5 +139,5 @@ public class SingleTaskDemo {
                                       @Nullable Exception realCause) {
             Log.d(TAG, "taskEnd " + cause + " " + realCause);
         }
-    };
+    }
 }

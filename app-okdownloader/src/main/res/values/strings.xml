@@ -20,4 +20,7 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="start_download">Start Download</string>
+    <string name="cancel_download">Cancel download</string>
+    <string name="start_same_task">Start Same Task</string>
+    <string name="start_same_file_task">Start same file task</string>
 </resources>
