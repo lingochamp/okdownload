@@ -20,7 +20,11 @@ import org.junit.Test;
 
 import java.io.File;
 
+import cn.dreamtobe.okdownload.DownloadTask;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BreakpointInfoTest {
 
@@ -54,4 +58,55 @@ public class BreakpointInfoTest {
 
         assertThat(info.getTotalLength()).isEqualTo(94);
     }
+
+    @Test
+    public void isSameFrom() {
+        BreakpointInfo info = new BreakpointInfo(1, "url", "p-path", "filename");
+        DownloadTask task = mock(DownloadTask.class);
+
+        when(task.getUrl()).thenReturn("url");
+        when(task.getParentPath()).thenReturn("p-path");
+        assertThat(info.isSameFrom(task)).isFalse();
+
+        when(task.getFilename()).thenReturn("filename");
+        assertThat(info.isSameFrom(task)).isTrue();
+
+        when(task.isUriIsDirectory()).thenReturn(true);
+        assertThat(info.isSameFrom(task)).isTrue();
+
+        info = new BreakpointInfo(1, "url", "p-path", null);
+        assertThat(info.isSameFrom(task)).isFalse();
+
+        when(task.getFilename()).thenReturn(null);
+        when(task.isUriIsDirectory()).thenReturn(false);
+        assertThat(info.isSameFrom(task)).isFalse();
+
+        when(task.isUriIsDirectory()).thenReturn(true);
+        assertThat(info.isSameFrom(task)).isTrue();
+
+
+        when(task.getUrl()).thenReturn("not-same-url");
+        assertThat(info.isSameFrom(task)).isFalse();
+    }
+
+    @Test
+    public void copyWithReplaceId() {
+        BreakpointInfo info = new BreakpointInfo(1, "url", "/p-path/", "filename");
+        final BlockInfo oldBlockInfo = new BlockInfo(0, 1);
+        info.addBlock(oldBlockInfo);
+
+        BreakpointInfo anotherInfo = info.copyWithReplaceId(2);
+
+        assertThat(anotherInfo).isNotEqualTo(info);
+        assertThat(anotherInfo.id).isEqualTo(2);
+        assertThat(anotherInfo.getUrl()).isEqualTo("url");
+        assertThat(anotherInfo.getPath()).isEqualTo("/p-path/filename");
+        assertThat(anotherInfo.getBlockCount()).isEqualTo(1);
+
+        final BlockInfo newBlockInfo = anotherInfo.getBlock(0);
+        assertThat(newBlockInfo).isNotEqualTo(oldBlockInfo);
+        assertThat(newBlockInfo.getRangeLeft()).isEqualTo(oldBlockInfo.getRangeLeft());
+        assertThat(newBlockInfo.getRangeRight()).isEqualTo(oldBlockInfo.getRangeRight());
+    }
+
 }

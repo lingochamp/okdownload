@@ -47,6 +47,9 @@ public class BreakpointStoreOnCacheTest {
         final DownloadTask task = mock(DownloadTask.class);
 
         when(task.getId()).thenReturn(insertedId);
+        when(task.getParentPath()).thenReturn("/p-path/");
+        when(task.getFilename()).thenReturn("filename");
+        when(task.getUrl()).thenReturn("url");
         storeOnCache.createAndInsert(task);
 
         final BreakpointInfo info = storeOnCache.get(insertedId);
@@ -76,7 +79,7 @@ public class BreakpointStoreOnCacheTest {
         // replace
         storeOnCache.update(newOne);
 
-        BreakpointInfo onStoreInfo =  storeOnCache.get(insertedId);
+        BreakpointInfo onStoreInfo = storeOnCache.get(insertedId);
         assertThat(onStoreInfo.getFilename()).isEqualTo("newOne");
 
         final BlockInfo blockInfo = mock(BlockInfo.class);

@@ -36,10 +36,11 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     @Override
     public BreakpointInfo createAndInsert(@NonNull DownloadTask task) {
         final int id = task.getId();
-        BreakpointInfo info = new BreakpointInfo(id, task.getUrl(), task.getParentPath(),
+
+        BreakpointInfo newInfo = new BreakpointInfo(id, task.getUrl(), task.getParentPath(),
                 task.getFilename());
-        breakpointMap.put(id, info);
-        return info;
+        breakpointMap.put(id, newInfo);
+        return newInfo;
     }
 
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
@@ -74,7 +75,16 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     }
 
     @Override
-    public int createId(@NonNull DownloadTask task) {
+    public synchronized int createId(@NonNull DownloadTask task) {
+        final SparseArray<BreakpointInfo> clonedMap = breakpointMap.clone();
+        final int size = clonedMap.size();
+        for (int i = 0; i < size; i++) {
+            final BreakpointInfo info = clonedMap.valueAt(i);
+            if (info.isSameFrom(task)) {
+                return info.id;
+            }
+        }
+
         return identifyGenerator.getAndIncrement();
     }
 }

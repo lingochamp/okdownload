@@ -165,6 +165,21 @@ public class DownloadStrategy {
         }
 
         @Nullable public String get() { return filename; }
+
+        @Override public boolean equals(Object obj) {
+            if (super.equals(obj)) return true;
+
+            if (obj instanceof FilenameHolder) {
+                if (filename == null) return ((FilenameHolder) obj).filename == null;
+                else return filename.equals(((FilenameHolder) obj).filename);
+            }
+
+            return false;
+        }
+
+        @Override public int hashCode() {
+            return filename == null ? 0 : filename.hashCode();
+        }
     }
 
     public static class ResumeAvailableResponseCheck {

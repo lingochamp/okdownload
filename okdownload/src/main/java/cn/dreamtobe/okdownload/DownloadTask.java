@@ -69,39 +69,48 @@ public class DownloadTask implements Cloneable {
 
     private final DownloadStrategy.FilenameHolder filenameHolder;
 
+    private final File providedPathFile;
+
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
                         HashMap<String, List<String>> headerMapFields, @Nullable String filename) {
-        this.url = url;
-        this.uri = uri;
-        this.priority = priority;
-        this.readBufferSize = readBufferSize;
-        this.flushBufferSize = flushBufferSize;
-        this.syncBufferSize = syncBufferSize;
-        this.syncBufferIntervalMills = syncBufferIntervalMills;
-        this.autoCallbackToUIThread = autoCallbackToUIThread;
-        this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
-        this.headerMapFields = headerMapFields;
-        this.lastCallbackProcessTimestamp = new AtomicLong();
-        this.id = OkDownload.with().breakpointStore().createId(this);
+        try {
+            this.url = url;
+            this.uri = uri;
+            this.priority = priority;
+            this.readBufferSize = readBufferSize;
+            this.flushBufferSize = flushBufferSize;
+            this.syncBufferSize = syncBufferSize;
+            this.syncBufferIntervalMills = syncBufferIntervalMills;
+            this.autoCallbackToUIThread = autoCallbackToUIThread;
+            this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
+            this.headerMapFields = headerMapFields;
+            this.lastCallbackProcessTimestamp = new AtomicLong();
 
-        final File file = new File(uri.getPath());
-        if (file.isFile()) {
-            if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
-                throw new IllegalArgumentException("Uri already provided filename!");
+            final File file = new File(uri.getPath());
+            if (file.isFile()) {
+                if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
+                    throw new IllegalArgumentException("Uri already provided filename!");
+                }
+
+                filename = file.getName();
+                isUriIsDirectory = false;
+            } else {
+                isUriIsDirectory = true;
             }
 
-            filename = file.getName();
-            isUriIsDirectory = false;
-        } else {
-            isUriIsDirectory = true;
-        }
+            if (Util.isEmpty(filename)) {
+                filenameHolder = new DownloadStrategy.FilenameHolder();
+                providedPathFile = new File(uri.getPath());
+            } else {
+                filenameHolder = new DownloadStrategy.FilenameHolder(filename);
 
-        if (Util.isEmpty(filename)) {
-            filenameHolder = new DownloadStrategy.FilenameHolder();
-        } else {
-            filenameHolder = new DownloadStrategy.FilenameHolder(filename);
+                if (isUriIsDirectory) providedPathFile = new File(uri.getPath(), filename);
+                else providedPathFile = new File(uri.getPath());
+            }
+        } finally {
+            this.id = OkDownload.with().breakpointStore().createId(this);
         }
     }
 
@@ -337,5 +346,22 @@ public class DownloadTask implements Cloneable {
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
                     headerMapFields, filename);
         }
+    }
+
+    @Override public boolean equals(Object obj) {
+        if (super.equals(obj)) return true;
+
+        if (obj instanceof DownloadTask) {
+            final DownloadTask another = (DownloadTask) obj;
+
+            return url.equals(another.url)
+                    && providedPathFile.equals(another.providedPathFile);
+        }
+
+        return false;
+    }
+
+    @Override public int hashCode() {
+        return (url + providedPathFile.toString()).hashCode();
     }
 }

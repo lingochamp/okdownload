@@ -190,7 +190,7 @@ public class DownloadDispatcher {
     private boolean inspectForConflict(DownloadTask task, Collection<DownloadCall> calls) {
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
         for (DownloadCall call : calls) {
-            if (call.task == task) {
+            if (call.task.equals(task)) {
                 callbackDispatcher.dispatch()
                         .taskEnd(task, EndCause.SAME_TASK_BUSY, null);
                 return true;

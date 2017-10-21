@@ -18,9 +18,12 @@ package cn.dreamtobe.okdownload;
 
 import android.net.Uri;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -66,4 +69,47 @@ public class DownloadTaskTest {
         assertThat(key2Values).containsOnly(mockValue2);
     }
 
+    final String parentPath = "./p-path/";
+    final String filename = "filename";
+
+    @Before
+    public void setup() throws IOException {
+        new File(parentPath).mkdir();
+        new File(parentPath, filename).createNewFile();
+    }
+
+    @After
+    public void tearDown() {
+        new File(parentPath, filename).delete();
+    }
+
+    @Test
+    public void equal() {
+        final Uri uri = mock(Uri.class);
+        when(uri.getPath()).thenReturn(parentPath);
+
+        DownloadTask task = new DownloadTask
+                .Builder("url", uri)
+                .setFilename(filename)
+                .build();
+
+        final Uri anotherUri = mock(Uri.class);
+        when(anotherUri.getPath()).thenReturn(parentPath + filename);
+        DownloadTask anotherTask = new DownloadTask
+                .Builder("url", anotherUri)
+                .build();
+        assertThat(task.equals(anotherTask)).isTrue();
+
+        anotherTask = new DownloadTask
+                .Builder("url", uri)
+                .build();
+        assertThat(task.equals(anotherTask)).isFalse();
+
+
+        anotherTask = new DownloadTask
+                .Builder("url", uri)
+                .setFilename("another-filename")
+                .build();
+        assertThat(task.equals(anotherTask)).isFalse();
+    }
 }
