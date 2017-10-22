@@ -2,7 +2,6 @@
 
 A flexible and powerful downloader engine.
 
-
 ---
 
 ## Why rewrite downloader
@@ -22,6 +21,14 @@ A flexible and powerful downloader engine.
 - Fewer threads to do same thing without drop performance.
 - File-IO thread pool is independent of Network-IO thread pool.
 - Make sense auto filename from url if can't find from response header.
+
+## Debug
+
+You can using [okcat](https://github.com/Jacksgong/okcat) to read the detail on sample(`-c` is just for clear old adb log before running):
+
+```
+okcat -y=okcat-okdownload -c
+```
 
 ## LICENSE
 
