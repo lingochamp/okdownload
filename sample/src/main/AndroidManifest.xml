@@ -16,7 +16,7 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="cn.dreamtobe.app.okdownloader">
+          package="cn.dreamtobe.okdownload.sample">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- When you invoke BaseDownloadTask#setWifiRequired(true), you need declare ACCESS_NETWORK_STATE permission -->

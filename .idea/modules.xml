@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app-okdownloader/app-okdownloader.iml" filepath="$PROJECT_DIR$/app-okdownloader/app-okdownloader.iml" />
       <module fileurl="file://$PROJECT_DIR$/benchmark/benchmark.iml" filepath="$PROJECT_DIR$/benchmark/benchmark.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload/okdownload.iml" filepath="$PROJECT_DIR$/okdownload/okdownload.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-breakpoint-sqlite/okdownload-breakpoint-sqlite.iml" filepath="$PROJECT_DIR$/okdownload-breakpoint-sqlite/okdownload-breakpoint-sqlite.iml" />
@@ -10,6 +9,7 @@
       <module fileurl="file://$PROJECT_DIR$/okdownload-kotlin-enhance/okdownload-kotlin-enhance.iml" filepath="$PROJECT_DIR$/okdownload-kotlin-enhance/okdownload-kotlin-enhance.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-process/okdownload-process.iml" filepath="$PROJECT_DIR$/okdownload-process/okdownload-process.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-root.iml" filepath="$PROJECT_DIR$/okdownload-root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sample/sample.iml" filepath="$PROJECT_DIR$/sample/sample.iml" />
     </modules>
   </component>
 </project>

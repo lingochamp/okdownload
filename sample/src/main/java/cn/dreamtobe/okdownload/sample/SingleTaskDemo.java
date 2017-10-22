@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.app.okdownloader;
+package cn.dreamtobe.okdownload.sample;
 
 import android.content.Context;
 import android.net.Uri;
@@ -54,7 +54,7 @@ public class SingleTaskDemo {
     }
 
     public void startSamePathTask_fileBusy(Uri path) {
-        final String otherUrl = "http://dldir1.qq.com/weixin/android/weixin6516android1120.apk";
+        final String otherUrl = "http://dldir1.qq.com/weixin/android/seixin6516android1120.apk";
         DownloadTask.Builder builder = new DownloadTask.Builder(otherUrl, path);
         final DownloadTask task = builder
                 .setAutoCallbackToUIThread(false)

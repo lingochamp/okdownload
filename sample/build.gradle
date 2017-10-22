@@ -18,7 +18,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "cn.dreamtobe.app.okdownloader"
+        applicationId "cn.dreamtobe.okdownload.sample"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
 

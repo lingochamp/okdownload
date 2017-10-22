@@ -8,13 +8,13 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app-okdownloader" />
             <option value="$PROJECT_DIR$/benchmark" />
             <option value="$PROJECT_DIR$/okdownload" />
             <option value="$PROJECT_DIR$/okdownload-breakpoint-sqlite" />
             <option value="$PROJECT_DIR$/okdownload-connection-okhttp" />
             <option value="$PROJECT_DIR$/okdownload-kotlin-enhance" />
             <option value="$PROJECT_DIR$/okdownload-process" />
+            <option value="$PROJECT_DIR$/sample" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
