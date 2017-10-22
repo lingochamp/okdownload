@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatButton
+import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -59,21 +60,28 @@ class MainActivity : AppCompatActivity() {
         startOrCancelBtn.setOnClickListener { v ->
             run {
                 if (v.tag == null) {
-                    demo.startAsync(this)
-                    (v as AppCompatButton).setText(R.string.cancel_download)
-                    v.tag = Object()
-                    startSameTaskBtn.isEnabled = true
-                    startSameFileBtn.isEnabled = true
+                    demo.startAsync(this, { runOnUiThread { setToStart(v) } })
+                    setToCancel(v)
                 } else {
                     demo.cancelTask()
-                    v.tag = null
-                    (v as AppCompatButton).setText(R.string.start_download)
-                    startSameTaskBtn.isEnabled = false
-                    startSameFileBtn.isEnabled = false
                 }
             }
         }
         startSameTaskBtn.setOnClickListener { demo.startSameTask_sameTaskBusy(storePath) }
         startSameFileBtn.setOnClickListener { demo.startSamePathTask_fileBusy(storePath) }
+    }
+
+    private fun setToStart(v: View) {
+        v.tag = null
+        (v as AppCompatButton).setText(R.string.start_download)
+        startSameTaskBtn.isEnabled = false
+        startSameFileBtn.isEnabled = false
+    }
+
+    private fun setToCancel(v: View) {
+        (v as AppCompatButton).setText(R.string.cancel_download)
+        v.tag = Object()
+        startSameTaskBtn.isEnabled = true
+        startSameFileBtn.isEnabled = true
     }
 }

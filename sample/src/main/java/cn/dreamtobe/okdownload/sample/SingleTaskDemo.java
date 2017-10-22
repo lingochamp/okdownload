@@ -18,6 +18,7 @@ package cn.dreamtobe.okdownload.sample;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -35,7 +36,7 @@ public class SingleTaskDemo {
     private DownloadTask task;
     private final String demoUrl = "https://t.alipayobjects.com/L1/71/100/and/alipay_wap_main.apk";
 
-    public void startAsync(Context context) {
+    public void startAsync(Context context, @NonNull final FinishListener listener) {
         if (task != null) return;
 
         DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl,
@@ -49,6 +50,7 @@ public class SingleTaskDemo {
                                           @Nullable Exception realCause) {
                 super.taskEnd(task, cause, realCause);
                 SingleTaskDemo.this.task = null;
+                listener.finish();
             }
         });
     }
@@ -139,5 +141,9 @@ public class SingleTaskDemo {
                                       @Nullable Exception realCause) {
             Log.d(TAG, "taskEnd " + cause + " " + realCause);
         }
+    }
+
+    interface FinishListener {
+        void finish();
     }
 }
