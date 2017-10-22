@@ -69,8 +69,8 @@ public class DownloadTaskTest {
         assertThat(key2Values).containsOnly(mockValue2);
     }
 
-    final String parentPath = "./p-path/";
-    final String filename = "filename";
+    private final String parentPath = "./p-path/";
+    private final String filename = "filename";
 
     @Before
     public void setup() throws IOException {
@@ -81,6 +81,7 @@ public class DownloadTaskTest {
     @After
     public void tearDown() {
         new File(parentPath, filename).delete();
+        new File(parentPath).delete();
     }
 
     @Test
