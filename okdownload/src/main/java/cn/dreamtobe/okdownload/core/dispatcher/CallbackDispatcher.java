@@ -135,7 +135,7 @@ public class CallbackDispatcher {
 
             @Override
             public void fetchProgress(final DownloadTask task, final int blockIndex,
-                                      final long fetchedBytes) {
+                                      final long increaseBytes) {
                 if (task.getMinIntervalMillisCallbackProcess() > 0) {
                     TaskCallbackWrapper.setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
                 }
@@ -143,11 +143,11 @@ public class CallbackDispatcher {
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
-                            task.getListener().fetchProgress(task, blockIndex, fetchedBytes);
+                            task.getListener().fetchProgress(task, blockIndex, increaseBytes);
                         }
                     });
                 } else {
-                    task.getListener().fetchProgress(task, blockIndex, fetchedBytes);
+                    task.getListener().fetchProgress(task, blockIndex, increaseBytes);
                 }
             }
 

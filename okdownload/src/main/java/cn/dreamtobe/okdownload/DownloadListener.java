@@ -38,7 +38,7 @@ public interface DownloadListener {
 
     void fetchStart(DownloadTask task, int blockIndex, long contentLength);
 
-    void fetchProgress(DownloadTask task, int blockIndex, long fetchedBytes);
+    void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes);
 
     void fetchEnd(DownloadTask task, int blockIndex, long contentLength);
 
