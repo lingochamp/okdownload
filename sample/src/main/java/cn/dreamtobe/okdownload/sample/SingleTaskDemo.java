@@ -24,6 +24,7 @@ import android.util.Log;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.SpeedCalculator;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
@@ -85,6 +86,8 @@ public class SingleTaskDemo {
     }
 
     private class SingleTaskListener implements DownloadListener {
+        private SpeedCalculator calculator = new SpeedCalculator();
+
         @Override public void taskStart(DownloadTask task) {
             Log.d(TAG, "taskStart " + task.getId());
         }
@@ -128,8 +131,10 @@ public class SingleTaskDemo {
         }
 
         @Override public void fetchProgress(DownloadTask task, int blockIndex,
-                                            long fetchedBytes) {
-            Log.d(TAG, "fetchProgress " + blockIndex + " " + fetchedBytes);
+                                            long increaseBytes) {
+            calculator.downloading(increaseBytes);
+            Log.d(TAG,
+                    "fetchProgress " + blockIndex + " " + increaseBytes + " " + calculator.speed());
         }
 
         @Override public void fetchEnd(DownloadTask task, int blockIndex,
@@ -139,7 +144,9 @@ public class SingleTaskDemo {
 
         @Override public void taskEnd(DownloadTask task, EndCause cause,
                                       @Nullable Exception realCause) {
-            Log.d(TAG, "taskEnd " + cause + " " + realCause);
+            calculator.endTask();
+            Log.d(TAG,
+                    "taskEnd " + cause + " " + realCause + " " + calculator.speedFromBegin());
         }
     }
 

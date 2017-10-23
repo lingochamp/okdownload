@@ -6,10 +6,6 @@ trans-msg-map:
         'taskEnd ' : 'TASK END'
         'downloadFromBreakpoint ': 'RESUMABLE'
 
-
-hide-msg-list:
-        - 'fetchProgress'
-
 highlight-list:
         - 'connectStart'
         - 'fetchEnd'
