@@ -32,8 +32,8 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
-import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
+import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.interceptor.Interceptor;
 
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
@@ -84,11 +84,11 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         OkDownload.with().callbackDispatcher().dispatch().connectStart(task, blockIndex,
-                connection);
+                connection.getRequestProperties());
         DownloadConnection.Connected connected = chain.processConnect();
 
         OkDownload.with().callbackDispatcher().dispatch().connectEnd(task, blockIndex,
-                connected);
+                connected.getResponseCode(), connected.getResponseHeaderFields());
         if (chain.getCache().isInterrupt()) {
             throw InterruptException.SIGNAL;
         }

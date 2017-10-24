@@ -19,7 +19,11 @@ package cn.dreamtobe.okdownload.core.dispatcher;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.List;
+import java.util.Map;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
@@ -27,7 +31,6 @@ import cn.dreamtobe.okdownload.TaskCallbackWrapper;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
-import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 
 // Dispatch callback to listeners
 public class CallbackDispatcher {
@@ -66,29 +69,45 @@ public class CallbackDispatcher {
 
             @Override
             public void connectStart(final DownloadTask task, final int blockIndex,
-                                     final DownloadConnection connection) {
+                                     @NonNull final Map<String, List<String>> requestHeaderFields) {
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
-                            task.getListener().connectStart(task, blockIndex, connection);
+                            task.getListener().connectStart(task, blockIndex, requestHeaderFields);
                         }
                     });
                 } else {
-                    task.getListener().connectStart(task, blockIndex, connection);
+                    task.getListener().connectStart(task, blockIndex, requestHeaderFields);
                 }
             }
 
             @Override
             public void connectEnd(final DownloadTask task, final int blockIndex,
-                                   final DownloadConnection.Connected connected) {
+                                   final int responseCode,
+                                   @NonNull final Map<String, List<String>> requestHeaderFields) {
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
-                            task.getListener().connectEnd(task, blockIndex, connected);
+                            task.getListener().connectEnd(task, blockIndex, responseCode,
+                                    requestHeaderFields);
                         }
                     });
                 } else {
-                    task.getListener().connectEnd(task, blockIndex, connected);
+                    task.getListener().connectEnd(task, blockIndex, responseCode,
+                            requestHeaderFields);
+                }
+            }
+
+            @Override public void splitBlockEnd(final DownloadTask task,
+                                                final BreakpointInfo info) {
+                if (task.isAutoCallbackToUIThread()) {
+                    uiHandler.post(new Runnable() {
+                        @Override public void run() {
+                            task.getListener().splitBlockEnd(task, info);
+                        }
+                    });
+                } else {
+                    task.getListener().splitBlockEnd(task, info);
                 }
             }
 

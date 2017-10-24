@@ -112,6 +112,15 @@ public class BreakpointInfo {
         this.etag = etag;
     }
 
+    public long getTotalOffset() {
+        long offset = 0;
+        ArrayList<BlockInfo> list = (ArrayList<BlockInfo>) ((ArrayList) blockInfoList).clone();
+        for (BlockInfo info : list) {
+            offset += info.getCurrentOffset();
+        }
+        return offset;
+    }
+
     public long getTotalLength() {
         long length = 0;
         ArrayList<BlockInfo> list = (ArrayList<BlockInfo>) ((ArrayList) blockInfoList).clone();

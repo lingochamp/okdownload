@@ -53,6 +53,9 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
                 splitBlock(blockCount, chain);
             }
 
+            OkDownload.with().callbackDispatcher().dispatch().splitBlockEnd(chain.getTask(),
+                    chain.getInfo());
+
             chain.unparkOtherBlock();
         }
 

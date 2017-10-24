@@ -16,12 +16,15 @@
 
 package cn.dreamtobe.okdownload;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.List;
+import java.util.Map;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
-import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 
 public interface DownloadListener {
     void taskStart(DownloadTask task);
@@ -32,9 +35,13 @@ public interface DownloadListener {
 
     void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info);
 
-    void connectStart(DownloadTask task, int blockIndex, DownloadConnection connection);
+    void connectStart(DownloadTask task, int blockIndex,
+                      @NonNull Map<String, List<String>> requestHeaderFields);
 
-    void connectEnd(DownloadTask task, int blockIndex, DownloadConnection.Connected connected);
+    void connectEnd(DownloadTask task, int blockIndex, int responseCode,
+                    @NonNull Map<String, List<String>> responseHeaderFields);
+
+    void splitBlockEnd(DownloadTask task, BreakpointInfo info);
 
     void fetchStart(DownloadTask task, int blockIndex, long contentLength);
 
