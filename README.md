@@ -35,7 +35,7 @@ okcat -y=okcat-okdownload -c
 ### STABILITY and RELIABLE
 
 - [x] Cover unit tests as far as possible
-- [x] Precheck whether free space is enough to store target file
+- [x] Precheck whether free space is enough to store target file when try to pre-allocate length of whole resouce with `PreAllocateException` and `EndCase.PRE_ALLOCATE_FAILED`
 - [x] Pre-allocate the length of target file from disk space when start download on very beginning
 - [x] Cover the case of there is the same task is running/waiting on OkDownload, another one will be interrupt when required to `enqueue`/`execute`
 - [x] Cover the case of there is a task is writing to or will be writing to the same file, another one will be interrupted when `enqueue`/`execute` or get a filename from the response.
