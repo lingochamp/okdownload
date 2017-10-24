@@ -38,13 +38,16 @@ import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
+import cn.dreamtobe.okdownload.core.exception.PreAllocateException;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -195,13 +198,14 @@ public class MultiPointOutputStreamTest {
         verify(outputStream, never()).setLength(anyLong());
     }
 
-    private void prepareOutputStreamEnv() throws FileNotFoundException {
+    private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {
         when(OkDownload.with().outputStreamFactory().supportSeek()).thenReturn(true);
         when(OkDownload.with().processFileStrategy().isPreAllocateLength()).thenReturn(true);
         when(OkDownload.with().outputStreamFactory().create(any(Context.class), any(Uri.class),
                 anyInt())).thenReturn(mock(DownloadOutputStream.class));
         // recreate for new values of support-seek and pre-allocate-length.
         multiPointOutputStream = spy(new MultiPointOutputStream(task, info));
+        doNothing().when(multiPointOutputStream).inspectFreeSpace(anyString(), anyLong());
 
         when(task.getUri()).thenReturn(mock(Uri.class));
     }

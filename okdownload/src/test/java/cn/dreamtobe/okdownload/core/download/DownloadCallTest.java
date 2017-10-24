@@ -219,6 +219,10 @@ public class DownloadCallTest {
         verify(mockFileStrategy).completeProcessStream(any(MultiPointOutputStream.class),
                 eq(mockTask));
 
+        when(mockCache.isPreAllocateFailed()).thenReturn(true);
+        call.execute();
+        verify(mockListener).taskEnd(mockTask, EndCause.PRE_ALLOCATE_FAILED, mockIOException);
+
         when(mockCache.isFileBusyAfterRun()).thenReturn(true);
         call.execute();
         verify(mockListener).taskEnd(mockTask, EndCause.FILE_BUSY, null);

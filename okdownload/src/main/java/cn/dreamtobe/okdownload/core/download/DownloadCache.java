@@ -33,6 +33,7 @@ public class DownloadCache {
     private volatile boolean isServerCanceled;
     private volatile boolean isUnknownError;
     private volatile boolean isFileBusyAfterRun;
+    private volatile boolean isPreAllocateFailed;
     private volatile IOException realCause;
 
     DownloadCache(@NonNull MultiPointOutputStream outputStream) {
@@ -71,6 +72,10 @@ public class DownloadCache {
         return isFileBusyAfterRun;
     }
 
+    public boolean isPreAllocateFailed() {
+        return isPreAllocateFailed;
+    }
+
     IOException getRealCause() {
         return realCause;
     }
@@ -81,7 +86,7 @@ public class DownloadCache {
 
     public boolean isInterrupt() {
         return isPreconditionFailed || isUserCanceled || isServerCanceled || isUnknownError
-                || isFileBusyAfterRun;
+                || isFileBusyAfterRun || isPreAllocateFailed;
     }
 
     public void setPreconditionFailed(IOException realCause) {
@@ -104,6 +109,11 @@ public class DownloadCache {
 
     public void setUnknownError(IOException realCause) {
         this.isUnknownError = true;
+        this.realCause = realCause;
+    }
+
+    public void setPreAllocateFailed(IOException realCause) {
+        this.isPreAllocateFailed = true;
         this.realCause = realCause;
     }
 }

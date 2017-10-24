@@ -39,6 +39,7 @@ import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
+import cn.dreamtobe.okdownload.core.exception.PreAllocateException;
 
 public class MultiPointOutputStream {
     private static final String TAG = "MultiPointOutputStream";
@@ -229,7 +230,12 @@ public class MultiPointOutputStream {
 
             if (!info.isChunked() && firstOutputStream && isPreAllocateLength) {
                 // pre allocate length
-                outputStream.setLength(info.getTotalLength());
+                final long totalLength = info.getTotalLength();
+                final long requireSpace = totalLength - file.length();
+                if (requireSpace > 0) {
+                    inspectFreeSpace(path, requireSpace);
+                    outputStream.setLength(totalLength);
+                }
             }
 
             synchronized (noSyncLengthMap) {
@@ -242,5 +248,12 @@ public class MultiPointOutputStream {
         }
 
         return outputStream;
+    }
+
+    void inspectFreeSpace(String path, long requireSpace) throws PreAllocateException {
+        final long freeSpace = Util.getFreeSpaceBytes(path);
+        if (freeSpace < requireSpace) {
+            throw new PreAllocateException(requireSpace, freeSpace);
+        }
     }
 }

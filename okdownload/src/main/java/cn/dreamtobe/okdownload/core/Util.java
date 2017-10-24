@@ -16,6 +16,8 @@
 
 package cn.dreamtobe.okdownload.core;
 
+import android.os.Build;
+import android.os.StatFs;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -150,5 +152,19 @@ public class Util {
             w("resetBlockIfDirty", "block is dirty so have to reset: " + info);
             info.resetBlock();
         }
+    }
+
+    public static long getFreeSpaceBytes(final String path) {
+        // NEED CHECK PERMISSION?
+        long freeSpaceBytes;
+        final StatFs statFs = new StatFs(path);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            freeSpaceBytes = statFs.getAvailableBytes();
+        } else {
+            //noinspection deprecation
+            freeSpaceBytes = statFs.getAvailableBlocks() * (long) statFs.getBlockSize();
+        }
+
+        return freeSpaceBytes;
     }
 }
