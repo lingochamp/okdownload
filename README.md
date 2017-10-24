@@ -48,6 +48,7 @@ okcat -y=okcat-okdownload -c
 - [x] Fix the range automatically when a range of block is wrong
 - [x] Check whether the local increase length is equal to the `content-length` on the response to make sure local data is right for each block
 - [x] Check the first block and last block especially to cover boundary case
+- [] Check whether the network is really available before start downloading
 
 ### FLEXIBLE and PERFORMANCE
 
