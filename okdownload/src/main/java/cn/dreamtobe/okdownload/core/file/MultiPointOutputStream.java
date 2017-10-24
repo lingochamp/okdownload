@@ -189,7 +189,7 @@ public class MultiPointOutputStream {
         outputStream(blockIndex).close();
     }
 
-    private boolean firstOutputStream;
+    private boolean firstOutputStream = true;
 
     synchronized DownloadOutputStream outputStream(int blockIndex) throws
             IOException {
@@ -198,7 +198,7 @@ public class MultiPointOutputStream {
         final File file = new File(path);
 
         final File parentFile = file.getParentFile();
-        if (!parentFile.exists() && file.getParentFile().mkdirs()) {
+        if (!parentFile.exists() && !parentFile.mkdirs()) {
             throw new IOException("Create parent folder failed!");
         }
 
@@ -220,13 +220,17 @@ public class MultiPointOutputStream {
                     uri,
                     flushBufferSize);
             if (supportSeek) {
-                outputStream.seek(info.getBlock(blockIndex).getRangeLeft());
+                final long seekPoint = info.getBlock(blockIndex).getRangeLeft();
+                if (seekPoint > 0) {
+                    // seek to target point
+                    outputStream.seek(seekPoint);
+                }
             }
 
-            if (firstOutputStream && isPreAllocateLength) {
+            if (!info.isChunked() && firstOutputStream && isPreAllocateLength) {
+                // pre allocate length
                 outputStream.setLength(info.getTotalLength());
             }
-
 
             synchronized (noSyncLengthMap) {
                 // make sure the length of noSyncLengthMap is equal to outputStreamMap

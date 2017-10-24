@@ -28,6 +28,8 @@ import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
+import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
+
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
     @Override
@@ -96,6 +98,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         final BreakpointInfo info = chain.getInfo();
         final long blockLength = info.getBlock(blockIndex).getContentLength();
         final boolean isMultiBlock = !info.isSingleBlock();
+        final boolean isNotChunked = contentLength != CHUNKED_CONTENT_LENGTH;
 
         long fetchLength = 0;
         long processFetchLength;
@@ -108,7 +111,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             }
 
             fetchLength += processFetchLength;
-            if (isMultiBlock && blockIndex == 0
+            if (isNotChunked && isMultiBlock && blockIndex == 0
                     && Util.isFirstBlockMeetLenienceFull(fetchLength, blockLength)) {
                 isFirstBlockLenienceRule = true;
                 break;
@@ -119,7 +122,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         final MultiPointOutputStream outputStream = chain.getOutputStream();
         outputStream.ensureSyncComplete(blockIndex);
 
-        if (!isFirstBlockLenienceRule) {
+        if (!isFirstBlockLenienceRule && isNotChunked) {
             // local persist data check.
             outputStream.inspectComplete(blockIndex);
 

@@ -129,6 +129,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
             }
         }
 
+        info.setChunked(contentLength == CHUNKED_CONTENT_LENGTH);
         chain.setResponseContentLength(contentLength);
         return connected;
     }

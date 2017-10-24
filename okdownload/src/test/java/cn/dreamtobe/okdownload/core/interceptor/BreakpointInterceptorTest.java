@@ -35,6 +35,7 @@ import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
+import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -133,9 +134,25 @@ public class BreakpointInterceptorTest {
 
     @Test
     public void interceptFetch_finish() throws IOException {
-        final BlockInfo blockInfo = new BlockInfo(0, 10);
+        BlockInfo blockInfo = new BlockInfo(0, 10);
 
         when(mockChain.getResponseContentLength()).thenReturn(new Long(10));
+        when(mockChain.getInfo()).thenReturn(mockInfo);
+        when(mockChain.getOutputStream()).thenReturn(mock(MultiPointOutputStream.class));
+        when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);
+        when(mockChain.loopFetch()).thenReturn(1L, 1L, 2L, 1L, 5L, -1L);
+
+        final long contentLength = interceptor.interceptFetch(mockChain);
+        verify(mockChain, times(6)).loopFetch();
+
+        assertThat(contentLength).isEqualTo(10);
+    }
+
+    @Test
+    public void interceptFetch_chunked() throws IOException {
+        final BlockInfo blockInfo = new BlockInfo(0, 0);
+
+        when(mockChain.getResponseContentLength()).thenReturn(Long.valueOf(CHUNKED_CONTENT_LENGTH));
         when(mockChain.getInfo()).thenReturn(mockInfo);
         when(mockChain.getOutputStream()).thenReturn(mock(MultiPointOutputStream.class));
         when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);

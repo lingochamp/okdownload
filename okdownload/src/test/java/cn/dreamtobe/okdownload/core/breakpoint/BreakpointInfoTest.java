@@ -43,10 +43,12 @@ public class BreakpointInfoTest {
     public void copyNotClone() {
         BreakpointInfo info = new BreakpointInfo(0, "", "", null);
         info.addBlock(new BlockInfo(0, 0));
+        info.setChunked(true);
 
         final BreakpointInfo copy = info.copy();
 
         assertThat(info.getBlock(0)).isNotEqualTo(copy.getBlock(0));
+        assertThat(copy.isChunked()).isTrue();
     }
 
     @Test
@@ -94,6 +96,7 @@ public class BreakpointInfoTest {
         BreakpointInfo info = new BreakpointInfo(1, "url", "/p-path/", "filename");
         final BlockInfo oldBlockInfo = new BlockInfo(0, 1);
         info.addBlock(oldBlockInfo);
+        info.setChunked(true);
 
         BreakpointInfo anotherInfo = info.copyWithReplaceId(2);
 
@@ -102,11 +105,11 @@ public class BreakpointInfoTest {
         assertThat(anotherInfo.getUrl()).isEqualTo("url");
         assertThat(anotherInfo.getPath()).isEqualTo("/p-path/filename");
         assertThat(anotherInfo.getBlockCount()).isEqualTo(1);
+        assertThat(anotherInfo.isChunked()).isTrue();
 
         final BlockInfo newBlockInfo = anotherInfo.getBlock(0);
         assertThat(newBlockInfo).isNotEqualTo(oldBlockInfo);
         assertThat(newBlockInfo.getRangeLeft()).isEqualTo(oldBlockInfo.getRangeLeft());
         assertThat(newBlockInfo.getRangeRight()).isEqualTo(oldBlockInfo.getRangeRight());
     }
-
 }

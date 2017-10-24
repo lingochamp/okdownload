@@ -37,6 +37,7 @@ public class BreakpointInfo {
 
     private final List<BlockInfo> blockInfoList;
     private final boolean isTaskOnlyProvidedParentPath;
+    private boolean isChunked;
 
     public BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
                           @Nullable String filename) {
@@ -70,8 +71,16 @@ public class BreakpointInfo {
         this.isTaskOnlyProvidedParentPath = isTaskOnlyProvidedParentPath;
     }
 
+    public void setChunked(boolean chunked) {
+        this.isChunked = chunked;
+    }
+
     public void addBlock(BlockInfo blockInfo) {
         this.blockInfoList.add(blockInfo);
+    }
+
+    public boolean isChunked() {
+        return this.isChunked;
     }
 
     public boolean isLastBlock(int blockIndex) {
@@ -138,6 +147,7 @@ public class BreakpointInfo {
     public BreakpointInfo copy() {
         final BreakpointInfo info = new BreakpointInfo(id, url, parentPath, filenameHolder.get(),
                 isTaskOnlyProvidedParentPath);
+        info.isChunked = this.isChunked;
         for (BlockInfo blockInfo : blockInfoList) {
             info.blockInfoList.add(blockInfo.copy());
         }
@@ -147,6 +157,7 @@ public class BreakpointInfo {
     public BreakpointInfo copyWithReplaceId(int replaceId) {
         final BreakpointInfo info = new BreakpointInfo(replaceId, url, parentPath,
                 filenameHolder.get(), isTaskOnlyProvidedParentPath);
+        info.isChunked = this.isChunked;
         for (BlockInfo blockInfo : blockInfoList) {
             info.blockInfoList.add(blockInfo.copy());
         }

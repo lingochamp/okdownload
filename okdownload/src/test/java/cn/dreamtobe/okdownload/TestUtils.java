@@ -16,6 +16,9 @@
 
 package cn.dreamtobe.okdownload;
 
+import android.content.Context;
+import android.net.Uri;
+
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
@@ -68,8 +71,11 @@ public class TestUtils {
         when(mockOkDownload.processFileStrategy()).thenReturn(fileStrategy);
         doNothing().when(fileStrategy).discardProcess(any(DownloadTask.class));
 
-        when(mockOkDownload.outputStreamFactory()).thenReturn(
-                mock(DownloadOutputStream.Factory.class));
+        final DownloadOutputStream.Factory outputStreamFactory = mock(
+                DownloadOutputStream.Factory.class);
+        when(mockOkDownload.outputStreamFactory()).thenReturn(outputStreamFactory);
+        doReturn(mock(DownloadOutputStream.class)).when(outputStreamFactory).create(
+                any(Context.class), any(Uri.class), anyInt());
     }
 
     public static void initProvider() {
