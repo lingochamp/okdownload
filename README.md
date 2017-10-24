@@ -54,6 +54,7 @@ okcat -y=okcat-okdownload -c
 - [x] Support task priority
 - [x] Support using `Uri` as target file reference
 - [x] Support replace Url on `BreakpointStore` for the case of old Url is discard but its data still resumable
+- [x] Combine output-streams of milti-blocks on one handler `MultiPointOutputStream`
 - [x] Provide `SpeedCalculator` to calculate instance speed or average speed on `DownloadListener`
 - [] Support control batch of tasks with `DownloadContext`
 - [] Support only download on Wi-Fi network state
@@ -75,6 +76,7 @@ okcat -y=okcat-okdownload -c
 - [x] Support customize breakpoint store with implement your own `BreakpointStore` to store all resumable breakpoint infos on your store and valid it with `OkDownload.Builder#breakpointStore`
 - [x] Support customize callback dispatcher with implment your own `CallbackDispatcher` to handle the event of callback to `DownloadListener` and valid with `Okdownload.Builder#callbackDispatcher`
 - [x] Support customize download dispatcher with implement your own `DownloadDispatcher` to control all download task
+- [x] Support customize output stream handler with implement your own `DownloadOutputStream` to control output stream for each task
 - [] Support speed limit
 - [] Support download task on independent process with import `okdownload-process`
 - [] Support RxJava
