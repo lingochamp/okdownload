@@ -59,6 +59,10 @@ public class DownloadChain implements Runnable {
     private long responseContentLength;
     private DownloadConnection connection;
 
+    long noCallbackIncreaseBytes;
+
+    private final CallbackDispatcher callbackDispatcher;
+
     static DownloadChain createChain(int blockIndex, DownloadTask task,
                                      @NonNull BreakpointInfo info,
                                      DownloadCache cache) {
@@ -80,6 +84,7 @@ public class DownloadChain implements Runnable {
         this.task = task;
         this.cache = cache;
         this.info = info;
+        this.callbackDispatcher = OkDownload.with().callbackDispatcher();
     }
 
     public boolean isOtherBlockPark() {
@@ -136,6 +141,17 @@ public class DownloadChain implements Runnable {
             connection = OkDownload.with().connectionFactory().create(url);
         }
         return connection;
+    }
+
+    public void increaseCallbackBytes(long increaseBytes) {
+        this.noCallbackIncreaseBytes += increaseBytes;
+    }
+
+    public void flushNoCallbackIncreaseBytes() {
+        if (noCallbackIncreaseBytes == 0) return;
+
+        callbackDispatcher.dispatch().fetchProgress(task, blockIndex, noCallbackIncreaseBytes);
+        noCallbackIncreaseBytes = 0;
     }
 
     void start() throws IOException {

@@ -144,6 +144,7 @@ public class BreakpointInterceptorTest {
 
         final long contentLength = interceptor.interceptFetch(mockChain);
         verify(mockChain, times(6)).loopFetch();
+        verify(mockChain).flushNoCallbackIncreaseBytes();
 
         assertThat(contentLength).isEqualTo(10);
     }

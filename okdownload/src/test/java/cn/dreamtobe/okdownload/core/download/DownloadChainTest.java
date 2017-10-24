@@ -37,6 +37,7 @@ import cn.dreamtobe.okdownload.core.interceptor.connect.RedirectInterceptor;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -174,5 +175,17 @@ public class DownloadChainTest {
 
         chain.run();
         chain.run();
+    }
+
+    @Test
+    public void flushNoCallbackIncreaseBytes() {
+        chain.increaseCallbackBytes(10L);
+        chain.increaseCallbackBytes(6L);
+        assertThat(chain.noCallbackIncreaseBytes).isEqualTo(16L);
+        chain.flushNoCallbackIncreaseBytes();
+
+        verify(OkDownload.with().callbackDispatcher().dispatch())
+                .fetchProgress(eq(chain.getTask()), eq(0), eq(16L));
+        assertThat(chain.noCallbackIncreaseBytes).isZero();
     }
 }

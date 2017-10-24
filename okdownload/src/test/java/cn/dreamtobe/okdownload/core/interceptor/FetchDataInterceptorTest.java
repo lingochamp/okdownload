@@ -70,7 +70,8 @@ public class FetchDataInterceptorTest {
 
         interceptor.interceptFetch(chain);
 
-        verify(dispatcher.dispatch()).fetchProgress(eq(task), eq(0), eq(10L));
+        verify(chain).increaseCallbackBytes(10L);
+        verify(chain).flushNoCallbackIncreaseBytes();
         verify(outputStream).write(eq(0), any(byte[].class), eq(10));
     }
 }

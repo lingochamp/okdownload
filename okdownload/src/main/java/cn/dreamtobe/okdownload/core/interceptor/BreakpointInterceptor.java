@@ -122,6 +122,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         // finish
+        chain.flushNoCallbackIncreaseBytes();
         final MultiPointOutputStream outputStream = chain.getOutputStream();
         outputStream.ensureSyncComplete(blockIndex);
 
