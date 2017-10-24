@@ -75,6 +75,7 @@ okcat -y=okcat-okdownload -c
 - [x] Support customize breakpoint store with implement your own `BreakpointStore` to store all resumable breakpoint infos on your store and valid it with `OkDownload.Builder#breakpointStore`
 - [x] Support customize callback dispatcher with implment your own `CallbackDispatcher` to handle the event of callback to `DownloadListener` and valid with `Okdownload.Builder#callbackDispatcher`
 - [x] Support customize download dispatcher with implement your own `DownloadDispatcher` to control all download task
+- [] Support speed limit
 - [] Support download task on independent process with import `okdownload-process`
 - [] Support RxJava
 - [] Support using OkHttp as connection handler with import `okdownload-connection-okhttp`
