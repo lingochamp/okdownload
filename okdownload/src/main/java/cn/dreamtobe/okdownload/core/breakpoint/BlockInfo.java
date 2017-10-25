@@ -47,6 +47,10 @@ public class BlockInfo {
         return this.currentOffset.get();
     }
 
+    public long getStartOffset() {
+        return startOffset;
+    }
+
     public long getRangeLeft() {
         return startOffset + currentOffset.get();
     }

@@ -99,10 +99,12 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         final long contentLength = chain.getResponseContentLength();
         final int blockIndex = chain.getBlockIndex();
         final BreakpointInfo info = chain.getInfo();
-        final long blockLength = info.getBlock(blockIndex).getContentLength();
+        final BlockInfo blockInfo = info.getBlock(blockIndex);
+        final long blockLength = blockInfo.getContentLength();
         final boolean isMultiBlock = !info.isSingleBlock();
         final boolean isNotChunked = contentLength != CHUNKED_CONTENT_LENGTH;
 
+        long rangeLeft = blockInfo.getRangeLeft();
         long fetchLength = 0;
         long processFetchLength;
         boolean isFirstBlockLenienceRule = false;
@@ -115,7 +117,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
             fetchLength += processFetchLength;
             if (isNotChunked && isMultiBlock && blockIndex == 0
-                    && Util.isFirstBlockMeetLenienceFull(fetchLength, blockLength)) {
+                    && Util.isFirstBlockMeetLenienceFull(rangeLeft + fetchLength, blockLength)) {
                 isFirstBlockLenienceRule = true;
                 break;
             }
