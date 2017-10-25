@@ -18,7 +18,7 @@ package cn.dreamtobe.okdownload;
 
 import android.os.SystemClock;
 
-import java.util.Locale;
+import cn.dreamtobe.okdownload.core.Util;
 
 public class SpeedCalculator {
 
@@ -105,14 +105,7 @@ public class SpeedCalculator {
         return humanReadableSpeed(getBytesPerSecondFromBegin(), true);
     }
 
-    /**
-     * @param si whether using SI unit refer to International System of Units.
-     */
-    public static String humanReadableSpeed(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-        return String.format(Locale.ENGLISH, "%.1f %sB/s", bytes / Math.pow(unit, exp), pre);
+    private static String humanReadableSpeed(long bytes, boolean si) {
+        return Util.humanReadableBytes(bytes, si) + "/s";
     }
 }

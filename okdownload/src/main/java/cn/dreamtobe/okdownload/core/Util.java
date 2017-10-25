@@ -25,6 +25,7 @@ import android.util.Log;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
@@ -102,7 +103,8 @@ public class Util {
         return fetchedLength == (isLastBlock ? contentLength : contentLength + 1);
     }
 
-    public static boolean isFirstBlockMeetLenienceFull(long fetchedLength, long contentLength) {
+    public static boolean isFirstBlockMeetLenienceFull(long fetchedLength,
+                                                       long contentLength) {
         return fetchedLength > contentLength;
     }
 
@@ -166,5 +168,16 @@ public class Util {
         }
 
         return freeSpaceBytes;
+    }
+
+    /**
+     * @param si whether using SI unit refer to International System of Units.
+     */
+    public static String humanReadableBytes(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+        return String.format(Locale.ENGLISH, "%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 }
