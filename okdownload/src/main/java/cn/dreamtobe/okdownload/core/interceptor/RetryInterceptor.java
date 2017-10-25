@@ -22,8 +22,8 @@ import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadCache;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
-import cn.dreamtobe.okdownload.core.exception.PreAllocateException;
 import cn.dreamtobe.okdownload.core.exception.InterruptException;
+import cn.dreamtobe.okdownload.core.exception.PreAllocateException;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
 import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
 
@@ -56,6 +56,7 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
             handleException(e, chain.getCache());
             throw e;
         } finally {
+            chain.getOutputStream().ensureSyncComplete(chain.getBlockIndex());
             chain.getOutputStream().close(chain.getBlockIndex());
         }
     }
