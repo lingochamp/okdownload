@@ -51,7 +51,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initSingleTaskDemo() {
-        val demo = SingleTaskDemo()
+        val demo = SingleTaskDemo.Builder()
+                .setStatusTv(status_title)
+                .setTaskViews(task_title, task_speed, task_pb)
+                .setBlock0Views(block0_title, block0_speed, block0_pb)
+                .setBlock1Views(block1_title, block1_speed, block1_pb)
+                .setBlock2Views(block2_title, block2_speed, block2_pb)
+                .setBlock3Views(block3_title, block3_speed, block3_pb)
+                .build()
+
         val storePath = Uri.fromFile(externalCacheDir)
 
         startSameTaskBtn.isEnabled = false

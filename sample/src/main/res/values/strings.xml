@@ -23,4 +23,6 @@
     <string name="cancel_download">Cancel download</string>
     <string name="start_same_task">Start Same Task</string>
     <string name="start_same_file_task">Start same file task</string>
+    <string name="block_title">Block%1$d(%2$s~%3$s)</string>
+    <string name="task_title">Task(0~%1$s)</string>
 </resources>
