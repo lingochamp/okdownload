@@ -21,10 +21,6 @@ import java.io.IOException;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 
-/**
- * Created by Jacksgong on 20/09/2017.
- */
-
 public interface Interceptor {
     interface Connect {
         DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException;

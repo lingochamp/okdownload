@@ -25,9 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import cn.dreamtobe.okdownload.DownloadListener;
@@ -48,9 +46,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -77,7 +77,7 @@ public class DownloadCallTest {
         when(mockTask.getUri()).thenReturn(mock(Uri.class));
         when(mockTask.getListener()).thenReturn(mock(DownloadListener.class));
         call = spy(DownloadCall.create(mockTask, false));
-        doNothing().when(call).startBlocks(any(Collection.class));
+        doNothing().when(call).startBlocks(any(List.class));
 
         final Future mockFuture = mock(Future.class);
         doReturn(mockFuture).when(call).startFirstBlock(any(DownloadChain.class));
@@ -113,7 +113,7 @@ public class DownloadCallTest {
 
         call.execute();
 
-        ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<DownloadChain>> captor = ArgumentCaptor.forClass(List.class);
 
         verify(call).startBlocks(captor.capture());
         assertThat(captor.getValue()).hasSize(2);
@@ -125,7 +125,7 @@ public class DownloadCallTest {
 
         call.execute();
 
-        ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<DownloadChain>> captor = ArgumentCaptor.forClass(List.class);
 
         verify(call).startBlocks(captor.capture());
         assertThat(captor.getValue()).hasSize(3);
@@ -138,7 +138,7 @@ public class DownloadCallTest {
         call.execute();
 
         verify(call).startFirstBlock(any(DownloadChain.class));
-        ArgumentCaptor<List<Callable<Object>>> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<DownloadChain>> captor = ArgumentCaptor.forClass(List.class);
         verify(call).startBlocks(captor.capture());
         assertThat(captor.getValue()).hasSize(2);
     }
@@ -213,6 +213,12 @@ public class DownloadCallTest {
 
         final DownloadListener mockListener = OkDownload.with().callbackDispatcher().dispatch();
 
+        when(mockCache.isUserCanceled()).thenReturn(true);
+        call.execute();
+        verify(mockListener, never()).taskEnd(any(DownloadTask.class), any(EndCause.class),
+                nullable(Exception.class));
+
+        when(mockCache.isUserCanceled()).thenReturn(false);
         call.execute();
         verify(mockListener).taskEnd(mockTask, EndCause.COMPLETE, null);
         verify(mockStore).completeDownload(mockTask.getId());
@@ -227,15 +233,12 @@ public class DownloadCallTest {
         call.execute();
         verify(mockListener).taskEnd(mockTask, EndCause.FILE_BUSY, null);
 
-
-        when(mockCache.isUserCanceled()).thenReturn(true);
-        call.execute();
-        verify(mockListener).taskEnd(mockTask, EndCause.CANCELED, null);
-
         when(mockCache.isServerCanceled()).thenReturn(true);
         call.execute();
         verify(mockListener).taskEnd(mockTask, EndCause.ERROR, mockIOException);
 
+
+        when(mockCache.isUserCanceled()).thenReturn(false);
         when(mockCache.isServerCanceled()).thenReturn(false);
         when(mockCache.isUnknownError()).thenReturn(true);
         call.execute();

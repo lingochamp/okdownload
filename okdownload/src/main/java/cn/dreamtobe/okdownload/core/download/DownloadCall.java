@@ -21,13 +21,10 @@ import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -54,13 +51,16 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     static final int MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED = 1;
     public final DownloadTask task;
     public final boolean asyncExecuted;
+    private final ArrayList<DownloadChain> blockChainList;
 
     @Nullable private volatile DownloadCache cache;
+    private volatile boolean canceled;
 
     private DownloadCall(DownloadTask task, boolean asyncExecuted) {
         super("download call: " + task.getId());
         this.task = task;
         this.asyncExecuted = asyncExecuted;
+        this.blockChainList = new ArrayList<>();
     }
 
     public static DownloadCall create(DownloadTask task, boolean asyncExecuted) {
@@ -68,9 +68,17 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     public void cancel() {
+        this.canceled = true;
         final DownloadCache cache = this.cache;
         if (cache != null) cache.setUserCanceled();
+
+        final List<DownloadChain> chains = (List<DownloadChain>) blockChainList.clone();
+        for (DownloadChain chain : chains) {
+            chain.cancel();
+        }
     }
+
+    public boolean isCanceled() { return canceled; }
 
     @Override
     public void execute() throws InterruptedException {
@@ -84,6 +92,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
         dispatcher.dispatch().taskStart(task);
         while (true) {
+            if (canceled) break;
 
             // get store
             BreakpointInfo info = store.get(task.getId());
@@ -96,6 +105,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                     info);
             final DownloadCache cache = createCache(outputStream);
             this.cache = cache;
+
+            if (canceled) break;
 
             if (retry) {
                 try {
@@ -118,6 +129,11 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 start(cache, info, localCheck.isAvailable());
             }
 
+            // finish
+            blockChainList.clear();
+
+            if (cache.isUserCanceled()) break;
+
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.discard(task.getId());
@@ -132,9 +148,6 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                     || cache.isPreconditionFailed()) {
                 // error
                 dispatcher.dispatch().taskEnd(task, EndCause.ERROR, cache.getRealCause());
-            } else if (cache.isUserCanceled()) {
-                // user cancel
-                dispatcher.dispatch().taskEnd(task, EndCause.CANCELED, null);
             } else if (cache.isFileBusyAfterRun()) {
                 dispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
             } else if (cache.isPreAllocateFailed()) {
@@ -164,15 +177,14 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         if (isResumeAvailableFromLocalCheck) {
             // resume task
             final int blockCount = info.getBlockCount();
-            final List<Callable<Object>> blockChainList = new ArrayList<>(info.getBlockCount());
+            final List<DownloadChain> blockChainList = new ArrayList<>(info.getBlockCount());
             final long totalLength = info.getTotalLength();
             for (int i = 0; i < blockCount; i++) {
                 final BlockInfo blockInfo = info.getBlock(i);
                 if (Util.isBlockComplete(i, blockCount, blockInfo)) continue;
 
                 Util.resetBlockIfDirty(i, blockCount, totalLength, blockInfo);
-                blockChainList.add(
-                        Executors.callable(DownloadChain.createChain(i, task, info, cache)));
+                blockChainList.add(DownloadChain.createChain(i, task, info, cache));
             }
 
             if (cache.isInterrupt()) {
@@ -194,6 +206,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 return;
             }
             final Future firstBlockFuture = startFirstBlock(firstChain);
+            blockChainList.add(firstChain);
             if (!firstChain.isFinished()) {
                 parkForFirstConnection();
             }
@@ -204,10 +217,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
             // start other blocks after unpark on BreakpointInterceptor#interceptConnect
             final int blockCount = info.getBlockCount();
-            final List<Callable<Object>> blockChainList = new ArrayList<>(info.getBlockCount() - 1);
+            final List<DownloadChain> blockChainList = new ArrayList<>(info.getBlockCount() - 1);
             for (int i = 1; i < blockCount; i++) {
-                blockChainList.add(
-                        Executors.callable(DownloadChain.createChain(i, task, info, cache)));
+                blockChainList.add(DownloadChain.createChain(i, task, info, cache));
             }
             startBlocks(blockChainList);
             if (!firstBlockFuture.isDone()) {
@@ -232,8 +244,30 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         LockSupport.park();
     }
 
-    void startBlocks(Collection<? extends Callable<Object>> tasks) throws InterruptedException {
-        EXECUTOR.invokeAll(tasks);
+    void startBlocks(List<DownloadChain> tasks) throws InterruptedException {
+        ArrayList<Future> futures = new ArrayList<>(tasks.size());
+        try {
+            for (DownloadChain chain : tasks) {
+                futures.add(EXECUTOR.submit(chain));
+            }
+
+            blockChainList.addAll(tasks);
+
+            for (Future future : futures) {
+                if (!future.isDone()) {
+                    try {
+                        future.get();
+                    } catch (CancellationException | ExecutionException ignore) { }
+                }
+            }
+        } catch (Throwable t) {
+            for (Future future : futures) {
+                future.cancel(true);
+            }
+            throw t;
+        } finally {
+            blockChainList.removeAll(tasks);
+        }
     }
 
     Future<?> startFirstBlock(DownloadChain firstChain) {

@@ -17,6 +17,7 @@
 package cn.dreamtobe.okdownload.core.interceptor;
 
 import java.io.IOException;
+import java.net.SocketException;
 
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadCache;
@@ -62,6 +63,8 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
     }
 
     private static void handleException(IOException e, DownloadCache cache) {
+        if (cache.isUserCanceled()) return; // ignored
+
         if (e instanceof ResumeFailedException) {
             cache.setPreconditionFailed(e);
         } else if (e instanceof ServerCancelledException) {
@@ -72,7 +75,9 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
             cache.setPreAllocateFailed(e);
         } else if (e != InterruptException.SIGNAL) {
             cache.setUnknownError(e);
-            e.printStackTrace();
+            if (!(e instanceof SocketException)) { // we know socket exception, so ignore it.
+                e.printStackTrace();
+            }
         }
     }
 }

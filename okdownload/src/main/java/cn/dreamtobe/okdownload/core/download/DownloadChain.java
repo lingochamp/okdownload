@@ -22,11 +22,16 @@ import android.support.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.dispatcher.CallbackDispatcher;
@@ -41,6 +46,10 @@ import cn.dreamtobe.okdownload.core.interceptor.connect.HeaderInterceptor;
 import cn.dreamtobe.okdownload.core.interceptor.connect.RedirectInterceptor;
 
 public class DownloadChain implements Runnable {
+
+    private static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+            60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+            Util.threadFactory("OkDownload Cancel Block", false));
 
     public static final int CHUNKED_CONTENT_LENGTH = -1;
 
@@ -60,6 +69,7 @@ public class DownloadChain implements Runnable {
     private DownloadConnection connection;
 
     long noCallbackIncreaseBytes;
+    private volatile Thread currentThread;
 
     private final CallbackDispatcher callbackDispatcher;
 
@@ -85,6 +95,19 @@ public class DownloadChain implements Runnable {
         this.cache = cache;
         this.info = info;
         this.callbackDispatcher = OkDownload.with().callbackDispatcher();
+    }
+
+    public void cancel() {
+        if (finished.get() || this.currentThread == null) return;
+
+        if (fetchIndex >= fetchInterceptorList.size() - 1) {
+            // on the fetch looper.
+            getOutputStream().ensureSyncComplete(blockIndex);
+        }
+
+        currentThread.interrupt();
+
+        EXECUTOR.execute(cancelRunnable);
     }
 
     public boolean isOtherBlockPark() {
@@ -129,6 +152,8 @@ public class DownloadChain implements Runnable {
     }
 
     @NonNull public DownloadConnection getConnectionOrCreate() throws IOException {
+        if (cache.isInterrupt()) throw InterruptException.SIGNAL;
+
         if (connection == null) {
             final String url;
             final String redirectLocation = cache.getRedirectLocation();
@@ -194,10 +219,12 @@ public class DownloadChain implements Runnable {
     }
 
     public DownloadConnection.Connected processConnect() throws IOException {
+        if (cache.isInterrupt()) throw InterruptException.SIGNAL;
         return connectInterceptorList.get(connectIndex++).interceptConnect(this);
     }
 
     public long processFetch() throws IOException {
+        if (cache.isInterrupt()) throw InterruptException.SIGNAL;
         return fetchInterceptorList.get(fetchIndex++).interceptFetch(this);
     }
 
@@ -218,6 +245,7 @@ public class DownloadChain implements Runnable {
         if (isFinished()) {
             throw new IllegalAccessError("The chain has been finished!");
         }
+        this.currentThread = Thread.currentThread();
 
         try {
             start();
@@ -231,5 +259,14 @@ public class DownloadChain implements Runnable {
         }
     }
 
+    private final Runnable cancelRunnable = new Runnable() {
+        @Override public void run() {
+            if (finished.get() || currentThread == null) return;
 
+            final DownloadConnection connection = getConnection();
+            if (connection != null) {
+                connection.release();
+            }
+        }
+    };
 }

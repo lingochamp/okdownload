@@ -85,7 +85,7 @@ public class DownloadDispatcherTest {
         readyAsyncCalls.add(readyCall);
 
         final DownloadTask mockRunningAsyncTask = mockTask();
-        final DownloadCall runningAsyncCall = DownloadCall.create(mockRunningAsyncTask, true);
+        final DownloadCall runningAsyncCall = spy(DownloadCall.create(mockRunningAsyncTask, true));
         runningAsyncCalls.add(runningAsyncCall);
 
         final DownloadTask mockRunningSyncTask = mockTask();
@@ -104,7 +104,6 @@ public class DownloadDispatcherTest {
         verifyTaskEnd(mockRunningAsyncTask, SAME_TASK_BUSY, null);
         verifyTaskEnd(mockRunningSyncTask, SAME_TASK_BUSY, null);
 
-
         final DownloadTask mockFileBusyTask1 = mockTask();
         doReturn(mockReadyTask.getPath()).when(mockFileBusyTask1).getPath();
         dispatcher.enqueue(mockFileBusyTask1);
@@ -119,6 +118,12 @@ public class DownloadDispatcherTest {
         doReturn(mockRunningSyncTask.getPath()).when(mockFileBusyTask3).getPath();
         dispatcher.enqueue(mockFileBusyTask3);
         verifyTaskEnd(mockFileBusyTask3, FILE_BUSY, null);
+
+        // ignore canceled
+        assertThat(runningAsyncCalls.size()).isEqualTo(1);
+        when(runningAsyncCall.isCanceled()).thenReturn(true);
+        dispatcher.enqueue(mockRunningAsyncTask);
+        assertThat(runningAsyncCalls.size()).isEqualTo(2);
     }
 
     private void verifyTaskEnd(DownloadTask task, EndCause cause, Exception realCause) {
@@ -137,6 +142,22 @@ public class DownloadDispatcherTest {
 
         assertThat(runningSyncCalls).isEmpty();
         assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount);
+    }
+
+    @Test
+    public void enqueue_countIgnoreCanceled() {
+        maxRunningTask();
+
+        assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount);
+
+        final DownloadTask task = mockTask();
+        dispatcher.cancel(runningAsyncCalls.get(0).task);
+        dispatcher.enqueue(task);
+
+        assertThat(readyAsyncCalls).hasSize(0);
+        assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount + 1);
+        assertThat(runningAsyncCalls.get(dispatcher.maxTaskCount).task).isEqualTo(task);
+        assertThat(runningSyncCalls).isEmpty();
     }
 
     @Test
@@ -242,10 +263,18 @@ public class DownloadDispatcherTest {
         final DownloadTask mockAsyncTask = mockTask();
         final DownloadTask samePathTask = mockTask();
         doReturn(mockAsyncTask.getPath()).when(samePathTask).getPath();
-        runningAsyncCalls.add(DownloadCall.create(mockAsyncTask, true));
+        DownloadCall call = spy(DownloadCall.create(mockAsyncTask, true));
+        runningAsyncCalls.add(call);
 
         boolean isConflict = dispatcher.isFileConflictAfterRun(samePathTask);
         assertThat(isConflict).isTrue();
+
+        // ignore canceled
+        when(call.isCanceled()).thenReturn(true);
+        isConflict = dispatcher.isFileConflictAfterRun(samePathTask);
+        assertThat(isConflict).isFalse();
+        // not canceled and another path task
+        when(call.isCanceled()).thenReturn(false);
 
         final DownloadTask mockSyncTask = mockTask();
         doReturn(mockSyncTask.getPath()).when(samePathTask).getPath();

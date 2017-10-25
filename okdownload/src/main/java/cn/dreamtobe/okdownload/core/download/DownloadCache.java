@@ -56,7 +56,7 @@ public class DownloadCache {
         return isPreconditionFailed;
     }
 
-    boolean isUserCanceled() {
+    public boolean isUserCanceled() {
         return isUserCanceled;
     }
 

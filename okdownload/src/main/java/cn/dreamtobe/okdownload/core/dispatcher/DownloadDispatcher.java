@@ -50,6 +50,8 @@ public class DownloadDispatcher {
     private final List<DownloadCall> runningAsyncCalls;
     private final List<DownloadCall> runningSyncCalls;
 
+    // for the case of tasks has been cancelled but didn't remove from runningAsyncCalls list yet.
+    private volatile int flyingCanceledCallCount;
     private @Nullable
     ExecutorService executorService;
 
@@ -79,7 +81,7 @@ public class DownloadDispatcher {
         if (inspectForConflict(task)) return;
 
         final DownloadCall call = DownloadCall.create(task, true);
-        if (runningAsyncCalls.size() < maxTaskCount) {
+        if (runningAsyncSize() < maxTaskCount) {
             runningAsyncCalls.add(call);
             executorService().execute(call);
         } else {
@@ -126,7 +128,11 @@ public class DownloadDispatcher {
 
         for (DownloadCall call : runningAsyncCalls) {
             if (call.task == task) {
+                flyingCanceledCallCount++;
                 call.cancel();
+                processCalls();
+                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task, EndCause.CANCELED,
+                        null);
                 return true;
             }
         }
@@ -150,6 +156,7 @@ public class DownloadDispatcher {
         final boolean asyncExecuted = call.asyncExecuted;
         final Collection<DownloadCall> calls = asyncExecuted ? runningAsyncCalls : runningSyncCalls;
         if (!calls.remove(call)) throw new AssertionError("Call wasn't in-flight!");
+        if (call.isCanceled()) flyingCanceledCallCount--;
 
         if (asyncExecuted) processCalls();
     }
@@ -160,7 +167,7 @@ public class DownloadDispatcher {
 
         // Other one is running, cancel the current task.
         for (DownloadCall syncCall : runningSyncCalls) {
-            if (syncCall.task == task) continue;
+            if (syncCall.isCanceled() || syncCall.task == task) continue;
 
             final String otherPath = syncCall.task.getPath();
             if (otherPath != null && new File(path).equals(new File(otherPath))) {
@@ -169,7 +176,7 @@ public class DownloadDispatcher {
         }
 
         for (DownloadCall asyncCall : runningAsyncCalls) {
-            if (asyncCall.task == task) continue;
+            if (asyncCall.isCanceled() || asyncCall.task == task) continue;
 
             final String otherPath = asyncCall.task.getPath();
             if (otherPath != null && new File(path).equals(new File(otherPath))) {
@@ -190,6 +197,8 @@ public class DownloadDispatcher {
     private boolean inspectForConflict(DownloadTask task, Collection<DownloadCall> calls) {
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
         for (DownloadCall call : calls) {
+            if (call.isCanceled()) continue;
+
             if (call.task.equals(task)) {
                 callbackDispatcher.dispatch()
                         .taskEnd(task, EndCause.SAME_TASK_BUSY, null);
@@ -207,8 +216,8 @@ public class DownloadDispatcher {
         return false;
     }
 
-    private void processCalls() {
-        if (runningAsyncCalls.size() >= maxTaskCount) return;
+    private synchronized void processCalls() {
+        if (runningAsyncSize() >= maxTaskCount) return;
         if (readyAsyncCalls.isEmpty()) return;
 
         for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
@@ -226,7 +235,11 @@ public class DownloadDispatcher {
             runningAsyncCalls.add(call);
             executorService().execute(call);
 
-            if (runningAsyncCalls.size() >= maxTaskCount) return;
+            if (runningAsyncSize() >= maxTaskCount) return;
         }
+    }
+
+    private int runningAsyncSize() {
+        return runningAsyncCalls.size() - flyingCanceledCallCount;
     }
 }

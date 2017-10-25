@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -90,12 +89,12 @@ public class MultiPointOutputStream {
         inspectAndPersist();
     }
 
-    private List<Thread> parkThreadList = new ArrayList<>();
+    private ArrayList<Thread> parkThreadList = new ArrayList<>();
     private static final long WAIT_SYNC_NANO = TimeUnit.MILLISECONDS.toNanos(100);
 
     public void ensureSyncComplete(int blockIndex) {
         final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
-        if (noSyncLength.get() > 0) {
+        if (noSyncLength != null && noSyncLength.get() > 0) {
             // sync to store
             if (syncRunning) {
                 // wait for sync
@@ -174,10 +173,14 @@ public class MultiPointOutputStream {
             }
 
             syncRunning = false;
-            for (Thread thread : parkThreadList) {
+            final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
+            parkThreadList.toArray(parkThreadArray);
+            for (Thread thread : parkThreadArray) {
+                if (thread == null) break; // on end.
+
                 LockSupport.unpark(thread);
+                parkThreadList.remove(thread);
             }
-            parkThreadList.clear();
         }
     };
 
