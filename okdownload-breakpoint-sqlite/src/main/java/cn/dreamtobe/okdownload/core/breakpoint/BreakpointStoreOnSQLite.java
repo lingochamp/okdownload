@@ -24,17 +24,17 @@ import java.io.IOException;
 
 import cn.dreamtobe.okdownload.DownloadTask;
 
-public class BreakpointStoreOnSqlite implements BreakpointStore {
+public class BreakpointStoreOnSQLite implements BreakpointStore {
 
     private final BreakpointSQLiteHelper helper;
     private final BreakpointStoreOnCache onCache;
 
-    BreakpointStoreOnSqlite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache) {
+    BreakpointStoreOnSQLite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache) {
         this.helper = helper;
         this.onCache = onCache;
     }
 
-    public BreakpointStoreOnSqlite(Context context) {
+    public BreakpointStoreOnSQLite(Context context) {
         this.helper = new BreakpointSQLiteHelper(context.getApplicationContext());
         this.onCache = new BreakpointStoreOnCache(helper.loadToCache());
     }

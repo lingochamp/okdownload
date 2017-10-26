@@ -125,7 +125,7 @@ public class OkDownload {
 
         // You can import through cn.dreamtobe.okdownload:sqlite:{version}
         private static final String STORE_ON_SQLITE
-                = "cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnSqlite";
+                = "cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnSQLite";
 
         public Builder(@NonNull Context context) {
             this.context = context.getApplicationContext();

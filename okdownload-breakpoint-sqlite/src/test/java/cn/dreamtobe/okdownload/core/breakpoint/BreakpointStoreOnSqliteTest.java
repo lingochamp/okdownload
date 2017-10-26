@@ -41,7 +41,7 @@ import static org.robolectric.annotation.Config.NONE;
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = NONE)
 public class BreakpointStoreOnSqliteTest {
-    private BreakpointStoreOnSqlite store;
+    private BreakpointStoreOnSQLite store;
 
     private BreakpointSQLiteHelper helper;
     private BreakpointStoreOnCache onCache;
@@ -50,7 +50,7 @@ public class BreakpointStoreOnSqliteTest {
     public void setup() {
         helper = spy(new BreakpointSQLiteHelper(application));
         onCache = spy(new BreakpointStoreOnCache());
-        store = spy(new BreakpointStoreOnSqlite(helper, onCache));
+        store = spy(new BreakpointStoreOnSQLite(helper, onCache));
     }
 
     @After
