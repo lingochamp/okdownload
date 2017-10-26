@@ -49,7 +49,6 @@ public class OkDownload {
     final Context context;
 
     DownloadMonitor monitor;
-    boolean lenience = false;
 
     OkDownload(Context context, DownloadDispatcher downloadDispatcher,
                CallbackDispatcher callbackDispatcher, BreakpointStore breakpointStore,
