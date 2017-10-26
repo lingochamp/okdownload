@@ -216,5 +216,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/block3_title"/>
 
+    <TextView
+        android:id="@+id/sameTaskOrFile_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center_horizontal"
+        android:maxLines="1"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/block3_pb"/>
 
 </android.support.constraint.ConstraintLayout>

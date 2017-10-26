@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
-            R.id.navigation_home -> {
+            R.id.navigation_one -> {
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_dashboard -> {
@@ -58,6 +58,8 @@ class MainActivity : AppCompatActivity() {
                 .setBlock1Views(block1_title, block1_speed, block1_pb)
                 .setBlock2Views(block2_title, block2_speed, block2_pb)
                 .setBlock3Views(block3_title, block3_speed, block3_pb)
+                .setSameTaskTv(sameTaskOrFile_tv)
+                .setSameFileTv(sameTaskOrFile_tv)
                 .build()
 
         val storePath = Uri.fromFile(externalCacheDir)
