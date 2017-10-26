@@ -89,6 +89,7 @@ cn.dreamtobe.okdownload:sqlite:{latest_version}
 - [x] Support customize callback dispatcher with implment your own `CallbackDispatcher` to handle the event of callback to `DownloadListener` and valid with `Okdownload.Builder#callbackDispatcher`
 - [x] Support customize download dispatcher with implement your own `DownloadDispatcher` to control all download task
 - [x] Support customize output stream handler with implement your own `DownloadOutputStream` to control output stream for each task
+- [] Support register one whole download monitor to statistic all key step for each task easily with `DownloadMonitor`
 - [] Support speed limit
 - [] Support download task on independent process with import `okdownload-process`
 - [] Support RxJava
