@@ -98,7 +98,12 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             BreakpointInfo info = store.get(task.getId());
             dispatcher.dispatch().breakpointData(task, info);
             if (info == null) {
-                info = store.createAndInsert(task);
+                try {
+                    info = store.createAndInsert(task);
+                } catch (IOException e) {
+                    this.cache = new DownloadCache.PreError(e);
+                    break;
+                }
             }
 
             final MultiPointOutputStream outputStream = fileStrategy.createProcessStream(task,

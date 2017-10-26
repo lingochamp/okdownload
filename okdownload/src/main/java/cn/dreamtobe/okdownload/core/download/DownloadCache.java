@@ -40,7 +40,12 @@ public class DownloadCache {
         this.outputStream = outputStream;
     }
 
-    MultiPointOutputStream getOutputStream() {
+    private DownloadCache() {
+        this.outputStream = null;
+    }
+
+    @NonNull MultiPointOutputStream getOutputStream() {
+        if (outputStream == null) throw new IllegalArgumentException();
         return outputStream;
     }
 
@@ -115,5 +120,12 @@ public class DownloadCache {
     public void setPreAllocateFailed(IOException realCause) {
         this.isPreAllocateFailed = true;
         this.realCause = realCause;
+    }
+
+    static class PreError extends DownloadCache {
+        PreError(IOException realCause) {
+            super(null);
+            setUnknownError(realCause);
+        }
     }
 }

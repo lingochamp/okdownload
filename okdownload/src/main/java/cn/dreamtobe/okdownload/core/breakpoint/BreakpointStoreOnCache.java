@@ -26,7 +26,15 @@ import cn.dreamtobe.okdownload.DownloadTask;
 public class BreakpointStoreOnCache implements BreakpointStore {
     private AtomicInteger identifyGenerator = new AtomicInteger(1);
 
-    private SparseArray<BreakpointInfo> breakpointMap = new SparseArray<>();
+    private final SparseArray<BreakpointInfo> breakpointMap;
+
+    public BreakpointStoreOnCache() {
+        this(new SparseArray<BreakpointInfo>());
+    }
+
+    public BreakpointStoreOnCache(SparseArray<BreakpointInfo> breakpointMap) {
+        this.breakpointMap = breakpointMap;
+    }
 
     @Override
     public BreakpointInfo get(int id) {

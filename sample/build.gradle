@@ -61,6 +61,7 @@ dependencies {
     compile dep.supportConstraintLayout
     testCompile dep.junit
     compile project(':okdownload')
+    implementation project(':okdownload-breakpoint-sqlite')
 }
 
 kotlin {

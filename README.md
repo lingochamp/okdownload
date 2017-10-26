@@ -30,13 +30,22 @@ You can use [okcat](https://github.com/Jacksgong/okcat) to read the detail on th
 okcat -y=okcat-okdownload -c
 ```
 
+## Using
+
+```
+// core
+cn.dreamtobe.okdownload:okdownload:{latest_version}
+// provide sqlite to store breakpoints
+cn.dreamtobe.okdownload:sqlite:{latest_version}
+```
+
 ## Why OkDownload
 
 ### STABILITY and RELIABLE
 
 - [x] Cover unit tests as far as possible
 - [x] Precheck whether free space is enough to store target file when try to pre-allocate length of whole resouce with `PreAllocateException` and `EndCase.PRE_ALLOCATE_FAILED`
-- [x] Pre-allocate the length of target file from disk space when start download on very beginning
+- [x] Preallocate the length of target file from disk space when start download on very beginning
 - [x] Cover the case of there is the same task is running/waiting on OkDownload, another one will be interrupt when required to `enqueue`/`execute`
 - [x] Cover the case of there is a task is writing to or will be writing to the same file, another one will be interrupted when `enqueue`/`execute` or get a filename from the response.
 - [x] It will never start completed block again automatically when you resume a task
@@ -49,6 +58,7 @@ okcat -y=okcat-okdownload -c
 - [x] Check whether the local increase length is equal to the `content-length` on the response to make sure local data is right for each block
 - [x] Check the first block and last block especially to cover boundary case
 - [x] Ensure cancel operation is effective even if connection is waiting for response, input stream is reading or disconnect is very slow
+- [x] Always saving proceed of each task, so the breakpoint is always resumable even if the process is kill, since your import `cn.dreamtobe.okdownload:sqlite`
 - [] Check whether the network is really available before start downloading
 
 ### FLEXIBLE and PERFORMANCE
@@ -56,7 +66,7 @@ okcat -y=okcat-okdownload -c
 - [x] Support task priority
 - [x] Support using `Uri` as target file reference
 - [x] Support replace Url on `BreakpointStore` for the case of old Url is discard but its data still resumable
-- [x] Combine output-streams of milti-blocks on one handler `MultiPointOutputStream`
+- [x] Combine output-streams of multi-blocks on one handler `MultiPointOutputStream`
 - [x] Provide `SpeedCalculator` to calculate instance speed or average speed on `DownloadListener`
 - [] Support control batch of tasks with `DownloadContext`
 - [] Support only download on Wi-Fi network state

@@ -20,18 +20,20 @@ package cn.dreamtobe.okdownload.core.breakpoint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.IOException;
+
 import cn.dreamtobe.okdownload.DownloadTask;
 
 public interface BreakpointStore {
 
     @Nullable BreakpointInfo get(int id);
 
-    BreakpointInfo createAndInsert(@NonNull DownloadTask task);
+    BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException;
 
     void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
                                    long increaseLength);
 
-    boolean update(@NonNull BreakpointInfo breakpointInfo);
+    boolean update(@NonNull BreakpointInfo breakpointInfo) throws IOException;
 
     void completeDownload(int id);
 

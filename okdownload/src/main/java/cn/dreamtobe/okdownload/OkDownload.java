@@ -20,6 +20,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
@@ -121,7 +124,11 @@ public class OkDownload {
         private DownloadMonitor monitor;
         private final Context context;
 
-        public Builder(Context context) {
+        // You can import through cn.dreamtobe.okdownload:sqlite:{version}
+        private static final String STORE_ON_SQLITE
+                = "cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnSqlite";
+
+        public Builder(@NonNull Context context) {
             this.context = context.getApplicationContext();
         }
 
@@ -175,7 +182,18 @@ public class OkDownload {
             }
 
             if (breakpointStore == null) {
-                breakpointStore = new BreakpointStoreOnCache();
+                try {
+                    final Constructor constructor = Class.forName(STORE_ON_SQLITE)
+                            .getDeclaredConstructor(Context.class);
+                    breakpointStore = (BreakpointStore) constructor.newInstance(context);
+                } catch (ClassNotFoundException ignored) {
+                } catch (InstantiationException ignored) {
+                } catch (IllegalAccessException ignored) {
+                } catch (NoSuchMethodException ignored) {
+                } catch (InvocationTargetException ignored) {
+                }
+
+                if (breakpointStore == null) breakpointStore = new BreakpointStoreOnCache();
             }
 
             if (connectionFactory == null) {

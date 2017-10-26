@@ -32,11 +32,11 @@ public class BreakpointInfo {
     private final String url;
     private String etag;
 
-    private final String parentPath;
+    final String parentPath;
     private final DownloadStrategy.FilenameHolder filenameHolder;
 
     private final List<BlockInfo> blockInfoList;
-    private final boolean isTaskOnlyProvidedParentPath;
+    final boolean isTaskOnlyProvidedParentPath;
     private boolean isChunked;
 
     public BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
@@ -55,7 +55,7 @@ public class BreakpointInfo {
         }
     }
 
-    private BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
+    BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
                            @Nullable String filename, boolean isTaskOnlyProvidedParentPath) {
         this.id = id;
         this.url = url;
