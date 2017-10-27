@@ -16,7 +16,6 @@
 
 package cn.dreamtobe.okdownload.sample;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -26,12 +25,14 @@ import android.util.SparseArray;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.SpeedCalculator;
+import cn.dreamtobe.okdownload.StatusUtil;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
@@ -44,29 +45,46 @@ public class SingleTaskDemo {
 
     private DownloadTask task;
     private final String demoUrl = "https://t.alipayobjects.com/L1/71/100/and/alipay_wap_main.apk";
+    @NonNull private final File parentFile;
+    @NonNull private final String filename;
 
     @NonNull private final ViewHolder taskViewHolder;
     @NonNull private final SparseArray<ViewHolder> blockViewHolderMap;
     @NonNull private final TextView statusTv;
-    @NonNull private final TextView sameTaskTv;
-    @NonNull private final TextView sameFileTv;
+    @NonNull private final TextView extInfoTv;
 
     private SingleTaskDemo(@NonNull ViewHolder taskViewHolder,
                            @NonNull SparseArray<ViewHolder> blockViewHolderMap,
-                           @NonNull TextView statusTv, @NonNull TextView sameTaskTv,
-                           @NonNull TextView sameFileTv) {
+                           @NonNull TextView statusTv, @NonNull TextView extInfoTv) {
         this.taskViewHolder = taskViewHolder;
         this.blockViewHolderMap = blockViewHolderMap;
         this.statusTv = statusTv;
-        this.sameTaskTv = sameTaskTv;
-        this.sameFileTv = sameFileTv;
+        this.extInfoTv = extInfoTv;
+        final File externalSaveDir = statusTv.getContext().getExternalCacheDir();
+        if (externalSaveDir == null) {
+            this.parentFile = statusTv.getContext().getCacheDir();
+        } else {
+            this.parentFile = externalSaveDir;
+        }
+        this.filename = "alipay_wap_main.apk";
+
+        final BreakpointInfo info = StatusUtil.getCurrentInfo(demoUrl, parentFile.getAbsolutePath(),
+                filename);
+        if (info != null) initInfo(taskViewHolder, blockViewHolderMap, info);
+
+
     }
 
-    public void startAsync(Context context, @NonNull final FinishListener listener) {
+    public void updateStatus() {
+        extInfoTv.setText(
+                StatusUtil.getStatus(demoUrl, parentFile.getAbsolutePath(), filename).name());
+    }
+
+    public void startAsync(@NonNull final FinishListener listener) {
         if (task != null) return;
 
         DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl,
-                Uri.fromFile(context.getExternalCacheDir()));
+                Uri.fromFile(parentFile));
         task = builder
                 .setMinIntervalMillisCallbackProcess(150)
                 .build();
@@ -87,10 +105,10 @@ public class SingleTaskDemo {
         final DownloadTask task = builder
                 .setAutoCallbackToUIThread(false)
                 // same filename to #startAsync
-                .setFilename("alipay_wap_main.apk")
+                .setFilename(filename)
                 .build();
 
-        task.enqueue(new SingleTaskListener(sameFileTv));
+        task.enqueue(new SingleTaskListener(extInfoTv));
 
     }
 
@@ -100,7 +118,7 @@ public class SingleTaskDemo {
                 .setAutoCallbackToUIThread(false)
                 .build();
 
-        task.enqueue(new SingleTaskListener(sameTaskTv));
+        task.enqueue(new SingleTaskListener(extInfoTv));
     }
 
     public void cancelTask() {
@@ -229,41 +247,46 @@ public class SingleTaskDemo {
         }
 
         private void initInfo(BreakpointInfo info) {
-            if (taskViewHolder == null) return;
-
-            final TextView titleTv = taskViewHolder.titleTv;
-            titleTv.setText(
-                    titleTv.getContext().getString(R.string.task_title,
-                            Util.humanReadableBytes(info.getTotalLength(), false)));
-            setProgress(taskViewHolder.pb, info.getTotalLength(), info.getTotalOffset());
-            resetBlocksInfo(info);
-
-        }
-
-        private void resetBlocksInfo(BreakpointInfo info) {
-            if (taskViewHolder == null) return;
-
-
-            // block
-            final int blockCount = Math.min(blockViewHolders.size(), info.getBlockCount());
-            for (int i = 0; i < blockCount; i++) {
-                final BlockInfo blockInfo = info.getBlock(i);
-                final ViewHolder viewHolder = blockViewHolders.get(i);
-                resetBlockInfo(viewHolder, i, blockInfo);
-            }
-        }
-
-        private void resetBlockInfo(ViewHolder viewHolder, int blockIndex, BlockInfo blockInfo) {
-            final TextView titleTv = viewHolder.titleTv;
-            titleTv.setText(titleTv.getContext().getString(R.string.block_title, blockIndex,
-                    Util.humanReadableBytes(blockInfo.getStartOffset(), false),
-                    Util.humanReadableBytes(blockInfo.getRangeRight(), false)));
-
-            setProgress(viewHolder.pb, blockInfo.getContentLength(),
-                    blockInfo.getCurrentOffset());
+            SingleTaskDemo.initInfo(taskViewHolder, blockViewHolders, info);
         }
     }
 
+
+    private static void initInfo(ViewHolder taskViewHolder,
+                                 SparseArray<ViewHolder> blockViewHolders, BreakpointInfo info) {
+        if (taskViewHolder == null) return;
+
+        final TextView titleTv = taskViewHolder.titleTv;
+        titleTv.setText(
+                titleTv.getContext().getString(R.string.task_title,
+                        Util.humanReadableBytes(info.getTotalLength(), false)));
+        setProgress(taskViewHolder.pb, info.getTotalLength(), info.getTotalOffset());
+        resetBlocksInfo(blockViewHolders, info);
+
+    }
+
+    private static void resetBlocksInfo(SparseArray<ViewHolder> blockViewHolders,
+                                        BreakpointInfo info) {
+        if (blockViewHolders.size() <= 0) return;
+
+        // block
+        final int blockCount = Math.min(blockViewHolders.size(), info.getBlockCount());
+        for (int i = 0; i < blockCount; i++) {
+            final BlockInfo blockInfo = info.getBlock(i);
+            final ViewHolder viewHolder = blockViewHolders.get(i);
+            resetBlockInfo(viewHolder, i, blockInfo);
+        }
+    }
+
+    private static void resetBlockInfo(ViewHolder viewHolder, int blockIndex, BlockInfo blockInfo) {
+        final TextView titleTv = viewHolder.titleTv;
+        titleTv.setText(titleTv.getContext().getString(R.string.block_title, blockIndex,
+                Util.humanReadableBytes(blockInfo.getStartOffset(), false),
+                Util.humanReadableBytes(blockInfo.getRangeRight(), false)));
+
+        setProgress(viewHolder.pb, blockInfo.getContentLength(),
+                blockInfo.getCurrentOffset());
+    }
 
     private static void setProgress(ProgressBar bar, long increaseLength) {
         final int shrinkRate = (int) bar.getTag();
@@ -325,8 +348,7 @@ public class SingleTaskDemo {
         private ViewHolder taskViewHolder;
         private SparseArray<ViewHolder> blockViewHolderMap = new SparseArray<>(4);
         private TextView statusTv;
-        private TextView sameTaskTv;
-        private TextView sameFileTv;
+        private TextView extInfoTv;
 
         public Builder setTaskViews(TextView titleTv, TextView speedTv, ProgressBar pb) {
             taskViewHolder = new ViewHolder(titleTv, speedTv, pb);
@@ -358,23 +380,16 @@ public class SingleTaskDemo {
             return this;
         }
 
-        public Builder setSameFileTv(TextView sameFileTv) {
-            this.sameFileTv = sameFileTv;
-            return this;
-        }
-
-        public Builder setSameTaskTv(TextView sameTaskTv) {
-            this.sameTaskTv = sameTaskTv;
+        public Builder setExtInfoTv(TextView extInfoTv) {
+            this.extInfoTv = extInfoTv;
             return this;
         }
 
         public SingleTaskDemo build() {
-            if (taskViewHolder == null || statusTv == null || sameTaskTv == null
-                    || sameFileTv == null) {
+            if (taskViewHolder == null || statusTv == null || extInfoTv == null) {
                 throw new IllegalArgumentException();
             }
-            return new SingleTaskDemo(taskViewHolder, blockViewHolderMap, statusTv, sameTaskTv,
-                    sameFileTv);
+            return new SingleTaskDemo(taskViewHolder, blockViewHolderMap, statusTv, extInfoTv);
         }
     }
 }

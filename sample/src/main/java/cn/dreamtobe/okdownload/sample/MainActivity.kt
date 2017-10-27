@@ -58,8 +58,7 @@ class MainActivity : AppCompatActivity() {
                 .setBlock1Views(block1_title, block1_speed, block1_pb)
                 .setBlock2Views(block2_title, block2_speed, block2_pb)
                 .setBlock3Views(block3_title, block3_speed, block3_pb)
-                .setSameTaskTv(sameTaskOrFile_tv)
-                .setSameFileTv(sameTaskOrFile_tv)
+                .setExtInfoTv(extInfo_tv)
                 .build()
 
         val storePath = Uri.fromFile(externalCacheDir)
@@ -70,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         startOrCancelBtn.setOnClickListener { v ->
             run {
                 if (v.tag == null) {
-                    demo.startAsync(this, { runOnUiThread { setToStart(v) } })
+                    demo.startAsync({ runOnUiThread { setToStart(v) } })
                     setToCancel(v)
                 } else {
                     demo.cancelTask()
@@ -79,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         }
         startSameTaskBtn.setOnClickListener { demo.startSameTask_sameTaskBusy(storePath) }
         startSameFileBtn.setOnClickListener { demo.startSamePathTask_fileBusy(storePath) }
+        getStatusBtn.setOnClickListener { demo.updateStatus() }
     }
 
     private fun setToStart(v: View) {

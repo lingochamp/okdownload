@@ -10,12 +10,24 @@
 
     <android.support.v7.widget.AppCompatButton
         android:id="@+id/startOrCancelBtn"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:text="@string/start_download"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/getStatusBtn"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/getStatusBtn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:text="Get Status"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/startOrCancelBtn"
         app:layout_constraintTop_toTopOf="parent"/>
 
 
@@ -217,7 +229,7 @@
         app:layout_constraintTop_toBottomOf="@+id/block3_title"/>
 
     <TextView
-        android:id="@+id/sameTaskOrFile_tv"
+        android:id="@+id/extInfo_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
