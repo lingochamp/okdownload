@@ -69,6 +69,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     public void cancel() {
+        if (canceled) return;
+        OkDownload.with().downloadDispatcher().flyingCanceled(this);
+
         this.canceled = true;
         final DownloadCache cache = this.cache;
         if (cache != null) cache.setUserCanceled();

@@ -51,7 +51,7 @@ public class DownloadDispatcher {
     private final List<DownloadCall> runningSyncCalls;
 
     // for the case of tasks has been cancelled but didn't remove from runningAsyncCalls list yet.
-    private volatile int flyingCanceledCallCount;
+    private volatile int flyingCanceledAsyncCallCount;
     private @Nullable
     ExecutorService executorService;
 
@@ -101,47 +101,99 @@ public class DownloadDispatcher {
     }
 
     public synchronized void cancelAll() {
-        for (DownloadCall call : readyAsyncCalls) {
-            call.cancel();
+
+        for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
+            DownloadCall call = i.next();
+            i.remove();
+
+            if (call.isCanceled()) continue;
+            OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
+                    EndCause.CANCELED,
+                    null);
         }
 
         for (DownloadCall call : runningAsyncCalls) {
+            if (call.isCanceled()) continue;
             call.cancel();
+            OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
+                    EndCause.CANCELED,
+                    null);
         }
 
         for (DownloadCall call : runningSyncCalls) {
+            if (call.isCanceled()) continue;
             call.cancel();
+            OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
+                    EndCause.CANCELED,
+                    null);
         }
     }
 
     public synchronized boolean cancel(DownloadTask task) {
-        for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
-            DownloadCall call = i.next();
-            if (call.task == task) {
-                // cancel manually from queue.
-                i.remove();
-                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task, EndCause.CANCELED,
+        boolean canceled = false;
+        try {
+            for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
+                DownloadCall call = i.next();
+                if (call.task == task) {
+                    if (call.isCanceled()) return false;
+
+                    // cancel manually from queue.
+                    i.remove();
+                    canceled = true;
+                    return true;
+                }
+            }
+
+            for (DownloadCall call : runningAsyncCalls) {
+                if (call.task == task) {
+                    if (call.isCanceled()) return false;
+
+                    call.cancel();
+                    processCalls();
+                    canceled = true;
+                    return true;
+                }
+            }
+
+            for (DownloadCall call : runningSyncCalls) {
+                if (call.task == task) {
+                    if (call.isCanceled()) return false;
+
+                    call.cancel();
+                    canceled = true;
+                    return true;
+                }
+            }
+        } finally {
+            if (canceled) {
+                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task,
+                        EndCause.CANCELED,
                         null);
-                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public synchronized boolean isRunning(DownloadTask task) {
+        for (DownloadCall call : runningSyncCalls) {
+            if (call.task.equals(task)) {
+                return !call.isCanceled();
             }
         }
 
         for (DownloadCall call : runningAsyncCalls) {
-            if (call.task == task) {
-                flyingCanceledCallCount++;
-                call.cancel();
-                processCalls();
-                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task, EndCause.CANCELED,
-                        null);
-                return true;
+            if (call.task.equals(task)) {
+                return !call.isCanceled();
             }
         }
 
-        for (DownloadCall call : runningSyncCalls) {
-            if (call.task == task) {
-                call.cancel();
-                return true;
-            }
+        return false;
+    }
+
+    public synchronized boolean isPending(DownloadTask task) {
+        for (DownloadCall call : readyAsyncCalls) {
+            if (call.task.equals(task)) return true;
         }
 
         return false;
@@ -152,11 +204,15 @@ public class DownloadDispatcher {
         call.run();
     }
 
+    public synchronized void flyingCanceled(DownloadCall call) {
+        if (call.asyncExecuted) flyingCanceledAsyncCallCount++;
+    }
+
     public synchronized void finish(DownloadCall call) {
         final boolean asyncExecuted = call.asyncExecuted;
         final Collection<DownloadCall> calls = asyncExecuted ? runningAsyncCalls : runningSyncCalls;
         if (!calls.remove(call)) throw new AssertionError("Call wasn't in-flight!");
-        if (call.isCanceled()) flyingCanceledCallCount--;
+        if (asyncExecuted && call.isCanceled()) flyingCanceledAsyncCallCount--;
 
         if (asyncExecuted) processCalls();
     }
@@ -240,6 +296,6 @@ public class DownloadDispatcher {
     }
 
     private int runningAsyncSize() {
-        return runningAsyncCalls.size() - flyingCanceledCallCount;
+        return runningAsyncCalls.size() - flyingCanceledAsyncCallCount;
     }
 }
