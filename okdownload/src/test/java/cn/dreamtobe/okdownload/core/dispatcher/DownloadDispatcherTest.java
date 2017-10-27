@@ -151,7 +151,12 @@ public class DownloadDispatcherTest {
         assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount);
 
         final DownloadTask task = mockTask();
-        dispatcher.cancel(runningAsyncCalls.get(0).task);
+        final DownloadCall canceledCall = runningAsyncCalls.get(0);
+        dispatcher.cancel(canceledCall.task);
+        // maybe here is bad design, because of here relate to DownloadCall#cancel we have to invoke
+        // flyingCanceled manually which does on DownloadCall#cancel
+        dispatcher.flyingCanceled(canceledCall);
+
         dispatcher.enqueue(task);
 
         assertThat(readyAsyncCalls).hasSize(0);
