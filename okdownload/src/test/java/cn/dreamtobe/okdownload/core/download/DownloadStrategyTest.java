@@ -78,12 +78,26 @@ public class DownloadStrategyTest {
     }
 
     @Test
+    public void resumeAvailableResponseCheck_EtagChangedFromNone() throws IOException {
+        final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
+                resumeAvailableResponseCheck();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
+        when(connected.getResponseHeaderField("Etag")).thenReturn("new-etag");
+        when(info.getBlock(0)).thenReturn(mock(BlockInfo.class));
+
+        responseCheck.inspect();
+    }
+
+    @Test
     public void resumeAvailableResponseCheck_EtagChanged() throws IOException {
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
 
         when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
         when(connected.getResponseHeaderField("Etag")).thenReturn("new-etag");
+        when(info.getEtag()).thenReturn("old-etag");
+
         expectResumeFailed(RESPONSE_ETAG_CHANGED);
 
         responseCheck.inspect();
@@ -301,7 +315,8 @@ public class DownloadStrategyTest {
         result = strategy.determineFilename(null, task, connected);
         assertThat(result).isNotEmpty();
 
-        when(task.getUrl()).thenReturn("https://jacksgong.com/android-studio-ide-171.4408382-mac.dmg");
+        when(task.getUrl())
+                .thenReturn("https://jacksgong.com/android-studio-ide-171.4408382-mac.dmg");
         result = strategy.determineFilename(null, task, connected);
         assertThat(result).isEqualTo("android-studio-ide-171.4408382-mac.dmg");
 

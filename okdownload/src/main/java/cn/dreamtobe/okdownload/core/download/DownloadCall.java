@@ -202,7 +202,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             final String path = task.getPath();
             if (path != null) {
                 final File oldFile = new File(path);
-                if (oldFile.exists()){
+                if (oldFile.exists()) {
                     OkDownload.with().processFileStrategy().discardOldFile(oldFile);
                 }
             }

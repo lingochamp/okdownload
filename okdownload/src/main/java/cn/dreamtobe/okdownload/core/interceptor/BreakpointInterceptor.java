@@ -98,7 +98,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
     }
 
-    private void discardOldFileIfExist(@NonNull String path) {
+    void discardOldFileIfExist(@NonNull String path) {
         final File oldFile = new File(path);
         if (oldFile.exists()) OkDownload.with().processFileStrategy().discardOldFile(oldFile);
     }

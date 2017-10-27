@@ -40,6 +40,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -85,6 +86,7 @@ public class BreakpointInterceptorTest {
         when(mockChain.isOtherBlockPark()).thenReturn(true);
         when(mockChain.processConnect()).thenReturn(mock(DownloadConnection.Connected.class));
         doNothing().when(interceptor).splitBlock(anyInt(), eq(mockChain));
+        doNothing().when(interceptor).discardOldFileIfExist(nullable(String.class));
 
         interceptor.interceptConnect(mockChain);
 
@@ -106,6 +108,7 @@ public class BreakpointInterceptorTest {
                 .determineBlockCount(any(DownloadTask.class), eq(contentLength),
                         any(DownloadConnection.Connected.class));
         doNothing().when(interceptor).splitBlock(eq(blockCount), eq(mockChain));
+        doNothing().when(interceptor).discardOldFileIfExist(nullable(String.class));
 
         interceptor.interceptConnect(mockChain);
         verify(interceptor).splitBlock(eq(blockCount), eq(mockChain));
