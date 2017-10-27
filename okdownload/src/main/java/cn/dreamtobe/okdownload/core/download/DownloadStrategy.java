@@ -209,8 +209,9 @@ public class DownloadStrategy {
                     break;
                 }
 
-                if (!Util.isEmpty(newEtag) && !newEtag.equals(etag)) {
+                if (!Util.isEmpty(etag) && !Util.isEmpty(newEtag) && !newEtag.equals(etag)) {
                     // etag changed.
+                    // also etag changed is relate to HTTP_PRECON_FAILED
                     resumeFailedCause = RESPONSE_ETAG_CHANGED;
                     break;
                 }
