@@ -92,7 +92,7 @@ public class DownloadStrategy {
         return connected.getResponseCode() == HttpURLConnection.HTTP_PARTIAL;
     }
 
-    private static final Pattern TMP_FILE_NAME_PATTERN = Pattern.compile(".*\\\\|/([\\w|.]*)\\??");
+    private static final Pattern TMP_FILE_NAME_PATTERN = Pattern.compile(".*\\\\|/([^\\\\|/|?]*)\\??");
 
     public void validFilenameFromResume(@NonNull String filenameOnStore,
                                         @NonNull DownloadTask task) {

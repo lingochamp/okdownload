@@ -300,5 +300,10 @@ public class DownloadStrategyTest {
         when(task.getUrl()).thenReturn("https://jacksgong.com/?abc");
         result = strategy.determineFilename(null, task, connected);
         assertThat(result).isNotEmpty();
+
+        when(task.getUrl()).thenReturn("https://jacksgong.com/android-studio-ide-171.4408382-mac.dmg");
+        result = strategy.determineFilename(null, task, connected);
+        assertThat(result).isEqualTo("android-studio-ide-171.4408382-mac.dmg");
+
     }
 }
