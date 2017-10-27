@@ -68,6 +68,7 @@ cn.dreamtobe.okdownload:sqlite:{latest_version}
 - [x] Support replace Url on `BreakpointStore` for the case of old Url is discard but its data still resumable
 - [x] Combine output-streams of multi-blocks on one handler `MultiPointOutputStream`
 - [x] Provide `SpeedCalculator` to calculate instance speed or average speed on `DownloadListener`
+- [x] Provide `StatusUtil` to find status of task or breakpoint-info of task anytime, anywhere 
 - [] Support control batch of tasks with `DownloadContext`
 - [] Support only download on Wi-Fi network state
 - [] Support control the whole queue size of running task on `DownloadDispatcher`
