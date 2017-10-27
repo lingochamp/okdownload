@@ -55,6 +55,10 @@ public class ProcessFileStrategy {
         }
     }
 
+    public void discardOldFile(@NonNull File oldFile) {
+        oldFile.delete();
+    }
+
     /**
      * @see DownloadStrategy#resumeAvailableResponseCheck
      */

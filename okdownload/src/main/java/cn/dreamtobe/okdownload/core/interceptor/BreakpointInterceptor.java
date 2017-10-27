@@ -16,6 +16,9 @@
 
 package cn.dreamtobe.okdownload.core.interceptor;
 
+import android.support.annotation.NonNull;
+
+import java.io.File;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.OkDownload;
@@ -44,6 +47,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         if (chain.isOtherBlockPark()) {
             // only can on the first block.
             if (chain.getBlockIndex() != 0) throw new IOException();
+            discardOldFileIfExist(chain.getInfo().getPath());
 
             final long contentLength = chain.getResponseContentLength();
             if (OkDownload.with().downloadStrategy().isSplitBlock(contentLength, connected)) {
@@ -92,6 +96,11 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             final BlockInfo blockInfo = new BlockInfo(startOffset, contentLength);
             info.addBlock(blockInfo);
         }
+    }
+
+    private void discardOldFileIfExist(@NonNull String path) {
+        final File oldFile = new File(path);
+        if (oldFile.exists()) OkDownload.with().processFileStrategy().discardOldFile(oldFile);
     }
 
     @Override

@@ -19,6 +19,7 @@ package cn.dreamtobe.okdownload.core.download;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -198,6 +199,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
             startBlocks(blockChainList);
         } else {
+            final String path = task.getPath();
+            if (path != null) {
+                final File oldFile = new File(path);
+                if (oldFile.exists()){
+                    OkDownload.with().processFileStrategy().discardOldFile(oldFile);
+                }
+            }
             // new task
             info.resetInfo();
 
