@@ -60,10 +60,10 @@ public class BreakpointStoreOnSqliteTest {
 
     @Test
     public void get_createAndInsert_onSyncToFilesystemSuccess_update() throws IOException {
-        final int id1 = store.createId(mock(DownloadTask.class));
-        final int id2 = store.createId(mock(DownloadTask.class));
+        final int id1 = store.findOrCreateId(mock(DownloadTask.class));
+        final int id2 = store.findOrCreateId(mock(DownloadTask.class));
         assertThat(id1).isNotEqualTo(id2);
-        verify(onCache, times(2)).createId(any(DownloadTask.class));
+        verify(onCache, times(2)).findOrCreateId(any(DownloadTask.class));
 
         final DownloadTask task = mock(DownloadTask.class);
         when(task.getId()).thenReturn(id2);
@@ -89,7 +89,7 @@ public class BreakpointStoreOnSqliteTest {
 
     @Test
     public void completeDownload() {
-        final int id = store.createId(mock(DownloadTask.class));
+        final int id = store.findOrCreateId(mock(DownloadTask.class));
         store.completeDownload(id);
         verify(onCache).completeDownload(id);
         verify(helper).removeInfo(id);
@@ -98,7 +98,7 @@ public class BreakpointStoreOnSqliteTest {
 
     @Test
     public void discard() {
-        final int id = store.createId(mock(DownloadTask.class));
+        final int id = store.findOrCreateId(mock(DownloadTask.class));
 
         store.discard(id);
         verify(onCache).discard(id);

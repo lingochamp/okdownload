@@ -28,6 +28,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
+
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -85,15 +89,21 @@ public class DownloadTaskTest {
     }
 
     @Test
-    public void equal() {
+    public void equal() throws IOException {
         final Uri uri = mock(Uri.class);
         when(uri.getPath()).thenReturn(parentPath);
 
+        // origin is:
+        // 1. uri is directory
+        // 2. filename is provided
         DownloadTask task = new DownloadTask
                 .Builder("url", uri)
                 .setFilename(filename)
                 .build();
 
+        // compare to:
+        // 1. uri is not directory
+        // 2. filename is provided by uri.
         final Uri anotherUri = mock(Uri.class);
         when(anotherUri.getPath()).thenReturn(parentPath + filename);
         DownloadTask anotherTask = new DownloadTask
@@ -101,16 +111,65 @@ public class DownloadTaskTest {
                 .build();
         assertThat(task.equals(anotherTask)).isTrue();
 
+        // compare to:
+        // 1. uri is directory
+        // 2. filename is not provided
         anotherTask = new DownloadTask
                 .Builder("url", uri)
                 .build();
+        // expect: not same
         assertThat(task.equals(anotherTask)).isFalse();
 
 
+        // compare to:
+        // 1. uri is directory
+        // 2. filename is provided and different
         anotherTask = new DownloadTask
                 .Builder("url", uri)
                 .setFilename("another-filename")
                 .build();
+        // expect: not same
         assertThat(task.equals(anotherTask)).isFalse();
+
+        // origin is:
+        // 1. uri is directory
+        // 2. filename is not provided
+        DownloadTask noFilenameTask = new DownloadTask
+                .Builder("url", uri)
+                .build();
+
+        // filename is enabled by response
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        when(info.getFilenameHolder()).thenReturn(mock(DownloadStrategy.FilenameHolder.class));
+        new DownloadStrategy().validFilenameFromResponse("response-filename",
+                noFilenameTask, info, mock(DownloadConnection.Connected.class));
+
+        // compare to:
+        // 1. uri is directory
+        // 2. filename is provided
+        anotherTask = new DownloadTask
+                .Builder("url", uri)
+                .setFilename("another-filename")
+                .build();
+        assertThat(noFilenameTask.equals(anotherTask)).isFalse();
+
+        // compare to:
+        // 1. uri is directory
+        // 2. filename is not provided
+        anotherTask = new DownloadTask
+                .Builder("url", uri)
+                .build();
+
+        assertThat(noFilenameTask.equals(anotherTask)).isTrue();
+
+        // compare to:
+        // 1. uri is directory
+        // 2. filename is provided and the same to the response-filename
+        anotherTask = new DownloadTask
+                .Builder("url", uri)
+                .setFilename("response-filename")
+                .build();
+        assertThat(noFilenameTask.equals(anotherTask)).isTrue();
+
     }
 }

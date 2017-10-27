@@ -193,15 +193,16 @@ public class BreakpointInfo {
         if (!url.equals(task.getUrl())) return false;
 
         final String otherFilename = task.getFilename();
+        if (otherFilename != null && otherFilename.equals(filenameHolder.get())) return true;
+
         if (isTaskOnlyProvidedParentPath) {
             // filename is provided by response.
             if (!task.isUriIsDirectory()) return false;
 
             return otherFilename == null || otherFilename.equals(filenameHolder.get());
-        } else {
-            // filename is provided by task.
-            return otherFilename != null && otherFilename.equals(filenameHolder.get());
         }
+
+        return false;
     }
 
     @Override public String toString() {

@@ -72,8 +72,8 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
         helper.removeInfo(id);
     }
 
-    @Override public int createId(@NonNull DownloadTask task) {
-        return onCache.createId(task);
+    @Override public int findOrCreateId(@NonNull DownloadTask task) {
+        return onCache.findOrCreateId(task);
     }
 
     void close() {

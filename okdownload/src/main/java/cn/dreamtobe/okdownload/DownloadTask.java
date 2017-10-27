@@ -110,7 +110,7 @@ public class DownloadTask implements Cloneable {
                 else providedPathFile = new File(uri.getPath());
             }
         } finally {
-            this.id = OkDownload.with().breakpointStore().createId(this);
+            this.id = OkDownload.with().breakpointStore().findOrCreateId(this);
         }
     }
 
@@ -149,7 +149,7 @@ public class DownloadTask implements Cloneable {
     @NonNull public String getParentPath() {
         if (isUriIsDirectory) return uri.getPath();
 
-        return new File(uri.getPath()).getParent();
+        return new File(uri.getPath()).getParentFile().getAbsolutePath();
     }
 
     @Nullable public String getPath() {
@@ -354,14 +354,20 @@ public class DownloadTask implements Cloneable {
         if (obj instanceof DownloadTask) {
             final DownloadTask another = (DownloadTask) obj;
 
-            return url.equals(another.url)
-                    && providedPathFile.equals(another.providedPathFile);
+            if (!url.equals(another.url)) return false;
+
+            if (providedPathFile.equals(another.providedPathFile)) return true;
+
+            // cover the case of filename is provided by response.
+            final String filename = getFilename();
+            final String anotherFilename = another.getFilename();
+            return anotherFilename != null && filename != null && anotherFilename.equals(filename);
         }
 
         return false;
     }
 
     @Override public int hashCode() {
-        return (url + providedPathFile.toString()).hashCode();
+        return (url + providedPathFile.toString() + filenameHolder.get()).hashCode();
     }
 }

@@ -83,7 +83,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     }
 
     @Override
-    public synchronized int createId(@NonNull DownloadTask task) {
+    public synchronized int findOrCreateId(@NonNull DownloadTask task) {
         final SparseArray<BreakpointInfo> clonedMap = breakpointMap.clone();
         final int size = clonedMap.size();
         for (int i = 0; i < size; i++) {
