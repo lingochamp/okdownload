@@ -178,8 +178,6 @@ public class SingleTaskDemo {
 
         }
 
-        int updateSpeedRateUtil = 0;
-
         @Override public void fetchProgress(DownloadTask task, int blockIndex,
                                             long increaseBytes) {
             taskSpeed.downloading(increaseBytes);
@@ -188,18 +186,16 @@ public class SingleTaskDemo {
                     "fetchProgress " + blockIndex + " " + Util.humanReadableBytes(increaseBytes,
                             false) + " " + speed);
 
-            final boolean isNeedUpdateSpeed = updateSpeedRateUtil++ % 4 == 0;
             if (taskViewHolder != null) {
                 setProgress(taskViewHolder.pb, increaseBytes);
+                if (blockIndex >= blockViewHolders.size()) return;
 
                 final SpeedCalculator blockSpeed = blockSpeeds.get(blockIndex);
                 blockSpeed.downloading(increaseBytes);
                 final ViewHolder blockViewHolder = blockViewHolders.get(blockIndex);
                 setProgress(blockViewHolder.pb, increaseBytes);
-                if (isNeedUpdateSpeed) {
-                    taskViewHolder.speedTv.setText(speed);
-                    blockViewHolder.speedTv.setText(blockSpeed.speed());
-                }
+                taskViewHolder.speedTv.setText(speed);
+                blockViewHolder.speedTv.setText(blockSpeed.speed());
             }
         }
 
@@ -249,7 +245,7 @@ public class SingleTaskDemo {
 
 
             // block
-            final int blockCount = blockViewHolders.size();
+            final int blockCount = Math.min(blockViewHolders.size(), info.getBlockCount());
             for (int i = 0; i < blockCount; i++) {
                 final BlockInfo blockInfo = info.getBlock(i);
                 final ViewHolder viewHolder = blockViewHolders.get(i);
