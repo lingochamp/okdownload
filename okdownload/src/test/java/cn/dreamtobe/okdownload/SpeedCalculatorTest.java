@@ -59,7 +59,7 @@ public class SpeedCalculatorTest {
         assertThat(calculator.allIncreaseBytes).isEqualTo(30);
 
         // 30/1*1000
-        assertThat(calculator.getBytesPerSecondAndFlush()).isEqualTo(30000);
+        assertThat(calculator.getInstantBytesPerSecondAndFlush()).isEqualTo(30000);
 
         calculator.downloading(60);
 
@@ -67,7 +67,7 @@ public class SpeedCalculatorTest {
         doReturn(now).when(calculator).nowMillis();
 
         // 60/(86-66)*1000
-        assertThat(calculator.getBytesPerSecondAndFlush()).isEqualTo(3000);
+        assertThat(calculator.getInstantBytesPerSecondAndFlush()).isEqualTo(3000);
         assertThat(calculator.timestamp).isEqualTo(now);
         assertThat(calculator.beginTimestamp).isEqualTo(firstTimestamp);
 
@@ -78,12 +78,29 @@ public class SpeedCalculatorTest {
         calculator.endTask();
 
         // 10/(96-86)*1000
-        assertThat(calculator.getBytesPerSecondAndFlush()).isEqualTo(1000);
+        assertThat(calculator.getInstantBytesPerSecondAndFlush()).isEqualTo(1000);
         //(10+20+60+10)
         assertThat(calculator.allIncreaseBytes).isEqualTo(100);
         assertThat(calculator.endTimestamp).isEqualTo(96);
         assertThat(calculator.beginTimestamp).isEqualTo(firstTimestamp);
         // (10+20+60+10)/(96-66)*1000
         assertThat(calculator.getBytesPerSecondFromBegin()).isEqualTo(3333);
+    }
+
+    @Test
+    public void speed() {
+        long now = 66;
+        doReturn(now).when(calculator).nowMillis();
+
+        calculator.downloading(1000);
+
+        now = 1065;
+        doReturn(now).when(calculator).nowMillis();
+        // because less than 1 second and last speed is 0.
+        assertThat(calculator.speed()).isEqualTo("0 B/s");
+
+        now = 1066;
+        doReturn(now).when(calculator).nowMillis();
+        assertThat(calculator.speed()).isEqualTo("1.0 kB/s");
     }
 }

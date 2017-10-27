@@ -58,9 +58,22 @@ public class SpeedCalculator {
         bytesPerSecond = (long) ((float) sinceNowIncreaseBytes / durationMillis * 1000f);
     }
 
-    public long getBytesPerSecondAndFlush() {
+    /**
+     * Get instant bytes per-second.
+     */
+    public long getInstantBytesPerSecondAndFlush() {
         flush();
         return bytesPerSecond;
+    }
+
+    /**
+     * Get bytes per-second and only if duration is greater than or equal to 1 second will flush and
+     * re-calculate speed.
+     */
+    public long getBytesPerSecondAndFlush() {
+        if (nowMillis() - timestamp < 1000) return bytesPerSecond;
+
+        return getInstantBytesPerSecondAndFlush();
     }
 
     public synchronized long getBytesPerSecondFromBegin() {
@@ -76,8 +89,29 @@ public class SpeedCalculator {
         endTimestamp = nowMillis();
     }
 
-    public String speed() {
+    /**
+     * Get instant speed
+     */
+    public String instantSpeed() {
         return getSpeedWithSIAndFlush();
+    }
+
+    /**
+     * Get speed with at least one second duration.
+     */
+    public String speed() {
+        return humanReadableSpeed(getBytesPerSecondAndFlush(), true);
+    }
+
+    /**
+     * Get last time calculated speed.
+     */
+    public String lastSpeed() {
+        return humanReadableSpeed(bytesPerSecond, true);
+    }
+
+    public long getInstantSpeedDurationMillis() {
+        return nowMillis() - timestamp;
     }
 
 
@@ -88,7 +122,7 @@ public class SpeedCalculator {
      * 1MiB = 2^10KB = 1024KB
      */
     public String getSpeedWithBinaryAndFlush() {
-        return humanReadableSpeed(getBytesPerSecondAndFlush(), false);
+        return humanReadableSpeed(getInstantBytesPerSecondAndFlush(), false);
     }
 
     /**
@@ -98,7 +132,7 @@ public class SpeedCalculator {
      * 1MB = 1000KB
      */
     public String getSpeedWithSIAndFlush() {
-        return humanReadableSpeed(getBytesPerSecondAndFlush(), true);
+        return humanReadableSpeed(getInstantBytesPerSecondAndFlush(), true);
     }
 
     public String speedFromBegin() {
