@@ -16,6 +16,7 @@
 
 <resources>
     <string name="app_name">OkDownload-Sample</string>
+    <string name="github_url">https://github.com/jacksgong/okdownload</string>
     <string name="title_single">Single</string>
     <string name="title_multiple">Multiple</string>
     <string name="title_notifications">Notifications</string>
@@ -26,4 +27,5 @@
     <string name="block_title">Block%1$d(%2$s~%3$s)</string>
     <string name="task_title">Task(0~%1$s)</string>
     <string name="get_status">Get Status</string>
+    <string name="github">GITHUB</string>
 </resources>
