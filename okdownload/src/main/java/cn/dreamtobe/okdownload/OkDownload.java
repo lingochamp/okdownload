@@ -46,7 +46,7 @@ public class OkDownload {
     private final ProcessFileStrategy processFileStrategy;
     private final DownloadStrategy downloadStrategy;
 
-    final Context context;
+    private final Context context;
 
     DownloadMonitor monitor;
 

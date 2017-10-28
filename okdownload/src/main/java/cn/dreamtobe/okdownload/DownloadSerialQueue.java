@@ -17,8 +17,6 @@
 package cn.dreamtobe.okdownload;
 
 /**
- * Created by Jacksgong on 28/09/2017.
- * <p>
  * Use for download a queue.
  */
 

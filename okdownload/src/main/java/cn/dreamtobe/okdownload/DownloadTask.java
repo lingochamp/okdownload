@@ -253,7 +253,16 @@ public class DownloadTask implements Cloneable {
         final Uri uri;
         private volatile HashMap<String, List<String>> headerMapFields;
 
-        public Builder(String url, Uri uri) {
+        public Builder(@NonNull String url, @NonNull String parentPath, @Nullable String filename) {
+            this(url, new File(parentPath));
+            this.filename = filename;
+        }
+
+        public Builder(@NonNull String url, @NonNull File file) {
+            this(url, Uri.fromFile(file));
+        }
+
+        public Builder(@NonNull String url, @NonNull Uri uri) {
             this.url = url;
             this.uri = uri;
         }
