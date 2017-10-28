@@ -29,7 +29,7 @@ import org.jetbrains.anko.runOnUiThread
 
 class SingleTaskFragment : Fragment() {
 
-    var demo: SingleTaskDemo? = null
+    private var demo: SingleTaskDemo? = null
 
     companion object {
         fun newInstance(): SingleTaskFragment {

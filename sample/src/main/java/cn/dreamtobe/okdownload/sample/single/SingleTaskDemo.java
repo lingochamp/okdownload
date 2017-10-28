@@ -17,7 +17,6 @@
 package cn.dreamtobe.okdownload.sample.single;
 
 import android.content.Context;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -32,13 +31,13 @@ public class SingleTaskDemo {
 
     private SingleTaskListener downloadListener;
     private DownloadTask task;
-    private FinishListener finishListener;
 
     private final String demoUrl = "https://t.alipayobjects.com/L1/71/100/and/alipay_wap_main.apk";
     @NonNull private final File parentFile;
     @NonNull private final String filename;
 
     private SingleTaskViewAdapter viewAdapter;
+    private FinishListener finishListener;
 
     public SingleTaskDemo(Context context) {
 
@@ -80,11 +79,11 @@ public class SingleTaskDemo {
         return task != null;
     }
 
+    // start task asynchronously
     public void startAsync() {
         if (task != null) return;
 
-        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl,
-                Uri.fromFile(parentFile));
+        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl, parentFile);
         task = builder
                 .setMinIntervalMillisCallbackProcess(150)
                 .build();
@@ -102,9 +101,10 @@ public class SingleTaskDemo {
         task.enqueue(downloadListener);
     }
 
+    // start task with the same path
     public void startSamePathTask_fileBusy() {
         final String otherUrl = "http://dldir1.qq.com/weixin/android/seixin6516android1120.apk";
-        DownloadTask.Builder builder = new DownloadTask.Builder(otherUrl, Uri.fromFile(parentFile));
+        DownloadTask.Builder builder = new DownloadTask.Builder(otherUrl, parentFile);
         final DownloadTask task = builder
                 .setAutoCallbackToUIThread(false)
                 // same filename to #startAsync
@@ -115,8 +115,9 @@ public class SingleTaskDemo {
 
     }
 
+    // start task with the same path and same url
     public void startSameTask_sameTaskBusy() {
-        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl, Uri.fromFile(parentFile));
+        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl, parentFile);
         DownloadTask task = builder
                 .setAutoCallbackToUIThread(false)
                 .build();
@@ -124,6 +125,7 @@ public class SingleTaskDemo {
         task.enqueue(new SingleTaskListener(this.viewAdapter));
     }
 
+    // cancel task
     public void cancelTask() {
         final DownloadTask task = this.task;
         if (task == null) return;
