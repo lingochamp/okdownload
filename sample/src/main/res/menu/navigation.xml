@@ -18,14 +18,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/navigation_one"
+        android:id="@+id/navigation_single"
         android:icon="@drawable/ic_home_black_24dp"
-        android:title="@string/title_one"/>
+        android:title="@string/title_single"/>
 
     <item
         android:id="@+id/navigation_dashboard"
         android:icon="@drawable/ic_dashboard_black_24dp"
-        android:title="@string/title_dashboard"/>
+        android:title="@string/title_multiple"/>
 
     <item
         android:id="@+id/navigation_notifications"
