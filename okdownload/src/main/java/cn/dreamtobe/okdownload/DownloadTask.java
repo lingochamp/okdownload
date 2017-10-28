@@ -370,4 +370,15 @@ public class DownloadTask implements Cloneable {
     @Override public int hashCode() {
         return (url + providedPathFile.toString() + filenameHolder.get()).hashCode();
     }
+
+    public static class TaskCallbackWrapper {
+        public static long getLastCallbackProcessTs(DownloadTask task) {
+            return task.getLastCallbackProcessTs();
+        }
+
+        public static void setLastCallbackProcessTs(DownloadTask task,
+                                                    long lastCallbackProcessTimestamp) {
+            task.setLastCallbackProcessTs(lastCallbackProcessTimestamp);
+        }
+    }
 }

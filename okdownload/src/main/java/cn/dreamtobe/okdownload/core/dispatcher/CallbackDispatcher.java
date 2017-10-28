@@ -27,7 +27,6 @@ import java.util.Map;
 
 import cn.dreamtobe.okdownload.DownloadListener;
 import cn.dreamtobe.okdownload.DownloadTask;
-import cn.dreamtobe.okdownload.TaskCallbackWrapper;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
@@ -156,7 +155,8 @@ public class CallbackDispatcher {
             public void fetchProgress(final DownloadTask task, final int blockIndex,
                                       final long increaseBytes) {
                 if (task.getMinIntervalMillisCallbackProcess() > 0) {
-                    TaskCallbackWrapper.setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
+                    DownloadTask.TaskCallbackWrapper
+                            .setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
                 }
 
                 if (task.isAutoCallbackToUIThread()) {
@@ -204,7 +204,8 @@ public class CallbackDispatcher {
         final long minInterval = task.getMinIntervalMillisCallbackProcess();
         final long now = SystemClock.uptimeMillis();
         return minInterval <= 0
-                || now - TaskCallbackWrapper.getLastCallbackProcessTs(task) >= minInterval;
+                || now - DownloadTask.TaskCallbackWrapper
+                .getLastCallbackProcessTs(task) >= minInterval;
     }
 
     public DownloadListener dispatch() {
