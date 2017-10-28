@@ -32,8 +32,6 @@ public class BlockInfo {
     }
 
     public BlockInfo(long startOffset, long contentLength, @IntRange(from = 0) long currentOffset) {
-        if (currentOffset > contentLength + 1) throw new IllegalArgumentException();
-
         if (startOffset < 0 || contentLength < 0 || currentOffset < 0) {
             throw new IllegalArgumentException();
         }

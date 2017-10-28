@@ -22,8 +22,6 @@ public interface DownloadContext {
 
     void unbind(DownloadTask task);
 
-    void fold(DownloadContext origin);
-
     void start(boolean oneByOne);
 
     void stop();

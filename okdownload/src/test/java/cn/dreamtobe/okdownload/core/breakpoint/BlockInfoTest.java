@@ -54,9 +54,4 @@ public class BlockInfoTest {
         info = new BlockInfo(12, 6, 2);
         assertThat(info.getRangeRight()).isEqualTo(18);
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void construct_illegalArgument() {
-        new BlockInfo(1, 5, 7);
-    }
 }
