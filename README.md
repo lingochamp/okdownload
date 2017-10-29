@@ -69,6 +69,7 @@ cn.dreamtobe.okdownload:sqlite:{latest_version}
 - [x] Combine output-streams of multi-blocks on one handler `MultiPointOutputStream`
 - [x] Provide `SpeedCalculator` to calculate instance speed or average speed on `DownloadListener`
 - [x] Provide `StatusUtil` to find status of task or breakpoint-info of task anytime, anywhere 
+- [x] Provide various callback listeners to meet all requirements you want with `DownloadListener1`,`DownloadListener2`,etc..
 - [] Support control batch of tasks with `DownloadContext`
 - [] Support only download on Wi-Fi network state
 - [] Support control the whole queue size of running task on `DownloadDispatcher`

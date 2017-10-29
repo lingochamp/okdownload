@@ -26,6 +26,13 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.cause.EndCause;
 import cn.dreamtobe.okdownload.core.cause.ResumeFailedCause;
 
+/**
+ * @see cn.dreamtobe.okdownload.core.listener.DownloadListener1
+ * @see cn.dreamtobe.okdownload.core.listener.DownloadListener2
+ * @see cn.dreamtobe.okdownload.core.listener.DownloadListener3
+ * @see cn.dreamtobe.okdownload.core.listener.DownloadListener4
+ * @see cn.dreamtobe.okdownload.core.listener.DownloadListener4WithSpeed
+ */
 public interface DownloadListener {
     void taskStart(DownloadTask task);
 
