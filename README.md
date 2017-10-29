@@ -71,12 +71,13 @@ cn.dreamtobe.okdownload:sqlite:{latest_version}
 - [x] Provide `StatusUtil` to find status of task or breakpoint-info of task anytime, anywhere 
 - [x] Provide various callback listeners to meet all requirements you want with `DownloadListener1`,`DownloadListener2`,etc..
 - [x] Provide function to find running task reference on `DownloadDispatcher#findSameTask`
+- [x] Support one task with several various listeners and manage them easily with `UnifiedListenerManager`
 - [] Support control batch of tasks with `DownloadContext`
 - [] Support only download on Wi-Fi network state
 - [] Support control the whole queue size of running task on `DownloadDispatcher`
 - [] Provide `MultiTaskListener` to listen to the process of batch of tasks
 - [x] Support split any count of block to download one task
-- [x] Using as few as possible thread count for one task
+- [x] Design as light as possible to download without drop performance
 - [x] Flexible thread pools on OkDownload to let OkDownload lighter
 - [x] Split the network I/O thread pool and file system I/O thread pool to avoid two resources block each other
 - [x] Support defines callback downloading process on UI-thread asynchronized or on Block-thread synchronized for each task with `DownloadTask.Builder#setAutoCallbackToUIThread`
