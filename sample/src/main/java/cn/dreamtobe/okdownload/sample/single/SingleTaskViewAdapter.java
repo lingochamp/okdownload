@@ -34,9 +34,6 @@ public class SingleTaskViewAdapter {
     @NonNull private final TextView statusTv;
     @NonNull private final TextView extInfoTv;
 
-
-    private boolean invalidate;
-
     private SingleTaskViewAdapter(@NonNull SingleTaskViewHolder taskViewHolder,
                                   @NonNull SparseArray<SingleTaskViewHolder> blockViewHolderMap,
                                   @NonNull TextView statusTv, @NonNull TextView extInfoTv) {
@@ -49,13 +46,10 @@ public class SingleTaskViewAdapter {
 
     public void refreshData(@NonNull BreakpointInfo info,
                             @Nullable SparseArray<Long> blockInstantOffsetMap) {
-        if (invalidate) return;
-
         SingleTaskUtil.initInfo(taskViewHolder, blockViewHolderMap, info, blockInstantOffsetMap);
     }
 
     public void setExtInfo(CharSequence info) {
-        if (invalidate) return;
         extInfoTv.setText(info);
     }
 
@@ -64,20 +58,15 @@ public class SingleTaskViewAdapter {
     }
 
     public void updateStatus(CharSequence status) {
-        if (invalidate) return;
         statusTv.setText(status);
     }
 
     public void setTaskProcess(long currentOffset, String globalSpeed) {
-        if (invalidate) return;
-
         setProgress(taskViewHolder.pb, currentOffset);
         taskViewHolder.speedTv.setText(globalSpeed);
     }
 
     public void setBlockProcess(int blockIndex, long currentOffset, String blockSpeed) {
-        if (invalidate) return;
-
         if (blockIndex >= blockViewHolderMap.size()) return;
 
         final SingleTaskViewHolder blockViewHolder = blockViewHolderMap.get(blockIndex);
@@ -89,22 +78,12 @@ public class SingleTaskViewAdapter {
         taskViewHolder.speedTv.setText(speedFromBegin);
     }
 
-    public void onBlocksEnd(SparseArray<SpeedCalculator> blockSpeeds) {
-        if (invalidate) return;
-
-        final int blockCount = blockViewHolderMap.size();
-        for (int i = 0; i < blockCount; i++) {
-            final int blockIndex = blockViewHolderMap.keyAt(i);
-            final SingleTaskViewHolder viewHolder = blockViewHolderMap.valueAt(i);
-            final SpeedCalculator blockSpeed = blockSpeeds.get(blockIndex);
-            viewHolder.speedTv.setText(blockSpeed.speedFromBegin());
-        }
+    public void onBlocksEnd(int blockIndex, SpeedCalculator blockSpeed) {
+        final SingleTaskViewHolder viewHolder = blockViewHolderMap.get(blockIndex);
+        viewHolder.speedTv.setText(blockSpeed.speedFromBegin());
     }
 
-    public void invalidate() {
-        this.invalidate = true;
-    }
-
+    // below is just builder.
     public static class Builder {
         private SingleTaskViewHolder taskViewHolder;
         private SparseArray<SingleTaskViewHolder> blockViewHolderMap = new SparseArray<>(4);

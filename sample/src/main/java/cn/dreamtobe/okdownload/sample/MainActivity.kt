@@ -23,7 +23,9 @@ import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import cn.dreamtobe.okdownload.UnifiedListenerManager
 import cn.dreamtobe.okdownload.sample.multiple.MultipleTaskFragment
+import cn.dreamtobe.okdownload.sample.queue.QueueFragment
 import cn.dreamtobe.okdownload.sample.single.SingleTaskFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -35,11 +37,12 @@ class MainActivity : AppCompatActivity() {
                 fragmentManager.beginTransaction().replace(R.id.container, singleTaskFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_dashboard -> {
+            R.id.navigation_multiple -> {
                 fragmentManager.beginTransaction().replace(R.id.container, multipleTaskFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
-            R.id.navigation_notifications -> {
+            R.id.navigation_queue -> {
+                fragmentManager.beginTransaction().replace(R.id.container, queueFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
         }
@@ -48,12 +51,17 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var singleTaskFragment: SingleTaskFragment
     private lateinit var multipleTaskFragment: MultipleTaskFragment
+    private lateinit var queueFragment: QueueFragment
+
+    // Because I want same task with several listener, so use UnifiedListenerManager
+    val listenerManager = UnifiedListenerManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         singleTaskFragment = SingleTaskFragment.newInstance()
-        multipleTaskFragment = MultipleTaskFragment.getInstance()
+        multipleTaskFragment = MultipleTaskFragment.newInstance()
+        queueFragment = QueueFragment.newInstance()
 
         setContentView(R.layout.activity_main)
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)

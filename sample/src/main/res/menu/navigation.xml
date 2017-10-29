@@ -23,13 +23,13 @@
         android:title="@string/title_single"/>
 
     <item
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_multiple"
         android:icon="@drawable/ic_dashboard_black_24dp"
         android:title="@string/title_multiple"/>
 
     <item
-        android:id="@+id/navigation_notifications"
-        android:icon="@drawable/ic_notifications_black_24dp"
-        android:title="@string/title_notifications"/>
+        android:id="@+id/navigation_queue"
+        android:icon="@drawable/ic_format_list_black_24dp"
+        android:title="@string/title_queue"/>
 
 </menu>

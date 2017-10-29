@@ -18,56 +18,52 @@ package cn.dreamtobe.okdownload.sample.single;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import java.io.File;
 
 import cn.dreamtobe.okdownload.DownloadTask;
+import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.StatusUtil;
+import cn.dreamtobe.okdownload.UnifiedListenerManager;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
-import cn.dreamtobe.okdownload.core.cause.EndCause;
 
 public class SingleTaskDemo {
 
-    private SingleTaskListener downloadListener;
-    private DownloadTask task;
+    @NonNull private final UnifiedListenerManager listenerManager;
+    @NonNull private final SingleTaskListener listener;
+    @NonNull private DownloadTask task;
 
-    private final String demoUrl = "https://t.alipayobjects.com/L1/71/100/and/alipay_wap_main.apk";
+    private final String demoUrl;
     @NonNull private final File parentFile;
     @NonNull private final String filename;
 
     private SingleTaskViewAdapter viewAdapter;
-    private FinishListener finishListener;
 
-    public SingleTaskDemo(Context context) {
-
-        final File externalSaveDir = context.getExternalCacheDir();
-        if (externalSaveDir == null) {
-            this.parentFile = context.getCacheDir();
-        } else {
-            this.parentFile = externalSaveDir;
-        }
-        this.filename = "alipay_wap_main.apk";
+    public SingleTaskDemo(@NonNull Context context,
+                          @NonNull UnifiedListenerManager listenerManager) {
+        this.listenerManager = listenerManager;
+        this.parentFile = SingleTaskUtil.getParentFile(context);
+        this.filename = SingleTaskUtil.FILENAME;
+        this.demoUrl = SingleTaskUtil.URL;
+        this.task = SingleTaskUtil.createTask(demoUrl, parentFile);
+        this.listener = new SingleTaskListener(viewAdapter, true);
     }
 
     public void detachViews() {
-        this.viewAdapter.invalidate();
+        this.listener.detach();
     }
 
-    public void attachViews(SingleTaskViewAdapter viewAdapter, FinishListener finishListener) {
+    public void attachViews(@NonNull SingleTaskViewAdapter viewAdapter,
+                            SingleTaskListener.FinishListener finishListener) {
         this.viewAdapter = viewAdapter;
-        this.finishListener = finishListener;
 
-        final SingleTaskListener listener = downloadListener;
         final BreakpointInfo info = StatusUtil
-                .getCurrentInfo(demoUrl, parentFile.getAbsolutePath(),
-                        filename);
-        if (info != null) {
-            viewAdapter.refreshData(info,
-                    listener != null ? listener.getBlockInstantOffsetMap() : null);
-        }
+                .getCurrentInfo(demoUrl, parentFile.getAbsolutePath(), filename);
 
-        if (listener != null) listener.reattach(viewAdapter);
+        listener.reattach(viewAdapter, finishListener);
+        listenerManager.attachListener(task, listener);
+
+        if (info != null) viewAdapter.refreshData(info, listener.getBlockInstantOffsetMap());
     }
 
     public void updateStatus() {
@@ -75,30 +71,15 @@ public class SingleTaskDemo {
                 StatusUtil.getStatus(demoUrl, parentFile.getAbsolutePath(), filename).name());
     }
 
-    public boolean isTaskExist() {
-        return task != null;
+    public boolean isTaskPendingOrRunning() {
+        return StatusUtil.isSameTaskPendingOrRunning(task);
     }
 
     // start task asynchronously
     public void startAsync() {
-        if (task != null) return;
+        if (StatusUtil.isSameTaskPendingOrRunning(task)) return;
 
-        DownloadTask.Builder builder = new DownloadTask.Builder(demoUrl, parentFile);
-        task = builder
-                .setMinIntervalMillisCallbackProcess(150)
-                .build();
-
-        this.downloadListener = new SingleTaskListener(viewAdapter, true) {
-            @Override public void taskEnd(DownloadTask task, EndCause cause,
-                                          @Nullable Exception realCause) {
-                super.taskEnd(task, cause, realCause);
-                SingleTaskDemo.this.task = null;
-                downloadListener = null;
-                finishListener.finish();
-            }
-        };
-
-        task.enqueue(downloadListener);
+        listenerManager.enqueueTaskWithUnifiedListener(task, listener);
     }
 
     // start task with the same path
@@ -127,13 +108,9 @@ public class SingleTaskDemo {
 
     // cancel task
     public void cancelTask() {
-        final DownloadTask task = this.task;
+        final DownloadTask task = OkDownload.with().downloadDispatcher().findSameTask(this.task);
         if (task == null) return;
 
         task.cancel();
-    }
-
-    interface FinishListener {
-        void finish();
     }
 }

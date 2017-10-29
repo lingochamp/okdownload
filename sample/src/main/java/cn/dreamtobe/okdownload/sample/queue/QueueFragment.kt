@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.sample.multiple
+package cn.dreamtobe.okdownload.sample.queue
 
 import android.app.Fragment
 import android.os.Bundle
@@ -23,13 +23,13 @@ import android.view.View
 import android.view.ViewGroup
 import cn.dreamtobe.okdownload.sample.R
 
-class MultipleTaskFragment : Fragment() {
+class QueueFragment : Fragment() {
 
     companion object {
-        fun newInstance() = MultipleTaskFragment()
+        fun newInstance() = QueueFragment()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_multiple_task, container, false)
+        return inflater.inflate(R.layout.fragment_queue, container, false)
     }
 }

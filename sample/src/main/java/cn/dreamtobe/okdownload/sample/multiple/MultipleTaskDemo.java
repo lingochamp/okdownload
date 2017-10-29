@@ -14,22 +14,7 @@
  * limitations under the License.
  */
 
-package cn.dreamtobe.okdownload.sample.multiple
+package cn.dreamtobe.okdownload.sample.multiple;
 
-import android.app.Fragment
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import cn.dreamtobe.okdownload.sample.R
-
-class MultipleTaskFragment : Fragment() {
-
-    companion object {
-        fun newInstance() = MultipleTaskFragment()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_multiple_task, container, false)
-    }
+public class MultipleTaskDemo {
 }

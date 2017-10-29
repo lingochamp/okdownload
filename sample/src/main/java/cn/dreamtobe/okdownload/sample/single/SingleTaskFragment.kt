@@ -22,6 +22,7 @@ import android.support.v7.widget.AppCompatButton
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import cn.dreamtobe.okdownload.sample.MainActivity
 import cn.dreamtobe.okdownload.sample.R
 import kotlinx.android.synthetic.main.fragment_single_task.*
 import org.jetbrains.anko.runOnUiThread
@@ -39,7 +40,8 @@ class SingleTaskFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (demo == null) demo = SingleTaskDemo(activity)
+        if (demo == null) demo = SingleTaskDemo(activity,
+                (activity as MainActivity).listenerManager)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -48,6 +50,7 @@ class SingleTaskFragment : Fragment() {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         demo!!.attachViews(createSingleTaskViewAdapter()
                 , { runOnUiThread { setToStart(startOrCancelBtn) } })
         initSingleTaskDemo()
@@ -76,7 +79,7 @@ class SingleTaskFragment : Fragment() {
         startSameFileBtn.setOnClickListener { demo!!.startSamePathTask_fileBusy() }
         getStatusBtn.setOnClickListener { demo!!.updateStatus() }
 
-        if (demo!!.isTaskExist) setToCancel(startOrCancelBtn)
+        if (demo!!.isTaskPendingOrRunning) setToCancel(startOrCancelBtn)
         else setToStart(startOrCancelBtn)
     }
 

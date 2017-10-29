@@ -19,7 +19,7 @@
     <string name="github_url">https://github.com/jacksgong/okdownload</string>
     <string name="title_single">Single</string>
     <string name="title_multiple">Multiple</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_queue">Queue</string>
     <string name="start_download">Start Download</string>
     <string name="cancel_download">Cancel download</string>
     <string name="start_same_task">Start Same Task</string>
@@ -28,4 +28,7 @@
     <string name="task_title">Task(0~%1$s)</string>
     <string name="get_status">Get Status</string>
     <string name="github">GITHUB</string>
+    <string name="start">Start</string>
+    <string name="cancel">Cancel</string>
+    <string name="parallel">Parallel</string>
 </resources>

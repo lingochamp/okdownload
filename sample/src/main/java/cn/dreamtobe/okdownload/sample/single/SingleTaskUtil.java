@@ -16,20 +16,43 @@
 
 package cn.dreamtobe.okdownload.sample.single;
 
+import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.SparseArray;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.sample.R;
 
-public class SingleTaskUtil {
+class SingleTaskUtil {
     static final String TAG = "SingleTask";
+
+    static final String FILENAME = "alipay_wap_main.apk";
+    static final String URL = "https://t.alipayobjects.com/L1/71/100/and/alipay_wap_main.apk";
+
+    static DownloadTask createTask(String url, File parentFile) {
+        return new DownloadTask.Builder(url, parentFile)
+                .setMinIntervalMillisCallbackProcess(150)
+                .build();
+    }
+
+    static File getParentFile(@NonNull Context context) {
+        final File externalSaveDir = context.getExternalCacheDir();
+        if (externalSaveDir == null) {
+            return context.getCacheDir();
+        } else {
+            return externalSaveDir;
+        }
+    }
 
     static void initInfo(SingleTaskViewHolder taskViewHolder,
                          SparseArray<SingleTaskViewHolder> blockViewHolders, BreakpointInfo info,
@@ -69,14 +92,20 @@ public class SingleTaskUtil {
                     Util.humanReadableBytes(blockInfo.getStartOffset(), false),
                     Util.humanReadableBytes(blockInfo.getRangeRight(), false)));
 
-            long offset;
-            if (blockInstantOffsetMap != null) offset = blockInstantOffsetMap.get(i);
-            else offset = blockInfo.getCurrentOffset();
-            setProgress(viewHolder.pb, blockInfo.getContentLength(), offset);
+            Long offsetLong = null;
+            if (blockInstantOffsetMap != null) {
+                offsetLong = blockInstantOffsetMap.get(i);
+            }
+
+            if (offsetLong == null) offsetLong = blockInfo.getCurrentOffset();
+
+            setProgress(viewHolder.pb, blockInfo.getContentLength(), offsetLong);
         }
     }
 
     static void setProgress(ProgressBar bar, long currentOffset) {
+        if (bar.getTag() == null) return;
+
         final int shrinkRate = (int) bar.getTag();
         final int progress = (int) ((currentOffset) / shrinkRate);
 
