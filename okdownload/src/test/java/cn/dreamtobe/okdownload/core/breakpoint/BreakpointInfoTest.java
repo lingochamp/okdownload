@@ -66,27 +66,32 @@ public class BreakpointInfoTest {
         BreakpointInfo info = new BreakpointInfo(1, "url", "p-path", "filename");
         DownloadTask task = mock(DownloadTask.class);
 
+        // no filename -> false
         when(task.getUrl()).thenReturn("url");
         when(task.getParentPath()).thenReturn("p-path");
         assertThat(info.isSameFrom(task)).isFalse();
 
+        // same filename -> true
         when(task.getFilename()).thenReturn("filename");
         assertThat(info.isSameFrom(task)).isTrue();
 
+        // is directory but provided same filename -> true
         when(task.isUriIsDirectory()).thenReturn(true);
         assertThat(info.isSameFrom(task)).isTrue();
 
         info = new BreakpointInfo(1, "url", "p-path", null);
         assertThat(info.isSameFrom(task)).isFalse();
 
-        when(task.getFilename()).thenReturn(null);
+        // not directory with filename -> false (don't know whether same yet)
         when(task.isUriIsDirectory()).thenReturn(false);
         assertThat(info.isSameFrom(task)).isFalse();
 
+        // is directory and no filename -> true
+        when(task.getFilename()).thenReturn(null);
         when(task.isUriIsDirectory()).thenReturn(true);
         assertThat(info.isSameFrom(task)).isTrue();
 
-
+        // not same url -> false
         when(task.getUrl()).thenReturn("not-same-url");
         assertThat(info.isSameFrom(task)).isFalse();
     }

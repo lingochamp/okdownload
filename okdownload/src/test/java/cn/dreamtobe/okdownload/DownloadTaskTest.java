@@ -22,6 +22,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,13 +32,18 @@ import java.util.List;
 import java.util.Map;
 
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
+import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class DownloadTaskTest {
 
     @BeforeClass
@@ -90,6 +98,9 @@ public class DownloadTaskTest {
 
     @Test
     public void equal() throws IOException {
+        // for id
+        when(OkDownload.with().breakpointStore()).thenReturn(spy(new BreakpointStoreOnCache()));
+
         final Uri uri = mock(Uri.class);
         when(uri.getPath()).thenReturn(parentPath);
 

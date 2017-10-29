@@ -362,6 +362,7 @@ public class DownloadTask implements Cloneable {
 
         if (obj instanceof DownloadTask) {
             final DownloadTask another = (DownloadTask) obj;
+            if (another.id == this.id) return true;
 
             if (!url.equals(another.url)) return false;
 
