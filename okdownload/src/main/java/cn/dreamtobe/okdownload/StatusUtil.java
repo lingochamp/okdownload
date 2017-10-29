@@ -28,6 +28,10 @@ import cn.dreamtobe.okdownload.core.dispatcher.DownloadDispatcher;
 
 public class StatusUtil {
 
+    public static boolean isSameTaskPendingOrRunning(@NonNull DownloadTask task) {
+        return OkDownload.with().downloadDispatcher().findSameTask(task) != null;
+    }
+
     public static Status getStatus(@NonNull String url, @NonNull String parentPath,
                                    @Nullable String filename) {
         if (filename != null && isCompleted(url, parentPath, filename)) return Status.COMPLETED;

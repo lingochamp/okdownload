@@ -129,6 +129,25 @@ public class DownloadDispatcher {
         }
     }
 
+    @Nullable public synchronized DownloadTask findSameTask(DownloadTask task) {
+        for (DownloadCall call : readyAsyncCalls) {
+            if (call.isCanceled()) continue;
+            if (call.task.equals(task)) return call.task;
+        }
+
+        for (DownloadCall call : runningAsyncCalls) {
+            if (call.isCanceled()) continue;
+            if (call.task.equals(task)) return call.task;
+        }
+
+        for (DownloadCall call : runningSyncCalls) {
+            if (call.isCanceled()) continue;
+            if (call.task.equals(task)) return call.task;
+        }
+
+        return null;
+    }
+
     public synchronized boolean cancel(DownloadTask task) {
         boolean canceled = false;
         try {
@@ -177,14 +196,16 @@ public class DownloadDispatcher {
 
     public synchronized boolean isRunning(DownloadTask task) {
         for (DownloadCall call : runningSyncCalls) {
+            if (call.isCanceled()) continue;
             if (call.task.equals(task)) {
-                return !call.isCanceled();
+                return true;
             }
         }
 
         for (DownloadCall call : runningAsyncCalls) {
+            if (call.isCanceled()) continue;
             if (call.task.equals(task)) {
-                return !call.isCanceled();
+                return true;
             }
         }
 
@@ -193,6 +214,7 @@ public class DownloadDispatcher {
 
     public synchronized boolean isPending(DownloadTask task) {
         for (DownloadCall call : readyAsyncCalls) {
+            if (call.isCanceled()) continue;
             if (call.task.equals(task)) return true;
         }
 
