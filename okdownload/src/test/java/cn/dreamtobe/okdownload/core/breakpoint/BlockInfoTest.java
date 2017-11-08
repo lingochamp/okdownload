@@ -49,9 +49,9 @@ public class BlockInfoTest {
     @Test
     public void getRangeRight() {
         BlockInfo info = new BlockInfo(0, 3, 1);
-        assertThat(info.getRangeRight()).isEqualTo(3);
+        assertThat(info.getRangeRight()).isEqualTo(2);
 
         info = new BlockInfo(12, 6, 2);
-        assertThat(info.getRangeRight()).isEqualTo(18);
+        assertThat(info.getRangeRight()).isEqualTo(17);
     }
 }

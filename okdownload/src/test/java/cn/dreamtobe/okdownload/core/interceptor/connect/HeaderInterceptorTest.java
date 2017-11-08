@@ -94,7 +94,7 @@ public class HeaderInterceptorTest {
         verify(connection).addHeader(nameCaptor.capture(), valueCaptor.capture());
 
         assertThat(nameCaptor.getAllValues()).containsExactly("Range");
-        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=10-20");
+        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=10-19");
 
         when(chain.getBlockIndex()).thenReturn(2);
         when(info.getBlock(2)).thenReturn(new BlockInfo(20, 10));

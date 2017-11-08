@@ -136,16 +136,11 @@ public class MultiPointOutputStreamTest {
 
     @Test(expected = IOException.class)
     public void inspectComplete_notFull() throws IOException {
-        final DownloadOutputStream outputStream = mock(DownloadOutputStream.class);
-        doReturn(outputStream).when(multiPointOutputStream).outputStream(1);
         final BlockInfo blockInfo = mock(BlockInfo.class);
         when(info.getBlock(1)).thenReturn(blockInfo);
-        multiPointOutputStream.syncRunning = false;
-        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong());
 
-        when(blockInfo.getContentLength()).thenReturn(10L);
+        when(blockInfo.getContentLength()).thenReturn(9L);
         when(blockInfo.getCurrentOffset()).thenReturn(10L);
-        when(info.isLastBlock(1)).thenReturn(false);
 
         multiPointOutputStream.inspectComplete(1);
     }

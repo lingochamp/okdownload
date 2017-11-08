@@ -98,33 +98,25 @@ public class Util {
         return null;
     }
 
-    public static boolean isCorrectFull(long fetchedLength, long contentLength,
-                                        boolean isLastBlock) {
-        return fetchedLength == (isLastBlock ? contentLength : contentLength + 1);
+    public static boolean isCorrectFull(long fetchedLength, long contentLength) {
+        return fetchedLength == contentLength;
     }
 
     public static boolean isFirstBlockMeetLenienceFull(long fetchedLength,
                                                        long contentLength) {
-        return fetchedLength > contentLength;
+        return fetchedLength >= contentLength;
     }
 
     public static boolean isBlockComplete(int blockIndex, int blockCount, BlockInfo info) {
         if (blockCount == 1) {
-            return isCorrectFull(info.getCurrentOffset(), info.getContentLength(),
-                    true);
+            return isCorrectFull(info.getCurrentOffset(), info.getContentLength());
         } else {
             if (blockIndex == 0) {
                 // first block
                 return isFirstBlockMeetLenienceFull(info.getCurrentOffset(),
                         info.getContentLength());
-            } else if (blockIndex < blockCount - 1) {
-                // middle blocks
-                return isCorrectFull(info.getCurrentOffset(), info.getContentLength(),
-                        false);
             } else {
-                // last block
-                return isCorrectFull(info.getCurrentOffset(), info.getContentLength(),
-                        true);
+                return isCorrectFull(info.getCurrentOffset(), info.getContentLength());
             }
         }
     }
@@ -143,7 +135,7 @@ public class Util {
                 if (info.getCurrentOffset() > totalLength) isDirty = true;
             } else if (blockIndex < blockCount - 1) {
                 // middle blocks
-                if (info.getCurrentOffset() > info.getContentLength() + 1) isDirty = true;
+                if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;
             } else {
                 // last block
                 if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;

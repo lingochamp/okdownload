@@ -132,17 +132,19 @@ public class BreakpointInterceptorTest {
         assertThat(totalLength).isEqualTo(6666L);
 
         final BlockInfo lastBlockInfo = info.getBlock(4);
-        assertThat(lastBlockInfo.getRangeRight()).isEqualTo(6666L);
+        assertThat(lastBlockInfo.getRangeRight()).isEqualTo(6665L);
     }
 
     @Test
     public void interceptFetch_finish() throws IOException {
-        BlockInfo blockInfo = new BlockInfo(0, 10);
+        BlockInfo blockInfo2 = new BlockInfo(10, 20);
 
         when(mockChain.getResponseContentLength()).thenReturn(new Long(10));
         when(mockChain.getInfo()).thenReturn(mockInfo);
         when(mockChain.getOutputStream()).thenReturn(mock(MultiPointOutputStream.class));
-        when(mockInfo.getBlock(anyInt())).thenReturn(blockInfo);
+        when(mockChain.getBlockIndex()).thenReturn(1);
+        when(mockInfo.getBlock(1)).thenReturn(blockInfo2);
+        when(mockInfo.getBlockCount()).thenReturn(2);
         when(mockChain.loopFetch()).thenReturn(1L, 1L, 2L, 1L, 5L, -1L);
 
         final long contentLength = interceptor.interceptFetch(mockChain);

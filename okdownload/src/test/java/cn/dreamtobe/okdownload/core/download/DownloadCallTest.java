@@ -109,7 +109,7 @@ public class DownloadCallTest {
     @Test
     public void execute_blockComplete_ignore() throws InterruptedException {
         mockLocalCheck(true);
-        when(mockInfo.getBlock(1)).thenReturn(new BlockInfo(10, 10, 11));
+        when(mockInfo.getBlock(1)).thenReturn(new BlockInfo(10, 10, 10));
 
         call.execute();
 

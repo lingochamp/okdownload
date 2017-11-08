@@ -58,7 +58,7 @@ public class BlockInfo {
     }
 
     public long getRangeRight() {
-        return startOffset + contentLength;
+        return startOffset + contentLength - 1;
     }
 
     public void increaseCurrentOffset(@IntRange(from = 1) long increaseLength) {
