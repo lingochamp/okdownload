@@ -40,4 +40,6 @@ public interface BreakpointStore {
     void discard(int id);
 
     int findOrCreateId(@NonNull DownloadTask task);
+
+    @Nullable BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored);
 }

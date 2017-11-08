@@ -76,6 +76,11 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
         return onCache.findOrCreateId(task);
     }
 
+    @Nullable @Override
+    public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
+        return onCache.findAnotherInfoFromCompare(task, ignored);
+    }
+
     void close() {
         helper.close();
     }

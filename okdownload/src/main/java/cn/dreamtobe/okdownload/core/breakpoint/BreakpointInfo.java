@@ -71,6 +71,10 @@ public class BreakpointInfo {
         this.isTaskOnlyProvidedParentPath = isTaskOnlyProvidedParentPath;
     }
 
+    public int getId() {
+        return id;
+    }
+
     public void setChunked(boolean chunked) {
         this.isChunked = chunked;
     }

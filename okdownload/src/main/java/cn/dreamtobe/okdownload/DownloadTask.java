@@ -363,18 +363,21 @@ public class DownloadTask implements Cloneable {
         if (obj instanceof DownloadTask) {
             final DownloadTask another = (DownloadTask) obj;
             if (another.id == this.id) return true;
-
-            if (!url.equals(another.url)) return false;
-
-            if (providedPathFile.equals(another.providedPathFile)) return true;
-
-            // cover the case of filename is provided by response.
-            final String filename = getFilename();
-            final String anotherFilename = another.getFilename();
-            return anotherFilename != null && filename != null && anotherFilename.equals(filename);
+            return compareIgnoreId(another);
         }
 
         return false;
+    }
+
+    public boolean compareIgnoreId(DownloadTask another) {
+        if (!url.equals(another.url)) return false;
+
+        if (providedPathFile.equals(another.providedPathFile)) return true;
+
+        // cover the case of filename is provided by response.
+        final String filename = getFilename();
+        final String anotherFilename = another.getFilename();
+        return anotherFilename != null && filename != null && anotherFilename.equals(filename);
     }
 
     @Override public int hashCode() {
