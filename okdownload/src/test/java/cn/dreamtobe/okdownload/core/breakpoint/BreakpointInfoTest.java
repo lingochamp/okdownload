@@ -52,6 +52,15 @@ public class BreakpointInfoTest {
     }
 
     @Test
+    public void getTotalOffset() {
+        BreakpointInfo info = new BreakpointInfo(0, "", "", null);
+        info.addBlock(new BlockInfo(0, 10, 12));
+        info.addBlock(new BlockInfo(10, 18, 18));
+        info.addBlock(new BlockInfo(28, 66, 66));
+        assertThat(info.getTotalOffset()).isEqualTo(94);
+    }
+
+    @Test
     public void getTotalLength() {
         BreakpointInfo info = new BreakpointInfo(0, "", "", null);
         info.addBlock(new BlockInfo(0, 10));

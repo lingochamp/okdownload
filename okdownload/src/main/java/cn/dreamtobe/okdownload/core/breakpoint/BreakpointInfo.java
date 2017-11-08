@@ -56,7 +56,7 @@ public class BreakpointInfo {
     }
 
     BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
-                           @Nullable String filename, boolean isTaskOnlyProvidedParentPath) {
+                   @Nullable String filename, boolean isTaskOnlyProvidedParentPath) {
         this.id = id;
         this.url = url;
         this.parentPath = parentPath;
@@ -119,8 +119,20 @@ public class BreakpointInfo {
     public long getTotalOffset() {
         long offset = 0;
         ArrayList<BlockInfo> list = (ArrayList<BlockInfo>) ((ArrayList) blockInfoList).clone();
-        for (BlockInfo info : list) {
-            offset += info.getCurrentOffset();
+
+        final int count = list.size();
+        for (int i = 0; i < count; i++) {
+            final BlockInfo info = list.get(i);
+            long cOffset = info.getCurrentOffset();
+            if (i == 0) {
+                if (cOffset > info.getContentLength()) {
+                    offset = info.getContentLength();
+                } else {
+                    offset = cOffset;
+                }
+            } else {
+                offset += cOffset;
+            }
         }
         return offset;
     }
