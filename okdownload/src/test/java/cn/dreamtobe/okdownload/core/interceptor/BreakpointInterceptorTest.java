@@ -31,6 +31,7 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
 import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
+import cn.dreamtobe.okdownload.core.exception.RetryException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
 import static cn.dreamtobe.okdownload.TestUtils.mockDownloadChain;
@@ -133,6 +134,58 @@ public class BreakpointInterceptorTest {
 
         final BlockInfo lastBlockInfo = info.getBlock(4);
         assertThat(lastBlockInfo.getRangeRight()).isEqualTo(6665L);
+    }
+
+
+    @Test
+    public void inspectAnotherSameInfo() throws RetryException {
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isFalse();
+
+        when(mockChain.getTask().isUriIsDirectory()).thenReturn(true);
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isFalse();
+
+        when(info.getId()).thenReturn(1);
+        when(mockInfo.getId()).thenReturn(2);
+        when(store.findAnotherInfoFromCompare(mockChain.getTask(), mockInfo)).thenReturn(info);
+
+        when(info.getTotalOffset()).thenReturn(0L);
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isFalse();
+        verify(store).discard(eq(1));
+
+        when(info.getTotalOffset()).thenReturn(10L);
+        when(info.getTotalLength()).thenReturn(101L);
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isFalse();
+
+        when(info.getTotalLength()).thenReturn(100L);
+        when(info.getEtag()).thenReturn("old-etag");
+        when(mockInfo.getEtag()).thenReturn("new-etag");
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isFalse();
+
+        when(info.getEtag()).thenReturn("new-etag");
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isTrue();
+        verify(mockInfo).reuseBlocks(eq(info));
+        final BlockInfo blockInfo = mock(BlockInfo.class);
+        when(info.getBlock(0)).thenReturn(blockInfo);
+        when(blockInfo.getCurrentOffset()).thenReturn(5121L);
+        assertThat(
+                interceptor.inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isTrue();
+
     }
 
     @Test

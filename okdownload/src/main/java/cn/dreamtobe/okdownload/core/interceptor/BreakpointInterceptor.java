@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import java.io.File;
 import java.io.IOException;
 
+import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
 import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
@@ -28,7 +29,9 @@ import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
 import cn.dreamtobe.okdownload.core.download.DownloadChain;
+import cn.dreamtobe.okdownload.core.download.DownloadStrategy;
 import cn.dreamtobe.okdownload.core.exception.InterruptException;
+import cn.dreamtobe.okdownload.core.exception.RetryException;
 import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
@@ -38,6 +41,9 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         final DownloadConnection.Connected connected = chain.processConnect();
+        final DownloadStrategy strategy = OkDownload.with().downloadStrategy();
+        boolean isReuseAnotherSameInfo = false;
+        final BreakpointInfo info = chain.getInfo();
 
         if (chain.getCache().isInterrupt()) {
             throw InterruptException.SIGNAL;
@@ -50,23 +56,31 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             discardOldFileIfExist(chain.getInfo().getPath());
 
             final long contentLength = chain.getResponseContentLength();
-            if (OkDownload.with().downloadStrategy().isSplitBlock(contentLength, connected)) {
+
+            isReuseAnotherSameInfo = inspectAnotherSameInfo(chain.getTask(), info, contentLength);
+
+            if (!isReuseAnotherSameInfo && strategy.isSplitBlock(contentLength, connected)) {
                 // split
-                final int blockCount = OkDownload.with().downloadStrategy()
-                        .determineBlockCount(chain.getTask(), contentLength, connected);
+                final int blockCount = strategy.determineBlockCount(chain.getTask(), contentLength,
+                        connected);
                 splitBlock(blockCount, chain);
             }
 
-            OkDownload.with().callbackDispatcher().dispatch().splitBlockEnd(chain.getTask(),
-                    chain.getInfo());
+            OkDownload.with().callbackDispatcher().dispatch().splitBlockEnd(chain.getTask(), info);
 
             chain.unparkOtherBlock();
         }
 
         // update for connected.
         final BreakpointStore store = OkDownload.with().breakpointStore();
-        if (!store.update(chain.getInfo())) {
+        if (!store.update(info)) {
             throw new IOException("Update store failed!");
+        }
+
+        if (isReuseAnotherSameInfo && info.getBlock(
+                0).getRangeLeft() > strategy.reconnectFirstBlockThresholdBytes()) {
+            throw new RetryException(
+                    "Retry since the range left of the fist block is changed larger than 5120byte");
         }
 
         return connected;
@@ -80,13 +94,15 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         final BreakpointInfo info = chain.getInfo();
+
         info.resetBlockInfos();
         final long eachLength = totalLength / blockCount;
+        long startOffset = 0;
+        long contentLength = 0;
         for (int i = 0; i < blockCount; i++) {
-            final long startOffset = i * eachLength;
-            final long contentLength;
-            if (i == blockCount - 1) {
-                // last block
+            startOffset = startOffset + contentLength;
+            if (i == 0) {
+                // first block
                 final long remainLength = totalLength % blockCount;
                 contentLength = eachLength + remainLength;
             } else {
@@ -96,6 +112,36 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             final BlockInfo blockInfo = new BlockInfo(startOffset, contentLength);
             info.addBlock(blockInfo);
         }
+    }
+
+    // this case meet only if there are another info task is idle and is the same after
+    // this task has filename.
+    boolean inspectAnotherSameInfo(DownloadTask task, BreakpointInfo info,
+                                   long totalLength) throws RetryException {
+        if (!task.isUriIsDirectory()) return false;
+
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        final BreakpointInfo anotherInfo = store.findAnotherInfoFromCompare(task, info);
+        if (anotherInfo == null) return false;
+
+        store.discard(anotherInfo.getId());
+
+        if (anotherInfo.getTotalOffset()
+                <= OkDownload.with().downloadStrategy().reuseIdledSameInfoThresholdBytes()) {
+            return false;
+        }
+
+        if (anotherInfo.getEtag() != null && !anotherInfo.getEtag().equals(info.getEtag())) {
+            return false;
+        }
+
+        if (anotherInfo.getTotalLength() != totalLength) {
+            return false;
+        }
+
+        info.reuseBlocks(anotherInfo);
+
+        return true;
     }
 
     void discardOldFileIfExist(@NonNull String path) {

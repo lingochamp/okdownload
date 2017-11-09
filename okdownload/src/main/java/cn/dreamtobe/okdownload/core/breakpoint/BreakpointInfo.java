@@ -189,6 +189,11 @@ public class BreakpointInfo {
         return info;
     }
 
+    public void reuseBlocks(BreakpointInfo info) {
+        blockInfoList.clear();
+        blockInfoList.addAll(info.blockInfoList);
+    }
+
     /**
      * You can use this method to replace url for using breakpoint info from another task.
      */

@@ -79,6 +79,14 @@ public class DownloadStrategy {
         return 5;
     }
 
+    public long reconnectFirstBlockThresholdBytes() {
+        return 5120;
+    }
+
+    public long reuseIdledSameInfoThresholdBytes() {
+        return 10240;
+    }
+
     public boolean isSplitBlock(final long contentLength,
                                 @NonNull DownloadConnection.Connected connected) throws
             IOException {

@@ -26,6 +26,7 @@ import cn.dreamtobe.okdownload.core.exception.FileBusyAfterRunException;
 import cn.dreamtobe.okdownload.core.exception.InterruptException;
 import cn.dreamtobe.okdownload.core.exception.PreAllocateException;
 import cn.dreamtobe.okdownload.core.exception.ResumeFailedException;
+import cn.dreamtobe.okdownload.core.exception.RetryException;
 import cn.dreamtobe.okdownload.core.exception.ServerCancelledException;
 
 public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch {
@@ -34,19 +35,28 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         final DownloadCache cache = chain.getCache();
 
-        try {
-            if (cache.isInterrupt()) {
-                throw InterruptException.SIGNAL;
+        while (true) {
+            try {
+                if (cache.isInterrupt()) {
+                    throw InterruptException.SIGNAL;
+                }
+                return chain.processConnect();
+            } catch (IOException e) {
+                if (e instanceof RetryException) {
+                    chain.resetConnectForRetry();
+                    continue;
+                }
+
+                handleException(e, cache);
+                final DownloadConnection connection = chain.getConnection();
+                if (connection != null) {
+                    connection.release();
+                }
+
+                throw e;
             }
-            return chain.processConnect();
-        } catch (IOException e) {
-            handleException(e, cache);
-            final DownloadConnection connection = chain.getConnection();
-            if (connection != null) {
-                connection.release();
-            }
-            throw e;
         }
+
     }
 
     @Override

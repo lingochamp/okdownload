@@ -218,6 +218,13 @@ public class DownloadChain implements Runnable {
         return responseContentLength;
     }
 
+
+    public void resetConnectForRetry() {
+        connectIndex = 1;
+        if (connection != null) connection.release();
+        connection = null;
+    }
+
     public DownloadConnection.Connected processConnect() throws IOException {
         if (cache.isInterrupt()) throw InterruptException.SIGNAL;
         return connectInterceptorList.get(connectIndex++).interceptConnect(this);
