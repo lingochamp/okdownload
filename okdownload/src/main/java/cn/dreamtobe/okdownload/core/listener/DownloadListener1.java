@@ -38,7 +38,7 @@ public abstract class DownloadListener1 implements DownloadListener {
     private volatile boolean firstConnectEnd;
 
     private int blockCount;
-    private long totalLength;
+    protected long totalLength;
     private final AtomicLong currentOffset;
 
     public DownloadListener1() {
