@@ -42,7 +42,7 @@ public class DownloadDispatcher {
     // submit task to download server
     // assemble breakpoint and start chain on block dispatcher
 
-    int maxTaskCount = 15;
+    int maxTaskCount = 5;
     // for sort performance(not need to copy one array), using ArrayList instead of deque(for add
     // on top, remove on bottom).
     private final List<DownloadCall> readyAsyncCalls;
