@@ -37,6 +37,7 @@ import cn.dreamtobe.okdownload.core.file.MultiPointOutputStream;
 import static cn.dreamtobe.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
 public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.Fetch {
+    private static final String TAG = "BreakpointInterceptor";
 
     @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
@@ -53,13 +54,14 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         if (chain.isOtherBlockPark()) {
             // only can on the first block.
             if (chain.getBlockIndex() != 0) throw new IOException();
-            discardOldFileIfExist(chain.getInfo().getPath());
 
             final long contentLength = chain.getResponseContentLength();
 
             isReuseAnotherSameInfo = inspectAnotherSameInfo(chain.getTask(), info, contentLength);
 
             if (!isReuseAnotherSameInfo && strategy.isSplitBlock(contentLength, connected)) {
+                discardOldFileIfExist(chain.getInfo().getPath());
+
                 // split
                 final int blockCount = strategy.determineBlockCount(chain.getTask(), contentLength,
                         connected);
@@ -77,8 +79,10 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             throw new IOException("Update store failed!");
         }
 
-        if (isReuseAnotherSameInfo && info.getBlock(
-                0).getRangeLeft() > strategy.reconnectFirstBlockThresholdBytes()) {
+        final long firstRangeLeft = info.getBlock(0).getRangeLeft();
+        if (isReuseAnotherSameInfo
+                && firstRangeLeft > strategy.reconnectFirstBlockThresholdBytes()) {
+            Util.d(TAG, "Retry the first block since its range left is turn to " + firstRangeLeft);
             throw new RetryException(
                     "Retry since the range left of the fist block is changed larger than 5120byte");
         }
@@ -139,8 +143,11 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             return false;
         }
 
+        if (!new File(anotherInfo.getPath()).exists()) return false;
+
         info.reuseBlocks(anotherInfo);
 
+        Util.d(TAG, "Reuse another same info: " + info);
         return true;
     }
 

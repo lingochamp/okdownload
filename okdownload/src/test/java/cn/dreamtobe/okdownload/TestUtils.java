@@ -21,6 +21,7 @@ import android.net.Uri;
 
 import java.io.IOException;
 
+import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
 import cn.dreamtobe.okdownload.core.connection.DownloadConnection;
@@ -89,7 +90,9 @@ public class TestUtils {
         final DownloadCache mockCache = mock(DownloadCache.class);
         when(mockCache.isInterrupt()).thenReturn(false);
         when(mockChain.getCache()).thenReturn(mockCache);
-        when(mockChain.getInfo()).thenReturn(mock(BreakpointInfo.class));
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        when(info.getBlock(0)).thenReturn(mock(BlockInfo.class));
+        when(mockChain.getInfo()).thenReturn(info);
         when(mockChain.getTask()).thenReturn(mock(DownloadTask.class));
         when(mockChain.getConnectionOrCreate()).thenReturn(mock(DownloadConnection.class));
 

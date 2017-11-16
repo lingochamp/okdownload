@@ -16,15 +16,18 @@
 
 package cn.dreamtobe.okdownload.core.interceptor;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.io.IOException;
 
 import cn.dreamtobe.okdownload.DownloadTask;
 import cn.dreamtobe.okdownload.OkDownload;
+import cn.dreamtobe.okdownload.core.Util;
 import cn.dreamtobe.okdownload.core.breakpoint.BlockInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointInfo;
 import cn.dreamtobe.okdownload.core.breakpoint.BreakpointStore;
@@ -59,9 +62,12 @@ public class BreakpointInterceptorTest {
 
     private DownloadChain mockChain;
 
+    private final String existPath = "./exist-path";
+
     @BeforeClass
     public static void setupClass() throws IOException {
         mockOkDownload();
+        Util.setLogger(mock(Util.Logger.class));
     }
 
     @Before
@@ -71,6 +77,12 @@ public class BreakpointInterceptorTest {
         mockChain = mockDownloadChain();
 
         interceptor = spy(new BreakpointInterceptor());
+        new File(existPath).createNewFile();
+    }
+
+    @After
+    public void tearDown() {
+        new File(existPath).delete();
     }
 
     @Test
@@ -174,18 +186,24 @@ public class BreakpointInterceptorTest {
                 .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
                 .isFalse();
 
+        when(info.getPath()).thenReturn("./no-exist-file");
         when(info.getEtag()).thenReturn("new-etag");
+        assertThat(interceptor
+                .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
+                .isFalse();
+
+        when(info.getPath()).thenReturn(existPath);
         assertThat(interceptor
                 .inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
                 .isTrue();
         verify(mockInfo).reuseBlocks(eq(info));
+
         final BlockInfo blockInfo = mock(BlockInfo.class);
         when(info.getBlock(0)).thenReturn(blockInfo);
         when(blockInfo.getCurrentOffset()).thenReturn(5121L);
         assertThat(
                 interceptor.inspectAnotherSameInfo(mockChain.getTask(), mockInfo, 100L))
                 .isTrue();
-
     }
 
     @Test
