@@ -34,9 +34,9 @@ okcat -y=okcat-okdownload -c
 
 ```
 // core
-cn.dreamtobe.okdownload:okdownload:{latest_version}
+com.liulishuo.okdownload:okdownload:{latest_version}
 // provide sqlite to store breakpoints
-cn.dreamtobe.okdownload:sqlite:{latest_version}
+com.liulishuo.okdownload:sqlite:{latest_version}
 ```
 
 ## Why OkDownload
@@ -58,7 +58,7 @@ cn.dreamtobe.okdownload:sqlite:{latest_version}
 - [x] Check whether the local increase length is equal to the `content-length` on the response to make sure local data is right for each block
 - [x] Check the first block and last block especially to cover boundary case
 - [x] Ensure cancel operation is effective even if connection is waiting for response, input stream is reading or disconnect is very slow
-- [x] Always saving proceed of each task, so the breakpoint is always resumable even if the process is kill, since your import `cn.dreamtobe.okdownload:sqlite`
+- [x] Always saving proceed of each task, so the breakpoint is always resumable even if the process is kill, since your import `com.liulishuo.okdownload:sqlite`
 - [] Check whether the network is really available before start downloading
 
 ### FLEXIBLE and PERFORMANCE

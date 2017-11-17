@@ -28,7 +28,10 @@
     <string name="task_title">Task(0~%1$s)</string>
     <string name="get_status">Get Status</string>
     <string name="github">GITHUB</string>
-    <string name="start">Start</string>
-    <string name="cancel">Cancel</string>
+    <string name="start">START</string>
+    <string name="cancel">CANCEL</string>
     <string name="parallel">Parallel</string>
+    <string name="priority">Priority(%1$d)</string>
+    <string name="state_idle">IDLE</string>
+    <string name="state_unknow">UNKNOWN</string>
 </resources>

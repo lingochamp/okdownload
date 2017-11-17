@@ -1,4 +1,4 @@
-package cn.dreamtobe.okdownload.benchmark
+package com.liulishuo.okdownload.benchmark
 
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView

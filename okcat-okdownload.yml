@@ -1,6 +1,6 @@
 # You can use 'okcat -y=okcat-okdownload' to parse okdownload logcat runtime more easily.
 # More detail about okcat please move to https://github.com/Jacksgong/okcat
-package: cn.dreamtobe.okdownload.sample
+package: com.liulishuo.okdownload.sample
 
 trans-msg-map:
         'taskEnd ' : 'TASK END'

@@ -1,4 +1,4 @@
-package cn.dreamtobe.okdownload.benchmark
+package com.liulishuo.okdownload.benchmark
 
 import org.junit.Test
 

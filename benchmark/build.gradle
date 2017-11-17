@@ -17,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "cn.dreamtobe.okdownload.benchmark"
+        applicationId "com.liulishuo.okdownload.benchmark"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
