@@ -1,0 +1,12 @@
+stages:
+  - check
+
+check:
+  stage: check
+  script:
+    - ./gradlew check
+  image: stag-reg.llsops.com/android/lls:common-0.1
+  tags:
+    - k8s
+  except:
+    - tags
