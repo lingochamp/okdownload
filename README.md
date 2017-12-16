@@ -1,10 +1,12 @@
 # OkDownload
 
-A Reliable, Flexible, Fast and Powerful downloader engine.
+A Reliable, Flexible, Fast and Powerful download engine.
+
+![][okdownload_svg]
 
 ---
 
-## Why rewrite downloader
+## WHY REWRITE DOWNLOADER
 
 - FileDownloader framework is not easy to write unit-test, it is not a testable framework, so it is not stable enough.
 - The core library of FileDownloader is too complex and not pure enough, so 5K+ star 1K+ fork with around 10 PR.
@@ -22,7 +24,13 @@ A Reliable, Flexible, Fast and Powerful downloader engine.
 - File-IO thread pool is independent of Network-IO thread pool.
 - Make sense auto filename from URL if can't find from response header.
 
-## Debug
+## SAMPLE
+
+![][sample_home_img]
+
+![][single_download_img]![][each_block_progress_img]
+
+## DEBUG
 
 You can use [okcat](https://github.com/Jacksgong/okcat) to read the detail on the sample(`-c` is just for clear old adb log before running):
 
@@ -30,7 +38,7 @@ You can use [okcat](https://github.com/Jacksgong/okcat) to read the detail on th
 okcat -y=okcat-okdownload -c
 ```
 
-## Using
+## USING
 
 ```
 // core
@@ -39,7 +47,7 @@ com.liulishuo.okdownload:okdownload:{latest_version}
 com.liulishuo.okdownload:sqlite:{latest_version}
 ```
 
-## Why OkDownload
+## WHY OKDOWNLOAD
 
 ### STABILITY and RELIABLE
 
@@ -76,17 +84,18 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 - [] Support only download on Wi-Fi network state
 - [] Support control the whole queue size of running task on `DownloadDispatcher`
 - [] Provide `MultiTaskListener` to listen to the process of batch of tasks
+- [] Support `RemitDatabase` to cover the case of many small tasks raise many useless database operation.
 - [x] Support split any count of block to download one task
 - [x] Design as light as possible to download without drop performance
 - [x] Flexible thread pools on OkDownload to let OkDownload lighter
 - [x] Split the network I/O thread pool and file system I/O thread pool to avoid two resources block each other
-- [x] Support defines callback downloading process on UI-thread asynchronized or on Block-thread synchronized for each task with `DownloadTask.Builder#setAutoCallbackToUIThread`
+- [x] Support defines callback downloading process on UI-thread asynchronous or on Block-thread synchronized for each task with `DownloadTask.Builder#setAutoCallbackToUIThread`
 - [x] Support defines the minimum interval millisecond between two callback of `DownloadListener#fetchProgress` for each task with `DownloadTask.Builder#setMinIntervalMillisCallbackProcess`
 - [x] Support defines read buffer size for each task with `DownloadTask.Builder#setReadBufferSize`
 - [x] Support define flush buffer size for each task with `DownloadTask.Builder#setFlushBufferSize`
 - [x] Support defines sync buffer size for each task with `DownloadTask.Builder#setSyncBufferSize`
-- [x] Support downloading task synchronized with `DownloadTask#execute` and asynchronized with `DownloadTask#enqueue`
-- [x] Support custmoize connection handler with implementing your own `DownloadConnection` and valid it with `OkDownload.Builder#connectionFactory`
+- [x] Support downloading task synchronized with `DownloadTask#execute` and asynchronous with `DownloadTask#enqueue`
+- [x] Support customize connection handler with implementing your own `DownloadConnection` and valid it with `OkDownload.Builder#connectionFactory`
 - [x] Support customizes download strategy with implementing your own `DownloadStrategy` to determine block-count for each task, whether resumable for the eatch task when receiving response, whether need to split to several blocks for eatch task, determine filename of task for eatch task, and valid it with `OkDownload.Builder#downloadStrategy`
 - [x] Support customize processing file strategy with implement your own `ProcessFileStrategy` to determine how is OkDownload to handle the processing file, whether resumable when get breakpoint info on very begining, and valid it with `OkDownload.Builder#processFileStrategy`
 - [x] Support customize breakpoint store with implement your own `BreakpointStore` to store all resumable breakpoint infos on your store and valid it with `OkDownload.Builder#breakpointStore`
@@ -118,3 +127,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+[okdownload_svg]: https://img.shields.io/badge/Android-Okdownload-orange.svg
+[sample_home_img]: https://github.com/lingochamp/okdownload/raw/master/art/sample-home.png
+[single_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/single-download.gif
+[each_block_progress_img]: https://github.com/lingochamp/okdownload/raw/master/art/each-block-progress.gif
