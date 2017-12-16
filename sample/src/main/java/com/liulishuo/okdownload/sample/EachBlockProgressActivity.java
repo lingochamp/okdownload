@@ -101,6 +101,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 actionView, actionTv,
                 startSameTaskView, startSameFileView,
                 taskPb, block0Pb, block1Pb, block2Pb, block3Pb,
+                taskTitleTv, block0TitleTv, block1TitleTv, block2TitleTv, block3TitleTv,
                 taskSpeedTv, block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
     }
 
@@ -136,6 +137,9 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                             final ProgressBar taskPb,
                             final ProgressBar block0Pb, final ProgressBar block1Pb,
                             final ProgressBar block2Pb, final ProgressBar block3Pb,
+                            final TextView taskTitleTv,
+                            final TextView block0TitleTv, final TextView block1TitleTv,
+                            final TextView block2TitleTv, final TextView block3TitleTv,
                             final TextView taskSpeedTv,
                             final TextView block0SpeedTv, final TextView block1SpeedTv,
                             final TextView block2SpeedTv, final TextView block3SpeedTv) {
@@ -157,6 +161,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                     startTask(statusTv, actionTv,
                             taskPb,
                             block0Pb, block1Pb, block2Pb, block3Pb,
+                            taskTitleTv, block0TitleTv, block1TitleTv, block2TitleTv, block3TitleTv,
                             taskSpeedTv,
                             block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
                     // mark
@@ -195,6 +200,9 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                            final ProgressBar taskPb,
                            final ProgressBar block0Pb, final ProgressBar block1Pb,
                            final ProgressBar block2Pb, final ProgressBar block3Pb,
+                           final TextView taskTitleTv,
+                           final TextView block0TitleTv, final TextView block1TitleTv,
+                           final TextView block2TitleTv, final TextView block3TitleTv,
                            final TextView taskSpeedTv,
                            final TextView block0SpeedTv, final TextView block1SpeedTv,
                            final TextView block2SpeedTv, final TextView block3SpeedTv) {
@@ -204,6 +212,9 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
             }
 
             @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info) {
+                EachBlockProgressUtil
+                        .initTitle(info, taskTitleTv, block0TitleTv, block1TitleTv, block2TitleTv,
+                                block3TitleTv);
                 EachBlockProgressUtil
                         .initProgress(info, taskPb, block0Pb, block1Pb, block2Pb, block3Pb);
             }
