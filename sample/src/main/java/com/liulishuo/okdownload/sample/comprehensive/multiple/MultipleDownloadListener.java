@@ -27,7 +27,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.sample.DemoUtil;
+import com.liulishuo.okdownload.sample.util.DemoUtil;
 import com.liulishuo.okdownload.sample.R;
 
 

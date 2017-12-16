@@ -31,10 +31,10 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
+import com.liulishuo.okdownload.sample.util.DemoUtil;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ import java.util.Map;
  */
 public class SingleActivity extends BaseSampleActivity {
 
-    private final static String TAG = "SingleActivity";
+    private static final String TAG = "SingleActivity";
     private DownloadTask task;
 
     @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,14 +73,9 @@ public class SingleActivity extends BaseSampleActivity {
     }
 
     private void initTask() {
-        final String url =
-                "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
-        final File parentFile = DemoUtil.getParentFile(this);
         final String filename = "single-test";
-        task = new DownloadTask.Builder(url, parentFile)
-                .setFilename(filename)
-                .setMinIntervalMillisCallbackProcess(16)
-                .build();
+        final int progressIntervalMillis = 16;
+        task = DemoUtil.createTask(this, filename, progressIntervalMillis);
     }
 
     private void initStatus(TextView statusTv, ProgressBar progressBar) {
@@ -90,7 +85,7 @@ public class SingleActivity extends BaseSampleActivity {
         if (info != null) {
             Log.d(TAG, "init status with: " + info.toString());
 
-            setProgress(progressBar, info.getTotalOffset(), info.getTotalLength());
+            DemoUtil.calcProgressToView(progressBar, info.getTotalOffset(), info.getTotalLength());
         }
     }
 
@@ -144,7 +139,7 @@ public class SingleActivity extends BaseSampleActivity {
 
                 totalLength = info.getTotalLength();
                 readableTotalLength = Util.humanReadableBytes(totalLength, true);
-                setProgress(progressBar, info.getTotalOffset(), totalLength);
+                DemoUtil.calcProgressToView(progressBar, info.getTotalOffset(), totalLength);
             }
 
             @Override
@@ -159,7 +154,7 @@ public class SingleActivity extends BaseSampleActivity {
                 final String progressStatusWithSpeed = progressStatus + "(" + speed + ")";
 
                 statusTv.setText(progressStatusWithSpeed);
-                setProgress(progressBar, currentOffset, totalLength);
+                DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength);
             }
 
             @Override protected void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
@@ -184,10 +179,4 @@ public class SingleActivity extends BaseSampleActivity {
         final StatusUtil.Status status = StatusUtil.getStatus(task);
         return status == StatusUtil.Status.PENDING || status == StatusUtil.Status.RUNNING;
     }
-
-    private static void setProgress(ProgressBar progressBar, long offset, long total) {
-        final float percent = (float) offset / total;
-        progressBar.setProgress((int) (percent * progressBar.getMax()));
-    }
-
 }

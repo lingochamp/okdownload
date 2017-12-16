@@ -24,7 +24,7 @@ import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.UnifiedListenerManager;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.sample.DemoUtil;
+import com.liulishuo.okdownload.sample.util.DemoUtil;
 
 import java.io.File;
 

@@ -25,7 +25,7 @@ import android.widget.TextView;
 import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 
-import static com.liulishuo.okdownload.sample.DemoUtil.setProgress;
+import static com.liulishuo.okdownload.sample.util.DemoUtil.setProgress;
 
 
 public class SingleTaskViewAdapter {

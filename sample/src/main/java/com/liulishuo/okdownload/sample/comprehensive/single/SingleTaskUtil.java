@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
-import static com.liulishuo.okdownload.sample.DemoUtil.setProgress;
+import static com.liulishuo.okdownload.sample.util.DemoUtil.setProgress;
 
 public class SingleTaskUtil {
     static final String TAG = "SingleTask";

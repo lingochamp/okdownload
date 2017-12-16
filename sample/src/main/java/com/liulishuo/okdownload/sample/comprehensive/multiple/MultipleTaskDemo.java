@@ -21,7 +21,7 @@ import android.support.annotation.NonNull;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.UnifiedListenerManager;
-import com.liulishuo.okdownload.sample.DemoUtil;
+import com.liulishuo.okdownload.sample.util.DemoUtil;
 
 import java.io.File;
 import java.util.ArrayList;
