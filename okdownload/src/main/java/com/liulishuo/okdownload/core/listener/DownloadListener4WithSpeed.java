@@ -45,19 +45,6 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
         return blockSpeeds.get(blockIndex);
     }
 
-    @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
-        initSpeed(info);
-
-        super.downloadFromBreakpoint(task, info);
-
-    }
-
-    @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
-        initSpeed(info);
-
-        super.splitBlockEnd(task, info);
-    }
-
     @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
         taskSpeed.downloading(increaseBytes);
         blockSpeeds.get(blockIndex).downloading(increaseBytes);
@@ -79,6 +66,11 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
     protected abstract void taskEnd(DownloadTask task, EndCause cause,
                                     @Nullable Exception realCause,
                                     @NonNull String averageSpeed);
+
+    @Override protected void initData(@NonNull BreakpointInfo info) {
+        super.initData(info);
+        initSpeed(info);
+    }
 
     private void initSpeed(BreakpointInfo info) {
         taskSpeed = new SpeedCalculator();

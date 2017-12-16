@@ -92,7 +92,7 @@ public abstract class DownloadListener4 implements DownloadListener {
         blockEnd(task, blockIndex, info.getBlock(blockIndex));
     }
 
-    private void initData(@NonNull BreakpointInfo info) {
+    protected void initData(@NonNull BreakpointInfo info) {
         this.info = info;
         currentOffset = info.getTotalOffset();
         blockCurrentOffsetMap = new SparseArray<>();
