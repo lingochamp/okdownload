@@ -47,7 +47,16 @@
     <string name="comprehensive_case_title">Comprehensive Case</string>
     <string name="comprehensive_case_desc">On this demo you can see a comprehensive demo with several tabs switch among pages.</string>
 
-    <!-- single -->
+    <!-- listener -->
     <string name="info_ready">Info Ready</string>
     <string name="task_start">Task Start</string>
+    <string name="breakpoint_data">Breakpoint Data on Store</string>
+    <string name="download_from_beginning">Download from Beginning</string>
+    <string name="download_from_breakpoint">Download from Breakpoint</string>
+    <string name="connect_start">Connect Start</string>
+    <string name="connect_end">Connect End</string>
+    <string name="split_end">Split End</string>
+    <string name="fetch_start">Fetch Start</string>
+    <string name="fetch_progress">Fetch Progress</string>
+    <string name="fetch_end">Fetch End</string>
 </resources>
