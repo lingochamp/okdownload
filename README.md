@@ -3,6 +3,7 @@
 A Reliable, Flexible, Fast and Powerful download engine.
 
 ![][okdownload_svg]
+[![][build_status_svg]][build_status_link]
 
 ---
 
@@ -132,3 +133,5 @@ limitations under the License.
 [sample_home_img]: https://github.com/lingochamp/okdownload/raw/master/art/sample-home.png
 [single_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/single-download.gif
 [each_block_progress_img]: https://github.com/lingochamp/okdownload/raw/master/art/each-block-progress.gif
+[build_status_svg]: https://travis-ci.org/lingochamp/okdownload.svg?branch=master
+[build_status_link]: https://travis-ci.org/lingochamp/okdownload

@@ -1,0 +1,31 @@
+language: android
+
+jdk:
+- oraclejdk8
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-26.0.2
+    - android-26
+    - extra
+
+script:
+  - ./gradlew clean check
+
+
+sudo: false
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+after_script:
+    - cat ./demo/build/outputs/lint-results.xml
+    - cat ./library/build/outputs/lint-results.xml
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
