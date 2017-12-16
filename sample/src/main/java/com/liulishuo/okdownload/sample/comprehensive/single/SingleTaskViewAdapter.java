@@ -24,8 +24,7 @@ import android.widget.TextView;
 
 import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-
-import static com.liulishuo.okdownload.sample.util.DemoUtil.setProgress;
+import com.liulishuo.okdownload.sample.util.ProgressUtil;
 
 
 public class SingleTaskViewAdapter {
@@ -63,7 +62,7 @@ public class SingleTaskViewAdapter {
     }
 
     public void setTaskProcess(long currentOffset, String globalSpeed) {
-        setProgress(taskViewHolder.pb, currentOffset);
+        ProgressUtil.updateProgressToViewWithMark(taskViewHolder.pb, currentOffset);
         taskViewHolder.speedTv.setText(globalSpeed);
     }
 
@@ -71,7 +70,7 @@ public class SingleTaskViewAdapter {
         if (blockIndex >= blockViewHolderMap.size()) return;
 
         final SingleTaskViewHolder blockViewHolder = blockViewHolderMap.get(blockIndex);
-        setProgress(blockViewHolder.pb, currentOffset);
+        ProgressUtil.updateProgressToViewWithMark(blockViewHolder.pb, currentOffset);
         blockViewHolder.speedTv.setText(blockSpeed);
     }
 

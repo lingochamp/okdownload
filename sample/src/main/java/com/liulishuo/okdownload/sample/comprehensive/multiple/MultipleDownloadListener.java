@@ -27,8 +27,8 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.sample.util.DemoUtil;
 import com.liulishuo.okdownload.sample.R;
+import com.liulishuo.okdownload.sample.util.ProgressUtil;
 
 
 public class MultipleDownloadListener extends DownloadListener1 {
@@ -42,18 +42,20 @@ public class MultipleDownloadListener extends DownloadListener1 {
         if (StatusUtil.isSameTaskPendingOrRunning(task)) {
             viewHolder.setToCancel(task);
             viewHolder.getStatusTv().setText(MultipleTaskUtil.getStatus(task));
-            DemoUtil.setProgress(viewHolder.getProgressBar(), MultipleTaskUtil.getTotal(task),
+            ProgressUtil.calcProgressToViewAndMark(viewHolder.getProgressBar(),
+                    MultipleTaskUtil.getTotal(task),
                     MultipleTaskUtil.getOffset(task));
         } else {
             viewHolder.setToStart(task, this);
             final BreakpointInfo info = StatusUtil.getCurrentInfo(task);
             if (info != null) {
                 viewHolder.getStatusTv().setText(R.string.state_idle);
-                DemoUtil.setProgress(viewHolder.getProgressBar(), info.getTotalLength(),
+                ProgressUtil.calcProgressToViewAndMark(viewHolder.getProgressBar(),
+                        info.getTotalLength(),
                         info.getTotalOffset());
             } else {
                 viewHolder.getStatusTv().setText(R.string.state_unknow);
-                DemoUtil.setProgress(viewHolder.getProgressBar(), 0, 0);
+                ProgressUtil.calcProgressToViewAndMark(viewHolder.getProgressBar(), 0, 0);
             }
         }
 
@@ -101,7 +103,7 @@ public class MultipleDownloadListener extends DownloadListener1 {
         if (holder == null) return;
 
         holder.getStatusTv().setText(status);
-        DemoUtil.setProgress(holder.getProgressBar(), totalLength, currentOffset);
+        ProgressUtil.calcProgressToViewAndMark(holder.getProgressBar(), totalLength, currentOffset);
     }
 
     @Override protected void progress(DownloadTask task, long currentOffset) {
@@ -115,7 +117,7 @@ public class MultipleDownloadListener extends DownloadListener1 {
         if (holder == null) return;
 
         holder.getStatusTv().setText(status);
-        DemoUtil.setProgress(holder.getProgressBar(), currentOffset);
+        ProgressUtil.updateProgressToViewWithMark(holder.getProgressBar(), currentOffset);
     }
 
     @Override protected void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {

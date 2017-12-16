@@ -17,7 +17,6 @@
 package com.liulishuo.okdownload.sample.util;
 
 import android.content.Context;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.widget.ProgressBar;
 
@@ -56,47 +55,5 @@ public class DemoUtil {
         } else {
             return externalSaveDir;
         }
-    }
-
-    public static void setProgress(ProgressBar bar, long currentOffset) {
-        if (bar.getTag() == null) return;
-
-        final int shrinkRate = (int) bar.getTag();
-        final int progress = (int) ((currentOffset) / shrinkRate);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            bar.setProgress(progress, true);
-        } else {
-            bar.setProgress(progress);
-        }
-    }
-
-    public static void setProgress(ProgressBar bar, long contentLength, long beginOffset) {
-        final int contentLengthOnInt = reducePrecision(contentLength);
-        final int shrinkRate = contentLengthOnInt == 0
-                ? 1 : (int) (contentLength / contentLengthOnInt);
-        bar.setTag(shrinkRate);
-        final int progress = (int) (beginOffset / shrinkRate);
-
-
-        bar.setMax(contentLengthOnInt);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            bar.setProgress(progress, true);
-        } else {
-            bar.setProgress(progress);
-        }
-    }
-
-    private static int reducePrecision(long origin) {
-        if (origin <= Integer.MAX_VALUE) return (int) origin;
-
-        int shrinkRate = 10;
-        long result = origin;
-        while (result > Integer.MAX_VALUE) {
-            result /= shrinkRate;
-            shrinkRate *= 5;
-        }
-
-        return (int) result;
     }
 }

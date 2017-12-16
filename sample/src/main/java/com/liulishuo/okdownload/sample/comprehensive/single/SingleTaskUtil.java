@@ -24,12 +24,11 @@ import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.sample.R;
+import com.liulishuo.okdownload.sample.util.ProgressUtil;
 
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-
-import static com.liulishuo.okdownload.sample.util.DemoUtil.setProgress;
 
 public class SingleTaskUtil {
     static final String TAG = "SingleTask";
@@ -62,7 +61,8 @@ public class SingleTaskUtil {
         } else {
             totalOffset = info.getTotalOffset();
         }
-        setProgress(taskViewHolder.pb, info.getTotalLength(), totalOffset);
+        ProgressUtil
+                .calcProgressToViewAndMark(taskViewHolder.pb, info.getTotalLength(), totalOffset);
         resetBlocksInfo(blockViewHolders, info, blockInstantOffsetMap);
 
     }
@@ -90,7 +90,8 @@ public class SingleTaskUtil {
 
             if (offsetLong == null) offsetLong = blockInfo.getCurrentOffset();
 
-            setProgress(viewHolder.pb, blockInfo.getContentLength(), offsetLong);
+            ProgressUtil.calcProgressToViewAndMark(viewHolder.pb, blockInfo.getContentLength(),
+                    offsetLong);
         }
     }
 }
