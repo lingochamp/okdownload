@@ -21,20 +21,9 @@ import android.support.annotation.NonNull;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.UnifiedListenerManager;
-import com.liulishuo.okdownload.sample.util.DemoUtil;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL1;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL2;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL3;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL4;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL5;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL6;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL7;
-import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL8;
 
 
 public class MultipleTaskDemo {
@@ -46,15 +35,15 @@ public class MultipleTaskDemo {
     public MultipleTaskDemo(@NonNull Context context,
                             @NonNull UnifiedListenerManager listenerManager) {
 
-        final File parentFile = DemoUtil.getParentFile(context);
-        taskList.add(new DownloadTask.Builder(URL1, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL2, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL3, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL4, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL5, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL6, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL7, parentFile).build());
-        taskList.add(new DownloadTask.Builder(URL8, parentFile).build());
+//        final File parentFile = DemoUtil.getParentFile(context);
+//        taskList.add(new DownloadTask.Builder(URL1, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL2, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL3, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL4, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL5, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL6, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL7, parentFile).build());
+//        taskList.add(new DownloadTask.Builder(URL8, parentFile).build());
 
         this.listenerManager = listenerManager;
     }
