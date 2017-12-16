@@ -16,10 +16,13 @@
 
 package com.liulishuo.okdownload.sample;
 
-import android.support.v7.app.AppCompatActivity;
+import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 
 /**
  * On this demo we will download a task and display each block progress for it.
  */
-public class EachBlockProgressActivity extends AppCompatActivity {
+public class EachBlockProgressActivity extends BaseSampleActivity {
+    @Override public int titleRes() {
+        return R.string.each_block_progress_title;
+    }
 }

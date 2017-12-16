@@ -16,10 +16,178 @@
 
 package com.liulishuo.okdownload.sample;
 
-import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.StatusUtil;
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
+import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
+
+import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
 /**
  * On this demo you can see the simplest way to download a task.
  */
-public class SingleActivity extends AppCompatActivity {
+public class SingleActivity extends BaseSampleActivity {
+
+    private final static String TAG = "SingleActivity";
+    private DownloadTask task;
+
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_single);
+        initSingleDownload(
+                (TextView) findViewById(R.id.statusTv),
+                (ProgressBar) findViewById(R.id.progressBar),
+                findViewById(R.id.actionView),
+                (TextView) findViewById(R.id.actionTv));
+    }
+
+    @Override public int titleRes() {
+        return R.string.single_download_title;
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        if (task != null) task.cancel();
+    }
+
+    private void initSingleDownload(TextView statusTv, ProgressBar progressBar, View actionView,
+                                    TextView actionTv) {
+        initTask();
+        initStatus(statusTv, progressBar);
+        initAction(actionView, actionTv, statusTv, progressBar);
+    }
+
+    private void initTask() {
+        final String url =
+                "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
+        final File parentFile = DemoUtil.getParentFile(this);
+        final String filename = "single-test";
+        task = new DownloadTask.Builder(url, parentFile)
+                .setFilename(filename)
+                .setMinIntervalMillisCallbackProcess(16)
+                .build();
+    }
+
+    private void initStatus(TextView statusTv, ProgressBar progressBar) {
+        final StatusUtil.Status status = StatusUtil.getStatus(task);
+        statusTv.setText(status.toString());
+        final BreakpointInfo info = StatusUtil.getCurrentInfo(task);
+        if (info != null) {
+            Log.d(TAG, "init status with: " + info.toString());
+
+            setProgress(progressBar, info.getTotalOffset(), info.getTotalLength());
+        }
+    }
+
+    private void initAction(final View actionView, final TextView actionTv, final TextView statusTv,
+                            final ProgressBar progressBar) {
+        actionTv.setText(R.string.start);
+        actionView.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                final boolean started = task.getTag() != null;
+
+                if (started) {
+                    // to cancel
+                    task.cancel();
+                } else {
+                    actionTv.setText(R.string.cancel);
+
+                    // to start
+                    startTask(statusTv, progressBar, actionTv);
+                    // mark
+                    task.setTag("mark-task-started");
+                }
+            }
+        });
+    }
+
+    private void startTask(final TextView statusTv, final ProgressBar progressBar,
+                           final TextView actionTv) {
+
+        task.enqueue(new DownloadListener4WithSpeed() {
+            private long totalLength;
+            private String readableTotalLength;
+
+            @Override public void taskStart(DownloadTask task) {
+                statusTv.setText(R.string.task_start);
+            }
+
+            @Override
+            protected void taskEnd(DownloadTask task, EndCause cause,
+                                   @android.support.annotation.Nullable Exception realCause,
+                                   @NonNull String averageSpeed) {
+                final String statusWithSpeed = cause.toString() + " " + averageSpeed;
+                statusTv.setText(statusWithSpeed);
+
+                actionTv.setText(R.string.start);
+                // mark
+                task.setTag(null);
+            }
+
+            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info) {
+                statusTv.setText(R.string.info_ready);
+
+                totalLength = info.getTotalLength();
+                readableTotalLength = Util.humanReadableBytes(totalLength, true);
+                setProgress(progressBar, info.getTotalOffset(), totalLength);
+            }
+
+            @Override
+            protected void progressBlock(DownloadTask task, int blockIndex,
+                                         long currentBlockOffset) {
+            }
+
+            @Override protected void progress(DownloadTask task, long currentOffset) {
+                final String readableOffset = Util.humanReadableBytes(currentOffset, true);
+                final String progressStatus = readableOffset + "/" + readableTotalLength;
+                final String speed = taskSpeed().speed();
+                final String progressStatusWithSpeed = progressStatus + "(" + speed + ")";
+
+                statusTv.setText(progressStatusWithSpeed);
+                setProgress(progressBar, currentOffset, totalLength);
+            }
+
+            @Override protected void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
+            }
+
+
+            @Override public void connectStart(DownloadTask task, int blockIndex,
+                                               @NonNull Map<String, List<String>> requestHeaders) {
+                final String status = "Connect Start " + blockIndex;
+                statusTv.setText(status);
+            }
+
+            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
+                                             @NonNull Map<String, List<String>> responseHeaders) {
+                final String status = "Connect End " + blockIndex;
+                statusTv.setText(status);
+            }
+        });
+    }
+
+    private boolean isTaskRunning() {
+        final StatusUtil.Status status = StatusUtil.getStatus(task);
+        return status == StatusUtil.Status.PENDING || status == StatusUtil.Status.RUNNING;
+    }
+
+    private static void setProgress(ProgressBar progressBar, long offset, long total) {
+        final float percent = (float) offset / total;
+        progressBar.setProgress((int) (percent * progressBar.getMax()));
+    }
+
 }

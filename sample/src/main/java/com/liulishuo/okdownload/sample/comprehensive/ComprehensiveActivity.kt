@@ -16,15 +16,11 @@
 
 package com.liulishuo.okdownload.sample.comprehensive
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
-import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
 import com.liulishuo.okdownload.UnifiedListenerManager
 import com.liulishuo.okdownload.sample.R
+import com.liulishuo.okdownload.sample.base.BaseSampleActivity
 import com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskFragment
 import com.liulishuo.okdownload.sample.comprehensive.queue.QueueFragment
 import com.liulishuo.okdownload.sample.comprehensive.single.SingleTaskFragment
@@ -33,7 +29,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 /**
  * On this demo you can see a comprehensive demo with several tabs switch among pages.
  */
-class ComprehensiveActivity : AppCompatActivity() {
+class ComprehensiveActivity : BaseSampleActivity() {
+
+    override fun titleRes() = R.string.comprehensive_case_title
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -74,26 +72,5 @@ class ComprehensiveActivity : AppCompatActivity() {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
 
         fragmentManager.beginTransaction().replace(R.id.container, singleTaskFragment).commit()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menu_github -> {
-                openGithub()
-                return true
-            }
-        }
-
-        return super.onOptionsItemSelected(item)
-    }
-
-    private fun openGithub() {
-        val uri = Uri.parse(getString(R.string.github_url))
-        startActivity(Intent(Intent.ACTION_VIEW, uri))
     }
 }

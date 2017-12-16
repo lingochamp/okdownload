@@ -23,15 +23,19 @@ import com.liulishuo.okdownload.sample.comprehensive.ComprehensiveActivity;
 public class MainActivity extends BaseListActivity {
 
     @Override protected void setupAdapter(BaseListActivity.ItemsHolder holder) {
-        holder.addItem(R.string.single_download, R.string.single_download_desc,
+        holder.addItem(R.string.single_download_title, R.string.single_download_desc,
                 SingleActivity.class);
-        holder.addItem(R.string.each_block_progress, R.string.each_block_progress_desc,
+        holder.addItem(R.string.each_block_progress_title, R.string.each_block_progress_desc,
                 EachBlockProgressActivity.class);
-        holder.addItem(R.string.queue_download, R.string.queue_download_desc,
+        holder.addItem(R.string.queue_download_title, R.string.queue_download_desc,
                 QueueActivity.class);
-        holder.addItem(R.string.task_manager, R.string.task_manager_desc,
+        holder.addItem(R.string.task_manager_title, R.string.task_manager_desc,
                 ManagerActivity.class);
-        holder.addItem(R.string.comprehensive_case, R.string.comprehensive_case_desc,
+        holder.addItem(R.string.comprehensive_case_title, R.string.comprehensive_case_desc,
                 ComprehensiveActivity.class);
+    }
+
+    @Override public int titleRes() {
+        return R.string.app_name;
     }
 }

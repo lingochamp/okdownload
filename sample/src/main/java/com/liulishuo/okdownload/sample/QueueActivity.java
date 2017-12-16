@@ -16,10 +16,14 @@
 
 package com.liulishuo.okdownload.sample;
 
-import android.support.v7.app.AppCompatActivity;
+import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 
 /**
- * On this demo you will be known how to download batch tasks as a queue and download with different priority.
+ * On this demo you will be known how to download batch tasks as a queue and download with different
+ * priority.
  */
-public class QueueActivity extends AppCompatActivity {
+public class QueueActivity extends BaseSampleActivity {
+    @Override public int titleRes() {
+        return R.string.queue_download_title;
+    }
 }

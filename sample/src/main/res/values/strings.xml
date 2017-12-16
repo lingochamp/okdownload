@@ -36,14 +36,18 @@
     <string name="state_unknow">UNKNOWN</string>
 
     <!-- entry list -->
-    <string name="single_download">Single Download</string>
+    <string name="single_download_title">Single Download</string>
     <string name="single_download_desc">On this demo you can see the simplest way to download a task.</string>
-    <string name="each_block_progress">Show Each Block Progress</string>
+    <string name="each_block_progress_title">Show Each Block Progress</string>
     <string name="each_block_progress_desc">On this demo we will download a task and display each block progress for it.</string>
-    <string name="task_manager">Show Task Manager</string>
-    <string name="task_manager_desc">On this demo we will using UnifiedListenerManager to manage all tasks and you can attach listener for a task any time any where.</string>
-    <string name="queue_download">Queue Download</string>
+    <string name="queue_download_title">Queue Download</string>
     <string name="queue_download_desc">On this demo you will be known how to download batch tasks as a queue and download with different priority.</string>
-    <string name="comprehensive_case">Comprehensive Case</string>
+    <string name="task_manager_title">Show Task Manager</string>
+    <string name="task_manager_desc">On this demo we will using UnifiedListenerManager to manage all tasks and you can attach listener for a task any time any where.</string>
+    <string name="comprehensive_case_title">Comprehensive Case</string>
     <string name="comprehensive_case_desc">On this demo you can see a comprehensive demo with several tabs switch among pages.</string>
+
+    <!-- single -->
+    <string name="info_ready">Info Ready</string>
+    <string name="task_start">Task Start</string>
 </resources>

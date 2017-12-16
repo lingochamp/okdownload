@@ -16,10 +16,14 @@
 
 package com.liulishuo.okdownload.sample;
 
-import android.support.v7.app.AppCompatActivity;
+import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 
 /**
- * On this demo we will using UnifiedListenerManager to manage all tasks and you can attach listener for a task any time any where.
+ * On this demo we will using UnifiedListenerManager to manage all tasks and you can attach listener
+ * for a task any time any where.
  */
-public class ManagerActivity extends AppCompatActivity {
+public class ManagerActivity extends BaseSampleActivity {
+    @Override public int titleRes() {
+        return R.string.task_manager_title;
+    }
 }
