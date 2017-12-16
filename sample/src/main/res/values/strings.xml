@@ -42,7 +42,7 @@
     <string name="each_block_progress_desc">On this demo we will download a task and display each block progress for it.</string>
     <string name="queue_download_title">Queue Download</string>
     <string name="queue_download_desc">On this demo you will be known how to download batch tasks as a queue and download with different priority.</string>
-    <string name="task_manager_title">Show Task Manager</string>
+    <string name="task_manager_title">Task Manager</string>
     <string name="task_manager_desc">On this demo we will using UnifiedListenerManager to manage all tasks and you can attach listener for a task any time any where.</string>
     <string name="comprehensive_case_title">Comprehensive Case</string>
     <string name="comprehensive_case_desc">On this demo you can see a comprehensive demo with several tabs switch among pages.</string>
