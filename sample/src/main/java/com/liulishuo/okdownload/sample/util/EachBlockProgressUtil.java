@@ -208,7 +208,7 @@ public class EachBlockProgressUtil {
 
             @Override
             public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
-                final String status = "Task End with: " + cause;
+                final String status = "Task" + task.getId() + " End with: " + cause;
                 extInfoTv.setText(status);
             }
         };

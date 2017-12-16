@@ -268,8 +268,8 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
             protected void taskEnd(DownloadTask task, EndCause cause,
                                    @android.support.annotation.Nullable Exception realCause,
                                    @NonNull String averageSpeed) {
-                final String statusWithSpeed = cause.toString() + " " + averageSpeed;
-                statusTv.setText(statusWithSpeed);
+                statusTv.setText(cause.toString());
+                taskSpeedTv.setText(averageSpeed);
 
                 actionTv.setText(R.string.start);
                 // mark
