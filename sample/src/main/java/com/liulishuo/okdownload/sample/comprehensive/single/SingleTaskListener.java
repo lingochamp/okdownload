@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.single;
+package com.liulishuo.okdownload.sample.comprehensive.single;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.SparseArray;
-
-import java.util.List;
-import java.util.Map;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.Util;
@@ -32,7 +29,8 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
 
-import static com.liulishuo.okdownload.sample.single.SingleTaskUtil.TAG;
+import java.util.List;
+import java.util.Map;
 
 class SingleTaskListener extends DownloadListener4WithSpeed {
 
@@ -171,7 +169,7 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
 
 
     private void updateStatus(String status) {
-        Log.d(TAG, status);
+        Log.d(SingleTaskUtil.TAG, status);
         if (viewAdapter == null) return;
 
         if (detail) viewAdapter.updateStatus(status);

@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.multiple
+package com.liulishuo.okdownload.sample.comprehensive.queue
 
-import android.support.v7.widget.RecyclerView
+import android.app.Fragment
+import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import com.liulishuo.okdownload.sample.R
 
-class MultipleTaskViewAdapter(private val demo: MultipleTaskDemo) : RecyclerView.Adapter<MultipleTaskViewHolder>() {
+class QueueFragment : Fragment() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MultipleTaskViewHolder {
-        return MultipleTaskViewHolder(LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_multiple_task, parent, false))
+    companion object {
+        fun newInstance() = QueueFragment()
     }
 
-    override fun onBindViewHolder(holder: MultipleTaskViewHolder, position: Int) {
-        demo.bind(holder, position)
-    }
-
-    override fun getItemCount(): Int {
-        return demo.size()
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        return inflater.inflate(R.layout.fragment_queue, container, false)
     }
 }

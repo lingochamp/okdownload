@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.single;
+package com.liulishuo.okdownload.sample.comprehensive.single;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

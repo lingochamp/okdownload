@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.multiple;
+package com.liulishuo.okdownload.sample.comprehensive.multiple;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,9 +27,8 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.sample.R;
-
 import com.liulishuo.okdownload.sample.DemoUtil;
+import com.liulishuo.okdownload.sample.R;
 
 
 public class MultipleDownloadListener extends DownloadListener1 {

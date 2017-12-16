@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.multiple
+package com.liulishuo.okdownload.sample.comprehensive.multiple
 
 import android.app.Fragment
 import android.os.Bundle
@@ -22,8 +22,8 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.liulishuo.okdownload.sample.MainActivity
 import com.liulishuo.okdownload.sample.R
+import com.liulishuo.okdownload.sample.comprehensive.ComprehensiveActivity
 import kotlinx.android.synthetic.main.fragment_multiple_task.*
 
 class MultipleTaskFragment : Fragment() {
@@ -37,8 +37,10 @@ class MultipleTaskFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (demo == null) demo = MultipleTaskDemo(activity
-                , (activity as MainActivity).listenerManager)
+        if (demo == null) demo = MultipleTaskDemo(
+                activity
+                ,
+                (activity as ComprehensiveActivity).listenerManager)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

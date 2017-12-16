@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample
+package com.liulishuo.okdownload.sample.comprehensive
 
 import android.content.Intent
 import android.net.Uri
@@ -24,25 +24,32 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import com.liulishuo.okdownload.UnifiedListenerManager
-import com.liulishuo.okdownload.sample.multiple.MultipleTaskFragment
-import com.liulishuo.okdownload.sample.queue.QueueFragment
-import com.liulishuo.okdownload.sample.single.SingleTaskFragment
+import com.liulishuo.okdownload.sample.R
+import com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskFragment
+import com.liulishuo.okdownload.sample.comprehensive.queue.QueueFragment
+import com.liulishuo.okdownload.sample.comprehensive.single.SingleTaskFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+/**
+ * On this demo you can see a comprehensive demo with several tabs switch among pages.
+ */
+class ComprehensiveActivity : AppCompatActivity() {
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_single -> {
-                fragmentManager.beginTransaction().replace(R.id.container, singleTaskFragment).commit()
+                fragmentManager.beginTransaction().replace(
+                        R.id.container, singleTaskFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_multiple -> {
-                fragmentManager.beginTransaction().replace(R.id.container, multipleTaskFragment).commit()
+                fragmentManager.beginTransaction().replace(
+                        R.id.container, multipleTaskFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_queue -> {
-                fragmentManager.beginTransaction().replace(R.id.container, queueFragment).commit()
+                fragmentManager.beginTransaction().replace(
+                        R.id.container, queueFragment).commit()
                 return@OnNavigationItemSelectedListener true
             }
         }

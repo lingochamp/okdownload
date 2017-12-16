@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.single;
+package com.liulishuo.okdownload.sample.comprehensive.single;
 
 import android.util.SparseArray;
 import android.widget.TextView;
-
-import org.jetbrains.annotations.Nullable;
-
-import java.io.File;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.sample.R;
+
+import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
 
 import static com.liulishuo.okdownload.sample.DemoUtil.setProgress;
 

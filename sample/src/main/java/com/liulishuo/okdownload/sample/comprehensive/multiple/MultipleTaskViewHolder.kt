@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.multiple
+package com.liulishuo.okdownload.sample.comprehensive.multiple
 
 import android.support.v7.widget.RecyclerView
 import android.view.View

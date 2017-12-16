@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.multiple;
+package com.liulishuo.okdownload.sample.comprehensive.multiple;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -27,14 +27,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL1;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL2;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL3;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL4;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL5;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL6;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL7;
-import static com.liulishuo.okdownload.sample.multiple.MultipleTaskUtil.URL8;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL1;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL2;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL3;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL4;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL5;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL6;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL7;
+import static com.liulishuo.okdownload.sample.comprehensive.multiple.MultipleTaskUtil.URL8;
 
 
 public class MultipleTaskDemo {

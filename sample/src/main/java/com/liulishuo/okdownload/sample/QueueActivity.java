@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.single;
+package com.liulishuo.okdownload.sample;
 
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.support.v7.app.AppCompatActivity;
 
-class SingleTaskViewHolder {
-    final TextView titleTv;
-    final TextView speedTv;
-    final ProgressBar pb;
-
-    SingleTaskViewHolder(TextView titleTv, TextView speedTv, ProgressBar pb) {
-        this.titleTv = titleTv;
-        this.speedTv = speedTv;
-        this.pb = pb;
-    }
+/**
+ * On this demo you will be known how to download batch tasks as a queue and download with different priority.
+ */
+public class QueueActivity extends AppCompatActivity {
 }

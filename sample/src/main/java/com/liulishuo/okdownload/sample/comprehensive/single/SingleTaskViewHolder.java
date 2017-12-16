@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.queue
+package com.liulishuo.okdownload.sample.comprehensive.single;
 
-import android.app.Fragment
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import com.liulishuo.okdownload.sample.R
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
-class QueueFragment : Fragment() {
+class SingleTaskViewHolder {
+    final TextView titleTv;
+    final TextView speedTv;
+    final ProgressBar pb;
 
-    companion object {
-        fun newInstance() = QueueFragment()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_queue, container, false)
+    SingleTaskViewHolder(TextView titleTv, TextView speedTv, ProgressBar pb) {
+        this.titleTv = titleTv;
+        this.speedTv = speedTv;
+        this.pb = pb;
     }
 }

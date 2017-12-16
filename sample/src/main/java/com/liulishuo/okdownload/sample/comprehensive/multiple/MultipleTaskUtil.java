@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.multiple;
+package com.liulishuo.okdownload.sample.comprehensive.multiple;
 
 import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.sample.single.SingleTaskUtil;
+import com.liulishuo.okdownload.sample.comprehensive.single.SingleTaskUtil;
 
 
 public class MultipleTaskUtil {

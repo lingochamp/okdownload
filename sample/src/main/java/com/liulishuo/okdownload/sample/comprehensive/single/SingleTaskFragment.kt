@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample.single
+package com.liulishuo.okdownload.sample.comprehensive.single
 
 import android.app.Fragment
 import android.os.Bundle
@@ -22,8 +22,8 @@ import android.support.v7.widget.AppCompatButton
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.liulishuo.okdownload.sample.MainActivity
 import com.liulishuo.okdownload.sample.R
+import com.liulishuo.okdownload.sample.comprehensive.ComprehensiveActivity
 import kotlinx.android.synthetic.main.fragment_single_task.*
 import org.jetbrains.anko.runOnUiThread
 
@@ -40,19 +40,20 @@ class SingleTaskFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (demo == null) demo = SingleTaskDemo(activity,
-                (activity as MainActivity).listenerManager)
+        if (demo == null) demo = SingleTaskDemo(
+                activity,
+                (activity as ComprehensiveActivity).listenerManager)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_single_task, container, false)
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        demo!!.attachViews(createSingleTaskViewAdapter()
-                , { runOnUiThread { setToStart(startOrCancelBtn) } })
+        demo!!.attachViews(createSingleTaskViewAdapter(), { runOnUiThread { setToStart(startOrCancelBtn) } })
         initSingleTaskDemo()
     }
 

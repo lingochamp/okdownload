@@ -31,7 +31,7 @@
         <item name="android:focusable">true</item>
         <item name="android:foreground">?android:attr/selectableItemBackground</item>
         <item name="cardCornerRadius">2dp</item>
-        <item name="contentPadding">15dp</item>
+        <item name="contentPadding">10dp</item>
     </style>
 
 </resources>
