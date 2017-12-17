@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/okdownload/okdownload.iml" filepath="$PROJECT_DIR$/okdownload/okdownload.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-breakpoint-sqlite/okdownload-breakpoint-sqlite.iml" filepath="$PROJECT_DIR$/okdownload-breakpoint-sqlite/okdownload-breakpoint-sqlite.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-connection-okhttp/okdownload-connection-okhttp.iml" filepath="$PROJECT_DIR$/okdownload-connection-okhttp/okdownload-connection-okhttp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/okdownload-filedownloader/okdownload-filedownloader.iml" filepath="$PROJECT_DIR$/okdownload-filedownloader/okdownload-filedownloader.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-kotlin-enhance/okdownload-kotlin-enhance.iml" filepath="$PROJECT_DIR$/okdownload-kotlin-enhance/okdownload-kotlin-enhance.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-process/okdownload-process.iml" filepath="$PROJECT_DIR$/okdownload-process/okdownload-process.iml" />
       <module fileurl="file://$PROJECT_DIR$/okdownload-root.iml" filepath="$PROJECT_DIR$/okdownload-root.iml" />
