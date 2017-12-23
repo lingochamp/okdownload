@@ -119,6 +119,8 @@ public class SingleActivity extends BaseSampleActivity {
             private String readableTotalLength;
 
             @Override public void taskStart(DownloadTask task) {
+                super.taskStart(task);
+
                 statusTv.setText(R.string.task_start);
             }
 

@@ -63,6 +63,8 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
     }
 
     @Override public void taskStart(DownloadTask task) {
+        super.taskStart(task);
+
         updateStatus("taskStart " + task.getId());
     }
 

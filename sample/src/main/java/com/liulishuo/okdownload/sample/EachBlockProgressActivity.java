@@ -208,6 +208,8 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                            final TextView block2SpeedTv, final TextView block3SpeedTv) {
         task.enqueue(new DownloadListener4WithSpeed() {
             @Override public void taskStart(DownloadTask task) {
+                super.taskStart(task);
+
                 statusTv.setText(R.string.task_start);
             }
 
