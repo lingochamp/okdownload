@@ -31,6 +31,16 @@ public class SpeedCalculator {
     long endTimestamp;
     long allIncreaseBytes;
 
+    public void reset() {
+        timestamp = 0;
+        increaseBytes = 0;
+        bytesPerSecond = 0;
+
+        beginTimestamp = 0;
+        endTimestamp = 0;
+        allIncreaseBytes = 0;
+    }
+
     // convenience for unit test
     long nowMillis() {
         return SystemClock.uptimeMillis();

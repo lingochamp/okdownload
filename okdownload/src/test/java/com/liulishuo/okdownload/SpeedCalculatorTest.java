@@ -85,6 +85,9 @@ public class SpeedCalculatorTest {
         assertThat(calculator.beginTimestamp).isEqualTo(firstTimestamp);
         // (10+20+60+10)/(96-66)*1000
         assertThat(calculator.getBytesPerSecondFromBegin()).isEqualTo(3333);
+
+        calculator.reset();
+        assertThat(calculator.getBytesPerSecondFromBegin()).isEqualTo(0);
     }
 
     @Test

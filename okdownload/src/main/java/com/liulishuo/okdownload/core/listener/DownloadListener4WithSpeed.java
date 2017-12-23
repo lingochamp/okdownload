@@ -26,22 +26,14 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
-    private SpeedCalculator taskSpeed;
-    private SparseArray<SpeedCalculator> blockSpeeds;
+    private final SpeedCalculator taskSpeed = new SpeedCalculator();
+    private final SparseArray<SpeedCalculator> blockSpeeds = new SparseArray<>();
 
     @NonNull protected SpeedCalculator taskSpeed() {
-        if (taskSpeed == null) {
-            throw new IllegalAccessError("This method can't be invoked before infoReady");
-        }
-
         return taskSpeed;
     }
 
     @NonNull protected SpeedCalculator blockSpeed(int blockIndex) {
-        if (blockSpeeds == null) {
-            throw new IllegalAccessError("This method can't be invoked before infoReady");
-        }
-
         return blockSpeeds.get(blockIndex);
     }
 
@@ -55,6 +47,11 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
     @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
         blockSpeeds.get(blockIndex).endTask();
         super.fetchEnd(task, blockIndex, contentLength);
+    }
+
+    @Override public void taskStart(DownloadTask task) {
+        taskSpeed.reset();
+        blockSpeeds.clear();
     }
 
     @Override
@@ -73,9 +70,9 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
     }
 
     private void initSpeed(BreakpointInfo info) {
-        taskSpeed = new SpeedCalculator();
+        taskSpeed.reset();
+        blockSpeeds.clear();
         final int blockCount = info.getBlockCount();
-        blockSpeeds = new SparseArray<>(blockCount);
         for (int i = 0; i < blockCount; i++) blockSpeeds.put(i, new SpeedCalculator());
     }
 }
