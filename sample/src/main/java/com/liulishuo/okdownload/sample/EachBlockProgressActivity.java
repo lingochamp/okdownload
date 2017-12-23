@@ -223,7 +223,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
             }
 
             @Override
-            protected void progressBlock(DownloadTask task, int blockIndex,
+            public void progressBlock(DownloadTask task, int blockIndex,
                                          long currentBlockOffset) {
                 final ProgressBar progressBar = EachBlockProgressUtil
                         .getProgressBar(blockIndex, block0Pb, block1Pb, block2Pb, block3Pb);
@@ -236,7 +236,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 if (speedTv != null) speedTv.setText(blockSpeed(blockIndex).speed());
             }
 
-            @Override protected void progress(DownloadTask task, long currentOffset) {
+            @Override public void progress(DownloadTask task, long currentOffset) {
                 statusTv.setText(R.string.fetch_progress);
 
                 EachBlockProgressUtil.updateProgress(taskPb, currentOffset);

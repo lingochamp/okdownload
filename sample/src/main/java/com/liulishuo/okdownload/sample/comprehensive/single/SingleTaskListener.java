@@ -86,7 +86,7 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
     }
 
     @Override
-    protected void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset) {
+    public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset) {
         if (detail && viewAdapter != null) {
             if (blockIndex >= viewAdapter.blockViewSize()) return;
 
@@ -95,7 +95,7 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         }
     }
 
-    @Override protected void progress(DownloadTask task, long currentOffset) {
+    @Override public void progress(DownloadTask task, long currentOffset) {
         if (detail && viewAdapter != null) {
             viewAdapter.setTaskProcess(currentOffset, taskSpeed().speed());
         }

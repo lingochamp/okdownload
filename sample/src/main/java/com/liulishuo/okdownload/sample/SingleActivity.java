@@ -146,11 +146,11 @@ public class SingleActivity extends BaseSampleActivity {
             }
 
             @Override
-            protected void progressBlock(DownloadTask task, int blockIndex,
+            public void progressBlock(DownloadTask task, int blockIndex,
                                          long currentBlockOffset) {
             }
 
-            @Override protected void progress(DownloadTask task, long currentOffset) {
+            @Override public void progress(DownloadTask task, long currentOffset) {
                 final String readableOffset = Util.humanReadableBytes(currentOffset, true);
                 final String progressStatus = readableOffset + "/" + readableTotalLength;
                 final String speed = taskSpeed().speed();
