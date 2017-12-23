@@ -67,11 +67,11 @@ public class DownloadListener4Test {
             }
 
             @Override
-            protected void progressBlock(DownloadTask task, int blockIndex,
-                                         long currentBlockOffset) {
+            public void progressBlock(DownloadTask task, int blockIndex,
+                                      long currentBlockOffset) {
             }
 
-            @Override protected void progress(DownloadTask task, long currentOffset) {
+            @Override public void progress(DownloadTask task, long currentOffset) {
             }
 
             @Override protected void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
@@ -98,31 +98,51 @@ public class DownloadListener4Test {
 
     @Test
     public void callback() {
+        final DownloadTask anotherTask = mock(DownloadTask.class);
+        when(anotherTask.getId()).thenReturn(1);
+        final BreakpointInfo anotherInfo = mock(BreakpointInfo.class);
+        when(anotherInfo.getId()).thenReturn(1);
+        final BlockInfo anotherBlockInfo = mock(BlockInfo.class);
+        when(anotherInfo.getBlockCount()).thenReturn(1);
+        when(anotherInfo.getTotalOffset()).thenReturn(1L);
+        when(anotherBlockInfo.getCurrentOffset()).thenReturn(1L);
+        when(anotherBlockInfo.getContentLength()).thenReturn(5L);
+        when(anotherInfo.getBlock(0)).thenReturn(anotherBlockInfo);
+
+
         listener4.taskStart(task);
         listener4.breakpointData(task, null);
         listener4.downloadFromBeginning(task, info, resumeFailedCause);
         listener4.connectStart(task, 0, tmpFields);
         listener4.connectEnd(task, 0, 206, tmpFields);
         when(info.getBlockCount()).thenReturn(3);
-        when(info.getTotalOffset()).thenReturn(15L);
         for (int i = 0; i < 3; i++) {
             final BlockInfo blockInfo = mock(BlockInfo.class);
-            when(blockInfo.getCurrentOffset()).thenReturn(i + 5L);
             doReturn(blockInfo).when(info).getBlock(i);
         }
         listener4.splitBlockEnd(task, info);
         verify(listener4).infoReady(eq(task), eq(info), eq(false));
         assertThat(listener4.blockCurrentOffsetMap().size()).isEqualTo(3);
-        assertThat(listener4.blockCurrentOffsetMap().get(1)).isEqualTo(6L);
-        assertThat(listener4.currentOffset).isEqualTo(15L);
+        assertThat(listener4.getCurrentOffset()).isEqualTo(0);
+
+        // another task coming.
+        listener4.taskStart(anotherTask);
+        listener4.downloadFromBreakpoint(anotherTask, anotherInfo);
 
         listener4.fetchStart(task, 0, 30L);
         listener4.connectStart(task, 1, tmpFields);
         listener4.connectEnd(task, 1, 206, tmpFields);
 
-        listener4.fetchProgress(task, 0, 10);
+        // another task running.
+        listener4.connectStart(anotherTask, 0, tmpFields);
+        listener4.connectEnd(anotherTask, 0, 206, tmpFields);
+        listener4.fetchProgress(anotherTask, 0, 2);
+        assertThat(listener4.blockCurrentOffsetMap(anotherTask.getId()).get(0)).isEqualTo(3);
+
+        listener4.fetchProgress(task, 1, 10);
+        listener4.fetchProgress(task, 0, 15);
         assertThat(listener4.blockCurrentOffsetMap().get(0)).isEqualTo(15L);
-        assertThat(listener4.currentOffset).isEqualTo(25L);
+        assertThat(listener4.getCurrentOffset()).isEqualTo(25L);
         verify(listener4).progressBlock(eq(task), eq(0), eq(15L));
         verify(listener4).progress(eq(task), eq(25L));
 
@@ -130,6 +150,13 @@ public class DownloadListener4Test {
         final BlockInfo firstBlock = info.getBlock(0);
         verify(listener4).blockEnd(eq(task), eq(0), eq(firstBlock));
 
+        // another task running.
+        listener4.fetchProgress(anotherTask, 0, 2);
+        assertThat(listener4.getCurrentOffset(anotherTask.getId())).isEqualTo(5);
+        assertThat(listener4.blockCurrentOffsetMap(anotherTask.getId()).get(0)).isEqualTo(5);
+
+
+        listener4.taskEnd(anotherTask, EndCause.COMPLETE, null);
         listener4.taskEnd(task, EndCause.COMPLETE, null);
     }
 }

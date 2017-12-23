@@ -22,8 +22,10 @@ import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.assist.DownloadProgressAssist;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
 /**
@@ -41,20 +43,42 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
  * (progress(currentOffset)->progressBlock(blockIndex,currentOffset))
  * ->blockEnd->taskEnd
  */
-public abstract class DownloadListener4 implements DownloadListener {
-    private BreakpointInfo info;
-    protected long currentOffset;
-    private SparseArray<Long> blockCurrentOffsetMap;
+public abstract class DownloadListener4 implements DownloadListener,
+        DownloadProgressAssist.DownloadProgress {
 
-    @Nullable protected SparseArray<Long> blockCurrentOffsetMap() { return blockCurrentOffsetMap; }
+    private final DownloadProgressAssist assist = new DownloadProgressAssist();
+
+    @Nullable
+    protected SparseArray<Long> blockCurrentOffsetMap(int id) {
+        final DownloadProgressAssist.ProgressModel model = assist.findModel(id);
+        return model == null ? null : model.getBlockCurrentOffsetMap();
+    }
+
+    /**
+     * If you only have one task attach to this listener instance, you can use this method without
+     * provide task id, otherwise please use {@link #blockCurrentOffsetMap(int)} instead.
+     */
+    @Nullable protected SparseArray<Long> blockCurrentOffsetMap() {
+        final DownloadProgressAssist.ProgressModel model = assist.getOneModel();
+        return model == null ? null : model.getBlockCurrentOffsetMap();
+    }
+
+    protected long getCurrentOffset(int id) {
+        final DownloadProgressAssist.ProgressModel model = assist.findModel(id);
+        return model == null ? 0 : model.getCurrentOffset();
+    }
+
+    /**
+     * If you only have one task attach to this listener instance, you can use this method without
+     * provide task id, otherwise please use {@link #getCurrentOffset(int)} instead.
+     */
+    protected long getCurrentOffset() {
+        final DownloadProgressAssist.ProgressModel model = assist.getOneModel();
+        return model == null ? 0 : model.getCurrentOffset();
+    }
 
     protected abstract void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
                                       boolean fromBreakpoint);
-
-    protected abstract void progressBlock(DownloadTask task, int blockIndex,
-                                          long currentBlockOffset);
-
-    protected abstract void progress(DownloadTask task, long currentOffset);
 
     protected abstract void blockEnd(DownloadTask task, int blockIndex, BlockInfo info);
 
@@ -79,29 +103,19 @@ public abstract class DownloadListener4 implements DownloadListener {
     }
 
     @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        synchronized (this) {
-            final long blockCurrentOffset = blockCurrentOffsetMap.get(blockIndex) + increaseBytes;
-            blockCurrentOffsetMap.put(blockIndex, blockCurrentOffset);
-            currentOffset += increaseBytes;
-
-            progressBlock(task, blockIndex, blockCurrentOffset);
-            progress(task, currentOffset);
-        }
+        assist.fetchProgress(task, blockIndex, increaseBytes, this);
     }
 
     @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
-        blockEnd(task, blockIndex, info.getBlock(blockIndex));
+        blockEnd(task, blockIndex, assist.getBlockInfo(task.getId(), blockIndex));
+    }
+
+    @Override
+    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        assist.remove(task.getId());
     }
 
     protected void initData(@NonNull BreakpointInfo info) {
-        this.info = info;
-        currentOffset = info.getTotalOffset();
-        blockCurrentOffsetMap = new SparseArray<>();
-
-        final int blockCount = info.getBlockCount();
-        for (int i = 0; i < blockCount; i++) {
-            final BlockInfo blockInfo = info.getBlock(i);
-            blockCurrentOffsetMap.put(i, blockInfo.getCurrentOffset());
-        }
+        assist.add(info);
     }
 }
