@@ -19,6 +19,12 @@ package com.liulishuo.okdownload.core.listener;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,12 +35,6 @@ import org.robolectric.annotation.Config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -62,7 +62,8 @@ public class DownloadListener4Test {
 
         tmpFields = new HashMap<>();
         listener4 = spy(new DownloadListener4() {
-            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info) {
+            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                               boolean fromBreakpoint) {
             }
 
             @Override
@@ -110,7 +111,7 @@ public class DownloadListener4Test {
             doReturn(blockInfo).when(info).getBlock(i);
         }
         listener4.splitBlockEnd(task, info);
-        verify(listener4).infoReady(eq(task), eq(info));
+        verify(listener4).infoReady(eq(task), eq(info), eq(false));
         assertThat(listener4.blockCurrentOffsetMap().size()).isEqualTo(3);
         assertThat(listener4.blockCurrentOffsetMap().get(1)).isEqualTo(6L);
         assertThat(listener4.currentOffset).isEqualTo(15L);

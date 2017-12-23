@@ -31,7 +31,7 @@ public abstract class DownloadListener3 extends DownloadListener1 {
     }
 
     @Override
-    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+    public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
         switch (cause) {
             case COMPLETE:
                 completed(task);

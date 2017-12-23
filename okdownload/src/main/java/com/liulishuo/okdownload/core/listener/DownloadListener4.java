@@ -48,7 +48,8 @@ public abstract class DownloadListener4 implements DownloadListener {
 
     @Nullable protected SparseArray<Long> blockCurrentOffsetMap() { return blockCurrentOffsetMap; }
 
-    protected abstract void infoReady(DownloadTask task, @NonNull BreakpointInfo info);
+    protected abstract void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                      boolean fromBreakpoint);
 
     protected abstract void progressBlock(DownloadTask task, int blockIndex,
                                           long currentBlockOffset);
@@ -62,16 +63,16 @@ public abstract class DownloadListener4 implements DownloadListener {
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) { }
 
-    @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+    @Override public final void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
         initData(info);
 
-        infoReady(task, info);
+        infoReady(task, info, true);
     }
 
-    @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+    @Override public final void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
         initData(info);
 
-        infoReady(task, info);
+        infoReady(task, info, false);
     }
 
     @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
