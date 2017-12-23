@@ -211,7 +211,8 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 statusTv.setText(R.string.task_start);
             }
 
-            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info) {
+            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                               boolean fromBreakpoint) {
                 EachBlockProgressUtil
                         .initTitle(info, taskTitleTv, block0TitleTv, block1TitleTv, block2TitleTv,
                                 block3TitleTv);
@@ -259,13 +260,6 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                         + responseHeaders;
                 statusTv.setText(status);
 
-            }
-
-            @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
-                super.splitBlockEnd(task, info);
-                final String status = "splitBlockEnd " + info.getBlockCount() + " " + info
-                        .getTotalLength();
-                statusTv.setText(status);
             }
 
             @Override

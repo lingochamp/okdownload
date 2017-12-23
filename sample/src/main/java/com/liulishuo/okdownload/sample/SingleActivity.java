@@ -134,7 +134,8 @@ public class SingleActivity extends BaseSampleActivity {
                 task.setTag(null);
             }
 
-            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info) {
+            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                               boolean fromBreakpoint) {
                 statusTv.setText(R.string.info_ready);
 
                 totalLength = info.getTotalLength();

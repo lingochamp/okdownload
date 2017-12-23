@@ -66,7 +66,8 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         updateStatus("taskStart " + task.getId());
     }
 
-    @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info) {
+    @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                       boolean fromBreakpoint) {
         if (viewAdapter != null) viewAdapter.refreshData(info, null);
     }
 
@@ -124,18 +125,6 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
                                                 ResumeFailedCause cause) {
         super.downloadFromBeginning(task, info, cause);
         updateStatus("downloadFromBeginning " + info + " " + cause);
-    }
-
-    @Override public void downloadFromBreakpoint(DownloadTask task,
-                                                 BreakpointInfo info) {
-        super.downloadFromBreakpoint(task, info);
-        updateStatus("downloadFromBreakpoint " + info);
-    }
-
-
-    @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
-        super.splitBlockEnd(task, info);
-        updateStatus("splitBlockEnd " + info.getBlockCount() + " " + info.getTotalLength());
     }
 
     @Override public void fetchStart(DownloadTask task, int blockIndex,
