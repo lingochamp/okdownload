@@ -79,14 +79,14 @@ public class DownloadListener4Assist {
         model.blockCurrentOffsetMap.put(blockIndex, blockCurrentOffset);
         model.currentOffset += increaseBytes;
 
-        if (callback != null){
+        if (callback != null) {
             callback.progressBlock(task, blockIndex, blockCurrentOffset);
             callback.progress(task, model.currentOffset);
         }
     }
 
     public void fetchEnd(DownloadTask task, int blockIndex) {
-        if (callback != null){
+        if (callback != null) {
             callback.blockEnd(task, blockIndex, findModel(task.getId()).info.getBlock(blockIndex));
         }
     }
