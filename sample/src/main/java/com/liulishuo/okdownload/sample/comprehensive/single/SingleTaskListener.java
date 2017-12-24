@@ -68,8 +68,8 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         updateStatus("taskStart " + task.getId());
     }
 
-    @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                       boolean fromBreakpoint) {
+    @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                    boolean fromBreakpoint) {
         if (viewAdapter != null) viewAdapter.refreshData(info, null);
     }
 
@@ -101,7 +101,7 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         }
     }
 
-    @Override protected void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
+    @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
         if (detail && viewAdapter != null) {
             viewAdapter.onBlocksEnd(blockIndex, blockSpeed(blockIndex));
         }

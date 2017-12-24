@@ -136,7 +136,7 @@ public class SingleActivity extends BaseSampleActivity {
                 task.setTag(null);
             }
 
-            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+            @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
                                                boolean fromBreakpoint) {
                 statusTv.setText(R.string.info_ready);
 
@@ -160,7 +160,7 @@ public class SingleActivity extends BaseSampleActivity {
                 DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength);
             }
 
-            @Override protected void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
+            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
             }
 
 
