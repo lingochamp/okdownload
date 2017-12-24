@@ -20,13 +20,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class UnifiedListenerManager {
 
@@ -110,16 +110,6 @@ public class UnifiedListenerManager {
             for (final DownloadListener realOne : listeners) {
                 if (realOne == null) continue;
                 realOne.taskStart(task);
-            }
-        }
-
-        @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) {
-            final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
-            if (listeners == null) return;
-
-            for (final DownloadListener realOne : listeners) {
-                if (realOne == null) continue;
-                realOne.breakpointData(task, info);
             }
         }
 

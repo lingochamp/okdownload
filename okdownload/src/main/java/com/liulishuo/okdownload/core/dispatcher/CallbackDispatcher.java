@@ -22,14 +22,14 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.List;
-import java.util.Map;
-
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+
+import java.util.List;
+import java.util.Map;
 
 // Dispatch callback to listeners
 public class CallbackDispatcher {
@@ -50,20 +50,6 @@ public class CallbackDispatcher {
                     task.getListener().taskStart(task);
                 }
 
-            }
-
-            @Override
-            public void breakpointData(final DownloadTask task,
-                                       @Nullable final BreakpointInfo info) {
-                if (task.isAutoCallbackToUIThread()) {
-                    uiHandler.post(new Runnable() {
-                        @Override public void run() {
-                            task.getListener().breakpointData(task, info);
-                        }
-                    });
-                } else {
-                    task.getListener().breakpointData(task, info);
-                }
             }
 
             @Override

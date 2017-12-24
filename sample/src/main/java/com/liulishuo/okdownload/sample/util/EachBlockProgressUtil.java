@@ -165,10 +165,6 @@ public class EachBlockProgressUtil {
                 extInfoTv.setText(R.string.task_start);
             }
 
-            @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) {
-                extInfoTv.setText(R.string.breakpoint_data);
-            }
-
             @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                         ResumeFailedCause cause) {
                 extInfoTv.setText(R.string.download_from_beginning);

@@ -113,7 +113,6 @@ public class DownloadListener4Test {
 
 
         listener4.taskStart(task);
-        listener4.breakpointData(task, null);
         listener4.downloadFromBeginning(task, info, resumeFailedCause);
         listener4.connectStart(task, 0, tmpFields);
         listener4.connectEnd(task, 0, 206, tmpFields);

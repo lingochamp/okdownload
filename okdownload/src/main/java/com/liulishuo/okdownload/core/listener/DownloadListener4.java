@@ -85,8 +85,6 @@ public abstract class DownloadListener4 implements DownloadListener,
         return model == null ? 0 : model.getCurrentOffset();
     }
 
-    @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) { }
-
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) { }
 

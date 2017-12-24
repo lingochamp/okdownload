@@ -50,7 +50,6 @@
     <!-- listener -->
     <string name="info_ready">Info Ready</string>
     <string name="task_start">Task Start</string>
-    <string name="breakpoint_data">Breakpoint Data on Store</string>
     <string name="download_from_beginning">Download from Beginning</string>
     <string name="download_from_breakpoint">Download from Breakpoint</string>
     <string name="connect_start">Connect Start</string>

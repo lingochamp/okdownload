@@ -17,23 +17,19 @@
 package com.liulishuo.okdownload.core.listener;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
-import java.util.List;
-import java.util.Map;
 
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * taskStart->taskEnd
  */
 public abstract class DownloadListener2 implements DownloadListener {
-    @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) {
-    }
-
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) {
     }

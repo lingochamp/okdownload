@@ -68,9 +68,6 @@ public abstract class DownloadListener1 implements DownloadListener,
         assist.taskEnd(task.getId());
     }
 
-    @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) {
-    }
-
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) {
         assist.downloadFromBeginning(task, cause);

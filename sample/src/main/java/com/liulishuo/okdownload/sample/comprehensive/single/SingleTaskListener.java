@@ -115,13 +115,6 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         }
     }
 
-    @Override public void breakpointData(DownloadTask task,
-                                         @Nullable BreakpointInfo info) {
-        super.breakpointData(task, info);
-        updateStatus("breakpointData " + info);
-
-    }
-
     @Override public void downloadFromBeginning(DownloadTask task,
                                                 BreakpointInfo info,
                                                 ResumeFailedCause cause) {
