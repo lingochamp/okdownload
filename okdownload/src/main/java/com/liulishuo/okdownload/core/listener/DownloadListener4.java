@@ -22,11 +22,10 @@ import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.assist.DownloadProgressAssist;
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.listener.assist.DownloadListener4Assist;
 
 /**
  * When download from resume:
@@ -44,13 +43,22 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
  * ->blockEnd->taskEnd
  */
 public abstract class DownloadListener4 implements DownloadListener,
-        DownloadProgressAssist.DownloadProgress {
+        DownloadListener4Assist.Listener4Callback {
 
-    private final DownloadProgressAssist assist = new DownloadProgressAssist();
+    final DownloadListener4Assist assist;
+
+    DownloadListener4(DownloadListener4Assist assist) {
+        this.assist = assist;
+        assist.setCallback(this);
+    }
+
+    public DownloadListener4() {
+        this(new DownloadListener4Assist());
+    }
 
     @Nullable
     protected SparseArray<Long> blockCurrentOffsetMap(int id) {
-        final DownloadProgressAssist.ProgressModel model = assist.findModel(id);
+        final DownloadListener4Assist.Listener4Model model = assist.findModel(id);
         return model == null ? null : model.getBlockCurrentOffsetMap();
     }
 
@@ -59,12 +67,12 @@ public abstract class DownloadListener4 implements DownloadListener,
      * provide task id, otherwise please use {@link #blockCurrentOffsetMap(int)} instead.
      */
     @Nullable protected SparseArray<Long> blockCurrentOffsetMap() {
-        final DownloadProgressAssist.ProgressModel model = assist.getOneModel();
+        final DownloadListener4Assist.Listener4Model model = assist.getSingleTaskModel();
         return model == null ? null : model.getBlockCurrentOffsetMap();
     }
 
     protected long getCurrentOffset(int id) {
-        final DownloadProgressAssist.ProgressModel model = assist.findModel(id);
+        final DownloadListener4Assist.Listener4Model model = assist.findModel(id);
         return model == null ? 0 : model.getCurrentOffset();
     }
 
@@ -73,14 +81,9 @@ public abstract class DownloadListener4 implements DownloadListener,
      * provide task id, otherwise please use {@link #getCurrentOffset(int)} instead.
      */
     protected long getCurrentOffset() {
-        final DownloadProgressAssist.ProgressModel model = assist.getOneModel();
+        final DownloadListener4Assist.Listener4Model model = assist.getSingleTaskModel();
         return model == null ? 0 : model.getCurrentOffset();
     }
-
-    protected abstract void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                      boolean fromBreakpoint);
-
-    protected abstract void blockEnd(DownloadTask task, int blockIndex, BlockInfo info);
 
     @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) { }
 
@@ -88,34 +91,31 @@ public abstract class DownloadListener4 implements DownloadListener,
                                                 ResumeFailedCause cause) { }
 
     @Override public final void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
-        initData(info);
-
-        infoReady(task, info, true);
+        initData(task, info, true);
     }
 
     @Override public final void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
-        initData(info);
-
-        infoReady(task, info, false);
+        initData(task, info, false);
     }
 
     @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
     }
 
     @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        assist.fetchProgress(task, blockIndex, increaseBytes, this);
+        assist.fetchProgress(task, blockIndex, increaseBytes);
     }
 
     @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
-        blockEnd(task, blockIndex, assist.getBlockInfo(task.getId(), blockIndex));
+        assist.fetchEnd(task, blockIndex);
     }
 
     @Override
     public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
-        assist.remove(task.getId());
+        assist.taskEnd(task.getId());
     }
 
-    protected void initData(@NonNull BreakpointInfo info) {
-        assist.add(info);
+    protected void initData(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                            boolean fromBreakpoint) {
+        assist.initData(task, info, fromBreakpoint);
     }
 }

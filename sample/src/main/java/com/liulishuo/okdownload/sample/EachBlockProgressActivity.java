@@ -213,7 +213,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 statusTv.setText(R.string.task_start);
             }
 
-            @Override protected void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+            @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
                                                boolean fromBreakpoint) {
                 EachBlockProgressUtil
                         .initTitle(info, taskTitleTv, block0TitleTv, block1TitleTv, block2TitleTv,
@@ -243,7 +243,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 taskSpeedTv.setText(taskSpeed().speed());
             }
 
-            @Override protected void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
+            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
                 final TextView speedTv = EachBlockProgressUtil.getSpeedTv(blockIndex,
                         block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
 

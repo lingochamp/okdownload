@@ -64,8 +64,9 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
                                     @Nullable Exception realCause,
                                     @NonNull String averageSpeed);
 
-    @Override protected void initData(@NonNull BreakpointInfo info) {
-        super.initData(info);
+    @Override protected void initData(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                      boolean fromBreakpoint) {
+        super.initData(task, info, fromBreakpoint);
         initSpeed(info);
     }
 
