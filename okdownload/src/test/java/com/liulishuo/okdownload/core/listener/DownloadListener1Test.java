@@ -17,37 +17,38 @@
 package com.liulishuo.okdownload.core.listener;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.listener.assist.DownloadListener1Assist;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class DownloadListener1Test {
     private DownloadListener1 listener1;
 
     @Mock private DownloadTask task;
-    @Mock private ResumeFailedCause resumeFailedCause;
-
-    private BreakpointInfo info;
+    @Mock private BreakpointInfo info;
 
     private Map<String, List<String>> tmpFields;
 
@@ -55,72 +56,59 @@ public class DownloadListener1Test {
     public void setup() {
         initMocks(this);
 
-        listener1 = spy(new DownloadListener1() {
+        listener1 = spy(new DownloadListener1(mock(DownloadListener1Assist.class)) {
 
             @Override
-            protected void connected(DownloadTask task, int blockCount, long currentOffset,
-                                     long totalLength) {
-
+            public void connected(DownloadTask task, int blockCount, long currentOffset,
+                                  long totalLength) {
             }
 
-            @Override protected void progress(DownloadTask task, long currentOffset) {
-
+            @Override public void progress(DownloadTask task, long currentOffset) {
             }
 
-            @Override protected void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
-
-            }
-
-            @Override public void taskStart(DownloadTask task) {
-            }
-
-            @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
             }
         });
 
         tmpFields = new HashMap<>();
-        info = mockInfo();
+
+        when(task.getId()).thenReturn(1);
     }
 
     @Test
-    public void connected() {
-        listener1.downloadFromBeginning(task, info, resumeFailedCause);
-        listener1.connectEnd(task, 1, 200, tmpFields);
-        verify(listener1, never()).connected(eq(task), eq(2), eq(10L), eq(20L));
-        listener1.splitBlockEnd(task, info);
-        verify(listener1).connected(eq(task), eq(2), eq(10L), eq(20L));
+    public void taskStart() {
+        listener1.taskStart(task);
+        verify(listener1.assist).taskStart(eq(task.getId()));
     }
 
     @Test
-    public void connected_fromResume() {
+    public void downloadFromBeginning() {
+        final ResumeFailedCause cause = mock(ResumeFailedCause.class);
+        listener1.downloadFromBeginning(task, info, cause);
+        verify(listener1.assist).downloadFromBeginning(eq(task), eq(cause));
+    }
+
+    @Test
+    public void downloadFromBreakpoint() {
         listener1.downloadFromBreakpoint(task, info);
-        listener1.connectEnd(task, 1, 200, tmpFields);
-        verify(listener1).connected(eq(task), eq(2), eq(10L), eq(20L));
+        verify(listener1.assist).downloadFromBreakpoint(eq(task.getId()), eq(info));
     }
 
     @Test
-    public void retry() {
-        listener1.downloadFromBeginning(task, info, resumeFailedCause);
+    public void connectEnd() {
         listener1.connectEnd(task, 1, 200, tmpFields);
-        listener1.splitBlockEnd(task, info);
-
-        // retry
-        listener1.downloadFromBeginning(task, info, resumeFailedCause);
-        verify(listener1).retry(task, resumeFailedCause);
-
-        listener1.connectEnd(task, 1, 200, tmpFields);
-        listener1.splitBlockEnd(task, info);
-
-        verify(listener1, times(2)).connected(eq(task), eq(2), eq(10L), eq(20L));
+        verify(listener1.assist).connectEnd(eq(task));
     }
 
-    private BreakpointInfo mockInfo() {
-        final BreakpointInfo info = mock(BreakpointInfo.class);
-        when(info.getBlockCount()).thenReturn(2);
-        when(info.getTotalLength()).thenReturn(20L);
-        when(info.getTotalOffset()).thenReturn(10L);
+    @Test
+    public void splitBlockEnd() {
+        listener1.splitBlockEnd(task, info);
+        verify(listener1.assist).splitBlockEnd(eq(task), eq(info));
+    }
 
-        return info;
+    @Test
+    public void fetchProgress() {
+        listener1.fetchProgress(task, 1, 2);
+        verify(listener1.assist).fetchProgress(eq(task), eq(2L));
     }
 }

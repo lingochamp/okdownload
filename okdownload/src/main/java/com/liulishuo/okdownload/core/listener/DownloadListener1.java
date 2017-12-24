@@ -19,66 +19,65 @@ package com.liulishuo.okdownload.core.listener;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.listener.assist.DownloadListener1Assist;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * taskStart->connect->progress<-->progress(currentOffset)->taskEnd
  */
-public abstract class DownloadListener1 implements DownloadListener {
-    private boolean start;
-    private boolean fromResume;
+public abstract class DownloadListener1 implements DownloadListener,
+        DownloadListener1Assist.Listener1Callback {
+    final DownloadListener1Assist assist;
 
-    private volatile boolean firstConnectEnd;
-
-    private int blockCount;
-    protected long totalLength;
-    private final AtomicLong currentOffset;
-
-    public DownloadListener1() {
-        currentOffset = new AtomicLong();
+    DownloadListener1(DownloadListener1Assist assist) {
+        this.assist = assist;
+        assist.setCallback(this);
     }
 
-    protected abstract void connected(DownloadTask task, int blockCount, long currentOffset,
-                                      long totalLength);
+    protected long getTotalLength(int id) {
+        final DownloadListener1Assist.Listener1Model model = assist.findModel(id);
+        return model == null ? 0 : model.getTotalLength();
+    }
 
-    protected abstract void progress(DownloadTask task, long currentOffset);
+    /**
+     * If you only have one task attach to this listener instance, you can use this method without
+     * provide task id, otherwise please use {@link #getTotalLength(int)} instead.
+     */
+    protected long getTotalLength() {
+        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        return model == null ? 0 : model.getTotalLength();
+    }
 
-    protected abstract void retry(DownloadTask task, @NonNull ResumeFailedCause cause);
+    public DownloadListener1() {
+        this(new DownloadListener1Assist());
+    }
+
+    @Override public void taskStart(DownloadTask task) {
+        assist.taskStart(task.getId());
+    }
+
+    @Override
+    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        assist.taskEnd(task.getId());
+    }
 
     @Override public void breakpointData(DownloadTask task, @Nullable BreakpointInfo info) {
     }
 
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) {
-        if (start) {
-            retry(task, cause);
-        }
-
-        blockCount = 0;
-        totalLength = 0;
-        currentOffset.set(0);
-
-        start = true;
-        fromResume = false;
-        firstConnectEnd = true;
-
+        assist.downloadFromBeginning(task, cause);
     }
 
     @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
-        blockCount = info.getBlockCount();
-        totalLength = info.getTotalLength();
-        currentOffset.set(info.getTotalOffset());
-
-        firstConnectEnd = true;
-        start = true;
-        fromResume = true;
+        assist.downloadFromBreakpoint(task.getId(), info);
     }
 
     @Override public void connectStart(DownloadTask task, int blockIndex,
@@ -87,28 +86,18 @@ public abstract class DownloadListener1 implements DownloadListener {
 
     @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
-        if (fromResume && firstConnectEnd) {
-            firstConnectEnd = false;
-            // from break point.
-            connected(task, blockCount, currentOffset.get(), totalLength);
-        }
+        assist.connectEnd(task);
     }
 
     @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
-        blockCount = info.getBlockCount();
-        totalLength = info.getTotalLength();
-        currentOffset.set(info.getTotalOffset());
-
-        // if not from resume we get info after block end, so callback on here.
-        connected(task, blockCount, currentOffset.get(), totalLength);
+        assist.splitBlockEnd(task, info);
     }
 
     @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
     }
 
     @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        currentOffset.addAndGet(increaseBytes);
-        progress(task, currentOffset.get());
+        assist.fetchProgress(task, increaseBytes);
     }
 
     @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {

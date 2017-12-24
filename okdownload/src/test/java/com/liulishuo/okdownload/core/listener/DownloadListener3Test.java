@@ -18,13 +18,13 @@ package com.liulishuo.okdownload.core.listener;
 
 import android.support.annotation.NonNull;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
@@ -59,14 +59,14 @@ public class DownloadListener3Test {
             }
 
             @Override
-            protected void connected(DownloadTask task, int blockCount, long currentOffset,
+            public void connected(DownloadTask task, int blockCount, long currentOffset,
                                      long totalLength) {
             }
 
-            @Override protected void progress(DownloadTask task, long currentOffset) {
+            @Override public void progress(DownloadTask task, long currentOffset) {
             }
 
-            @Override protected void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
+            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
             }
         });
     }
