@@ -38,15 +38,17 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
     }
 
     @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
+        super.fetchProgress(task, blockIndex, increaseBytes);
+
         taskSpeed.downloading(increaseBytes);
         blockSpeeds.get(blockIndex).downloading(increaseBytes);
 
-        super.fetchProgress(task, blockIndex, increaseBytes);
     }
 
     @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
-        blockSpeeds.get(blockIndex).endTask();
         super.fetchEnd(task, blockIndex, contentLength);
+
+        blockSpeeds.get(blockIndex).endTask();
     }
 
     @Override public void taskStart(DownloadTask task) {
@@ -56,6 +58,8 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
 
     @Override
     public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        super.taskEnd(task, cause, realCause);
+
         taskSpeed.endTask();
         taskEnd(task, cause, realCause, taskSpeed.speedFromBegin());
     }
