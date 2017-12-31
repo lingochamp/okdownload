@@ -17,11 +17,13 @@
 package com.liulishuo.okdownload.core.listener;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.assist.DownloadListener1Assist;
+import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -56,18 +58,23 @@ public class DownloadListener1Test {
     public void setup() {
         initMocks(this);
 
-        listener1 = spy(new DownloadListener1(mock(DownloadListener1Assist.class)) {
+        listener1 = spy(new DownloadListener1(mock(Listener1Assist.class)) {
+            @Override
+            public void taskStart(DownloadTask task,
+                                  @NonNull Listener1Assist.Listener1Model model) {}
+
+            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {}
 
             @Override
             public void connected(DownloadTask task, int blockCount, long currentOffset,
-                                  long totalLength) {
-            }
+                                  long totalLength) {}
 
-            @Override public void progress(DownloadTask task, long currentOffset) {
-            }
+            @Override
+            public void progress(DownloadTask task, long currentOffset, long totalLength) {}
 
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
-            }
+            @Override
+            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                                @NonNull Listener1Assist.Listener1Model model) {}
         });
 
         tmpFields = new HashMap<>();
@@ -78,7 +85,7 @@ public class DownloadListener1Test {
     @Test
     public void taskStart() {
         listener1.taskStart(task);
-        verify(listener1.assist).taskStart(eq(task.getId()));
+        verify(listener1.assist).taskStart(eq(task));
     }
 
     @Test

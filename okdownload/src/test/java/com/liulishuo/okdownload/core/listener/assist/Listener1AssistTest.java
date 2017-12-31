@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.core.listener.assist;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
 import org.junit.Before;
@@ -28,6 +29,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -37,31 +39,34 @@ import static org.robolectric.annotation.Config.NONE;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = NONE)
-public class DownloadListener1AssistTest {
+public class Listener1AssistTest {
 
-    private DownloadListener1Assist assist;
-    @Mock private DownloadListener1Assist.Listener1Callback callback;
-    @Mock private DownloadTask task;
+    private Listener1Assist assist;
+    @Mock private Listener1Assist.Listener1Callback callback;
+    @Mock private DownloadTask task1;
+    @Mock private DownloadTask task2;
     @Mock private BreakpointInfo info;
     @Mock private ResumeFailedCause cause;
 
-    private final int taskId = 1;
+    private final int task1Id = 1;
+    private final int task2Id = 2;
 
     @Before
     public void setup() {
         initMocks(this);
 
-        assist = new DownloadListener1Assist();
+        assist = new Listener1Assist();
         assist.setCallback(callback);
 
-        when(task.getId()).thenReturn(taskId);
+        when(task1.getId()).thenReturn(task1Id);
+        when(task2.getId()).thenReturn(task2Id);
     }
 
     @Test
     public void taskStart() {
-        assist.taskStart(1);
+        assist.taskStart(task1);
         assertThat(assist.findModel(1)).isEqualTo(assist.getSingleTaskModel());
-        assist.taskStart(2);
+        assist.taskStart(task2);
         assertThat(assist.findModel(2).id).isEqualTo(2);
         assertThat(assist.findModel(2)).isNotNull();
         assertThat(assist.findModel(2)).isNotEqualTo(assist.getSingleTaskModel());
@@ -69,23 +74,23 @@ public class DownloadListener1AssistTest {
 
     @Test
     public void taskEnd() {
-        assist.taskStart(1);
-        assist.taskStart(2);
+        assist.taskStart(task1);
+        assist.taskStart(task2);
 
-        assist.taskEnd(1);
+        assist.taskEnd(task1, EndCause.COMPLETE, null);
         assertThat(assist.getSingleTaskModel()).isNull();
         assertThat(assist.findModel(2)).isNotNull();
 
-        assist.taskEnd(2);
+        assist.taskEnd(task2, EndCause.COMPLETE, null);
         assertThat(assist.findModel(2)).isNull();
     }
 
     @Test
     public void downloadFromBeginning() {
-        assist.taskStart(taskId);
-        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        assist.taskStart(task1);
+        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
 
-        assist.downloadFromBeginning(task, cause);
+        assist.downloadFromBeginning(task1, cause);
 
         assertThat(model.isStarted).isTrue();
         assertThat(model.isFromResumed).isFalse();
@@ -95,21 +100,21 @@ public class DownloadListener1AssistTest {
         assertThat(model.totalLength).isZero();
         assertThat(model.currentOffset.get()).isZero();
 
-        verify(callback, never()).retry(eq(task), eq(cause));
+        verify(callback, never()).retry(eq(task1), eq(cause));
 
-        assist.downloadFromBeginning(task, cause);
-        verify(callback).retry(eq(task), eq(cause));
+        assist.downloadFromBeginning(task1, cause);
+        verify(callback).retry(eq(task1), eq(cause));
     }
 
     @Test
     public void downloadFromBreakpoint() {
-        assist.taskStart(taskId);
-        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        assist.taskStart(task1);
+        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
 
         when(info.getBlockCount()).thenReturn(2);
         when(info.getTotalLength()).thenReturn(3L);
 
-        assist.downloadFromBreakpoint(taskId, info);
+        assist.downloadFromBreakpoint(task1Id, info);
 
         assertThat(model.isStarted).isTrue();
         assertThat(model.isFromResumed).isTrue();
@@ -122,50 +127,50 @@ public class DownloadListener1AssistTest {
 
     @Test
     public void connectEnd() {
-        assist.taskStart(taskId);
-        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        assist.taskStart(task1);
+        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
 
         when(info.getTotalOffset()).thenReturn(2L);
         when(info.getTotalLength()).thenReturn(3L);
-        assist.downloadFromBreakpoint(taskId, info);
+        assist.downloadFromBreakpoint(task1Id, info);
         assertThat(model.isFirstConnect).isTrue();
 
-        assist.connectEnd(task);
+        assist.connectEnd(task1);
         assertThat(model.isFirstConnect).isFalse();
-        verify(callback).connected(eq(task), eq(0), eq(2L), eq(3L));
+        verify(callback).connected(eq(task1), eq(0), eq(2L), eq(3L));
     }
 
     @Test
     public void splitBlockEnd() {
-        assist.taskStart(taskId);
-        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        assist.taskStart(task1);
+        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
 
         when(info.getBlockCount()).thenReturn(1);
         when(info.getTotalOffset()).thenReturn(2L);
         when(info.getTotalLength()).thenReturn(3L);
 
-        assist.splitBlockEnd(task, info);
+        assist.splitBlockEnd(task1, info);
 
         assertThat(model.blockCount).isEqualTo(1);
         assertThat(model.currentOffset.get()).isEqualTo(2);
         assertThat(model.totalLength).isEqualTo(3);
 
-        verify(callback).connected(eq(task), eq(1), eq(2L), eq(3L));
+        verify(callback).connected(eq(task1), eq(1), eq(2L), eq(3L));
     }
 
     @Test
     public void fetchProgress() {
-        assist.taskStart(taskId);
-        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        assist.taskStart(task1);
+        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
         assertThat(model.currentOffset.get()).isZero();
 
-        assist.fetchProgress(task, 1);
+        assist.fetchProgress(task1, 1);
         assertThat(model.currentOffset.get()).isEqualTo(1);
-        assist.fetchProgress(task, 2);
+        assist.fetchProgress(task1, 2);
         assertThat(model.currentOffset.get()).isEqualTo(3);
 
-        verify(callback).progress(eq(task), eq(1L));
-        verify(callback).progress(eq(task), eq(3L));
+        verify(callback).progress(eq(task1), eq(1L), anyLong());
+        verify(callback).progress(eq(task1), eq(3L), anyLong());
 
     }
 }

@@ -24,7 +24,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.assist.DownloadListener1Assist;
+import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 
 import java.util.List;
 import java.util.Map;
@@ -33,40 +33,22 @@ import java.util.Map;
  * taskStart->connect->progress<-->progress(currentOffset)->taskEnd
  */
 public abstract class DownloadListener1 implements DownloadListener,
-        DownloadListener1Assist.Listener1Callback {
-    final DownloadListener1Assist assist;
+        Listener1Assist.Listener1Callback {
+    final Listener1Assist assist;
 
-    DownloadListener1(DownloadListener1Assist assist) {
+    DownloadListener1(Listener1Assist assist) {
         this.assist = assist;
         assist.setCallback(this);
     }
 
-    protected long getTotalLength(int id) {
-        final DownloadListener1Assist.Listener1Model model = assist.findModel(id);
-        return model == null ? 0 : model.getTotalLength();
-    }
-
-    /**
-     * If you only have one task attach to this listener instance, you can use this method without
-     * provide task id, otherwise please use {@link #getTotalLength(int)} instead.
-     */
-    protected long getTotalLength() {
-        final DownloadListener1Assist.Listener1Model model = assist.getSingleTaskModel();
-        return model == null ? 0 : model.getTotalLength();
-    }
-
     public DownloadListener1() {
-        this(new DownloadListener1Assist());
+        this(new Listener1Assist());
     }
 
-    @Override public void taskStart(DownloadTask task) {
-        assist.taskStart(task.getId());
+    @Override public final void taskStart(DownloadTask task) {
+        assist.taskStart(task);
     }
 
-    @Override
-    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
-        assist.taskEnd(task.getId());
-    }
 
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) {
@@ -99,5 +81,11 @@ public abstract class DownloadListener1 implements DownloadListener,
 
     @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
     }
+
+    @Override
+    public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        assist.taskEnd(task, cause, realCause);
+    }
+
 }
 

@@ -22,11 +22,12 @@ import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class DownloadListener1Assist {
+public class Listener1Assist {
     private Listener1Model singleTaskModel;
     private final SparseArray<Listener1Model> modelList = new SparseArray<>();
 
@@ -36,22 +37,37 @@ public class DownloadListener1Assist {
         this.callback = callback;
     }
 
-    public synchronized void taskStart(int id) {
-        if (singleTaskModel == null) {
-            singleTaskModel = new Listener1Model(id);
-        } else {
-            modelList.put(id, new Listener1Model(id));
+    public void taskStart(DownloadTask task) {
+        final int id = task.getId();
+        final Listener1Model model = new Listener1Model(id);
+        synchronized (this) {
+            if (singleTaskModel == null) {
+                singleTaskModel = model;
+            } else {
+
+                modelList.put(id, model);
+            }
         }
+
+        if (callback != null) callback.taskStart(task, model);
     }
 
-    public synchronized void taskEnd(int id) {
-        if (singleTaskModel != null && singleTaskModel.id == id) {
-            singleTaskModel = null;
-        } else {
-            modelList.remove(id);
-        }
-    }
+    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        final int id = task.getId();
+        final Listener1Model model;
 
+        synchronized (this) {
+            if (singleTaskModel != null && singleTaskModel.id == id) {
+                model = singleTaskModel;
+                singleTaskModel = null;
+            } else {
+                model = modelList.get(id);
+                modelList.remove(id);
+            }
+        }
+
+        if (callback != null) callback.taskEnd(task, cause, realCause, model);
+    }
 
     @Nullable public Listener1Model getSingleTaskModel() {
         return singleTaskModel;
@@ -122,12 +138,12 @@ public class DownloadListener1Assist {
         final Listener1Model model = findModel(task.getId());
 
         model.currentOffset.addAndGet(increaseBytes);
-        if (callback != null) callback.progress(task, model.currentOffset.get());
+        if (callback != null) callback.progress(task, model.currentOffset.get(), model.totalLength);
     }
 
 
     public static class Listener1Model {
-        int id;
+        final int id;
         boolean isStarted;
         boolean isFromResumed;
 
@@ -144,13 +160,22 @@ public class DownloadListener1Assist {
         public long getTotalLength() {
             return totalLength;
         }
+
+        public int getId() {
+            return id;
+        }
     }
 
     public interface Listener1Callback {
-        void connected(DownloadTask task, int blockCount, long currentOffset, long totalLength);
-
-        void progress(DownloadTask task, long currentOffset);
+        void taskStart(DownloadTask task, @NonNull Listener1Model model);
 
         void retry(DownloadTask task, @NonNull ResumeFailedCause cause);
+
+        void connected(DownloadTask task, int blockCount, long currentOffset, long totalLength);
+
+        void progress(DownloadTask task, long currentOffset, long totalLength);
+
+        void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                     @NonNull Listener1Model model);
     }
 }
