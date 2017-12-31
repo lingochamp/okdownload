@@ -137,7 +137,7 @@ public class SingleActivity extends BaseSampleActivity {
             }
 
             @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                               boolean fromBreakpoint) {
+                                            boolean fromBreakpoint) {
                 statusTv.setText(R.string.info_ready);
 
                 totalLength = info.getTotalLength();
@@ -147,7 +147,7 @@ public class SingleActivity extends BaseSampleActivity {
 
             @Override
             public void progressBlock(DownloadTask task, int blockIndex,
-                                         long currentBlockOffset) {
+                                      long currentBlockOffset) {
             }
 
             @Override public void progress(DownloadTask task, long currentOffset) {
