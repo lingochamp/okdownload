@@ -31,6 +31,7 @@ import org.robolectric.annotation.Config;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -66,10 +67,13 @@ public class Listener1AssistTest {
     public void taskStart() {
         assist.taskStart(task1);
         assertThat(assist.findModel(1)).isEqualTo(assist.getSingleTaskModel());
+        verify(callback).taskStart(eq(task1), eq(assist.findModel(1)));
+
         assist.taskStart(task2);
         assertThat(assist.findModel(2).id).isEqualTo(2);
         assertThat(assist.findModel(2)).isNotNull();
         assertThat(assist.findModel(2)).isNotEqualTo(assist.getSingleTaskModel());
+        verify(callback).taskStart(eq(task2), eq(assist.findModel(2)));
     }
 
     @Test
@@ -77,12 +81,19 @@ public class Listener1AssistTest {
         assist.taskStart(task1);
         assist.taskStart(task2);
 
+        final Listener1Assist.Listener1Model model1 = assist.findModel(1);
+
         assist.taskEnd(task1, EndCause.COMPLETE, null);
         assertThat(assist.getSingleTaskModel()).isNull();
         assertThat(assist.findModel(2)).isNotNull();
+        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETE), nullable(Exception.class),
+                eq(model1));
 
+        final Listener1Assist.Listener1Model model2 = assist.findModel(2);
         assist.taskEnd(task2, EndCause.COMPLETE, null);
         assertThat(assist.findModel(2)).isNull();
+        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETE), nullable(Exception.class),
+                eq(model2));
     }
 
     @Test
