@@ -24,7 +24,7 @@ import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.assist.DownloadListener4Assist;
+import com.liulishuo.okdownload.core.listener.assist.Listener4Assist;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -63,38 +62,31 @@ public class DownloadListener4Test {
         initMocks(this);
 
         tmpFields = new HashMap<>();
-        listener4 = spy(new DownloadListener4(spy(new DownloadListener4Assist())) {
-            @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                            boolean fromBreakpoint) {
-            }
+        listener4 = spy(new DownloadListener4(spy(new Listener4Assist())) {
+            @Override
+            public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                  boolean fromBreakpoint,
+                                  @NonNull Listener4Assist.Listener4Model model) { }
 
             @Override
-            public void progressBlock(DownloadTask task, int blockIndex,
-                                      long currentBlockOffset) {
+            public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset) {
             }
 
-            @Override public void progress(DownloadTask task, long currentOffset) {
-            }
+            @Override public void progress(DownloadTask task, long currentOffset) { }
 
-            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
-            }
+            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) { }
 
-            @Override public void taskStart(DownloadTask task) {
-            }
+            @Override
+            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                                @NonNull Listener4Assist.Listener4Model model) { }
+
+            @Override public void taskStart(DownloadTask task) { }
 
             @Override public void connectStart(DownloadTask task, int blockIndex,
-                                               @NonNull Map<String, List<String>>
-                                                       requestHeaderFields) {
-            }
+                                               @NonNull Map<String, List<String>> requestHeader) { }
 
             @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>>
-                                                     responseHeaderFields) {
-            }
-
-            @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
-            }
+                                             @NonNull Map<String, List<String>> responseHeader) { }
         });
     }
 
@@ -122,9 +114,7 @@ public class DownloadListener4Test {
             doReturn(blockInfo).when(info).getBlock(i);
         }
         listener4.splitBlockEnd(task, info);
-        verify(listener4.assist).initData(eq(task), eq(info), eq(false));
-        assertThat(listener4.blockCurrentOffsetMap().size()).isEqualTo(3);
-        assertThat(listener4.getCurrentOffset()).isEqualTo(0);
+        verify(listener4.assist).infoReady(eq(task), eq(info), eq(false));
 
         // another task coming.
         listener4.taskStart(anotherTask);
@@ -138,26 +128,14 @@ public class DownloadListener4Test {
         listener4.connectStart(anotherTask, 0, tmpFields);
         listener4.connectEnd(anotherTask, 0, 206, tmpFields);
         listener4.fetchProgress(anotherTask, 0, 2);
-        assertThat(listener4.blockCurrentOffsetMap(anotherTask.getId()).get(0)).isEqualTo(3);
 
         listener4.fetchProgress(task, 1, 10);
         verify(listener4.assist).fetchProgress(eq(task), eq(1), eq(10L));
 
         listener4.fetchProgress(task, 0, 15);
         verify(listener4.assist).fetchProgress(eq(task), eq(0), eq(15L));
-        assertThat(listener4.blockCurrentOffsetMap().get(0)).isEqualTo(15L);
-        assertThat(listener4.getCurrentOffset()).isEqualTo(25L);
 
         listener4.fetchEnd(task, 0, 30L);
         verify(listener4.assist).fetchEnd(eq(task), eq(0));
-
-        // another task running.
-        listener4.fetchProgress(anotherTask, 0, 2);
-        assertThat(listener4.getCurrentOffset(anotherTask.getId())).isEqualTo(5);
-        assertThat(listener4.blockCurrentOffsetMap(anotherTask.getId()).get(0)).isEqualTo(5);
-
-
-        listener4.taskEnd(anotherTask, EndCause.COMPLETE, null);
-        listener4.taskEnd(task, EndCause.COMPLETE, null);
     }
 }
