@@ -21,16 +21,16 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.download.DownloadStrategy;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.liulishuo.okdownload.core.Util;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
-import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
 public class DownloadTask implements Cloneable {
     private final int id;
@@ -249,8 +249,8 @@ public class DownloadTask implements Cloneable {
     }
 
     public static class Builder {
-        final String url;
-        final Uri uri;
+        @NonNull final String url;
+        @NonNull final Uri uri;
         private volatile HashMap<String, List<String>> headerMapFields;
 
         public Builder(@NonNull String url, @NonNull String parentPath, @Nullable String filename) {
@@ -270,17 +270,24 @@ public class DownloadTask implements Cloneable {
         // More larger more high.
         private int priority;
 
-        private int readBufferSize = 4096/* byte **/;
-        private int flushBufferSize = 16384/* byte **/;
+        public static final int DEFAULT_READ_BUFFER_SIZE = 4096/* byte **/;
+        private int readBufferSize = DEFAULT_READ_BUFFER_SIZE;
+        public static final int DEFAULT_FLUSH_BUFFER_SIZE = 16384/* byte **/;
+        private int flushBufferSize = DEFAULT_FLUSH_BUFFER_SIZE;
 
         /**
          * Make sure sync to physical filesystem.
          */
-        private int syncBufferSize = 65536/* byte **/;
-        private int syncBufferIntervalMillis = 3000/* millis **/;
+        public static final int DEFAULT_SYNC_BUFFER_SIZE = 65536/* byte **/;
+        private int syncBufferSize = DEFAULT_SYNC_BUFFER_SIZE;
+        public static final int DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS = 3000/* millis **/;
+        private int syncBufferIntervalMillis = DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS;
 
-        private boolean autoCallbackToUIThread = true;
-        private int minIntervalMillisCallbackProcess = 320/* millis **/;
+        public static final boolean DEFAULT_AUTO_CALLBACK_TO_UI_THREAD = true;
+        private boolean autoCallbackToUIThread = DEFAULT_AUTO_CALLBACK_TO_UI_THREAD;
+
+        public static final int DEFAULT_MIN_INTERVAL_MILLIS_CALLBACK_PROCESS = 3000/* millis **/;
+        private int minIntervalMillisCallbackProcess = DEFAULT_MIN_INTERVAL_MILLIS_CALLBACK_PROCESS;
 
         private String filename;
 

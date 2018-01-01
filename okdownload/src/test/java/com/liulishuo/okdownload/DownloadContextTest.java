@@ -107,7 +107,7 @@ public class DownloadContextTest {
         final String url = "url";
         final Uri uri = mock(Uri.class);
         when(uri.getPath()).thenReturn("");
-        queueSet.setDirUri(uri);
+        queueSet.setParentPathUri(uri);
         builder.bind(url);
         final DownloadTask addedTask = builder.boundTaskList.get(0);
         assertThat(addedTask.getUrl()).isEqualTo(url);
@@ -139,6 +139,17 @@ public class DownloadContextTest {
         queueSet.setSyncBufferIntervalMillis(syncBufferIntervalMillis);
         builder.bind(taskBuilder);
         verify(taskBuilder).setSyncBufferIntervalMillis(eq(syncBufferIntervalMillis));
+
+        final boolean autoCallbackToUIThread = false;
+        queueSet.setAutoCallbackToUIThread(autoCallbackToUIThread);
+        builder.bind(taskBuilder);
+        verify(taskBuilder).setAutoCallbackToUIThread(eq(autoCallbackToUIThread));
+
+        final int minIntervalMillisCallbackProgress = 5;
+        queueSet.setMinIntervalMillisCallbackProcess(minIntervalMillisCallbackProgress);
+        builder.bind(taskBuilder);
+        verify(taskBuilder)
+                .setMinIntervalMillisCallbackProcess(eq(minIntervalMillisCallbackProgress));
 
         final Object tag = mock(Object.class);
         queueSet.setTag(tag);

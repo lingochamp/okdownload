@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DownloadContext {
 
-    private static final Executor serialExecutor = new ThreadPoolExecutor(0,
+    private static final Executor SERIAL_EXECUTOR = new ThreadPoolExecutor(0,
             Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload Serial", false));
 
@@ -45,6 +45,10 @@ public class DownloadContext {
 
     public boolean isStarted() {
         return isStarted;
+    }
+
+    public DownloadTask[] getTasks() {
+        return tasks;
     }
 
     public void start(final DownloadListener listener, boolean isSerial) {
@@ -73,13 +77,17 @@ public class DownloadContext {
     }
 
     void executeOnSerialExecutor(Runnable runnable) {
-        serialExecutor.execute(runnable);
+        SERIAL_EXECUTOR.execute(runnable);
     }
 
     public static class Builder {
         ArrayList<DownloadTask> boundTaskList = new ArrayList<>();
 
         private final QueueSet set;
+
+        public Builder() {
+            this(new QueueSet());
+        }
 
         public Builder(QueueSet set) {
             this.set = set;
@@ -105,6 +113,13 @@ public class DownloadContext {
             if (set.syncBufferSize != null) taskBuilder.setSyncBufferSize(set.syncBufferSize);
             if (set.syncBufferIntervalMillis != null) {
                 taskBuilder.setSyncBufferIntervalMillis(set.syncBufferIntervalMillis);
+            }
+            if (set.autoCallbackToUIThread != null) {
+                taskBuilder.setAutoCallbackToUIThread(set.autoCallbackToUIThread);
+            }
+            if (set.minIntervalMillisCallbackProcess != null) {
+                taskBuilder
+                        .setMinIntervalMillisCallbackProcess(set.minIntervalMillisCallbackProcess);
             }
 
             final DownloadTask task = taskBuilder.build();
@@ -137,6 +152,10 @@ public class DownloadContext {
         private Integer flushBufferSize;
         private Integer syncBufferSize;
         private Integer syncBufferIntervalMillis;
+
+        private Boolean autoCallbackToUIThread;
+        private Integer minIntervalMillisCallbackProcess;
+
         private Object tag;
 
         public HashMap<String, List<String>> getHeaderMapFields() {
@@ -152,8 +171,12 @@ public class DownloadContext {
             return uri;
         }
 
-        public void setDirUri(Uri uri) {
+        public void setParentPathUri(Uri uri) {
             this.uri = uri;
+        }
+
+        public void setParentPathFile(File parentPathFile) {
+            this.uri = Uri.fromFile(parentPathFile);
         }
 
         public void setParentPath(String parentPath) {
@@ -161,11 +184,8 @@ public class DownloadContext {
         }
 
         public int getReadBufferSize() {
-            if (readBufferSize == null) {
-                return DownloadTask.Builder.DEFAULT_READ_BUFFER_SIZE;
-            } else {
-                return readBufferSize;
-            }
+            return readBufferSize == null
+                    ? DownloadTask.Builder.DEFAULT_READ_BUFFER_SIZE : readBufferSize;
         }
 
         public void setReadBufferSize(int readBufferSize) {
@@ -173,11 +193,8 @@ public class DownloadContext {
         }
 
         public int getFlushBufferSize() {
-            if (flushBufferSize == null) {
-                return DownloadTask.Builder.DEFAULT_FLUSH_BUFFER_SIZE;
-            } else {
-                return flushBufferSize;
-            }
+            return flushBufferSize == null
+                    ? DownloadTask.Builder.DEFAULT_FLUSH_BUFFER_SIZE : flushBufferSize;
         }
 
         public void setFlushBufferSize(int flushBufferSize) {
@@ -185,11 +202,8 @@ public class DownloadContext {
         }
 
         public int getSyncBufferSize() {
-            if (syncBufferSize == null) {
-                return DownloadTask.Builder.DEFAULT_SYNC_BUFFER_SIZE;
-            } else {
-                return syncBufferSize;
-            }
+            return syncBufferSize == null
+                    ? DownloadTask.Builder.DEFAULT_SYNC_BUFFER_SIZE : syncBufferSize;
         }
 
         public void setSyncBufferSize(int syncBufferSize) {
@@ -197,15 +211,34 @@ public class DownloadContext {
         }
 
         public int getSyncBufferIntervalMillis() {
-            if (syncBufferIntervalMillis == null) {
-                return DownloadTask.Builder.DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS;
-            } else {
-                return syncBufferIntervalMillis;
-            }
+            return syncBufferIntervalMillis == null
+                    ? DownloadTask.Builder.DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS
+                    : syncBufferIntervalMillis;
         }
 
         public void setSyncBufferIntervalMillis(int syncBufferIntervalMillis) {
             this.syncBufferIntervalMillis = syncBufferIntervalMillis;
+        }
+
+        public boolean getAutoCallbackToUIThread() {
+            return autoCallbackToUIThread == null
+                    ? DownloadTask.Builder.DEFAULT_AUTO_CALLBACK_TO_UI_THREAD
+                    : autoCallbackToUIThread;
+        }
+
+        public void setAutoCallbackToUIThread(Boolean autoCallbackToUIThread) {
+            this.autoCallbackToUIThread = autoCallbackToUIThread;
+        }
+
+        public int getMinIntervalMillisCallbackProcess() {
+            return minIntervalMillisCallbackProcess == null
+                    ? DownloadTask.Builder.DEFAULT_MIN_INTERVAL_MILLIS_CALLBACK_PROCESS
+                    : minIntervalMillisCallbackProcess;
+        }
+
+        public void setMinIntervalMillisCallbackProcess(
+                Integer minIntervalMillisCallbackProcess) {
+            this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
         }
 
         public Object getTag() {
