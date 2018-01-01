@@ -49,7 +49,6 @@ public abstract class DownloadListener1 implements DownloadListener,
         assist.taskStart(task);
     }
 
-
     @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
                                                 ResumeFailedCause cause) {
         assist.downloadFromBeginning(task, cause);

@@ -61,20 +61,20 @@ public class DownloadListener1Test {
         listener1 = spy(new DownloadListener1(mock(Listener1Assist.class)) {
             @Override
             public void taskStart(DownloadTask task,
-                                  @NonNull Listener1Assist.Listener1Model model) {}
+                                  @NonNull Listener1Assist.Listener1Model model) { }
 
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {}
+            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) { }
 
             @Override
             public void connected(DownloadTask task, int blockCount, long currentOffset,
-                                  long totalLength) {}
+                                  long totalLength) { }
 
             @Override
-            public void progress(DownloadTask task, long currentOffset, long totalLength) {}
+            public void progress(DownloadTask task, long currentOffset, long totalLength) { }
 
             @Override
             public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
-                                @NonNull Listener1Assist.Listener1Model model) {}
+                                @NonNull Listener1Assist.Listener1Model model) { }
         });
 
         tmpFields = new HashMap<>();

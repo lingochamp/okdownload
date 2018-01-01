@@ -44,7 +44,6 @@ public class Listener1Assist {
             if (singleTaskModel == null) {
                 singleTaskModel = model;
             } else {
-
                 modelList.put(id, model);
             }
         }
