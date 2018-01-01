@@ -24,14 +24,20 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class DownloadListener3Test {
     private DownloadListener3 listener3;
 
@@ -43,39 +49,33 @@ public class DownloadListener3Test {
         initMocks(this);
 
         listener3 = spy(new DownloadListener3() {
-            @Override protected void started(DownloadTask task) {
-            }
+            @Override protected void started(DownloadTask task) { }
 
-            @Override protected void completed(DownloadTask task) {
-            }
-
-            @Override protected void canceled(DownloadTask task) {
-            }
-
-            @Override protected void error(DownloadTask task, Exception e) {
-            }
-
-            @Override protected void warn(DownloadTask task) {
-            }
+            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) { }
 
             @Override
             public void connected(DownloadTask task, int blockCount, long currentOffset,
-                                     long totalLength) {
-            }
+                                  long totalLength) { }
 
-            @Override public void progress(DownloadTask task, long currentOffset) {
-            }
+            @Override
+            public void progress(DownloadTask task, long currentOffset, long totalLength) { }
 
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
-            }
+            @Override protected void completed(DownloadTask task) { }
+
+            @Override protected void canceled(DownloadTask task) { }
+
+            @Override protected void error(DownloadTask task, Exception e) { }
+
+            @Override protected void warn(DownloadTask task) { }
         });
+        // if here isn't set manually there is a different instance on callback, it's very odd.
+        listener3.assist.setCallback(listener3);
     }
 
     @Test
     public void end() {
         listener3.taskStart(task);
         verify(listener3).started(eq(task));
-
 
         listener3.taskEnd(task, EndCause.COMPLETE, realCause);
         verify(listener3).completed(eq(task));

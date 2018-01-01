@@ -16,22 +16,25 @@
 
 package com.liulishuo.okdownload.core.listener;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 
 /**
  * started->connected->progress<-->progress(currentOffset)-> completed/canceled/error/warn
  */
 public abstract class DownloadListener3 extends DownloadListener1 {
-    @Override public void taskStart(DownloadTask task) {
+    @Override
+    public final void taskStart(DownloadTask task, Listener1Assist.Listener1Model model) {
         started(task);
     }
 
-    @Override
-    public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+    @Override public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                                  @NonNull Listener1Assist.Listener1Model model) {
         switch (cause) {
             case COMPLETE:
                 completed(task);
