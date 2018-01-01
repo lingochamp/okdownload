@@ -145,6 +145,10 @@ public class SpeedCalculator {
         return humanReadableSpeed(getInstantBytesPerSecondAndFlush(), true);
     }
 
+    public String averageSpeed() {
+        return speedFromBegin();
+    }
+
     public String speedFromBegin() {
         return humanReadableSpeed(getBytesPerSecondFromBegin(), true);
     }
