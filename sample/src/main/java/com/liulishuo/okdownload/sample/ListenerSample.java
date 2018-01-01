@@ -41,7 +41,7 @@ import java.util.Map;
 
 public class ListenerSample {
 
-    private final static String TAG = "ListenerSample";
+    private static final String TAG = "ListenerSample";
 
     private static void log(String msg) {
         Log.d(TAG, msg);
