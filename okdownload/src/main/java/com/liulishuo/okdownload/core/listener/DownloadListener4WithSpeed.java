@@ -18,66 +18,39 @@ package com.liulishuo.okdownload.core.listener;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.SpeedCalculator;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.listener.assist.Listener4Assist;
+import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
 
-public abstract class DownloadListener4WithSpeed extends DownloadListener4 {
-    private final SpeedCalculator taskSpeed = new SpeedCalculator();
-    private final SparseArray<SpeedCalculator> blockSpeeds = new SparseArray<>();
+public abstract class DownloadListener4WithSpeed extends DownloadListener4
+        implements Listener4SpeedAssistExtend.Listener4SpeedCallback {
 
-    @NonNull protected SpeedCalculator taskSpeed() {
-        return taskSpeed;
+    DownloadListener4WithSpeed(Listener4SpeedAssistExtend assistExtend) {
+        assistExtend.setCallback(this);
+        setAssistExtend(assistExtend);
     }
 
-    @NonNull protected SpeedCalculator blockSpeed(int blockIndex) {
-        return blockSpeeds.get(blockIndex);
-    }
-
-    @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        super.fetchProgress(task, blockIndex, increaseBytes);
-
-        taskSpeed.downloading(increaseBytes);
-        blockSpeeds.get(blockIndex).downloading(increaseBytes);
-
-    }
-
-    @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
-        super.fetchEnd(task, blockIndex, contentLength);
-
-        blockSpeeds.get(blockIndex).endTask();
-    }
-
-    @Override public void taskStart(DownloadTask task) {
-        taskSpeed.reset();
-        blockSpeeds.clear();
+    public DownloadListener4WithSpeed() {
+        this(new Listener4SpeedAssistExtend());
     }
 
     @Override
-    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
-        super.taskEnd(task, cause, realCause);
+    public final void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                boolean fromBreakpoint,
+                                @NonNull Listener4Assist.Listener4Model model) { }
 
-        taskSpeed.endTask();
-        taskEnd(task, cause, realCause, taskSpeed.speedFromBegin());
-    }
+    @Override
+    public final void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset) { }
 
-    protected abstract void taskEnd(DownloadTask task, EndCause cause,
-                                    @Nullable Exception realCause,
-                                    @NonNull String averageSpeed);
+    @Override public final void progress(DownloadTask task, long currentOffset) { }
 
-    @Override protected void initData(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
-                                      boolean fromBreakpoint) {
-        super.initData(task, info, fromBreakpoint);
-        initSpeed(info);
-    }
+    @Override public final void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) { }
 
-    private void initSpeed(BreakpointInfo info) {
-        taskSpeed.reset();
-        blockSpeeds.clear();
-        final int blockCount = info.getBlockCount();
-        for (int i = 0; i < blockCount; i++) blockSpeeds.put(i, new SpeedCalculator());
-    }
+    @Override
+    public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                              @NonNull Listener4Assist.Listener4Model model) { }
 }
