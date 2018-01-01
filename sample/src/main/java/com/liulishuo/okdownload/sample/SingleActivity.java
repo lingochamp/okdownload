@@ -24,12 +24,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
+import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 import com.liulishuo.okdownload.sample.util.DemoUtil;
 
@@ -119,50 +121,19 @@ public class SingleActivity extends BaseSampleActivity {
             private String readableTotalLength;
 
             @Override public void taskStart(DownloadTask task) {
-                super.taskStart(task);
-
                 statusTv.setText(R.string.task_start);
             }
 
             @Override
-            protected void taskEnd(DownloadTask task, EndCause cause,
-                                   @android.support.annotation.Nullable Exception realCause,
-                                   @NonNull String averageSpeed) {
-                final String statusWithSpeed = cause.toString() + " " + averageSpeed;
-                statusTv.setText(statusWithSpeed);
-
-                actionTv.setText(R.string.start);
-                // mark
-                task.setTag(null);
-            }
-
-            @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                            boolean fromBreakpoint) {
+            public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                  boolean fromBreakpoint,
+                                  @NonNull Listener4SpeedAssistExtend.Listener4SpeedModel model) {
                 statusTv.setText(R.string.info_ready);
 
                 totalLength = info.getTotalLength();
                 readableTotalLength = Util.humanReadableBytes(totalLength, true);
                 DemoUtil.calcProgressToView(progressBar, info.getTotalOffset(), totalLength);
             }
-
-            @Override
-            public void progressBlock(DownloadTask task, int blockIndex,
-                                      long currentBlockOffset) {
-            }
-
-            @Override public void progress(DownloadTask task, long currentOffset) {
-                final String readableOffset = Util.humanReadableBytes(currentOffset, true);
-                final String progressStatus = readableOffset + "/" + readableTotalLength;
-                final String speed = taskSpeed().speed();
-                final String progressStatusWithSpeed = progressStatus + "(" + speed + ")";
-
-                statusTv.setText(progressStatusWithSpeed);
-                DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength);
-            }
-
-            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
-            }
-
 
             @Override public void connectStart(DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeaders) {
@@ -174,6 +145,37 @@ public class SingleActivity extends BaseSampleActivity {
                                              @NonNull Map<String, List<String>> responseHeaders) {
                 final String status = "Connect End " + blockIndex;
                 statusTv.setText(status);
+            }
+
+            @Override
+            public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
+                                      @NonNull SpeedCalculator blockSpeed) {
+            }
+
+            @Override public void progress(DownloadTask task, long currentOffset,
+                                           @NonNull SpeedCalculator taskSpeed) {
+                final String readableOffset = Util.humanReadableBytes(currentOffset, true);
+                final String progressStatus = readableOffset + "/" + readableTotalLength;
+                final String speed = taskSpeed.speed();
+                final String progressStatusWithSpeed = progressStatus + "(" + speed + ")";
+
+                statusTv.setText(progressStatusWithSpeed);
+                DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength);
+            }
+
+            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
+                                           @NonNull SpeedCalculator blockSpeed) {
+            }
+
+            @Override public void taskEnd(DownloadTask task, EndCause cause,
+                                          @android.support.annotation.Nullable Exception realCause,
+                                          @NonNull SpeedCalculator taskSpeed) {
+                final String statusWithSpeed = cause.toString() + " " + taskSpeed.averageSpeed();
+                statusTv.setText(statusWithSpeed);
+
+                actionTv.setText(R.string.start);
+                // mark
+                task.setTag(null);
             }
         });
     }

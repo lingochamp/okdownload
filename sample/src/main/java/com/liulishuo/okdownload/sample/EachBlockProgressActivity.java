@@ -24,11 +24,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
+import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 import com.liulishuo.okdownload.sample.util.EachBlockProgressUtil;
 
@@ -207,47 +209,20 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                            final TextView block0SpeedTv, final TextView block1SpeedTv,
                            final TextView block2SpeedTv, final TextView block3SpeedTv) {
         task.enqueue(new DownloadListener4WithSpeed() {
-            @Override public void taskStart(DownloadTask task) {
-                super.taskStart(task);
 
+            @Override public void taskStart(DownloadTask task) {
                 statusTv.setText(R.string.task_start);
             }
 
-            @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                               boolean fromBreakpoint) {
+            @Override
+            public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+                                  boolean fromBreakpoint,
+                                  @NonNull Listener4SpeedAssistExtend.Listener4SpeedModel model) {
                 EachBlockProgressUtil
                         .initTitle(info, taskTitleTv, block0TitleTv, block1TitleTv, block2TitleTv,
                                 block3TitleTv);
                 EachBlockProgressUtil
                         .initProgress(info, taskPb, block0Pb, block1Pb, block2Pb, block3Pb);
-            }
-
-            @Override
-            public void progressBlock(DownloadTask task, int blockIndex,
-                                         long currentBlockOffset) {
-                final ProgressBar progressBar = EachBlockProgressUtil
-                        .getProgressBar(blockIndex, block0Pb, block1Pb, block2Pb, block3Pb);
-
-                EachBlockProgressUtil.updateProgress(progressBar, currentBlockOffset);
-
-                final TextView speedTv = EachBlockProgressUtil.getSpeedTv(blockIndex,
-                        block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
-
-                if (speedTv != null) speedTv.setText(blockSpeed(blockIndex).speed());
-            }
-
-            @Override public void progress(DownloadTask task, long currentOffset) {
-                statusTv.setText(R.string.fetch_progress);
-
-                EachBlockProgressUtil.updateProgress(taskPb, currentOffset);
-                taskSpeedTv.setText(taskSpeed().speed());
-            }
-
-            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
-                final TextView speedTv = EachBlockProgressUtil.getSpeedTv(blockIndex,
-                        block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
-
-                if (speedTv != null) speedTv.setText(blockSpeed(blockIndex).speedFromBegin());
             }
 
             @Override public void connectStart(DownloadTask task, int blockIndex,
@@ -265,18 +240,42 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
             }
 
             @Override
-            public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
-                super.fetchStart(task, blockIndex, contentLength);
-                final String status = "fetchStart " + blockIndex + " " + contentLength;
-                statusTv.setText(status);
+            public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
+                                      @NonNull SpeedCalculator blockSpeed) {
+                final ProgressBar progressBar = EachBlockProgressUtil
+                        .getProgressBar(blockIndex, block0Pb, block1Pb, block2Pb, block3Pb);
+
+                EachBlockProgressUtil.updateProgress(progressBar, currentBlockOffset);
+
+                final TextView speedTv = EachBlockProgressUtil.getSpeedTv(blockIndex,
+                        block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
+
+                if (speedTv != null) speedTv.setText(blockSpeed.speed());
+
             }
 
-            @Override
-            protected void taskEnd(DownloadTask task, EndCause cause,
-                                   @android.support.annotation.Nullable Exception realCause,
-                                   @NonNull String averageSpeed) {
+            @Override public void progress(DownloadTask task, long currentOffset,
+                                           @NonNull SpeedCalculator taskSpeed) {
+                statusTv.setText(R.string.fetch_progress);
+
+                EachBlockProgressUtil.updateProgress(taskPb, currentOffset);
+                taskSpeedTv.setText(taskSpeed.speed());
+            }
+
+            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
+                                           @NonNull SpeedCalculator blockSpeed) {
+                final TextView speedTv = EachBlockProgressUtil.getSpeedTv(blockIndex,
+                        block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
+
+                if (speedTv != null) speedTv.setText(blockSpeed.averageSpeed());
+            }
+
+
+            @Override public void taskEnd(DownloadTask task, EndCause cause,
+                                          @android.support.annotation.Nullable Exception realCause,
+                                          @NonNull SpeedCalculator taskSpeed) {
                 statusTv.setText(cause.toString());
-                taskSpeedTv.setText(averageSpeed);
+                taskSpeedTv.setText(taskSpeed.averageSpeed());
 
                 actionTv.setText(R.string.start);
                 // mark

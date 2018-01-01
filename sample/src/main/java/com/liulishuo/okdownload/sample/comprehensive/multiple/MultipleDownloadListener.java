@@ -27,6 +27,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener1;
+import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
 import com.liulishuo.okdownload.sample.R;
 import com.liulishuo.okdownload.sample.util.ProgressUtil;
 
@@ -58,8 +59,6 @@ public class MultipleDownloadListener extends DownloadListener1 {
                 ProgressUtil.calcProgressToViewAndMark(viewHolder.getProgressBar(), 0, 0);
             }
         }
-
-
     }
 
     void clearBound() {
@@ -70,7 +69,8 @@ public class MultipleDownloadListener extends DownloadListener1 {
         viewHolderMap.put(task.getId(), viewHolder);
     }
 
-    @Override public void taskStart(DownloadTask task) {
+    @Override
+    public void taskStart(DownloadTask task, @NonNull Listener1Assist.Listener1Model model) {
         final String status = "Start";
         MultipleTaskUtil.saveStatus(task, status);
 
@@ -80,8 +80,8 @@ public class MultipleDownloadListener extends DownloadListener1 {
         holder.getStatusTv().setText(status);
     }
 
-    @Override
-    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+    @Override public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                                  @NonNull Listener1Assist.Listener1Model model) {
         final String status = cause.name() + (realCause != null ? realCause : "");
         MultipleTaskUtil.saveStatus(task, status);
 
@@ -106,10 +106,10 @@ public class MultipleDownloadListener extends DownloadListener1 {
         ProgressUtil.calcProgressToViewAndMark(holder.getProgressBar(), totalLength, currentOffset);
     }
 
-    @Override public void progress(DownloadTask task, long currentOffset) {
+    @Override public void progress(DownloadTask task, long currentOffset, long totalLength) {
         final String status = "Progress(" + Util
                 .humanReadableBytes(currentOffset, false) + "/"
-                + Util.humanReadableBytes(getTotalLength(), false) + ")";
+                + Util.humanReadableBytes(totalLength, false) + ")";
         MultipleTaskUtil.saveStatus(task, status);
         MultipleTaskUtil.saveOffset(task, currentOffset);
 

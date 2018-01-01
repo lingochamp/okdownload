@@ -22,12 +22,12 @@ import android.util.Log;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
+import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +37,7 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
     @Nullable private SingleTaskViewAdapter viewAdapter;
     private final boolean detail;
     private FinishListener finishListener;
+    private SparseArray<Long> blockCurrentOffsetMap;
 
     SingleTaskListener(@NonNull SingleTaskViewAdapter viewAdapter, boolean detail) {
         this.detail = detail;
@@ -44,7 +45,7 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
     }
 
     SparseArray<Long> getBlockInstantOffsetMap() {
-        return blockCurrentOffsetMap();
+        return this.blockCurrentOffsetMap;
     }
 
     void detach() {
@@ -63,13 +64,13 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
     }
 
     @Override public void taskStart(DownloadTask task) {
-        super.taskStart(task);
-
         updateStatus("taskStart " + task.getId());
     }
 
-    @Override public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                    boolean fromBreakpoint) {
+    @Override
+    public void infoReady(DownloadTask task, @NonNull BreakpointInfo info, boolean fromBreakpoint,
+                          @NonNull Listener4SpeedAssistExtend.Listener4SpeedModel model) {
+        this.blockCurrentOffsetMap = model.cloneBlockCurrentOffsetMap();
         if (viewAdapter != null) viewAdapter.refreshData(info, null);
     }
 
@@ -85,72 +86,39 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
 
     }
 
-    @Override
-    public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset) {
+    @Override public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
+                                        @NonNull SpeedCalculator blockSpeed) {
         if (detail && viewAdapter != null) {
             if (blockIndex >= viewAdapter.blockViewSize()) return;
 
             viewAdapter.setBlockProcess(blockIndex, currentBlockOffset,
-                    blockSpeed(blockIndex).speed());
+                    blockSpeed.speed());
         }
     }
 
-    @Override public void progress(DownloadTask task, long currentOffset) {
+    @Override public void progress(DownloadTask task, long currentOffset,
+                                   @NonNull SpeedCalculator taskSpeed) {
         if (detail && viewAdapter != null) {
-            viewAdapter.setTaskProcess(currentOffset, taskSpeed().speed());
+            viewAdapter.setTaskProcess(currentOffset, taskSpeed.speed());
         }
     }
 
-    @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info) {
+    @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
+                                   @NonNull SpeedCalculator blockSpeed) {
         if (detail && viewAdapter != null) {
-            viewAdapter.onBlocksEnd(blockIndex, blockSpeed(blockIndex));
+            viewAdapter.onBlocksEnd(blockIndex, blockSpeed);
         }
+
     }
 
-    @Override
-    protected void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
-                           @NonNull String averageSpeed) {
+    @Override public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+                                  @NonNull SpeedCalculator taskSpeed) {
         if (detail && viewAdapter != null) {
-            viewAdapter.onTaskEnd(averageSpeed);
+            viewAdapter.onTaskEnd(taskSpeed.averageSpeed());
         }
-    }
-
-    @Override public void downloadFromBeginning(DownloadTask task,
-                                                BreakpointInfo info,
-                                                ResumeFailedCause cause) {
-        super.downloadFromBeginning(task, info, cause);
-        updateStatus("downloadFromBeginning " + info + " " + cause);
-    }
-
-    @Override public void fetchStart(DownloadTask task, int blockIndex,
-                                     long contentLength) {
-        super.fetchStart(task, blockIndex, contentLength);
-        updateStatus("fetchStart " + blockIndex + " " + contentLength);
-    }
-
-
-    @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        super.fetchProgress(task, blockIndex, increaseBytes);
-        updateStatus(
-                "fetchProgress " + blockIndex + " " + Util.humanReadableBytes(increaseBytes,
-                        false) + " " + taskSpeed().speed());
-    }
-
-    @Override public void fetchEnd(DownloadTask task, int blockIndex,
-                                   long contentLength) {
-        super.fetchEnd(task, blockIndex, contentLength);
-        updateStatus("fetchEnd " + blockIndex + " " + contentLength);
-    }
-
-
-    @Override public void taskEnd(DownloadTask task, EndCause cause,
-                                  @Nullable Exception realCause) {
-        super.taskEnd(task, cause, realCause);
-        updateStatus("taskEnd " + cause + " " + realCause + " " + taskSpeed().speedFromBegin());
 
         if (this.finishListener != null) this.finishListener.finish();
     }
-
 
     private void updateStatus(String status) {
         Log.d(SingleTaskUtil.TAG, status);
