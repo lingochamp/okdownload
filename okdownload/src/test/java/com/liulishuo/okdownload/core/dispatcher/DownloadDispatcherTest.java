@@ -16,6 +16,13 @@
 
 package com.liulishuo.okdownload.core.dispatcher;
 
+import com.liulishuo.okdownload.DownloadListener;
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.download.DownloadCall;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,12 +32,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-
-import com.liulishuo.okdownload.DownloadListener;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.download.DownloadCall;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.cause.EndCause.FILE_BUSY;
@@ -56,6 +57,7 @@ public class DownloadDispatcherTest {
     @BeforeClass
     public static void setupClass() throws IOException {
         mockOkDownload();
+        Util.setLogger(mock(Util.Logger.class));
     }
 
     @Before

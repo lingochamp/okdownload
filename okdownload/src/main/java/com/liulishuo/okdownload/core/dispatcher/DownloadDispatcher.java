@@ -20,6 +20,12 @@ package com.liulishuo.okdownload.core.dispatcher;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.download.DownloadCall;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,16 +37,12 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.Util;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.download.DownloadCall;
-
 public class DownloadDispatcher {
     // same id will be discard
     // submit task to download server
     // assemble breakpoint and start chain on block dispatcher
+
+    private static final String TAG = "DownloadDispatcher";
 
     int maxTaskCount = 5;
     // for sort performance(not need to copy one array), using ArrayList instead of deque(for add
@@ -91,11 +93,17 @@ public class DownloadDispatcher {
         }
     }
 
-    public synchronized void execute(DownloadTask task) {
-        if (inspectForConflict(task)) return;
+    public void execute(DownloadTask task) {
+        final DownloadCall call;
 
-        final DownloadCall call = DownloadCall.create(task, false);
-        runningSyncCalls.add(call);
+        synchronized (this) {
+            if (inspectForConflict(task)) return;
+
+            Util.d(TAG, "execute " + task);
+
+            call = DownloadCall.create(task, false);
+            runningSyncCalls.add(call);
+        }
 
         syncRunCall(call);
     }
@@ -149,6 +157,7 @@ public class DownloadDispatcher {
     }
 
     public synchronized boolean cancel(DownloadTask task) {
+        Util.d(TAG, "cancel manually: " + task.getId());
         boolean canceled = false;
         try {
             for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
@@ -242,6 +251,7 @@ public class DownloadDispatcher {
     public synchronized boolean isFileConflictAfterRun(@NonNull DownloadTask task) {
         final String path = task.getPath();
         if (path == null) return false;
+        Util.d(TAG, "isFileConflictAfterRun " + path);
 
         // Other one is running, cancel the current task.
         for (DownloadCall syncCall : runningSyncCalls) {
