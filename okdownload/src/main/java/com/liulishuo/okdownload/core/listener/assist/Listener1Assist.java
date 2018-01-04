@@ -81,6 +81,8 @@ public class Listener1Assist {
     public void downloadFromBeginning(DownloadTask task,
                                       ResumeFailedCause cause) {
         final Listener1Model model = findModel(task.getId());
+        if (model == null) return;
+
         if (model.isStarted && callback != null) {
             callback.retry(task, cause);
         }
@@ -96,6 +98,7 @@ public class Listener1Assist {
 
     public void downloadFromBreakpoint(int id, BreakpointInfo info) {
         final Listener1Model model = findModel(id);
+        if (model == null) return;
 
         model.blockCount = info.getBlockCount();
         model.totalLength = info.getTotalLength();
@@ -108,6 +111,7 @@ public class Listener1Assist {
 
     public void connectEnd(DownloadTask task) {
         final Listener1Model model = findModel(task.getId());
+        if (model == null) return;
 
         if (model.isFromResumed && model.isFirstConnect) {
             model.isFirstConnect = false;
@@ -121,6 +125,7 @@ public class Listener1Assist {
 
     public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
         final Listener1Model model = findModel(task.getId());
+        if (model == null) return;
 
         model.blockCount = info.getBlockCount();
         model.totalLength = info.getTotalLength();
@@ -135,6 +140,7 @@ public class Listener1Assist {
 
     public void fetchProgress(DownloadTask task, long increaseBytes) {
         final Listener1Model model = findModel(task.getId());
+        if (model == null) return;
 
         model.currentOffset.addAndGet(increaseBytes);
         if (callback != null) callback.progress(task, model.currentOffset.get(), model.totalLength);

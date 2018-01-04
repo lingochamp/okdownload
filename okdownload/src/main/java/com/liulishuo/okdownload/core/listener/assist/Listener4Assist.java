@@ -88,6 +88,7 @@ public class Listener4Assist {
 
     public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
         final Listener4Model model = findModel(task.getId());
+        if (model == null) return;
 
         final long blockCurrentOffset = model.blockCurrentOffsetMap
                 .get(blockIndex) + increaseBytes;
@@ -107,6 +108,8 @@ public class Listener4Assist {
 
     public void fetchEnd(DownloadTask task, int blockIndex) {
         final Listener4Model model = findModel(task.getId());
+        if (model == null) return;
+
         if (assistExtend != null
                 && assistExtend.dispatchBlockEnd(task, blockIndex, model)) {
             return;
