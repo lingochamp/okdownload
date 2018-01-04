@@ -22,13 +22,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
-
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 
 public class Util {
 
@@ -36,6 +36,8 @@ public class Util {
         void w(String tag, String msg);
 
         void d(String tag, String msg);
+
+        void i(String tag, String msg);
     }
 
     private static Logger logger;
@@ -60,6 +62,15 @@ public class Util {
         }
 
         Log.d(tag, msg);
+    }
+
+    public static void i(String tag, String msg) {
+        if (logger != null) {
+            logger.i(tag, msg);
+            return;
+        }
+
+        Log.i(tag, msg);
     }
 
     // For avoid mock whole android framework methods on unit-test.
