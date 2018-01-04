@@ -19,11 +19,11 @@ package com.liulishuo.okdownload.core.breakpoint;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
+import com.liulishuo.okdownload.DownloadTask;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.liulishuo.okdownload.DownloadTask;
 
 public class BreakpointStoreOnCache implements BreakpointStore {
     private final SparseArray<BreakpointInfo> storedInfos;
@@ -111,7 +111,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         final int size = clonedMap.size();
         for (int i = 0; i < size; i++) {
             final BreakpointInfo info = clonedMap.valueAt(i);
-            if (info.isSameFrom(task)) {
+            if (info != null && info.isSameFrom(task)) {
                 return info.id;
             }
         }
