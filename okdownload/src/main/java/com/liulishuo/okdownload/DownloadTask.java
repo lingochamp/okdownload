@@ -67,9 +67,8 @@ public class DownloadTask implements Cloneable {
 
     private final AtomicLong lastCallbackProcessTimestamp;
 
-    private final DownloadStrategy.FilenameHolder filenameHolder;
-
-    private final File providedPathFile;
+    @NonNull private final DownloadStrategy.FilenameHolder filenameHolder;
+    @NonNull private final File providedPathFile;
 
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
@@ -389,6 +388,11 @@ public class DownloadTask implements Cloneable {
 
     @Override public int hashCode() {
         return (url + providedPathFile.toString() + filenameHolder.get()).hashCode();
+    }
+
+    @Override public String toString() {
+        return super.toString() + "@" + id + "@" + url + "@" + providedPathFile.toString()
+                + "/" + filenameHolder.get();
     }
 
     public static class TaskCallbackWrapper {
