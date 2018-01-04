@@ -24,6 +24,7 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
@@ -33,6 +34,7 @@ import java.util.Map;
 
 // Dispatch callback to listeners
 public class CallbackDispatcher {
+    private static final String TAG = "CallbackDispatcher";
 
     public CallbackDispatcher() {
         transmit = new DownloadListener() {
@@ -40,6 +42,7 @@ public class CallbackDispatcher {
 
             @Override
             public void taskStart(final DownloadTask task) {
+                Util.i(TAG, "taskStart: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -55,6 +58,7 @@ public class CallbackDispatcher {
             @Override
             public void connectStart(final DownloadTask task, final int blockIndex,
                                      @NonNull final Map<String, List<String>> requestHeaderFields) {
+                Util.i(TAG, "connectStart: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -70,6 +74,7 @@ public class CallbackDispatcher {
             public void connectEnd(final DownloadTask task, final int blockIndex,
                                    final int responseCode,
                                    @NonNull final Map<String, List<String>> requestHeaderFields) {
+                Util.i(TAG, "connectEnd: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -85,6 +90,7 @@ public class CallbackDispatcher {
 
             @Override public void splitBlockEnd(final DownloadTask task,
                                                 final BreakpointInfo info) {
+                Util.i(TAG, "splitBlockEnd: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -99,6 +105,7 @@ public class CallbackDispatcher {
             @Override
             public void downloadFromBeginning(final DownloadTask task, final BreakpointInfo info,
                                               final ResumeFailedCause cause) {
+                Util.i(TAG, "downloadFromBeginning: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -112,6 +119,7 @@ public class CallbackDispatcher {
 
             @Override
             public void downloadFromBreakpoint(final DownloadTask task, final BreakpointInfo info) {
+                Util.i(TAG, "downloadFromBreakpoint: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -126,6 +134,7 @@ public class CallbackDispatcher {
             @Override
             public void fetchStart(final DownloadTask task, final int blockIndex,
                                    final long contentLength) {
+                Util.i(TAG, "fetchStart: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -140,6 +149,7 @@ public class CallbackDispatcher {
             @Override
             public void fetchProgress(final DownloadTask task, final int blockIndex,
                                       final long increaseBytes) {
+                Util.i(TAG, "fetchProgress: " + task.getId());
                 if (task.getMinIntervalMillisCallbackProcess() > 0) {
                     DownloadTask.TaskCallbackWrapper
                             .setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
@@ -159,6 +169,7 @@ public class CallbackDispatcher {
             @Override
             public void fetchEnd(final DownloadTask task, final int blockIndex,
                                  final long contentLength) {
+                Util.i(TAG, "fetchEnd: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -173,6 +184,7 @@ public class CallbackDispatcher {
             @Override
             public void taskEnd(final DownloadTask task, final EndCause cause,
                                 @Nullable final Exception realCause) {
+                Util.i(TAG, "taskEnd: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
