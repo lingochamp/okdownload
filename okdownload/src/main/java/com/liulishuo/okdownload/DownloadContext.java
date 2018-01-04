@@ -97,16 +97,16 @@ public class DownloadContext {
             if (!boundTaskList.contains(task)) boundTaskList.add(task);
         }
 
-        public void bind(@NonNull String url) {
+        public DownloadTask bind(@NonNull String url) {
             if (set.uri == null) {
                 throw new IllegalArgumentException("If you want to bind only with url, you have to"
                         + " provide parentPath on QueueSet!");
             }
 
-            bind(new DownloadTask.Builder(url, set.uri));
+            return bind(new DownloadTask.Builder(url, set.uri));
         }
 
-        public void bind(@NonNull DownloadTask.Builder taskBuilder) {
+        public DownloadTask bind(@NonNull DownloadTask.Builder taskBuilder) {
             if (set.headerMapFields != null) taskBuilder.setHeaderMapFields(set.headerMapFields);
             if (set.readBufferSize != null) taskBuilder.setReadBufferSize(set.readBufferSize);
             if (set.flushBufferSize != null) taskBuilder.setFlushBufferSize(set.flushBufferSize);
@@ -126,6 +126,7 @@ public class DownloadContext {
             if (set.tag != null) task.setTag(set.tag);
 
             boundTaskList.add(task);
+            return task;
         }
 
         public void unbind(@NonNull DownloadTask task) {
