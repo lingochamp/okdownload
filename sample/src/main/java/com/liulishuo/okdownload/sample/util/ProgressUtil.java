@@ -43,11 +43,7 @@ public class ProgressUtil {
 
 
         bar.setMax(contentLengthOnInt);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            bar.setProgress(progress, true);
-        } else {
-            bar.setProgress(progress);
-        }
+        bar.setProgress(progress);
     }
 
     private static int reducePrecision(long origin) {
