@@ -26,6 +26,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -77,6 +78,22 @@ public class BreakpointSQLiteHelperTest {
         assertThat(info2.getUrl()).isEqualTo("url2");
         assertThat(info2.parentPath).isEqualTo("p-path2");
         assertThat(info2.getFilename()).isEqualTo("filename2");
+    }
+
+    @Test
+    public void loadResponseFilenameToMap_updateFilename() {
+        final String url1 = "url1";
+        final String filename1 = "filename1";
+
+        final String url2 = "url2";
+        final String filename2 = "filename2";
+
+        helper.updateFilename(url1, filename1);
+        helper.updateFilename(url2, filename2);
+
+        final HashMap<String, String> urlFilenameMap = helper.loadResponseFilenameToMap();
+        assertThat(urlFilenameMap).containsEntry(url1, filename1);
+        assertThat(urlFilenameMap).containsEntry(url2, filename2);
     }
 
     @Test

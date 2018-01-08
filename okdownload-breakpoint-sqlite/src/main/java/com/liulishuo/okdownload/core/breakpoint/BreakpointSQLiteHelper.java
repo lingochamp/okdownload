@@ -25,12 +25,13 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
+import com.liulishuo.okdownload.core.exception.SQLiteException;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import com.liulishuo.okdownload.core.exception.SQLiteException;
 
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.BLOCK_INDEX;
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.CHUNKED;
@@ -50,6 +51,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
     private static final String NAME = "okdownload-breakpoint.db";
     private static final int VERSION = 1;
 
+    private static final String RESPONSE_FILENAME_TABLE_NAME = "okdownloadResponseFilename";
     private static final String BREAKPOINT_TABLE_NAME = "breakpoint";
     private static final String BLOCK_TABLE_NAME = "block";
 
@@ -88,9 +90,25 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
                 + CONTENT_LENGTH + " INTEGER, "
                 + CURRENT_OFFSET + " INTEGER)"
         );
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS "
+                + RESPONSE_FILENAME_TABLE_NAME + "( "
+                + URL + " VARCHAR NOT NULL PRIMARY KEY, "
+                + FILENAME + " VARCHAR NOT NULL)"
+        );
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion == 1 && newVersion == 2) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS "
+                    + RESPONSE_FILENAME_TABLE_NAME + "( "
+                    + URL + " VARCHAR NOT NULL PRIMARY KEY, "
+                    + FILENAME + " VARCHAR NOT NULL)"
+            );
+        }
+    }
+
+    @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
     public SparseArray<BreakpointInfo> loadToCache() {
@@ -131,6 +149,51 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         }
 
         return breakpointInfoMap;
+    }
+
+    public HashMap<String, String> loadResponseFilenameToMap() {
+        Cursor cursor = null;
+        final SQLiteDatabase db = getWritableDatabase();
+        final HashMap<String, String> urlFilenameMap = new HashMap<>();
+
+        try {
+            cursor = db.rawQuery("SELECT * FROM " + RESPONSE_FILENAME_TABLE_NAME, null);
+            while (cursor.moveToNext()) {
+                final String url = cursor.getString(cursor.getColumnIndex(URL));
+                final String filename = cursor.getString(cursor.getColumnIndex(FILENAME));
+                urlFilenameMap.put(url, filename);
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+
+        return urlFilenameMap;
+    }
+
+    public void updateFilename(@NonNull String url, @NonNull String filename) {
+        final SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues(2);
+        values.put(URL, url);
+        values.put(FILENAME, filename);
+
+        Cursor c = null;
+        try {
+            final String query = "SELECT " + FILENAME + " FROM " + RESPONSE_FILENAME_TABLE_NAME
+                    + " WHERE " + URL + " = ?";
+            c = db.rawQuery(query, new String[]{url});
+            if (c.moveToFirst()) {
+                // exist
+                if (!filename.equals(c.getString(c.getColumnIndex(FILENAME)))) {
+                    // replace if not equal
+                    db.replace(RESPONSE_FILENAME_TABLE_NAME, null, values);
+                }
+            } else {
+                // insert
+                db.insert(RESPONSE_FILENAME_TABLE_NAME, null, values);
+            }
+        } finally {
+            if (c != null) c.close();
+        }
     }
 
     public void insert(@NonNull BreakpointInfo info) throws IOException {
