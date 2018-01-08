@@ -16,7 +16,7 @@
 
 <resources>
     <string name="app_name">OkDownload-Sample</string>
-    <string name="github_url">https://github.com/jacksgong/okdownload</string>
+    <string name="github_url">https://github.com/lingochamp/okdownload</string>
     <string name="title_single">Single</string>
     <string name="title_multiple">Multiple</string>
     <string name="title_queue">Queue</string>
