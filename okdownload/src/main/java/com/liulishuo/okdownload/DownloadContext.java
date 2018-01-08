@@ -17,9 +17,15 @@
 package com.liulishuo.okdownload;
 
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.listener.DownloadListener2;
+import com.liulishuo.okdownload.core.listener.DownloadListenerBunch;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,18 +35,23 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DownloadContext {
 
+    private static final String TAG = "DownloadContext";
     private static final Executor SERIAL_EXECUTOR = new ThreadPoolExecutor(0,
             Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload Serial", false));
 
     private final DownloadTask[] tasks;
     volatile boolean isStarted = false;
+    @Nullable private final DownloadQueueListener queueListener;
 
-    public DownloadContext(@NonNull DownloadTask[] tasks) {
+    public DownloadContext(@NonNull DownloadTask[] tasks,
+                           @Nullable DownloadQueueListener queueListener) {
         this.tasks = tasks;
+        this.queueListener = queueListener;
     }
 
     public boolean isStarted() {
@@ -53,18 +64,31 @@ public class DownloadContext {
 
     public void start(final DownloadListener listener, boolean isSerial) {
         isStarted = true;
+        final DownloadListener targetListener;
+        if (queueListener != null) {
+            targetListener = new DownloadListenerBunch.Builder()
+                    .append(listener)
+                    .append(new QueueAttachListener(queueListener, tasks.length))
+                    .build();
+        } else {
+            targetListener = listener;
+        }
+
         if (isSerial) {
             executeOnSerialExecutor(new Runnable() {
                 @Override public void run() {
                     for (DownloadTask task : tasks) {
-                        if (!isStarted) break;
-                        task.execute(listener);
+                        if (!isStarted) {
+                            callbackQueueEndOnSerialLoop(task.isAutoCallbackToUIThread());
+                            break;
+                        }
+                        task.execute(targetListener);
                     }
                 }
             });
         } else {
             for (DownloadTask task : tasks) {
-                task.enqueue(listener);
+                task.enqueue(targetListener);
             }
         }
     }
@@ -76,6 +100,20 @@ public class DownloadContext {
         }
     }
 
+    private void callbackQueueEndOnSerialLoop(boolean isAutoCallbackToUIThread) {
+        if (queueListener == null) return;
+
+        if (isAutoCallbackToUIThread) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override public void run() {
+                    queueListener.queueEnd();
+                }
+            });
+        } else {
+            queueListener.queueEnd();
+        }
+    }
+
     void executeOnSerialExecutor(Runnable runnable) {
         SERIAL_EXECUTOR.execute(runnable);
     }
@@ -84,6 +122,7 @@ public class DownloadContext {
         ArrayList<DownloadTask> boundTaskList = new ArrayList<>();
 
         private final QueueSet set;
+        private DownloadQueueListener listener;
 
         public Builder() {
             this(new QueueSet());
@@ -91,6 +130,10 @@ public class DownloadContext {
 
         public Builder(QueueSet set) {
             this.set = set;
+        }
+
+        public void setListener(DownloadQueueListener listener) {
+            this.listener = listener;
         }
 
         public void bindSetTask(@NonNull DownloadTask task) {
@@ -142,7 +185,7 @@ public class DownloadContext {
 
         public DownloadContext build() {
             DownloadTask[] tasks = new DownloadTask[boundTaskList.size()];
-            return new DownloadContext(boundTaskList.toArray(tasks));
+            return new DownloadContext(boundTaskList.toArray(tasks), listener);
         }
     }
 
@@ -252,6 +295,26 @@ public class DownloadContext {
 
         public Builder commit() {
             return new DownloadContext.Builder(this);
+        }
+    }
+
+    private static class QueueAttachListener extends DownloadListener2 {
+        private final AtomicInteger remainCount;
+        @NonNull private final DownloadQueueListener queueListener;
+
+        QueueAttachListener(@NonNull DownloadQueueListener queueListener, int taskCount) {
+            remainCount = new AtomicInteger(taskCount);
+            this.queueListener = queueListener;
+        }
+
+        @Override public void taskStart(DownloadTask task) {
+        }
+
+        @Override
+        public void taskEnd(DownloadTask task, EndCause cause,
+                            @Nullable Exception realCause) {
+            if (remainCount.decrementAndGet() <= 0) queueListener.queueEnd();
+            Util.d(TAG, "taskEnd and remainCount" + remainCount);
         }
     }
 }

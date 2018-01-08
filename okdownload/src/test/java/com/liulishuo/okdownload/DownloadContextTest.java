@@ -18,8 +18,12 @@ package com.liulishuo.okdownload;
 
 import android.net.Uri;
 
+import com.liulishuo.okdownload.core.listener.DownloadListenerBunch;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 
 import java.io.IOException;
@@ -40,6 +44,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class DownloadContextTest {
 
     @Mock private DownloadListener listener;
+    @Mock private DownloadQueueListener queueListener;
 
     private DownloadContext context;
     private DownloadTask[] tasks;
@@ -55,16 +60,20 @@ public class DownloadContextTest {
         tasks[0] = mock(DownloadTask.class);
         tasks[1] = mock(DownloadTask.class);
         tasks[2] = mock(DownloadTask.class);
-        context = spy(new DownloadContext(tasks));
+        context = spy(new DownloadContext(tasks, queueListener));
 
         queueSet = new DownloadContext.QueueSet();
         builder = spy(new DownloadContext.Builder(queueSet));
     }
 
-    @Test
-    public void start() {
-        assertThat(context.isStarted()).isFalse();
+    @Captor
+    private ArgumentCaptor<DownloadListenerBunch> listenerCaptor;
 
+    @Test
+    public void start_withoutQueueListener() {
+        // without queue listener
+        context = spy(new DownloadContext(tasks, null));
+        assertThat(context.isStarted()).isFalse();
         doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
         context.start(listener, true);
         verify(context).executeOnSerialExecutor(any(Runnable.class));
@@ -72,9 +81,22 @@ public class DownloadContextTest {
         assertThat(context.isStarted()).isTrue();
 
         context.start(listener, false);
+
         for (DownloadTask task : tasks) {
             verify(task).enqueue(listener);
         }
+    }
+
+    @Test
+    public void start_withQueueListener() {
+        // with queue listener
+        context = spy(new DownloadContext(tasks, queueListener));
+        doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
+        context.start(listener, false);
+        verify(tasks[0]).enqueue(listenerCaptor.capture());
+
+        final DownloadListenerBunch bunch = listenerCaptor.getValue();
+        assertThat(bunch.contain(listener)).isTrue();
     }
 
     @Test
