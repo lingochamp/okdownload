@@ -20,9 +20,9 @@ package com.liulishuo.okdownload.core.breakpoint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.io.IOException;
-
 import com.liulishuo.okdownload.DownloadTask;
+
+import java.io.IOException;
 
 public interface BreakpointStore {
 
@@ -42,4 +42,6 @@ public interface BreakpointStore {
     int findOrCreateId(@NonNull DownloadTask task);
 
     @Nullable BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored);
+
+    @Nullable String getResponseFilename(String url);
 }

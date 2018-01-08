@@ -184,7 +184,7 @@ public class CallbackDispatcher {
             @Override
             public void taskEnd(final DownloadTask task, final EndCause cause,
                                 @Nullable final Exception realCause) {
-                Util.i(TAG, "taskEnd: " + task.getId());
+                Util.i(TAG, "taskEnd: " + task.getId() + " " + cause);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {

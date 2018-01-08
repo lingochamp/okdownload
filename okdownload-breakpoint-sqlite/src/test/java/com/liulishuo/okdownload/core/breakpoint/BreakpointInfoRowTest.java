@@ -88,7 +88,7 @@ public class BreakpointInfoRowTest {
         assertThat(info.getEtag()).isEqualTo("etag");
         assertThat(info.parentPath).isEqualTo("p-path");
         assertThat(info.getFilename()).isNull();
-        assertThat(info.isTaskOnlyProvidedParentPath).isTrue();
+        assertThat(info.isTaskOnlyProvidedParentPath()).isTrue();
         assertThat(info.isChunked()).isFalse();
     }
 }

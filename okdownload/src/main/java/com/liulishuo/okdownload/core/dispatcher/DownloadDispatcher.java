@@ -251,7 +251,6 @@ public class DownloadDispatcher {
     public synchronized boolean isFileConflictAfterRun(@NonNull DownloadTask task) {
         final String path = task.getPath();
         if (path == null) return false;
-        Util.d(TAG, "isFileConflictAfterRun " + path);
 
         // Other one is running, cancel the current task.
         for (DownloadCall syncCall : runningSyncCalls) {

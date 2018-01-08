@@ -18,9 +18,6 @@ package com.liulishuo.okdownload.core.interceptor;
 
 import android.support.annotation.NonNull;
 
-import java.io.File;
-import java.io.IOException;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
@@ -33,6 +30,9 @@ import com.liulishuo.okdownload.core.download.DownloadStrategy;
 import com.liulishuo.okdownload.core.exception.InterruptException;
 import com.liulishuo.okdownload.core.exception.RetryException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
+
+import java.io.File;
+import java.io.IOException;
 
 import static com.liulishuo.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
@@ -75,8 +75,12 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
 
         // update for connected.
         final BreakpointStore store = OkDownload.with().breakpointStore();
-        if (!store.update(info)) {
-            throw new IOException("Update store failed!");
+        try {
+            if (!store.update(info)) {
+                throw new IOException("Update store failed!");
+            }
+        } catch (Exception e) {
+            throw new IOException("Update store failed!", e);
         }
 
         final long firstRangeLeft = info.getBlock(0).getRangeLeft();

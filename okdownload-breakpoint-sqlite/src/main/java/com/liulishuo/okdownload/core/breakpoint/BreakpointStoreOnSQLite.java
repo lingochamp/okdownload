@@ -20,12 +20,14 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.io.IOException;
-
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.Util;
+
+import java.io.IOException;
 
 public class BreakpointStoreOnSQLite implements BreakpointStore {
 
+    private static final String TAG = "BreakpointStoreOnSQLite";
     private final BreakpointSQLiteHelper helper;
     private final BreakpointStoreOnCache onCache;
 
@@ -36,7 +38,8 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
 
     public BreakpointStoreOnSQLite(Context context) {
         this.helper = new BreakpointSQLiteHelper(context.getApplicationContext());
-        this.onCache = new BreakpointStoreOnCache(helper.loadToCache());
+        this.onCache = new BreakpointStoreOnCache(helper.loadToCache(),
+                helper.loadResponseFilenameToMap());
     }
 
     @Nullable @Override public BreakpointInfo get(int id) {
@@ -59,6 +62,11 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
     @Override public boolean update(@NonNull BreakpointInfo breakpointInfo) throws IOException {
         final boolean result = onCache.update(breakpointInfo);
         helper.updateInfo(breakpointInfo);
+        final String filename = breakpointInfo.getFilename();
+        Util.d(TAG, "update " + breakpointInfo);
+        if (breakpointInfo.isTaskOnlyProvidedParentPath() && filename != null) {
+            helper.updateFilename(breakpointInfo.getUrl(), filename);
+        }
         return result;
     }
 
@@ -79,6 +87,10 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
     @Nullable @Override
     public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
         return onCache.findAnotherInfoFromCompare(task, ignored);
+    }
+
+    @Nullable @Override public String getResponseFilename(String url) {
+        return onCache.getResponseFilename(url);
     }
 
     void close() {

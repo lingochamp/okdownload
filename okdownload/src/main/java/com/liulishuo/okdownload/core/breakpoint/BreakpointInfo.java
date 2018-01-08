@@ -19,13 +19,13 @@ package com.liulishuo.okdownload.core.breakpoint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BreakpointInfo {
     final int id;
@@ -36,7 +36,7 @@ public class BreakpointInfo {
     private final DownloadStrategy.FilenameHolder filenameHolder;
 
     private final List<BlockInfo> blockInfoList;
-    final boolean isTaskOnlyProvidedParentPath;
+    private final boolean isTaskOnlyProvidedParentPath;
     private boolean isChunked;
 
     public BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
@@ -93,6 +93,10 @@ public class BreakpointInfo {
 
     public boolean isSingleBlock() {
         return blockInfoList.size() == 1;
+    }
+
+    boolean isTaskOnlyProvidedParentPath() {
+        return isTaskOnlyProvidedParentPath;
     }
 
     public BlockInfo getBlock(int blockIndex) {
@@ -156,7 +160,7 @@ public class BreakpointInfo {
         return url;
     }
 
-    public String getFilename() {
+    @Nullable public String getFilename() {
         return filenameHolder.get();
     }
 
@@ -228,6 +232,7 @@ public class BreakpointInfo {
 
     @Override public String toString() {
         return "id[" + id + "]" + " url[" + url + "]" + " etag[" + etag + "]"
+                + " isTaskOnlyProvidedParentPath[" + isTaskOnlyProvidedParentPath + "]"
                 + " parent path[" + parentPath + "]" + " filename[" + filenameHolder.get() + "]"
                 + " block(s):" + blockInfoList.toString();
     }

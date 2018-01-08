@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
+import com.liulishuo.okdownload.DownloadTask;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,12 +27,12 @@ import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 
-import com.liulishuo.okdownload.DownloadTask;
-
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -85,6 +87,22 @@ public class BreakpointStoreOnSqliteTest {
         store.update(info2);
         verify(onCache).update(info2);
         verify(helper).updateInfo(info2);
+
+    }
+
+    @Test
+    public void update_updateFilename() throws IOException {
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        when(info.isTaskOnlyProvidedParentPath()).thenReturn(false);
+        when(info.getUrl()).thenReturn("url");
+        when(info.getFilename()).thenReturn("filename");
+
+        store.update(info);
+        verify(helper, never()).updateFilename(eq("url"), eq("filename"));
+
+        when(info.isTaskOnlyProvidedParentPath()).thenReturn(true);
+        store.update(info);
+        verify(helper).updateFilename(eq("url"), eq("filename"));
     }
 
     @Test
@@ -94,7 +112,6 @@ public class BreakpointStoreOnSqliteTest {
         verify(onCache).completeDownload(id);
         verify(helper).removeInfo(id);
     }
-
 
     @Test
     public void discard() {

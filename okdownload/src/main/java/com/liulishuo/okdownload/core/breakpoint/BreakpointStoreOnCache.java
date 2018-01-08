@@ -17,35 +17,42 @@
 package com.liulishuo.okdownload.core.breakpoint;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public class BreakpointStoreOnCache implements BreakpointStore {
     private final SparseArray<BreakpointInfo> storedInfos;
+    private final HashMap<String, String> responseFilenameMap;
 
     private final SparseArray<DownloadTask> unStoredTasks;
     private final List<Integer> sortedOccupiedIds;
 
     public BreakpointStoreOnCache() {
-        this(new SparseArray<BreakpointInfo>());
+        this(new SparseArray<BreakpointInfo>(), new HashMap<String, String>());
     }
 
     BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos,
+                           HashMap<String, String> responseFilenameMap,
                            SparseArray<DownloadTask> unStoredTasks,
                            List<Integer> sortedOccupiedIds) {
         this.unStoredTasks = unStoredTasks;
         this.storedInfos = storedInfos;
+        this.responseFilenameMap = responseFilenameMap;
         this.sortedOccupiedIds = sortedOccupiedIds;
     }
 
-    public BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos) {
+    public BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos,
+                                  HashMap<String, String> responseFilenameMap) {
         this.unStoredTasks = new SparseArray<>();
         this.storedInfos = storedInfos;
+        this.responseFilenameMap = responseFilenameMap;
 
         final int count = storedInfos.size();
 
@@ -82,6 +89,11 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
     @Override
     public boolean update(@NonNull BreakpointInfo breakpointInfo) {
+        final String filename = breakpointInfo.getFilename();
+        if (breakpointInfo.isTaskOnlyProvidedParentPath() && filename != null) {
+            this.responseFilenameMap.put(breakpointInfo.getUrl(), filename);
+        }
+
         final BreakpointInfo onCacheOne = this.storedInfos.get(breakpointInfo.id);
         if (onCacheOne != null) {
             if (onCacheOne == breakpointInfo) return true;
@@ -143,6 +155,10 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         }
 
         return null;
+    }
+
+    @Nullable @Override public String getResponseFilename(String url) {
+        return responseFilenameMap.get(url);
     }
 
     private static final int FIRST_ID = 1;

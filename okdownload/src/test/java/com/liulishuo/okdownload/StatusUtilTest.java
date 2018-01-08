@@ -16,6 +16,10 @@
 
 package com.liulishuo.okdownload;
 
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,10 +30,6 @@ import org.robolectric.annotation.Config;
 import java.io.File;
 import java.io.IOException;
 
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
-import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
-
 import static com.liulishuo.okdownload.StatusUtil.Status.COMPLETED;
 import static com.liulishuo.okdownload.StatusUtil.Status.PENDING;
 import static com.liulishuo.okdownload.StatusUtil.Status.RUNNING;
@@ -38,9 +38,11 @@ import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.robolectric.annotation.Config.NONE;
 
 @RunWith(RobolectricTestRunner.class)
@@ -105,6 +107,62 @@ public class StatusUtilTest {
         isCompleted = StatusUtil
                 .isCompleted(url, file.getParentFile().getPath(), file.getName());
         assertThat(isCompleted).isFalse();
+    }
+
+    @Test
+    public void isCompletedOrUnknown_infoNotExist() throws IOException {
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getUrl()).thenReturn("url");
+        when(task.getParentPath()).thenReturn(file.getParent());
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+
+        // filename is null and can't find ---> unknown
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        doReturn(null).when(store).getResponseFilename(anyString());
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
+
+        // filename is null but found on store but not exist ---> unknown
+        doReturn("no-exist-filename").when(store).getResponseFilename(anyString());
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
+
+        // filename is null but found on store and exist ---> completed
+        doReturn(file.getName()).when(store).getResponseFilename(anyString());
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.COMPLETED);
+
+        // file name not null and exist
+        when(task.getFilename()).thenReturn(file.getName());
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.COMPLETED);
+    }
+
+    @Test
+    public void isCompletedOrUnknown_infoExist() throws IOException {
+        final DownloadTask task = mock(DownloadTask.class);
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+
+        // case of info exist
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        doReturn(info).when(store).get(anyInt());
+
+        // info exist but no filename ---> idle
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
+
+        // info exist but filename not the same ---> idle
+        when(task.getFilename()).thenReturn("filename");
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
+
+        // info exist and filename is the same but offset not the same to total ---> idle
+        when(task.getFilename()).thenReturn(file.getName());
+        when(task.getParentPath()).thenReturn(file.getParent());
+        when(info.getFilename()).thenReturn(file.getName());
+        when(info.getTotalLength()).thenReturn(1L);
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
+
+        // info exist and filename is the same and offset the same to total ---> completed
+        when(info.getTotalOffset()).thenReturn(1L);
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.COMPLETED);
     }
 
     @Test

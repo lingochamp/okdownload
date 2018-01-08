@@ -18,6 +18,8 @@ package com.liulishuo.okdownload.core.breakpoint;
 
 import android.util.SparseArray;
 
+import com.liulishuo.okdownload.DownloadTask;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,9 +27,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import com.liulishuo.okdownload.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -102,6 +103,7 @@ public class BreakpointStoreOnCacheTest {
         final SparseArray<DownloadTask> unStoredTasks = new SparseArray<>();
         final SparseArray<BreakpointInfo> storedInfos = new SparseArray<>();
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
+                new HashMap<String, String>(),
                 unStoredTasks,
                 new ArrayList<Integer>());
 
@@ -121,6 +123,7 @@ public class BreakpointStoreOnCacheTest {
         final SparseArray<DownloadTask> unStoredTasks = new SparseArray<>();
         final SparseArray<BreakpointInfo> storedInfos = new SparseArray<>();
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
+                new HashMap<String, String>(),
                 unStoredTasks,
                 new ArrayList<Integer>());
 
@@ -143,6 +146,7 @@ public class BreakpointStoreOnCacheTest {
     public void allocateId() {
         final List<Integer> sortedOccupiedIds = new ArrayList<>();
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
+                new HashMap<String, String>(),
                 new SparseArray<DownloadTask>(),
                 sortedOccupiedIds);
 
@@ -169,5 +173,36 @@ public class BreakpointStoreOnCacheTest {
         storeOnCache.completeDownload(1);
         assertThat(sortedOccupiedIds).containsExactly(2, 3, 4, 5, 6, 7, 8);
         assertThat(storeOnCache.allocateId()).isEqualTo(1);
+    }
+
+    @Test
+    public void urlFileNameMap() {
+        final HashMap<String, String> urlFilenameMap = new HashMap<>();
+
+        final String url1 = "url1";
+        final String url2 = "url2";
+        final String filename1 = "filename1";
+        final String filename2 = "filename2";
+        // init
+        urlFilenameMap.put(url1, filename1);
+        storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
+                urlFilenameMap,
+                new SparseArray<DownloadTask>(),
+                new ArrayList<Integer>());
+        assertThat(storeOnCache.getResponseFilename(url1)).isEqualTo(filename1);
+        assertThat(storeOnCache.getResponseFilename(url2)).isNull();
+
+        // update
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        when(info.getUrl()).thenReturn(url2);
+        when(info.isTaskOnlyProvidedParentPath()).thenReturn(true);
+        doReturn(filename2).when(info).getFilename();
+        storeOnCache.update(info);
+        assertThat(storeOnCache.getResponseFilename(url2)).isEqualTo(filename2);
+
+        // replace
+        when(info.getUrl()).thenReturn(url1);
+        storeOnCache.update(info);
+        assertThat(storeOnCache.getResponseFilename(url1)).isEqualTo(filename2);
     }
 }
