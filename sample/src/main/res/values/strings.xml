@@ -33,7 +33,7 @@
     <string name="parallel">Parallel</string>
     <string name="priority">Priority(%1$d)</string>
     <string name="state_idle">IDLE</string>
-    <string name="state_unknow">UNKNOWN</string>
+    <string name="state_unknown">UNKNOWN</string>
 
     <!-- entry list -->
     <string name="single_download_title">Single Download</string>

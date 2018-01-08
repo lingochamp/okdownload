@@ -38,8 +38,6 @@ public class MultipleDownloadListener extends DownloadListener1 {
     void resetInfo(DownloadTask task, MultipleTaskViewHolder viewHolder) {
         viewHolder.updatePriority(task.getPriority());
 
-        StatusUtil.getStatus(task);
-
         if (StatusUtil.isSameTaskPendingOrRunning(task)) {
             viewHolder.setToCancel(task);
             viewHolder.getStatusTv().setText(MultipleTaskUtil.getStatus(task));
@@ -55,7 +53,7 @@ public class MultipleDownloadListener extends DownloadListener1 {
                         info.getTotalLength(),
                         info.getTotalOffset());
             } else {
-                viewHolder.getStatusTv().setText(R.string.state_unknow);
+                viewHolder.getStatusTv().setText(R.string.state_unknown);
                 ProgressUtil.calcProgressToViewAndMark(viewHolder.getProgressBar(), 0, 0);
             }
         }
