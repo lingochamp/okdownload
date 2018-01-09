@@ -18,7 +18,6 @@ package com.liulishuo.okdownload.sample;
 
 
 import com.liulishuo.okdownload.sample.base.BaseListActivity;
-import com.liulishuo.okdownload.sample.comprehensive.ComprehensiveActivity;
 
 public class MainActivity extends BaseListActivity {
 
@@ -31,8 +30,8 @@ public class MainActivity extends BaseListActivity {
                 QueueActivity.class);
         holder.addItem(R.string.task_manager_title, R.string.task_manager_desc,
                 ManagerActivity.class);
-        holder.addItem(R.string.comprehensive_case_title, R.string.comprehensive_case_desc,
-                ComprehensiveActivity.class);
+//        holder.addItem(R.string.comprehensive_case_title, R.string.comprehensive_case_desc,
+//                ComprehensiveActivity.class);
     }
 
     @Override public int titleRes() {
