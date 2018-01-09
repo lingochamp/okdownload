@@ -233,6 +233,14 @@ public class Listener4AssistTest {
                         any(Listener4Assist.Listener4Model.class));
     }
 
+    @Test
+    public void taskEnd_noModel() {
+        assist.taskEnd(task1, EndCause.COMPLETED, null);
+        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
+                any(Listener4Assist.Listener4Model.class));
+
+    }
+
     private void mockSingleModelWith0Block() {
         final SparseArray<Long> blockOffsetMap = new SparseArray<>();
         blockOffsetMap.put(0, 1L);

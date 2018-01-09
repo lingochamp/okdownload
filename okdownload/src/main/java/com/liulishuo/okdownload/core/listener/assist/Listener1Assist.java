@@ -53,7 +53,7 @@ public class Listener1Assist {
 
     public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
         final int id = task.getId();
-        final Listener1Model model;
+        Listener1Model model;
 
         synchronized (this) {
             if (singleTaskModel != null && singleTaskModel.id == id) {
@@ -63,6 +63,10 @@ public class Listener1Assist {
                 model = modelList.get(id);
                 modelList.remove(id);
             }
+        }
+
+        if (model == null) {
+            model = new Listener1Model(task.getId());
         }
 
         if (callback != null) callback.taskEnd(task, cause, realCause, model);

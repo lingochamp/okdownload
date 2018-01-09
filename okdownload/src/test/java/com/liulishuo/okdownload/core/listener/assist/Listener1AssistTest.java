@@ -29,6 +29,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -94,6 +95,13 @@ public class Listener1AssistTest {
         assertThat(assist.findModel(2)).isNull();
         verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETED), nullable(Exception.class),
                 eq(model2));
+    }
+
+    @Test
+    public void taskEnd_noModel() {
+        assist.taskEnd(task1, EndCause.COMPLETED, null);
+        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
+                any(Listener1Assist.Listener1Model.class));
     }
 
     @Test

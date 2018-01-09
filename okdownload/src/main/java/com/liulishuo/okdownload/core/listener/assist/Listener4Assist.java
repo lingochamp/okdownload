@@ -26,7 +26,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 public class Listener4Assist {
-    Listener4Model singleTaskModel;
+    @Nullable Listener4Model singleTaskModel;
     private final SparseArray<Listener4Model> modelList = new SparseArray<>();
 
     Listener4Callback callback;
@@ -62,7 +62,7 @@ public class Listener4Assist {
         return model;
     }
 
-    public Listener4Model getSingleTaskModel() {
+    @Nullable public Listener4Model getSingleTaskModel() {
         return singleTaskModel;
     }
 
@@ -123,13 +123,23 @@ public class Listener4Assist {
     public synchronized void taskEnd(DownloadTask task, EndCause cause,
                                      @Nullable Exception realCause) {
         final int id = task.getId();
-        final Listener4Model model;
-        if (singleTaskModel.info.getId() == id) {
+        Listener4Model model;
+        if (singleTaskModel != null && singleTaskModel.info.getId() == id) {
             model = singleTaskModel;
             singleTaskModel = null;
         } else {
             model = modelList.get(id);
             modelList.remove(id);
+        }
+
+        if (model == null) {
+            model = new Listener4Model(
+                    new BreakpointInfo(task.getId(), task.getUrl(), task.getParentPath(),
+                            task.getFilename()), 0, new SparseArray<Long>());
+
+            if (assistExtend != null) {
+                model = assistExtend.inspectAddModel(model);
+            }
         }
 
         if (assistExtend != null
