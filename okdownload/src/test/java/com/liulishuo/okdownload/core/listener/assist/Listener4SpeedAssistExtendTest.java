@@ -105,11 +105,11 @@ public class Listener4SpeedAssistExtendTest {
 
     @Test
     public void dispatchTaskEnd() {
-        final boolean result = assistExtend.dispatchTaskEnd(task, EndCause.COMPLETE, null, model);
+        final boolean result = assistExtend.dispatchTaskEnd(task, EndCause.COMPLETED, null, model);
         assertThat(result).isTrue();
 
         verify(model.taskSpeed).endTask();
-        verify(callback).taskEnd(eq(task), eq(EndCause.COMPLETE), nullable(Exception.class),
+        verify(callback).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class),
                 eq(model.taskSpeed));
     }
 }

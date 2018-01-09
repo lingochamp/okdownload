@@ -161,7 +161,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 dispatcher.dispatch().taskEnd(task, EndCause.PRE_ALLOCATE_FAILED,
                         cache.getRealCause());
             } else {
-                dispatcher.dispatch().taskEnd(task, EndCause.COMPLETE, null);
+                dispatcher.dispatch().taskEnd(task, EndCause.COMPLETED, null);
                 store.completeDownload(task.getId());
                 fileStrategy.completeProcessStream(outputStream, task);
             }

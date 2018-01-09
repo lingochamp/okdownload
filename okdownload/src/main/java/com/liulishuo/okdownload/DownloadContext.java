@@ -29,8 +29,10 @@ import com.liulishuo.okdownload.core.listener.DownloadListenerBunch;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -47,11 +49,14 @@ public class DownloadContext {
     private final DownloadTask[] tasks;
     volatile boolean isStarted = false;
     @Nullable private final DownloadQueueListener queueListener;
+    private final QueueSet set;
 
-    public DownloadContext(@NonNull DownloadTask[] tasks,
-                           @Nullable DownloadQueueListener queueListener) {
+    DownloadContext(@NonNull DownloadTask[] tasks,
+                    @Nullable DownloadQueueListener queueListener,
+                    @NonNull QueueSet set) {
         this.tasks = tasks;
         this.queueListener = queueListener;
+        this.set = set;
     }
 
     public boolean isStarted() {
@@ -74,10 +79,13 @@ public class DownloadContext {
             targetListener = listener;
         }
 
+        final List<DownloadTask> scheduleTaskList = new ArrayList<>(Arrays.asList(tasks));
+        Collections.sort(scheduleTaskList);
+
         if (isSerial) {
             executeOnSerialExecutor(new Runnable() {
                 @Override public void run() {
-                    for (DownloadTask task : tasks) {
+                    for (DownloadTask task : scheduleTaskList) {
                         if (!isStarted) {
                             callbackQueueEndOnSerialLoop(task.isAutoCallbackToUIThread());
                             break;
@@ -87,7 +95,7 @@ public class DownloadContext {
                 }
             });
         } else {
-            for (DownloadTask task : tasks) {
+            for (DownloadTask task : scheduleTaskList) {
                 task.enqueue(targetListener);
             }
         }
@@ -118,8 +126,13 @@ public class DownloadContext {
         SERIAL_EXECUTOR.execute(runnable);
     }
 
+    public Builder toBuilder() {
+        return new Builder(set, new ArrayList<>(Arrays.asList(tasks)))
+                .setListener(this.queueListener);
+    }
+
     public static class Builder {
-        ArrayList<DownloadTask> boundTaskList = new ArrayList<>();
+        final ArrayList<DownloadTask> boundTaskList;
 
         private final QueueSet set;
         private DownloadQueueListener listener;
@@ -129,15 +142,29 @@ public class DownloadContext {
         }
 
         public Builder(QueueSet set) {
+            this(set, new ArrayList<DownloadTask>());
+        }
+
+        public Builder(QueueSet set, ArrayList<DownloadTask> taskArrayList) {
             this.set = set;
+            this.boundTaskList = taskArrayList;
         }
 
-        public void setListener(DownloadQueueListener listener) {
+        public Builder setListener(DownloadQueueListener listener) {
             this.listener = listener;
+            return this;
         }
 
-        public void bindSetTask(@NonNull DownloadTask task) {
-            if (!boundTaskList.contains(task)) boundTaskList.add(task);
+        public Builder bindSetTask(@NonNull DownloadTask task) {
+            final int index = boundTaskList.indexOf(task);
+            if (index >= 0) {
+                // replace
+                boundTaskList.set(index, task);
+            } else {
+                boundTaskList.add(task);
+            }
+
+            return this;
         }
 
         public DownloadTask bind(@NonNull String url) {
@@ -165,6 +192,10 @@ public class DownloadContext {
                         .setMinIntervalMillisCallbackProcess(set.minIntervalMillisCallbackProcess);
             }
 
+            if (set.passIfAlreadyCompleted != null) {
+                taskBuilder.setPassIfAlreadyCompleted(set.passIfAlreadyCompleted);
+            }
+
             final DownloadTask task = taskBuilder.build();
             if (set.tag != null) task.setTag(set.tag);
 
@@ -185,12 +216,12 @@ public class DownloadContext {
 
         public DownloadContext build() {
             DownloadTask[] tasks = new DownloadTask[boundTaskList.size()];
-            return new DownloadContext(boundTaskList.toArray(tasks), listener);
+            return new DownloadContext(boundTaskList.toArray(tasks), listener, set);
         }
     }
 
     public static class QueueSet {
-        private HashMap<String, List<String>> headerMapFields;
+        private Map<String, List<String>> headerMapFields;
         private Uri uri;
         private Integer readBufferSize;
         private Integer flushBufferSize;
@@ -200,14 +231,15 @@ public class DownloadContext {
         private Boolean autoCallbackToUIThread;
         private Integer minIntervalMillisCallbackProcess;
 
+        private Boolean passIfAlreadyCompleted;
+
         private Object tag;
 
-        public HashMap<String, List<String>> getHeaderMapFields() {
+        public Map<String, List<String>> getHeaderMapFields() {
             return headerMapFields;
         }
 
-        public void setHeaderMapFields(
-                HashMap<String, List<String>> headerMapFields) {
+        public void setHeaderMapFields(Map<String, List<String>> headerMapFields) {
             this.headerMapFields = headerMapFields;
         }
 
@@ -291,6 +323,16 @@ public class DownloadContext {
 
         public void setTag(Object tag) {
             this.tag = tag;
+        }
+
+        public boolean isPassIfAlreadyCompleted() {
+            return passIfAlreadyCompleted == null
+                    ? DownloadTask.Builder.DEFAULT_PASS_IF_ALREADY_COMPLETED
+                    : passIfAlreadyCompleted;
+        }
+
+        public void setPassIfAlreadyCompleted(boolean passIfAlreadyCompleted) {
+            this.passIfAlreadyCompleted = passIfAlreadyCompleted;
         }
 
         public Builder commit() {

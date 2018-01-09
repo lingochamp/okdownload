@@ -60,9 +60,9 @@ public class DownloadContextTest {
         tasks[0] = mock(DownloadTask.class);
         tasks[1] = mock(DownloadTask.class);
         tasks[2] = mock(DownloadTask.class);
-        context = spy(new DownloadContext(tasks, queueListener));
 
         queueSet = new DownloadContext.QueueSet();
+        context = spy(new DownloadContext(tasks, queueListener, queueSet));
         builder = spy(new DownloadContext.Builder(queueSet));
     }
 
@@ -72,7 +72,7 @@ public class DownloadContextTest {
     @Test
     public void start_withoutQueueListener() {
         // without queue listener
-        context = spy(new DownloadContext(tasks, null));
+        context = spy(new DownloadContext(tasks, null, queueSet));
         assertThat(context.isStarted()).isFalse();
         doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
         context.start(listener, true);
@@ -90,7 +90,7 @@ public class DownloadContextTest {
     @Test
     public void start_withQueueListener() {
         // with queue listener
-        context = spy(new DownloadContext(tasks, queueListener));
+        context = spy(new DownloadContext(tasks, queueListener, queueSet));
         doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
         context.start(listener, false);
         verify(tasks[0]).enqueue(listenerCaptor.capture());
@@ -179,6 +179,10 @@ public class DownloadContextTest {
         doReturn(task).when(taskBuilder).build();
         builder.bind(taskBuilder);
         verify(task).setTag(tag);
+
+        queueSet.setPassIfAlreadyCompleted(true);
+        builder.bind(taskBuilder);
+        verify(taskBuilder).setPassIfAlreadyCompleted(eq(true));
     }
 
     @Test

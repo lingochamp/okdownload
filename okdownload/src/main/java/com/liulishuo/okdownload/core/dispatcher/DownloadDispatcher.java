@@ -22,6 +22,7 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.download.DownloadCall;
@@ -80,6 +81,7 @@ public class DownloadDispatcher {
     }
 
     public synchronized void enqueue(DownloadTask task) {
+        if (inspectCompleted(task)) return;
         if (inspectForConflict(task)) return;
 
         final DownloadCall call = DownloadCall.create(task, true);
@@ -97,6 +99,7 @@ public class DownloadDispatcher {
         final DownloadCall call;
 
         synchronized (this) {
+            if (inspectCompleted(task)) return;
             if (inspectForConflict(task)) return;
 
             Util.d(TAG, "execute " + task);
@@ -278,7 +281,16 @@ public class DownloadDispatcher {
         return inspectForConflict(task, readyAsyncCalls)
                 || inspectForConflict(task, runningAsyncCalls)
                 || inspectForConflict(task, runningSyncCalls);
+    }
 
+    private boolean inspectCompleted(DownloadTask task) {
+        if (task.isPassIfAlreadyCompleted() && StatusUtil.isCompleted(task)) {
+            OkDownload.with().callbackDispatcher().dispatch()
+                    .taskEnd(task, EndCause.COMPLETED, null);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean inspectForConflict(DownloadTask task, Collection<DownloadCall> calls) {

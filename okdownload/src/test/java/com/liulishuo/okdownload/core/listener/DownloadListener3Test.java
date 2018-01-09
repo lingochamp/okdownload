@@ -77,7 +77,7 @@ public class DownloadListener3Test {
         listener3.taskStart(task);
         verify(listener3).started(eq(task));
 
-        listener3.taskEnd(task, EndCause.COMPLETE, realCause);
+        listener3.taskEnd(task, EndCause.COMPLETED, realCause);
         verify(listener3).completed(eq(task));
 
         listener3.taskEnd(task, EndCause.CANCELED, realCause);

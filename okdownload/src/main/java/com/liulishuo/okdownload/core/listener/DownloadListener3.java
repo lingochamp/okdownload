@@ -36,7 +36,7 @@ public abstract class DownloadListener3 extends DownloadListener1 {
     @Override public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
                                   @NonNull Listener1Assist.Listener1Model model) {
         switch (cause) {
-            case COMPLETE:
+            case COMPLETED:
                 completed(task);
                 break;
             case CANCELED:

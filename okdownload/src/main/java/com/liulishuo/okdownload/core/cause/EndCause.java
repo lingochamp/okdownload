@@ -17,7 +17,7 @@
 package com.liulishuo.okdownload.core.cause;
 
 public enum EndCause {
-    COMPLETE,
+    COMPLETED,
     ERROR,
     CANCELED,
     FILE_BUSY,

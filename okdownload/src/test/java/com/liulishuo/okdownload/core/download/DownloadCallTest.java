@@ -220,7 +220,7 @@ public class DownloadCallTest {
 
         when(mockCache.isUserCanceled()).thenReturn(false);
         call.execute();
-        verify(mockListener).taskEnd(mockTask, EndCause.COMPLETE, null);
+        verify(mockListener).taskEnd(mockTask, EndCause.COMPLETED, null);
         verify(mockStore).completeDownload(mockTask.getId());
         verify(mockFileStrategy).completeProcessStream(any(MultiPointOutputStream.class),
                 eq(mockTask));

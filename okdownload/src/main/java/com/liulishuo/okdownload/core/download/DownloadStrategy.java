@@ -19,11 +19,6 @@ package com.liulishuo.okdownload.core.download;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
@@ -33,6 +28,11 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.ServerCancelledException;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREATED_RANGE_NOT_FROM_0;
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETAG_CHANGED;
@@ -162,11 +162,15 @@ public class DownloadStrategy {
 
     public static class FilenameHolder {
         private volatile String filename;
+        private final boolean filenameProvidedByConstruct;
 
-        public FilenameHolder() { }
+        public FilenameHolder() {
+            this.filenameProvidedByConstruct = false;
+        }
 
         public FilenameHolder(@NonNull String filename) {
             this.filename = filename;
+            this.filenameProvidedByConstruct = true;
         }
 
         void set(@NonNull String filename) {
@@ -174,6 +178,10 @@ public class DownloadStrategy {
         }
 
         @Nullable public String get() { return filename; }
+
+        public boolean isFilenameProvidedByConstruct() {
+            return filenameProvidedByConstruct;
+        }
 
         @Override public boolean equals(Object obj) {
             if (super.equals(obj)) return true;

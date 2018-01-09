@@ -32,12 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class DownloadTask implements Cloneable {
+public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
     private final int id;
     private final String url;
     private final Uri uri;
     private final boolean isUriIsDirectory;
-    private final HashMap<String, List<String>> headerMapFields;
+    private final Map<String, List<String>> headerMapFields;
 
 
     /**
@@ -57,6 +57,11 @@ public class DownloadTask implements Cloneable {
     private final int syncBufferSize;
     private final int syncBufferIntervalMills;
 
+    /**
+     * if this task has already completed with
+     */
+    private final boolean passIfAlreadyCompleted;
+
     private final boolean autoCallbackToUIThread;
     private final int minIntervalMillisCallbackProcess;
     // end optimize ------------------
@@ -73,7 +78,8 @@ public class DownloadTask implements Cloneable {
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
-                        HashMap<String, List<String>> headerMapFields, @Nullable String filename) {
+                        Map<String, List<String>> headerMapFields, @Nullable String filename,
+                        boolean passIfAlreadyCompleted) {
         try {
             this.url = url;
             this.uri = uri;
@@ -86,6 +92,7 @@ public class DownloadTask implements Cloneable {
             this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
             this.headerMapFields = headerMapFields;
             this.lastCallbackProcessTimestamp = new AtomicLong();
+            this.passIfAlreadyCompleted = passIfAlreadyCompleted;
 
             final File file = new File(uri.getPath());
             if (file.isFile()) {
@@ -127,6 +134,10 @@ public class DownloadTask implements Cloneable {
 
     @Nullable public String getFilename() {
         return filenameHolder.get();
+    }
+
+    public boolean isPassIfAlreadyCompleted() {
+        return passIfAlreadyCompleted;
     }
 
     public DownloadStrategy.FilenameHolder getFilenameHolder() {
@@ -209,6 +220,14 @@ public class DownloadTask implements Cloneable {
         keyTagMap.put(key, value);
     }
 
+    public synchronized void removeTag(int key) {
+        if (keyTagMap != null) keyTagMap.remove(key);
+    }
+
+    public synchronized void removeTag() {
+        this.tag = null;
+    }
+
     public void setTag(Object tag) {
         this.tag = tag;
     }
@@ -236,7 +255,7 @@ public class DownloadTask implements Cloneable {
     }
 
     public Builder toBuilder() {
-        return new Builder(this.url, this.uri)
+        final Builder builder = new Builder(this.url, this.uri)
                 .setPriority(priority)
                 .setReadBufferSize(readBufferSize)
                 .setFlushBufferSize(flushBufferSize)
@@ -244,13 +263,29 @@ public class DownloadTask implements Cloneable {
                 .setSyncBufferIntervalMillis(syncBufferIntervalMills)
                 .setAutoCallbackToUIThread(autoCallbackToUIThread)
                 .setMinIntervalMillisCallbackProcess(minIntervalMillisCallbackProcess)
-                .setHeaderMapFields(headerMapFields);
+                .setHeaderMapFields(headerMapFields)
+                .setPassIfAlreadyCompleted(passIfAlreadyCompleted);
+
+        if (getFilenameHolder().isFilenameProvidedByConstruct()) {
+            builder.setFilename(getFilename());
+        }
+
+        return builder;
+    }
+
+    public void setTags(DownloadTask oldTask) {
+        this.tag = oldTask.tag;
+        this.keyTagMap = oldTask.keyTagMap;
+    }
+
+    @Override public int compareTo(@NonNull DownloadTask o) {
+        return o.getPriority() - getPriority();
     }
 
     public static class Builder {
         @NonNull final String url;
         @NonNull final Uri uri;
-        private volatile HashMap<String, List<String>> headerMapFields;
+        private volatile Map<String, List<String>> headerMapFields;
 
         public Builder(@NonNull String url, @NonNull String parentPath, @Nullable String filename) {
             this(url, new File(parentPath));
@@ -290,6 +325,14 @@ public class DownloadTask implements Cloneable {
 
         private String filename;
 
+        public static final boolean DEFAULT_PASS_IF_ALREADY_COMPLETED = true;
+        /**
+         * if this task has already completed judged by
+         * {@link StatusUtil.Status#isCompleted(DownloadTask)}, callback completed directly instead
+         * of start download.
+         */
+        private boolean passIfAlreadyCompleted = DEFAULT_PASS_IF_ALREADY_COMPLETED;
+
         public Builder setAutoCallbackToUIThread(boolean autoCallbackToUIThread) {
             this.autoCallbackToUIThread = autoCallbackToUIThread;
             return this;
@@ -300,7 +343,7 @@ public class DownloadTask implements Cloneable {
             return this;
         }
 
-        public Builder setHeaderMapFields(HashMap<String, List<String>> headerMapFields) {
+        public Builder setHeaderMapFields(Map<String, List<String>> headerMapFields) {
             this.headerMapFields = headerMapFields;
             return this;
         }
@@ -355,11 +398,16 @@ public class DownloadTask implements Cloneable {
             return this;
         }
 
+        public Builder setPassIfAlreadyCompleted(boolean passIfAlreadyCompleted) {
+            this.passIfAlreadyCompleted = passIfAlreadyCompleted;
+            return this;
+        }
+
         public DownloadTask build() {
             return new DownloadTask(url, uri, priority, readBufferSize, flushBufferSize,
                     syncBufferSize, syncBufferIntervalMillis,
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
-                    headerMapFields, filename);
+                    headerMapFields, filename, passIfAlreadyCompleted);
         }
     }
 

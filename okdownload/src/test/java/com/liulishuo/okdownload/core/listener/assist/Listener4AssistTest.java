@@ -153,15 +153,15 @@ public class Listener4AssistTest {
         verify(callback).infoReady(eq(task2), eq(info2), eq(false),
                 any(Listener4Assist.Listener4Model.class));
 
-        assist.taskEnd(task2, EndCause.COMPLETE, null);
+        assist.taskEnd(task2, EndCause.COMPLETED, null);
         assertThat(assist.findModel(info2.getId())).isNull();
-        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETE), nullable(Exception.class),
+        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETED), nullable(Exception.class),
                 any(Listener4Assist.Listener4Model.class));
 
-        assist.taskEnd(task1, EndCause.COMPLETE, null);
+        assist.taskEnd(task1, EndCause.COMPLETED, null);
         assertThat(assist.getSingleTaskModel()).isNull();
         assertThat(assist.findModel(info1.getId())).isNull();
-        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETE), nullable(Exception.class),
+        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
                 any(Listener4Assist.Listener4Model.class));
     }
 
@@ -227,9 +227,9 @@ public class Listener4AssistTest {
         when(assistExtend.dispatchTaskEnd(eq(task1), any(EndCause.class), nullable(Exception.class),
                 any(Listener4Assist.Listener4Model.class)))
                 .thenReturn(true);
-        assist.taskEnd(task1, EndCause.COMPLETE, null);
+        assist.taskEnd(task1, EndCause.COMPLETED, null);
         verify(callback, never())
-                .taskEnd(eq(task1), eq(EndCause.COMPLETE), nullable(Exception.class),
+                .taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
                         any(Listener4Assist.Listener4Model.class));
     }
 

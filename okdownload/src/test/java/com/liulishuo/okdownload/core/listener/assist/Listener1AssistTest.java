@@ -83,16 +83,16 @@ public class Listener1AssistTest {
 
         final Listener1Assist.Listener1Model model1 = assist.findModel(1);
 
-        assist.taskEnd(task1, EndCause.COMPLETE, null);
+        assist.taskEnd(task1, EndCause.COMPLETED, null);
         assertThat(assist.getSingleTaskModel()).isNull();
         assertThat(assist.findModel(2)).isNotNull();
-        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETE), nullable(Exception.class),
+        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
                 eq(model1));
 
         final Listener1Assist.Listener1Model model2 = assist.findModel(2);
-        assist.taskEnd(task2, EndCause.COMPLETE, null);
+        assist.taskEnd(task2, EndCause.COMPLETED, null);
         assertThat(assist.findModel(2)).isNull();
-        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETE), nullable(Exception.class),
+        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETED), nullable(Exception.class),
                 eq(model2));
     }
 
