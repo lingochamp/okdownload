@@ -114,6 +114,7 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 - [] Support using OkHttp as connection handler with import `okdownload-connection-okhttp`
 - [] Support using OkDownload on kotlin style such as DSL with import `okdownload-kotlin-enhance`
 - [] Provide Benchmark on `benchmark` application
+- [] Provide `connectionPool` library to maintain connection for default `DownloadUrlConnection` instead of disconnect each time
 
 ## LICENSE
 
