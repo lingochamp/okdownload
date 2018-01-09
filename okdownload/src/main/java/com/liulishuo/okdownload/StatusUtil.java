@@ -66,7 +66,8 @@ public class StatusUtil {
                     && new File(parentPath, filename).exists()
                     && info.getTotalOffset() == info.getTotalLength()) {
                 return Status.COMPLETED;
-            } else {
+            } else if (filename != null && filename.equals(info.getFilename())
+                    && new File(parentPath, filename).exists()) {
                 return Status.IDLE;
             }
         } else if (filename != null && new File(parentPath, filename).exists()) {

@@ -146,12 +146,16 @@ public class StatusUtilTest {
         final BreakpointInfo info = mock(BreakpointInfo.class);
         doReturn(info).when(store).get(anyInt());
 
-        // info exist but no filename ---> idle
-        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
+        // info exist but no filename ---> unknown
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
 
-        // info exist but filename not the same ---> idle
+        // info exist but filename not the same ---> unknown
         when(task.getFilename()).thenReturn("filename");
-        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
+
+        // info exist and filename is the same but file not exist --> unknown
+        when(info.getFilename()).thenReturn("filename");
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
 
         // info exist and filename is the same but offset not the same to total ---> idle
         when(task.getFilename()).thenReturn(file.getName());
