@@ -15,9 +15,10 @@
   ~ limitations under the License.
   -->
 
-<resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="disabled">#9e9e9e</color>
-</resources>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/transparent"
+          android:state_enabled="true"/>
+
+    <item android:drawable="@color/disabled"
+          android:state_enabled="false"/>
+</selector>

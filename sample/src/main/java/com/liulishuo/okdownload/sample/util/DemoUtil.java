@@ -32,6 +32,7 @@ public class DemoUtil {
         return new DownloadTask.Builder(url, parentFile)
                 .setFilename(filename)
                 .setMinIntervalMillisCallbackProcess(progressIntervalMillis)
+                .setPassIfAlreadyCompleted(false)
                 .build();
     }
 

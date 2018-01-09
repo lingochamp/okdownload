@@ -23,7 +23,7 @@
     <string name="start_download">Start Download</string>
     <string name="cancel_download">Cancel download</string>
     <string name="start_same_task">Start Same Task</string>
-    <string name="start_same_file_task">Start same file task</string>
+    <string name="start_same_file_task">Start Same File Task</string>
     <string name="block_title">Block%1$d(%2$s~%3$s)</string>
     <string name="task_title">Task(0~%1$s)</string>
     <string name="get_status">Get Status</string>
@@ -31,9 +31,12 @@
     <string name="start">START</string>
     <string name="cancel">CANCEL</string>
     <string name="parallel">Parallel</string>
+    <string name="serial">Serial</string>
     <string name="priority">Priority(%1$d)</string>
     <string name="state_idle">IDLE</string>
+    <string name="state_pending">PENDING</string>
     <string name="state_unknown">UNKNOWN</string>
+    <string name="state_running">RUNNING</string>
 
     <!-- entry list -->
     <string name="single_download_title">Single Download</string>
@@ -58,4 +61,5 @@
     <string name="fetch_start">Fetch Start</string>
     <string name="fetch_progress">Fetch Progress</string>
     <string name="fetch_end">Fetch End</string>
+    <string name="delete_files">DELETE FILES</string>
 </resources>
