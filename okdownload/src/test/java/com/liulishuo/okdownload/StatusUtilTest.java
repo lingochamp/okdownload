@@ -157,9 +157,14 @@ public class StatusUtilTest {
         when(info.getFilename()).thenReturn("filename");
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
 
+        // info exist and filename is null and filename from info is exist --> idle
+        when(info.getFilename()).thenReturn(file.getName());
+        when(task.getParentPath()).thenReturn(file.getParent());
+        when(task.getFilename()).thenReturn(null);
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
+
         // info exist and filename is the same but offset not the same to total ---> idle
         when(task.getFilename()).thenReturn(file.getName());
-        when(task.getParentPath()).thenReturn(file.getParent());
         when(info.getFilename()).thenReturn(file.getName());
         when(info.getTotalLength()).thenReturn(1L);
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
