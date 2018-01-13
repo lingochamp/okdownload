@@ -89,7 +89,7 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 - [] Support only download on Wi-Fi network state
 - [] Support control the whole queue size of running task on `DownloadDispatcher`
 - [] Provide `MultiTaskListener` to listen to the process of batch of tasks
-- [x] Support `RemitDatabase` to cover the case of many small tasks raise many useless database operation.
+- [x] Support `RemitStoreOnSQLite` to cover the case of many small tasks raise many useless database operation.
 - [x] Support split any count of block to download one task
 - [x] Design as light as possible to download without drop performance
 - [x] Flexible thread pools on OkDownload to let OkDownload lighter
