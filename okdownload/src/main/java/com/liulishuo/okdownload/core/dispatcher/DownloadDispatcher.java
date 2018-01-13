@@ -197,6 +197,9 @@ public class DownloadDispatcher {
             }
         } finally {
             if (canceled) {
+                OkDownload.with().breakpointStore()
+                        .onTaskEnd(task.getId(), EndCause.CANCELED, null);
+
                 OkDownload.with().callbackDispatcher().dispatch().taskEnd(task,
                         EndCause.CANCELED,
                         null);

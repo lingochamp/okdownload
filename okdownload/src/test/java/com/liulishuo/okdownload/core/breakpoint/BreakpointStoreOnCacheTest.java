@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.core.breakpoint;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.EndCause;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -170,7 +171,7 @@ public class BreakpointStoreOnCacheTest {
         assertThat(storeOnCache.allocateId()).isEqualTo(6);
 
         assertThat(sortedOccupiedIds).containsExactly(1, 2, 3, 4, 5, 6, 7, 8);
-        storeOnCache.completeDownload(1);
+        storeOnCache.onTaskEnd(1, EndCause.COMPLETED, null);
         assertThat(sortedOccupiedIds).containsExactly(2, 3, 4, 5, 6, 7, 8);
         assertThat(storeOnCache.allocateId()).isEqualTo(1);
     }

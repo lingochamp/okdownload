@@ -20,11 +20,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
+import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
@@ -123,10 +120,6 @@ public class OkDownload {
         private DownloadMonitor monitor;
         private final Context context;
 
-        // You can import through com.liulishuo.okdownload:sqlite:{version}
-        private static final String STORE_ON_SQLITE
-                = "com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnSQLite";
-
         public Builder(@NonNull Context context) {
             this.context = context.getApplicationContext();
         }
@@ -181,18 +174,7 @@ public class OkDownload {
             }
 
             if (breakpointStore == null) {
-                try {
-                    final Constructor constructor = Class.forName(STORE_ON_SQLITE)
-                            .getDeclaredConstructor(Context.class);
-                    breakpointStore = (BreakpointStore) constructor.newInstance(context);
-                } catch (ClassNotFoundException ignored) {
-                } catch (InstantiationException ignored) {
-                } catch (IllegalAccessException ignored) {
-                } catch (NoSuchMethodException ignored) {
-                } catch (InvocationTargetException ignored) {
-                }
-
-                if (breakpointStore == null) breakpointStore = new BreakpointStoreOnCache();
+                breakpointStore = Util.createDefaultDatabase(context);
             }
 
             if (connectionFactory == null) {

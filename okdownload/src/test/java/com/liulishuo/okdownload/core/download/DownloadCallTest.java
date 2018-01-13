@@ -18,16 +18,6 @@ package com.liulishuo.okdownload.core.download;
 
 import android.net.Uri;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Future;
-
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
@@ -39,6 +29,16 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Future;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -218,10 +218,12 @@ public class DownloadCallTest {
         verify(mockListener, never()).taskEnd(any(DownloadTask.class), any(EndCause.class),
                 nullable(Exception.class));
 
+        when(mockCache.getOutputStream()).thenReturn(mock(MultiPointOutputStream.class));
         when(mockCache.isUserCanceled()).thenReturn(false);
         call.execute();
         verify(mockListener).taskEnd(mockTask, EndCause.COMPLETED, null);
-        verify(mockStore).completeDownload(mockTask.getId());
+        verify(mockStore)
+                .onTaskEnd(eq(mockTask.getId()), eq(EndCause.COMPLETED), nullable(Exception.class));
         verify(mockFileStrategy).completeProcessStream(any(MultiPointOutputStream.class),
                 eq(mockTask));
 

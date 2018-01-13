@@ -27,7 +27,6 @@ import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
@@ -89,11 +88,10 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         int retryCount = 0;
 
         final OkDownload okDownload = OkDownload.with();
-        final CallbackDispatcher dispatcher = okDownload.callbackDispatcher();
         final BreakpointStore store = okDownload.breakpointStore();
         final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
 
-        dispatcher.dispatch().taskStart(task);
+        inspectTaskStart();
         while (true) {
             if (canceled) break;
 
@@ -145,28 +143,51 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.discard(task.getId());
                 // try again from beginning.
-                dispatcher.dispatch().downloadFromBeginning(task, info,
+                OkDownload.with().callbackDispatcher().dispatch().downloadFromBeginning(task, info,
                         cache.getResumeFailedCause());
                 retry = true;
                 continue;
             }
 
+            final EndCause cause;
+            Exception realCause = null;
             if (cache.isServerCanceled() || cache.isUnknownError()
                     || cache.isPreconditionFailed()) {
                 // error
-                dispatcher.dispatch().taskEnd(task, EndCause.ERROR, cache.getRealCause());
+                cause = EndCause.ERROR;
+                realCause = cache.getRealCause();
             } else if (cache.isFileBusyAfterRun()) {
-                dispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
+                cause = EndCause.FILE_BUSY;
             } else if (cache.isPreAllocateFailed()) {
-                dispatcher.dispatch().taskEnd(task, EndCause.PRE_ALLOCATE_FAILED,
-                        cache.getRealCause());
+                cause = EndCause.PRE_ALLOCATE_FAILED;
+                realCause = cache.getRealCause();
             } else {
-                dispatcher.dispatch().taskEnd(task, EndCause.COMPLETED, null);
-                store.completeDownload(task.getId());
-                fileStrategy.completeProcessStream(outputStream, task);
+                cause = EndCause.COMPLETED;
             }
+            inspectTaskEnd(cache, cause, realCause);
             break;
         }
+    }
+
+    private void inspectTaskStart() {
+        OkDownload.with().breakpointStore().onTaskStart(task.getId());
+        OkDownload.with().callbackDispatcher().dispatch().taskStart(task);
+    }
+
+    private void inspectTaskEnd(DownloadCache cache, @NonNull EndCause cause,
+                                @Nullable Exception realCause) {
+        // non-cancel handled on here
+        if (cause == EndCause.CANCELED) {
+            throw new IllegalAccessError("can't recognize cancelled on here");
+        }
+
+        OkDownload.with().breakpointStore().onTaskEnd(task.getId(), cause, realCause);
+        if (cause == EndCause.COMPLETED) {
+            OkDownload.with().processFileStrategy()
+                    .completeProcessStream(cache.getOutputStream(), task);
+        }
+
+        OkDownload.with().callbackDispatcher().dispatch().taskEnd(task, cause, realCause);
     }
 
     // this method is convenient for unit-test.

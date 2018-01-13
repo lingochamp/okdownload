@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload.core.breakpoint;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.EndCause;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -108,8 +110,8 @@ public class BreakpointStoreOnSqliteTest {
     @Test
     public void completeDownload() {
         final int id = store.findOrCreateId(mock(DownloadTask.class));
-        store.completeDownload(id);
-        verify(onCache).completeDownload(id);
+        store.onTaskEnd(id, EndCause.COMPLETED, null);
+        verify(onCache).onTaskEnd(eq(id), eq(EndCause.COMPLETED), nullable(Exception.class));
         verify(helper).removeInfo(id);
     }
 

@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.StatFs;
 import android.support.annotation.NonNull;
@@ -23,8 +24,12 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
@@ -33,6 +38,8 @@ import java.util.concurrent.ThreadFactory;
 public class Util {
 
     public interface Logger {
+        void e(String tag, String msg, Exception e);
+
         void w(String tag, String msg);
 
         void d(String tag, String msg);
@@ -44,6 +51,15 @@ public class Util {
 
     public static void setLogger(Logger l) {
         logger = l;
+    }
+
+    public static void e(String tag, String msg, Exception e) {
+        if (logger != null) {
+            logger.e(tag, msg, e);
+            return;
+        }
+
+        Log.e(tag, msg, e);
     }
 
     public static void w(String tag, String msg) {
@@ -182,5 +198,37 @@ public class Util {
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
         return String.format(Locale.ENGLISH, "%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    public static @NonNull BreakpointStore createDefaultDatabase(Context context) {
+        // You can import through com.liulishuo.okdownload:sqlite:{version}
+        final String storeOnSqliteClassName
+                = "com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnSQLite";
+        final String remitStoreOnSqliteClassName
+                = "com.liulishuo.okdownload.core.breakpoint.RemitStoreOnSQLite";
+
+        try {
+            final Constructor constructor = Class.forName(remitStoreOnSqliteClassName)
+                    .getDeclaredConstructor(Context.class);
+            return (BreakpointStore) constructor.newInstance(context);
+        } catch (ClassNotFoundException ignored) {
+        } catch (InstantiationException ignored) {
+        } catch (IllegalAccessException ignored) {
+        } catch (NoSuchMethodException ignored) {
+        } catch (InvocationTargetException ignored) {
+        }
+
+        try {
+            final Constructor constructor = Class.forName(storeOnSqliteClassName)
+                    .getDeclaredConstructor(Context.class);
+            return (BreakpointStore) constructor.newInstance(context);
+        } catch (ClassNotFoundException ignored) {
+        } catch (InstantiationException ignored) {
+        } catch (IllegalAccessException ignored) {
+        } catch (NoSuchMethodException ignored) {
+        } catch (InvocationTargetException ignored) {
+        }
+
+        return new BreakpointStoreOnCache();
     }
 }

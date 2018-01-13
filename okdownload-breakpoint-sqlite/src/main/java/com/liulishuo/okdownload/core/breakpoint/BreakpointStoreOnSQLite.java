@@ -22,14 +22,15 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
 
 public class BreakpointStoreOnSQLite implements BreakpointStore {
 
     private static final String TAG = "BreakpointStoreOnSQLite";
-    private final BreakpointSQLiteHelper helper;
-    private final BreakpointStoreOnCache onCache;
+    protected final BreakpointSQLiteHelper helper;
+    protected final BreakpointStoreOnCache onCache;
 
     BreakpointStoreOnSQLite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache) {
         this.helper = helper;
@@ -46,10 +47,15 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
         return onCache.get(id);
     }
 
-    @Override public BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException {
+    @NonNull @Override public BreakpointInfo createAndInsert(@NonNull DownloadTask task)
+            throws IOException {
         final BreakpointInfo info = onCache.createAndInsert(task);
         helper.insert(info);
         return info;
+    }
+
+    @Override public void onTaskStart(int id) {
+        onCache.onTaskStart(id);
     }
 
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
@@ -70,9 +76,12 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
         return result;
     }
 
-    @Override public void completeDownload(int id) {
-        onCache.completeDownload(id);
-        helper.removeInfo(id);
+    @Override
+    public void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception) {
+        onCache.onTaskEnd(id, cause, exception);
+        if (cause == EndCause.COMPLETED) {
+            helper.removeInfo(id);
+        }
     }
 
     @Override public void discard(int id) {

@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
 
@@ -28,14 +29,16 @@ public interface BreakpointStore {
 
     @Nullable BreakpointInfo get(int id);
 
-    BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException;
+    @NonNull BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException;
+
+    void onTaskStart(int id);
 
     void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
                                    long increaseLength);
 
     boolean update(@NonNull BreakpointInfo breakpointInfo) throws IOException;
 
-    void completeDownload(int id);
+    void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception);
 
     void discard(int id);
 

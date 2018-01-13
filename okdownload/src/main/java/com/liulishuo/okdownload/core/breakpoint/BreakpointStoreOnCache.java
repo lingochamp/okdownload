@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class BreakpointStoreOnCache implements BreakpointStore {
-    private final SparseArray<BreakpointInfo> storedInfos;
+    final SparseArray<BreakpointInfo> storedInfos;
     private final HashMap<String, String> responseFilenameMap;
 
     private final SparseArray<DownloadTask> unStoredTasks;
@@ -79,6 +80,9 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         return newInfo;
     }
 
+    @Override public void onTaskStart(int id) {
+    }
+
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
                                                     long increaseLength) {
         final BreakpointInfo onCacheOne = this.storedInfos.get(info.id);
@@ -107,9 +111,11 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     }
 
     @Override
-    public synchronized void completeDownload(int id) {
-        storedInfos.remove(id);
-        if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));
+    public void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception) {
+        if (cause == EndCause.COMPLETED) {
+            storedInfos.remove(id);
+            if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));
+        }
     }
 
     @Override public synchronized void discard(int id) {
@@ -161,7 +167,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         return responseFilenameMap.get(url);
     }
 
-    private static final int FIRST_ID = 1;
+    public static final int FIRST_ID = 1;
 
     synchronized int allocateId() {
         int newId = 0;
