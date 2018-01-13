@@ -18,18 +18,10 @@ package com.liulishuo.okdownload;
 
 import android.support.annotation.Nullable;
 
+import com.liulishuo.okdownload.core.cause.EndCause;
+
 public interface DownloadMonitor {
-    void start(DownloadTask task);
+    void taskStart(DownloadTask task);
 
-    void success(DownloadTask task);
-
-    void failed(DownloadTask task, FailedCause cause, @Nullable Exception realCause);
-
-    enum FailedCause {
-        error,
-        stop,
-        fileBusy,
-        sameIdBusy,
-    }
-
+    void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause);
 }

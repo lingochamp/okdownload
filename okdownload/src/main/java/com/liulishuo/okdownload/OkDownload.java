@@ -19,6 +19,7 @@ package com.liulishuo.okdownload;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
@@ -45,7 +46,7 @@ public class OkDownload {
 
     private final Context context;
 
-    DownloadMonitor monitor;
+    @Nullable DownloadMonitor monitor;
 
     OkDownload(Context context, DownloadDispatcher downloadDispatcher,
                CallbackDispatcher callbackDispatcher, BreakpointStore breakpointStore,
@@ -78,8 +79,12 @@ public class OkDownload {
 
     public Context context() { return this.context; }
 
-    public void setMonitor(DownloadMonitor monitor) {
+    public void setMonitor(@Nullable DownloadMonitor monitor) {
         this.monitor = monitor;
+    }
+
+    @Nullable public DownloadMonitor getMonitor() {
+        return monitor;
     }
 
     public static OkDownload with() {

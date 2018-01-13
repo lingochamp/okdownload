@@ -23,7 +23,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadListener;
+import com.liulishuo.okdownload.DownloadMonitor;
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
@@ -43,6 +45,7 @@ public class CallbackDispatcher {
             @Override
             public void taskStart(final DownloadTask task) {
                 Util.i(TAG, "taskStart: " + task.getId());
+                inspectTaskStart(task);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -185,6 +188,7 @@ public class CallbackDispatcher {
             public void taskEnd(final DownloadTask task, final EndCause cause,
                                 @Nullable final Exception realCause) {
                 Util.i(TAG, "taskEnd: " + task.getId() + " " + cause);
+                inspectTaskEnd(task, cause, realCause);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -196,6 +200,17 @@ public class CallbackDispatcher {
                 }
             }
         };
+    }
+
+    private void inspectTaskStart(DownloadTask task) {
+        final DownloadMonitor monitor = OkDownload.with().getMonitor();
+        if (monitor != null) monitor.taskStart(task);
+    }
+
+    private void inspectTaskEnd(final DownloadTask task, final EndCause cause,
+                                @Nullable final Exception realCause) {
+        final DownloadMonitor monitor = OkDownload.with().getMonitor();
+        if (monitor != null) monitor.taskEnd(task, cause, realCause);
     }
 
     public boolean isFetchProcessMoment(DownloadTask task) {
