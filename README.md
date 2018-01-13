@@ -85,10 +85,10 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 - [x] Provide various callback listeners to meet all requirements you want with `DownloadListener1`,`DownloadListener2`,etc..
 - [x] Provide function to find running task reference on `DownloadDispatcher#findSameTask`
 - [x] Support one task with several various listeners and manage them easily with `UnifiedListenerManager`
-- [] Support control batch of tasks with `DownloadContext`
+- [x] Support control batch of tasks with `DownloadContext`
 - [] Support only download on Wi-Fi network state
 - [] Support control the whole queue size of running task on `DownloadDispatcher`
-- [] Provide `MultiTaskListener` to listen to the process of batch of tasks
+- [] Provide `DownloadQueueListener` to listen to the process of batch of tasks
 - [x] Support `RemitStoreOnSQLite` to cover the case of many small tasks raise many useless database operation.
 - [x] Support split any count of block to download one task
 - [x] Design as light as possible to download without drop performance
