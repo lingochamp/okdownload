@@ -16,7 +16,6 @@
 
 package com.liulishuo.okdownload.sample.util;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -147,16 +146,6 @@ public class EachBlockProgressUtil {
         final String readableRange = "(" + readableRangeLeft + "~" + readableRangeRight + ")";
         final String title = prefix + readableRange;
         titleTv.setText(title);
-    }
-
-    public static DownloadTask createTask(Context context) {
-        return DemoUtil.createTask(context, "each-block-progress-test", 64);
-    }
-
-    public static DownloadTask createSameFileAnotherUrlTask(Context context) {
-        final String anotherUrl =
-                "http://dldir1.qq.com/weixin/android/seixin6516android1120.apk";
-        return DemoUtil.createTask(context, "each-block-progress-test", anotherUrl, 64);
     }
 
     public static DownloadListener createSampleListener(final TextView extInfoTv) {

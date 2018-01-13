@@ -32,10 +32,12 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed;
 import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
+import com.liulishuo.okdownload.sample.util.DemoUtil;
 import com.liulishuo.okdownload.sample.util.EachBlockProgressUtil;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -108,8 +110,33 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
     }
 
     private void initTask() {
-        task = EachBlockProgressUtil.createTask(this);
+        task = createTask();
     }
+
+    private DownloadTask createTask() {
+        final String url =
+                "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
+        return createTask(url);
+    }
+
+    private DownloadTask createSameFileAnotherUrlTask() {
+        final String anotherUrl =
+                "http://dldir1.qq.com/weixin/android/seixin6516android1120.apk";
+        return createTask(anotherUrl);
+    }
+
+    private DownloadTask createTask(String url) {
+        final String filename = "each-block-progress-test";
+        final File parentFile = DemoUtil.getParentFile(this);
+        return new DownloadTask.Builder(url, parentFile)
+                .setFilename(filename)
+                // the minimal interval millisecond for callback progress
+                .setMinIntervalMillisCallbackProcess(64)
+                // ignore the same task has already completed in the past.
+                .setPassIfAlreadyCompleted(false)
+                .build();
+    }
+
 
     private void initStatus(TextView statusTv,
                             ProgressBar taskPb,
@@ -120,6 +147,9 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                             TextView block2TitleTv, TextView block3TitleTv) {
         final StatusUtil.Status status = StatusUtil.getStatus(task);
         statusTv.setText(status.toString());
+        if (status == StatusUtil.Status.COMPLETED) {
+            taskPb.setProgress(taskPb.getMax());
+        }
 
         final BreakpointInfo info = StatusUtil.getCurrentInfo(task);
         if (info != null) {
@@ -178,8 +208,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 final boolean started = task.getTag() != null;
                 if (!started) return;
 
-                final DownloadTask task = EachBlockProgressUtil
-                        .createTask(EachBlockProgressActivity.this);
+                final DownloadTask task = createTask();
                 task.enqueue(EachBlockProgressUtil.createSampleListener(extInfoTv));
             }
         });
@@ -190,8 +219,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 final boolean started = task.getTag() != null;
                 if (!started) return;
 
-                final DownloadTask sameFileAnotherUrlTask = EachBlockProgressUtil
-                        .createSameFileAnotherUrlTask(EachBlockProgressActivity.this);
+                final DownloadTask sameFileAnotherUrlTask = createSameFileAnotherUrlTask();
                 sameFileAnotherUrlTask
                         .enqueue(EachBlockProgressUtil.createSampleListener(extInfoTv));
             }

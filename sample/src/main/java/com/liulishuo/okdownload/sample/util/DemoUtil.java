@@ -20,28 +20,9 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.widget.ProgressBar;
 
-import com.liulishuo.okdownload.DownloadTask;
-
 import java.io.File;
 
 public class DemoUtil {
-
-    public static DownloadTask createTask(Context context, String filename, String url,
-                                          int progressIntervalMillis) {
-        final File parentFile = DemoUtil.getParentFile(context);
-        return new DownloadTask.Builder(url, parentFile)
-                .setFilename(filename)
-                .setMinIntervalMillisCallbackProcess(progressIntervalMillis)
-                .setPassIfAlreadyCompleted(false)
-                .build();
-    }
-
-    public static DownloadTask createTask(Context context, String filename,
-                                          int progressIntervalMillis) {
-        final String url =
-                "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
-        return createTask(context, filename, url, progressIntervalMillis);
-    }
 
     public static void calcProgressToView(ProgressBar progressBar, long offset, long total) {
         final float percent = (float) offset / total;

@@ -37,6 +37,7 @@ import com.liulishuo.okdownload.sample.util.DemoUtil;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -76,12 +77,24 @@ public class SingleActivity extends BaseSampleActivity {
 
     private void initTask() {
         final String filename = "single-test";
-        final int progressIntervalMillis = 16;
-        task = DemoUtil.createTask(this, filename, progressIntervalMillis);
+        final String url =
+                "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk";
+        final File parentFile = DemoUtil.getParentFile(this);
+        task = new DownloadTask.Builder(url, parentFile)
+                .setFilename(filename)
+                // the minimal interval millisecond for callback progress
+                .setMinIntervalMillisCallbackProcess(16)
+                // ignore the same task has already completed in the past.
+                .setPassIfAlreadyCompleted(false)
+                .build();
     }
 
     private void initStatus(TextView statusTv, ProgressBar progressBar) {
         final StatusUtil.Status status = StatusUtil.getStatus(task);
+        if (status == StatusUtil.Status.COMPLETED) {
+            progressBar.setProgress(progressBar.getMax());
+        }
+
         statusTv.setText(status.toString());
         final BreakpointInfo info = StatusUtil.getCurrentInfo(task);
         if (info != null) {
