@@ -81,7 +81,7 @@ public class SpeedCalculator {
      * re-calculate speed.
      */
     public long getBytesPerSecondAndFlush() {
-        if (nowMillis() - timestamp < 1000) return bytesPerSecond;
+        if (nowMillis() - timestamp < 1000 && bytesPerSecond != 0) return bytesPerSecond;
 
         return getInstantBytesPerSecondAndFlush();
     }
