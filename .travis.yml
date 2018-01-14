@@ -13,7 +13,6 @@ android:
 script:
   - ./gradlew clean check
 
-
 sudo: false
 
 before_cache:
@@ -21,8 +20,7 @@ before_cache:
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 
 after_script:
-    - cat ./demo/build/outputs/lint-results.xml
-    - cat ./library/build/outputs/lint-results.xml
+  - bash <(curl -s https://codecov.io/bash)
 
 cache:
   directories:

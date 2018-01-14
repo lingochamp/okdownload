@@ -10,3 +10,4 @@
 /build
 /captures
 .externalNativeBuild
+jacoco.exec
