@@ -64,7 +64,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             setWriteAheadLoggingEnabled(true);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+        } else {
             db.enableWriteAheadLogging();
         }
     }
