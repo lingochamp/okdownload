@@ -17,10 +17,13 @@
 package com.liulishuo.okdownload.core.breakpoint;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
@@ -34,6 +37,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -226,5 +230,24 @@ public class RemitStoreOnSQLiteTest {
 
         store.saveOnDBIdList.add(1);
         assertThat(store.isInfoNotOnDatabase(1)).isFalse();
+    }
+
+    @Rule public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void setRemitToDBDelayMillis() throws IOException {
+        OkDownload.setSingletonInstance(mock(OkDownload.class));
+
+        doReturn(mock(BreakpointStoreOnCache.class)).when(OkDownload.with()).breakpointStore();
+        thrown.expect(IllegalStateException.class);
+        RemitStoreOnSQLite.setRemitToDBDelayMillis(1);
+
+        doReturn(store).when(OkDownload.with()).breakpointStore();
+
+        RemitStoreOnSQLite.setRemitToDBDelayMillis(-1);
+        assertThat(remitHelper.delayMillis).isEqualTo(0);
+
+        RemitStoreOnSQLite.setRemitToDBDelayMillis(1);
+        assertThat(remitHelper.delayMillis).isEqualTo(1);
     }
 }
