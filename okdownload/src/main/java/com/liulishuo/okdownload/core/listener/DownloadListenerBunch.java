@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class DownloadListenerBunch implements DownloadListener {
 
-    private final DownloadListener[] listenerList;
+    @NonNull final DownloadListener[] listenerList;
 
     DownloadListenerBunch(@NonNull DownloadListener[] listenerList) {
         this.listenerList = listenerList;
