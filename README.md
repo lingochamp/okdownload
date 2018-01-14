@@ -4,6 +4,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 
 ![][okdownload_svg]
 [![][build_status_svg]][build_status_link]
+[![codecov](https://codecov.io/gh/lingochamp/okdownload/branch/master/graph/badge.svg)](https://codecov.io/gh/lingochamp/okdownload)
 
 ---
 
