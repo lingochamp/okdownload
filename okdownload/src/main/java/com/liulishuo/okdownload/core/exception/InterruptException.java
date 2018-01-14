@@ -24,9 +24,6 @@ public class InterruptException extends IOException {
     }
 
     public static final InterruptException SIGNAL = new InterruptException() {
-        @Override public StackTraceElement[] getStackTrace() {
-            throw new IllegalAccessError("Stack is ignored for signal");
-        }
 
         @Override public void printStackTrace() {
             throw new IllegalAccessError("Stack is ignored for signal");

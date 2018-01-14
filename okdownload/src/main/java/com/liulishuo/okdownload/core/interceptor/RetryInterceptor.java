@@ -16,9 +16,6 @@
 
 package com.liulishuo.okdownload.core.interceptor;
 
-import java.io.IOException;
-import java.net.SocketException;
-
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadCache;
 import com.liulishuo.okdownload.core.download.DownloadChain;
@@ -28,6 +25,9 @@ import com.liulishuo.okdownload.core.exception.PreAllocateException;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.RetryException;
 import com.liulishuo.okdownload.core.exception.ServerCancelledException;
+
+import java.io.IOException;
+import java.net.SocketException;
 
 public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
@@ -56,7 +56,6 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
                 throw e;
             }
         }
-
     }
 
     @Override
@@ -72,7 +71,7 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
         }
     }
 
-    private static void handleException(IOException e, DownloadCache cache) {
+    void handleException(IOException e, DownloadCache cache) {
         if (cache.isUserCanceled()) return; // ignored
 
         if (e instanceof ResumeFailedException) {
