@@ -50,16 +50,22 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     static final int MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED = 1;
     public final DownloadTask task;
     public final boolean asyncExecuted;
-    private final ArrayList<DownloadChain> blockChainList;
+    @NonNull private final ArrayList<DownloadChain> blockChainList;
 
     @Nullable private volatile DownloadCache cache;
     private volatile boolean canceled;
 
+
     private DownloadCall(DownloadTask task, boolean asyncExecuted) {
+        this(task, asyncExecuted, new ArrayList<DownloadChain>());
+    }
+
+    DownloadCall(DownloadTask task, boolean asyncExecuted,
+                 @NonNull ArrayList<DownloadChain> runningBlockList) {
         super("download call: " + task.getId());
         this.task = task;
         this.asyncExecuted = asyncExecuted;
-        this.blockChainList = new ArrayList<>();
+        this.blockChainList = runningBlockList;
     }
 
     public static DownloadCall create(DownloadTask task, boolean asyncExecuted) {
@@ -233,7 +239,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (cache.isInterrupt()) {
                 return;
             }
-            final Future firstBlockFuture = startFirstBlock(firstChain);
+            final Future firstBlockFuture = submitChain(firstChain);
             blockChainList.add(firstChain);
             if (!firstChain.isFinished()) {
                 parkForFirstConnection();
@@ -276,7 +282,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         ArrayList<Future> futures = new ArrayList<>(tasks.size());
         try {
             for (DownloadChain chain : tasks) {
-                futures.add(EXECUTOR.submit(chain));
+                futures.add(submitChain(chain));
             }
 
             blockChainList.addAll(tasks);
@@ -298,8 +304,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         }
     }
 
-    Future<?> startFirstBlock(DownloadChain firstChain) {
-        return EXECUTOR.submit(firstChain);
+    Future<?> submitChain(DownloadChain chain) {
+        return EXECUTOR.submit(chain);
     }
 
     @Override

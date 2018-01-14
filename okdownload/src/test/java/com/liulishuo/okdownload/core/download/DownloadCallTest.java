@@ -37,6 +37,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -77,10 +78,9 @@ public class DownloadCallTest {
         when(mockTask.getUri()).thenReturn(mock(Uri.class));
         when(mockTask.getListener()).thenReturn(mock(DownloadListener.class));
         call = spy(DownloadCall.create(mockTask, false));
-        doNothing().when(call).startBlocks(any(List.class));
 
         final Future mockFuture = mock(Future.class);
-        doReturn(mockFuture).when(call).startFirstBlock(any(DownloadChain.class));
+        doReturn(mockFuture).when(call).submitChain(any(DownloadChain.class));
         when(mockFuture.isDone()).thenReturn(true);
 
         when(mockInfo.getBlockCount()).thenReturn(3);
@@ -100,6 +100,7 @@ public class DownloadCallTest {
         when(mockStore.get(anyInt())).thenReturn(null);
         when(mockStore.createAndInsert(mockTask)).thenReturn(mockInfo);
         doNothing().when(call).start(any(DownloadCache.class), eq(mockInfo), anyBoolean());
+        doNothing().when(call).startBlocks(any(List.class));
 
         call.execute();
 
@@ -110,6 +111,7 @@ public class DownloadCallTest {
     public void execute_blockComplete_ignore() throws InterruptedException {
         mockLocalCheck(true);
         when(mockInfo.getBlock(1)).thenReturn(new BlockInfo(10, 10, 10));
+        doNothing().when(call).startBlocks(any(List.class));
 
         call.execute();
 
@@ -122,6 +124,7 @@ public class DownloadCallTest {
     @Test
     public void execute_availableResume_startAllBlocks() throws InterruptedException {
         mockLocalCheck(true);
+        doNothing().when(call).startBlocks(any(List.class));
 
         call.execute();
 
@@ -134,10 +137,11 @@ public class DownloadCallTest {
     @Test
     public void execute_notAvailableResume_startFirstAndOthers() throws InterruptedException {
         mockLocalCheck(false);
+        doNothing().when(call).startBlocks(any(List.class));
 
         call.execute();
 
-        verify(call).startFirstBlock(any(DownloadChain.class));
+        verify(call).submitChain(any(DownloadChain.class));
         ArgumentCaptor<List<DownloadChain>> captor = ArgumentCaptor.forClass(List.class);
         verify(call).startBlocks(captor.capture());
         assertThat(captor.getValue()).hasSize(2);
@@ -146,6 +150,7 @@ public class DownloadCallTest {
     @Test
     public void execute_filenameOnStore_validFilename() throws InterruptedException {
         mockLocalCheck(true);
+        doNothing().when(call).startBlocks(any(List.class));
 
         final String filename = "valid-filename";
         when(mockInfo.getFilename()).thenReturn(filename);
@@ -158,6 +163,7 @@ public class DownloadCallTest {
     @Test
     public void execute_preconditionFailed() throws InterruptedException {
         mockLocalCheck(true);
+        doNothing().when(call).startBlocks(any(List.class));
 
         final DownloadCache mockCache = mock(DownloadCache.class);
         doReturn(mockCache).when(call).createCache(any(MultiPointOutputStream.class));
@@ -188,6 +194,7 @@ public class DownloadCallTest {
         final DownloadCache mockCache = mock(DownloadCache.class);
         doReturn(mockCache).when(call).createCache(any(MultiPointOutputStream.class));
         when(mockCache.isPreconditionFailed()).thenReturn(true);
+        doNothing().when(call).startBlocks(any(List.class));
 
         call.execute();
 
@@ -210,6 +217,7 @@ public class DownloadCallTest {
         doReturn(mockCache).when(call).createCache(any(MultiPointOutputStream.class));
         final IOException mockIOException = mock(IOException.class);
         when(mockCache.getRealCause()).thenReturn(mockIOException);
+        doNothing().when(call).startBlocks(any(List.class));
 
         final DownloadListener mockListener = OkDownload.with().callbackDispatcher().dispatch();
 
@@ -262,6 +270,26 @@ public class DownloadCallTest {
 
         final int result = call.compareTo(compareCall);
         assertThat(result).isEqualTo(3);
+    }
+
+    @Test
+    public void startBlocks() throws InterruptedException {
+        ArrayList<DownloadChain> runningBlockList = spy(new ArrayList<DownloadChain>());
+        call = spy(new DownloadCall(mockTask, false, runningBlockList));
+
+        final Future mockFuture = mock(Future.class);
+        doReturn(mockFuture).when(call).submitChain(any(DownloadChain.class));
+
+        List<DownloadChain> chains = new ArrayList<>();
+        chains.add(mock(DownloadChain.class));
+        chains.add(mock(DownloadChain.class));
+        chains.add(mock(DownloadChain.class));
+
+        call.startBlocks(chains);
+
+        verify(call, times(3)).submitChain(any(DownloadChain.class));
+        verify(runningBlockList).addAll(eq(chains));
+        verify(runningBlockList).removeAll(eq(chains));
     }
 
     private void mockLocalCheck(boolean isAvailable) {
