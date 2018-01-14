@@ -45,7 +45,7 @@ public class DownloadDispatcher {
 
     private static final String TAG = "DownloadDispatcher";
 
-    int maxTaskCount = 5;
+    int maxParallelRunningCount = 5;
     // for sort performance(not need to copy one array), using ArrayList instead of deque(for add
     // on top, remove on bottom).
     private final List<DownloadCall> readyAsyncCalls;
@@ -85,7 +85,7 @@ public class DownloadDispatcher {
         if (inspectForConflict(task)) return;
 
         final DownloadCall call = DownloadCall.create(task, true);
-        if (runningAsyncSize() < maxTaskCount) {
+        if (runningAsyncSize() < maxParallelRunningCount) {
             runningAsyncCalls.add(call);
             executorService().execute(call);
         } else {
@@ -319,7 +319,7 @@ public class DownloadDispatcher {
     }
 
     private synchronized void processCalls() {
-        if (runningAsyncSize() >= maxTaskCount) return;
+        if (runningAsyncSize() >= maxParallelRunningCount) return;
         if (readyAsyncCalls.isEmpty()) return;
 
         for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
@@ -337,11 +337,22 @@ public class DownloadDispatcher {
             runningAsyncCalls.add(call);
             executorService().execute(call);
 
-            if (runningAsyncSize() >= maxTaskCount) return;
+            if (runningAsyncSize() >= maxParallelRunningCount) return;
         }
     }
 
     private int runningAsyncSize() {
         return runningAsyncCalls.size() - flyingCanceledAsyncCallCount;
+    }
+
+    public static void setMaxParallelRunningCount(int maxParallelRunningCount) {
+        DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
+        if (dispatcher.getClass() != DownloadDispatcher.class) {
+            throw new IllegalStateException(
+                    "The current dispatcher is " + dispatcher + " not DownloadDispatcher exactly!");
+        }
+
+        maxParallelRunningCount = Math.max(1, maxParallelRunningCount);
+        dispatcher.maxParallelRunningCount = maxParallelRunningCount;
     }
 }

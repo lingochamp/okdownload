@@ -25,7 +25,9 @@ import com.liulishuo.okdownload.core.download.DownloadCall;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
@@ -143,14 +145,14 @@ public class DownloadDispatcherTest {
         assertThat(readyAsyncCalls.get(0).task).isEqualTo(mockTask);
 
         assertThat(runningSyncCalls).isEmpty();
-        assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount);
+        assertThat(runningAsyncCalls).hasSize(dispatcher.maxParallelRunningCount);
     }
 
     @Test
     public void enqueue_countIgnoreCanceled() {
         maxRunningTask();
 
-        assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount);
+        assertThat(runningAsyncCalls).hasSize(dispatcher.maxParallelRunningCount);
 
         final DownloadTask task = mockTask();
         final DownloadCall canceledCall = runningAsyncCalls.get(0);
@@ -162,8 +164,8 @@ public class DownloadDispatcherTest {
         dispatcher.enqueue(task);
 
         assertThat(readyAsyncCalls).hasSize(0);
-        assertThat(runningAsyncCalls).hasSize(dispatcher.maxTaskCount + 1);
-        assertThat(runningAsyncCalls.get(dispatcher.maxTaskCount).task).isEqualTo(task);
+        assertThat(runningAsyncCalls).hasSize(dispatcher.maxParallelRunningCount + 1);
+        assertThat(runningAsyncCalls.get(dispatcher.maxParallelRunningCount).task).isEqualTo(task);
         assertThat(runningSyncCalls).isEmpty();
     }
 
@@ -190,7 +192,7 @@ public class DownloadDispatcherTest {
     }
 
     private void maxRunningTask() {
-        for (int i = 0; i < dispatcher.maxTaskCount; i++) {
+        for (int i = 0; i < dispatcher.maxParallelRunningCount; i++) {
             dispatcher.enqueue(mockTask());
         }
     }
@@ -294,4 +296,25 @@ public class DownloadDispatcherTest {
         isConflict = dispatcher.isFileConflictAfterRun(noSamePathTask);
         assertThat(isConflict).isFalse();
     }
+
+    @Rule public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void setMaxParallelRunningCount() throws IOException {
+        doReturn(mock(MockDownloadDispatcher.class)).when(OkDownload.with()).downloadDispatcher();
+        thrown.expect(IllegalStateException.class);
+        DownloadDispatcher.setMaxParallelRunningCount(1);
+
+        doReturn(dispatcher).when(OkDownload.with()).breakpointStore();
+
+        DownloadDispatcher.setMaxParallelRunningCount(0);
+        assertThat(dispatcher.maxParallelRunningCount).isEqualTo(1);
+
+        DownloadDispatcher.setMaxParallelRunningCount(2);
+        assertThat(dispatcher.maxParallelRunningCount).isEqualTo(2);
+    }
+
+    private static class MockDownloadDispatcher extends DownloadDispatcher {
+    }
+
 }
