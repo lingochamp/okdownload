@@ -149,6 +149,4 @@ public class DownloadListenerBunchTest {
         assertThat(listenerBunch.contain(listener2)).isTrue();
         assertThat(listenerBunch.contain(mock(DownloadListener.class))).isFalse();
     }
-
-
 }
