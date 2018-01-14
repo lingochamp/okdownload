@@ -223,9 +223,10 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
 
     public void updateInfo(@NonNull BreakpointInfo info) throws IOException {
         final SQLiteDatabase db = getWritableDatabase();
+        Cursor cursor = null;
         db.beginTransaction();
         try {
-            final Cursor cursor = getWritableDatabase().rawQuery(
+            cursor = getWritableDatabase().rawQuery(
                     "SELECT " + ID + " FROM " + BREAKPOINT_TABLE_NAME + " WHERE " + ID + " ="
                             + info.id + " LIMIT 1",
                     null);
@@ -237,6 +238,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
 
             db.setTransactionSuccessful();
         } finally {
+            if (cursor != null) cursor.close();
             db.endTransaction();
         }
     }
