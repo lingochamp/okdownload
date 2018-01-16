@@ -18,14 +18,15 @@ package com.liulishuo.okdownload.core.file;
 
 import android.support.annotation.NonNull;
 
-import java.io.File;
-import java.io.IOException;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
+
+import java.io.File;
+import java.io.IOException;
 
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.FILE_NOT_EXIST;
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
@@ -73,46 +74,67 @@ public class ProcessFileStrategy {
     }
 
     public static class ResumeAvailableLocalCheck {
-        private final boolean isAvailable;
-        private final boolean fileExist;
-        private final boolean infoRight;
-        private final boolean outputStreamSupport;
+        Boolean isAvailable;
+        boolean fileExist;
+        boolean infoRight;
+        boolean outputStreamSupport;
         private final DownloadTask task;
         private final BreakpointInfo info;
 
         protected ResumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
-            final String filePath = task.getPath();
-
-            File fileOnTask = null;
-            if (filePath == null) {
-                this.fileExist = false;
-            } else {
-                fileOnTask = new File(filePath);
-                this.fileExist = fileOnTask.exists();
-            }
-
-            final String pathOnInfo = info.getPath();
-            this.infoRight = info.getBlockCount() > 0 && pathOnInfo != null
-                    && new File(pathOnInfo).equals(fileOnTask);
-
-            final boolean supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
-            this.outputStreamSupport = (info.getBlockCount() > 1 && supportSeek)
-                    // pre-allocate but can't support seek, so can't resume, even though one block.
-                    || (info.getBlockCount() == 1 && !supportSeek
-                    && !OkDownload.with().processFileStrategy().isPreAllocateLength())
-                    || (info.getBlockCount() == 1 && supportSeek);
-
-            this.isAvailable = infoRight && fileExist && outputStreamSupport;
-
             this.task = task;
             this.info = info;
         }
 
+        public boolean isInfoRightToResume() {
+            final int blockCount = info.getBlockCount();
+
+            if (blockCount <= 0) return false;
+            if (info.isChunked()) return false;
+            if (info.getPath() == null) return false;
+            final File fileOnTask = task.getPath() == null ? null : new File(task.getPath());
+            if (!new File(info.getPath()).equals(fileOnTask)) return false;
+
+            for (int i = 0; i < blockCount; i++) {
+                BlockInfo blockInfo = info.getBlock(i);
+                if (blockInfo.getContentLength() <= 0) return false;
+            }
+
+            return true;
+        }
+
+        public boolean isOutputStreamSupportResume() {
+            final boolean supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
+            if (supportSeek) return true;
+
+            if (info.getBlockCount() != 1) return false;
+            if (OkDownload.with().processFileStrategy().isPreAllocateLength()) return false;
+
+            return true;
+        }
+
+        public boolean isFileExistToResume() {
+            final String filePath = task.getPath();
+            return filePath != null && new File(filePath).exists();
+        }
+
         public boolean isAvailable() {
+            checkIfNeed();
             return this.isAvailable;
         }
 
+        private void checkIfNeed() {
+            if (isAvailable == null) {
+                fileExist = isFileExistToResume();
+                infoRight = isInfoRightToResume();
+                outputStreamSupport = isOutputStreamSupportResume();
+                isAvailable = infoRight && fileExist && outputStreamSupport;
+            }
+        }
+
         public void callbackCause() {
+            checkIfNeed();
+
             final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
             if (isAvailable) {
                 dispatcher.dispatch().downloadFromBreakpoint(task, info);
