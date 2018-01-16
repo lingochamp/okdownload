@@ -18,12 +18,6 @@ package com.liulishuo.okdownload.core.interceptor.connect;
 
 import android.support.annotation.Nullable;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
@@ -35,6 +29,12 @@ import com.liulishuo.okdownload.core.download.DownloadStrategy;
 import com.liulishuo.okdownload.core.exception.FileBusyAfterRunException;
 import com.liulishuo.okdownload.core.exception.InterruptException;
 import com.liulishuo.okdownload.core.interceptor.Interceptor;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.liulishuo.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
 
@@ -140,8 +140,11 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
     }
 
-    private static final Pattern CONTENT_DISPOSITION_PATTERN =
+    private static final Pattern CONTENT_DISPOSITION_QUOTED_PATTERN =
             Pattern.compile("attachment;\\s*filename\\s*=\\s*\"([^\"]*)\"");
+    // no note
+    private static final Pattern CONTENT_DISPOSITION_NON_QUOTED_PATTERN =
+            Pattern.compile("attachment;\\s*filename\\s*=\\s*(.*)");
 
     /**
      * The same to com.android.providers.downloads.Helpers#parseContentDisposition.
@@ -157,7 +160,12 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         try {
-            Matcher m = CONTENT_DISPOSITION_PATTERN.matcher(contentDisposition);
+            Matcher m = CONTENT_DISPOSITION_QUOTED_PATTERN.matcher(contentDisposition);
+            if (m.find()) {
+                return m.group(1);
+            }
+
+            m = CONTENT_DISPOSITION_NON_QUOTED_PATTERN.matcher(contentDisposition);
             if (m.find()) {
                 return m.group(1);
             }

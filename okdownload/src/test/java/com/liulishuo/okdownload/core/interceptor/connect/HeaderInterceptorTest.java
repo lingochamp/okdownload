@@ -16,6 +16,14 @@
 
 package com.liulishuo.okdownload.core.interceptor.connect;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.download.DownloadChain;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,14 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.Util;
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.connection.DownloadConnection;
-import com.liulishuo.okdownload.core.download.DownloadChain;
 
 import static com.liulishuo.okdownload.TestUtils.mockDownloadChain;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
@@ -172,5 +172,8 @@ public class HeaderInterceptorTest {
         filename = HeaderInterceptor
                 .parseContentDisposition("attachment; filename=\"hello world\"");
         assertThat(filename).isEqualTo("hello world");
+        filename = HeaderInterceptor
+                .parseContentDisposition("attachment; filename=genome.jpeg\nabc");
+        assertThat(filename).isEqualTo("genome.jpeg");
     }
 }
