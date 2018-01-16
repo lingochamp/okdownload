@@ -62,7 +62,9 @@ public class StatusUtil {
         @NonNull final String parentPath = task.getParentPath();
 
         if (info != null) {
-            if ((filename != null && filename.equals(info.getFilename()))
+            if (!info.isChunked() && info.getTotalLength() <= 0) {
+                return Status.UNKNOWN;
+            } else if ((filename != null && filename.equals(info.getFilename()))
                     && new File(parentPath, filename).exists()
                     && info.getTotalOffset() == info.getTotalLength()) {
                 return Status.COMPLETED;
