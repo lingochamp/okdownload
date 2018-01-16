@@ -81,9 +81,7 @@ class RemitSyncToDBHelper {
     void makeIdFreeToDatabase(int id) {
         try {
             handlingId = id;
-            if (agent.isInfoNotOnDatabase(id)) {
-                syncCacheToDB(id);
-            }
+            syncCacheToDB(id);
             freeToDBIdList.add(id);
         } catch (IOException e) {
             Util.e("RemitSyncToDBHelper", "sync cache to database failed!", e);
@@ -105,16 +103,29 @@ class RemitSyncToDBHelper {
         handler.sendEmptyMessageDelayed(id, delayMillis);
     }
 
-    void onTaskEnd(int id) {
-        discardDelayedId(id);
+    void endAndEnsureToDB(int id) {
+        final boolean isAlreadySyncToDB = discardFlyingSyncOrEnsureSyncFinish(id);
+
+        if (!isAlreadySyncToDB) {
+            try {
+                syncCacheToDB(id);
+            } catch (IOException e) {
+                Util.e("RemitSyncToDBHelper", "sync cache to database failed!", e);
+            }
+        }
         freeToDBIdList.remove((Integer) id);
     }
 
-    void discardFlyingSyncOrEnsureSyncFinish(int id) {
+    void discard(int id) {
+        discardFlyingSyncOrEnsureSyncFinish(id);
+        freeToDBIdList.remove((Integer) id);
+    }
+
+    boolean discardFlyingSyncOrEnsureSyncFinish(int id) {
         // is already finished
         if (freeToDBIdList.contains(id)) {
             // already finished delayed message
-            return;
+            return true;
         }
 
         // try to discard
@@ -125,20 +136,10 @@ class RemitSyncToDBHelper {
             // discard failed, so make sure sync finish
             cleanThreadParkInNextLoop();
             parkCurrentThread();
+            return true;
         }
-    }
 
-
-    void ensureCacheToDB(int id) {
-        discardFlyingSyncOrEnsureSyncFinish(id);
-
-        if (agent.isInfoNotOnDatabase(id)) {
-            try {
-                syncCacheToDB(id);
-            } catch (IOException e) {
-                Util.e("RemitSyncToDBHelper", "sync cache to database failed!", e);
-            }
-        }
+        return false;
     }
 
     void syncCacheToDB(int id) throws IOException {
@@ -147,8 +148,6 @@ class RemitSyncToDBHelper {
 
     interface RemitAgent {
         void syncCacheToDB(int id) throws IOException;
-
-        boolean isInfoNotOnDatabase(int id);
     }
 
     void parkCurrentThread() {
@@ -163,5 +162,4 @@ class RemitSyncToDBHelper {
     void discardDelayedId(int id) {
         handler.removeMessages(id);
     }
-
 }

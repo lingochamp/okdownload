@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.core.breakpoint;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import org.junit.Before;
@@ -63,18 +64,6 @@ public class RemitStoreOnSQLiteTest {
 
         onCache = spy(new BreakpointStoreOnCache());
         store = new RemitStoreOnSQLite(helper, onCache, remitHelper);
-    }
-
-    @Test
-    public void init() {
-        onCache.storedInfos.put(1, mock(BreakpointInfo.class));
-        onCache.storedInfos.put(3, mock(BreakpointInfo.class));
-        onCache.storedInfos.put(5, mock(BreakpointInfo.class));
-        onCache.storedInfos.put(7, mock(BreakpointInfo.class));
-
-        store.init();
-
-        assertThat(store.saveOnDBIdList).containsExactly(1, 3, 5, 7);
     }
 
     @Test
@@ -159,77 +148,41 @@ public class RemitStoreOnSQLiteTest {
     }
 
     @Test
-    public void onTaskEnd_completedAndNotOnDatabase() {
+    public void onTaskEnd() {
         store.onTaskEnd(1, EndCause.COMPLETED, null);
 
         verify(onCache).onTaskEnd(eq(1), eq(EndCause.COMPLETED), nullable(Exception.class));
-        verify(remitHelper).discardFlyingSyncOrEnsureSyncFinish(eq(1));
-        verify(helper, never()).removeInfo(eq(1));
-        verify(remitHelper).onTaskEnd(eq(1));
-    }
-
-    @Test
-    public void onTaskEnd_completedAndAlreadyOnDatabase() {
-        store.saveOnDBIdList.add(1);
-
-        store.onTaskEnd(1, EndCause.COMPLETED, null);
-
-        verify(onCache).onTaskEnd(eq(1), eq(EndCause.COMPLETED), nullable(Exception.class));
-        verify(remitHelper).discardFlyingSyncOrEnsureSyncFinish(eq(1));
+        verify(remitHelper).discard(eq(1));
         verify(helper).removeInfo(eq(1));
-        verify(remitHelper).onTaskEnd(eq(1));
-
-        assertThat(store.saveOnDBIdList).isEmpty();
     }
 
     @Test
     public void onTaskEnd_notCompleted() {
         store.onTaskEnd(1, EndCause.CANCELED, null);
 
-        verify(remitHelper).ensureCacheToDB(eq(1));
         verify(onCache).onTaskEnd(eq(1), eq(EndCause.CANCELED), nullable(Exception.class));
-        verify(remitHelper).onTaskEnd(eq(1));
+        verify(remitHelper).endAndEnsureToDB(eq(1));
     }
 
     @Test
-    public void discard_notOnDatabase() {
+    public void discard() {
         store.discard(1);
 
         verify(onCache).discard(eq(1));
-        verify(remitHelper).discardFlyingSyncOrEnsureSyncFinish(eq(1));
-        verify(helper, never()).removeInfo(eq(1));
-        verify(remitHelper).onTaskEnd(eq(1));
-    }
-
-    @Test
-    public void discard_alreadyOnDatabase() {
-        store.saveOnDBIdList.add(1);
-        store.discard(1);
-
-        verify(onCache).discard(eq(1));
-        verify(remitHelper).discardFlyingSyncOrEnsureSyncFinish(eq(1));
+        verify(remitHelper).discard(eq(1));
         verify(helper).removeInfo(eq(1));
-        verify(remitHelper).onTaskEnd(eq(1));
-
-        assertThat(store.saveOnDBIdList).isEmpty();
     }
 
     @Test
     public void syncCacheToDB() throws IOException {
+        Util.setLogger(mock(Util.Logger.class));
+
         final BreakpointInfo info = mock(BreakpointInfo.class);
         when(onCache.get(1)).thenReturn(info);
 
         store.syncCacheToDB(1);
+        verify(store.helper).removeInfo(eq(1));
         verify(store.helper).insert(eq(info));
-        assertThat(store.saveOnDBIdList).containsExactly(1);
-    }
-
-    @Test
-    public void isInfoNotOnDatabase() {
-        assertThat(store.isInfoNotOnDatabase(1)).isTrue();
-
-        store.saveOnDBIdList.add(1);
-        assertThat(store.isInfoNotOnDatabase(1)).isFalse();
     }
 
     @Rule public ExpectedException thrown = ExpectedException.none();

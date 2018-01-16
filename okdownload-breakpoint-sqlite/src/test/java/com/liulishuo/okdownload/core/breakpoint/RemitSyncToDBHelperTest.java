@@ -29,10 +29,10 @@ import java.io.IOException;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.robolectric.annotation.Config.NONE;
 
@@ -63,24 +63,15 @@ public class RemitSyncToDBHelperTest {
 
 
     @Test
-    public void makeIdFreeToDatabase_infoOnDatabase() throws IOException {
+    public void makeIdFreeToDatabase() throws IOException {
         // info already on database case.
-        when(agent.isInfoNotOnDatabase(1)).thenReturn(false);
+        helper.handlingId = 10;
+
         doNothing().when(helper).syncCacheToDB(1);
         helper.makeIdFreeToDatabase(1);
-        verify(helper, never()).syncCacheToDB(eq(1));
-        assertThat(helper.freeToDBIdList).containsExactly(1);
-    }
 
-    @Test
-    public void makeIdFreeToDatabase_infoNotOnDatabase() throws IOException {
-        when(agent.isInfoNotOnDatabase(1)).thenReturn(true);
-
-        helper.handlingId = 10;
-        helper.makeIdFreeToDatabase(1);
-
-        assertThat(helper.freeToDBIdList).containsExactly(1);
         verify(helper).syncCacheToDB(eq(1));
+        assertThat(helper.freeToDBIdList).containsExactly(1);
         assertThat(helper.handlingId).isEqualTo(RemitSyncToDBHelper.INVALID_ID);
     }
 
@@ -99,10 +90,32 @@ public class RemitSyncToDBHelperTest {
 
 
     @Test
-    public void onTaskEnd() {
+    public void endAndEnsureToDB_notAlreadySyncToDB() throws IOException {
+        doReturn(false).when(helper).discardFlyingSyncOrEnsureSyncFinish(1);
         helper.freeToDBIdList.add(1);
 
-        helper.onTaskEnd(1);
+        helper.endAndEnsureToDB(1);
+
+        assertThat(helper.freeToDBIdList).isEmpty();
+        verify(helper).syncCacheToDB(eq(1));
+    }
+
+    public void endAndEnsureToDB_alreadySyncToDB() throws IOException {
+        doReturn(true).when(helper).discardFlyingSyncOrEnsureSyncFinish(1);
+
+        helper.freeToDBIdList.add(1);
+
+        helper.endAndEnsureToDB(1);
+
+        assertThat(helper.freeToDBIdList).isEmpty();
+        verify(helper, never()).syncCacheToDB(eq(1));
+    }
+
+    public void discard() {
+        doNothing().when(helper).discardFlyingSyncOrEnsureSyncFinish(1);
+        helper.freeToDBIdList.add(1);
+
+        helper.discard(1);
 
         assertThat(helper.freeToDBIdList).isEmpty();
     }
@@ -125,19 +138,5 @@ public class RemitSyncToDBHelperTest {
         helper.discardFlyingSyncOrEnsureSyncFinish(1);
         verify(helper).cleanThreadParkInNextLoop();
         verify(helper).parkCurrentThread();
-    }
-
-    @Test
-    public void ensureCacheToDB() throws IOException {
-        doNothing().when(helper).discardFlyingSyncOrEnsureSyncFinish(1);
-
-        when(agent.isInfoNotOnDatabase(1)).thenReturn(false);
-        helper.ensureCacheToDB(1);
-        verify(helper).discardFlyingSyncOrEnsureSyncFinish(eq(1));
-        verify(helper, never()).syncCacheToDB(eq(1));
-
-        when(agent.isInfoNotOnDatabase(1)).thenReturn(true);
-        helper.ensureCacheToDB(1);
-        verify(helper).syncCacheToDB(eq(1));
     }
 }

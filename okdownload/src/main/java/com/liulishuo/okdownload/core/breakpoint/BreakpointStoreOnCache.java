@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class BreakpointStoreOnCache implements BreakpointStore {
-    final SparseArray<BreakpointInfo> storedInfos;
+    private final SparseArray<BreakpointInfo> storedInfos;
     private final HashMap<String, String> responseFilenameMap;
 
     private final SparseArray<DownloadTask> unStoredTasks;

@@ -22,52 +22,39 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
         implements RemitSyncToDBHelper.RemitAgent {
 
+    private static final String TAG = "RemitStoreOnSQLite";
+
     @NonNull final RemitSyncToDBHelper remitHelper;
-    final List<Integer> saveOnDBIdList = new ArrayList<>();
 
     RemitStoreOnSQLite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache,
                        @NonNull RemitSyncToDBHelper remitHelper) {
         super(helper, onCache);
         this.remitHelper = remitHelper;
-        init();
-
     }
 
     RemitStoreOnSQLite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache) {
         super(helper, onCache);
         remitHelper = new RemitSyncToDBHelper(this);
-        init();
     }
 
     public RemitStoreOnSQLite(Context context) {
         super(context);
         remitHelper = new RemitSyncToDBHelper(this);
-        init();
-    }
-
-    void init() {
-        final int size = onCache.storedInfos.size();
-        for (int i = 0; i < size; i++) {
-            saveOnDBIdList.add(onCache.storedInfos.keyAt(i));
-        }
     }
 
     @NonNull @Override public BreakpointInfo createAndInsert(@NonNull DownloadTask task)
             throws IOException {
         if (remitHelper.isNotFreeToDatabase(task.getId())) return onCache.createAndInsert(task);
 
-        final BreakpointInfo info = super.createAndInsert(task);
-        saveOnDBIdList.add(info.getId());
-        return info;
+        return super.createAndInsert(task);
     }
 
     @Override public void onTaskStart(int id) {
@@ -93,46 +80,32 @@ public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
 
     @Override
     public void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception) {
+        onCache.onTaskEnd(id, cause, exception);
+
         if (cause == EndCause.COMPLETED) {
-            onCache.onTaskEnd(id, cause, exception);
-
-            remitHelper.discardFlyingSyncOrEnsureSyncFinish(id);
-            if (saveOnDBIdList.contains(id)) {
-                // already on database
-                helper.removeInfo(id);
-                saveOnDBIdList.remove((Integer) id);
-            }
+            remitHelper.discard(id);
+            helper.removeInfo(id);
         } else {
-            remitHelper.ensureCacheToDB(id);
-            onCache.onTaskEnd(id, cause, exception);
+            remitHelper.endAndEnsureToDB(id);
         }
-
-        remitHelper.onTaskEnd(id);
     }
 
     @Override public void discard(int id) {
         onCache.discard(id);
 
-        remitHelper.discardFlyingSyncOrEnsureSyncFinish(id);
-        if (saveOnDBIdList.contains(id)) {
-            // already on database
-            helper.removeInfo(id);
-            saveOnDBIdList.remove((Integer) id);
-        }
-
-        remitHelper.onTaskEnd(id);
+        remitHelper.discard(id);
+        helper.removeInfo(id);
     }
 
     @Override public void syncCacheToDB(int id) throws IOException {
+        Util.i(TAG, "syncCacheToDB " + id);
+
+        helper.removeInfo(id);
+
         final BreakpointInfo info = onCache.get(id);
         if (info == null) return;
 
         helper.insert(info);
-        saveOnDBIdList.add(id);
-    }
-
-    @Override public boolean isInfoNotOnDatabase(int id) {
-        return !saveOnDBIdList.contains(id);
     }
 
     public static void setRemitToDBDelayMillis(int delayMillis) {
