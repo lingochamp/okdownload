@@ -31,6 +31,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ![][sample_home_img]
 
 ![][single_download_img]![][each_block_progress_img]
+![][bunch_download_img]
 
 ## LISTENER
 
@@ -139,6 +140,7 @@ limitations under the License.
 [okdownload_svg]: https://img.shields.io/badge/Android-Okdownload-green.svg
 [sample_home_img]: https://github.com/lingochamp/okdownload/raw/master/art/sample-home.png
 [single_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/single-download.gif
+[bunch_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/bunch-download.gif
 [listener_img]: https://github.com/lingochamp/okdownload/raw/master/art/listener.png
 [each_block_progress_img]: https://github.com/lingochamp/okdownload/raw/master/art/each-block-progress.gif
 [build_status_svg]: https://travis-ci.org/lingochamp/okdownload.svg?branch=master
