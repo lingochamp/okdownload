@@ -18,13 +18,17 @@ package com.liulishuo.okdownload;
 
 import android.net.Uri;
 
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.listener.DownloadListenerBunch;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -40,7 +44,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class DownloadContextTest {
 
     @Mock private DownloadListener listener;
@@ -51,6 +58,11 @@ public class DownloadContextTest {
 
     private DownloadContext.Builder builder;
     private DownloadContext.QueueSet queueSet;
+
+    @BeforeClass
+    public static void setupClass() throws IOException {
+        Util.setLogger(mock(Util.Logger.class));
+    }
 
     @Before
     public void setup() {
@@ -66,12 +78,15 @@ public class DownloadContextTest {
         builder = spy(new DownloadContext.Builder(queueSet));
     }
 
-    @Captor
-    private ArgumentCaptor<DownloadListenerBunch> listenerCaptor;
-
     @Test
-    public void start_withoutQueueListener() {
+    public void start_withoutQueueListener() throws IOException {
+        mockOkDownload();
+
         // without queue listener
+        final DownloadTask[] tasks = new DownloadTask[2];
+        tasks[0] = new DownloadTask.Builder("url1", "path", "filename1").build();
+        tasks[1] = new DownloadTask.Builder("url2", "path", "filename1").build();
+
         context = spy(new DownloadContext(tasks, null, queueSet));
         assertThat(context.isStarted()).isFalse();
         doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
@@ -82,32 +97,42 @@ public class DownloadContextTest {
 
         context.start(listener, false);
 
-        for (DownloadTask task : tasks) {
-            verify(task).enqueue(listener);
-        }
+        final DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
+        verify(dispatcher).enqueue(tasks);
+
+        assertThat(tasks[0].getListener()).isEqualTo(listener);
+        assertThat(tasks[1].getListener()).isEqualTo(listener);
     }
 
     @Test
-    public void start_withQueueListener() {
+    public void start_withQueueListener() throws IOException {
+        mockOkDownload();
+
         // with queue listener
+        final DownloadTask[] tasks = new DownloadTask[2];
+        tasks[0] = new DownloadTask.Builder("url1", "path", "filename1").build();
+        tasks[1] = new DownloadTask.Builder("url2", "path", "filename1").build();
+
         context = spy(new DownloadContext(tasks, queueListener, queueSet));
         doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
         context.start(listener, false);
-        verify(tasks[0]).enqueue(listenerCaptor.capture());
 
-        final DownloadListenerBunch bunch = listenerCaptor.getValue();
-        assertThat(bunch.contain(listener)).isTrue();
+        final DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
+        verify(dispatcher).enqueue(tasks);
+
+        assertThat(tasks[0].getListener()).isEqualTo(tasks[1].getListener());
+        final DownloadListener taskListener = tasks[0].getListener();
+        assertThat(taskListener).isExactlyInstanceOf(DownloadListenerBunch.class);
+        assertThat(((DownloadListenerBunch) taskListener).contain(listener)).isTrue();
     }
 
     @Test
-    public void stop() {
+    public void stop() throws IOException {
         context.isStarted = true;
         context.stop();
         assertThat(context.isStarted()).isFalse();
 
-        for (DownloadTask task : tasks) {
-            verify(task).cancel();
-        }
+        verify(OkDownload.with().downloadDispatcher()).cancel(tasks);
     }
 
     @Test

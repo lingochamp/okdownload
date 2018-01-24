@@ -18,6 +18,11 @@ package com.liulishuo.okdownload;
 
 import android.net.Uri;
 
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
+import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.download.DownloadStrategy;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -31,14 +36,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
-import com.liulishuo.okdownload.core.connection.DownloadConnection;
-import com.liulishuo.okdownload.core.download.DownloadStrategy;
-
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.robolectric.annotation.Config.NONE;
 
@@ -94,6 +96,22 @@ public class DownloadTaskTest {
     public void tearDown() {
         new File(parentPath, filename).delete();
         new File(parentPath).delete();
+    }
+
+
+    @Test
+    public void enqueue() {
+        final DownloadTask[] tasks = new DownloadTask[2];
+        tasks[0] = new DownloadTask.Builder("url1", "path", "filename1").build();
+        tasks[1] = new DownloadTask.Builder("url2", "path", "filename1").build();
+
+        final DownloadListener listener = mock(DownloadListener.class);
+        DownloadTask.enqueue(tasks, listener);
+
+        assertThat(tasks[0].getListener()).isEqualTo(listener);
+        assertThat(tasks[1].getListener()).isEqualTo(listener);
+
+        verify(OkDownload.with().downloadDispatcher()).enqueue(eq(tasks));
     }
 
     @Test
@@ -181,6 +199,5 @@ public class DownloadTaskTest {
                 .setFilename("response-filename")
                 .build();
         assertThat(noFilenameTask.equals(anotherTask)).isTrue();
-
     }
 }

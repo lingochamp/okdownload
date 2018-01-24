@@ -68,6 +68,7 @@ public class DownloadContext {
     }
 
     public void start(final DownloadListener listener, boolean isSerial) {
+        Util.d(TAG, "start " + isSerial);
         isStarted = true;
         final DownloadListener targetListener;
         if (queueListener != null) {
@@ -79,10 +80,9 @@ public class DownloadContext {
             targetListener = listener;
         }
 
-        final List<DownloadTask> scheduleTaskList = new ArrayList<>(Arrays.asList(tasks));
-        Collections.sort(scheduleTaskList);
-
         if (isSerial) {
+            final List<DownloadTask> scheduleTaskList = Arrays.asList(tasks);
+            Collections.sort(scheduleTaskList);
             executeOnSerialExecutor(new Runnable() {
                 @Override public void run() {
                     for (DownloadTask task : scheduleTaskList) {
@@ -95,17 +95,14 @@ public class DownloadContext {
                 }
             });
         } else {
-            for (DownloadTask task : scheduleTaskList) {
-                task.enqueue(targetListener);
-            }
+            DownloadTask.enqueue(tasks, targetListener);
         }
+        Util.d(TAG, "start finish " + isSerial);
     }
 
     public void stop() {
+        if (isStarted) OkDownload.with().downloadDispatcher().cancel(tasks);
         isStarted = false;
-        for (DownloadTask task : tasks) {
-            task.cancel();
-        }
     }
 
     private void callbackQueueEndOnSerialLoop(boolean isAutoCallbackToUIThread) {
@@ -247,16 +244,19 @@ public class DownloadContext {
             return uri;
         }
 
-        public void setParentPathUri(Uri uri) {
+        public QueueSet setParentPathUri(Uri uri) {
             this.uri = uri;
+            return this;
         }
 
-        public void setParentPathFile(File parentPathFile) {
+        public QueueSet setParentPathFile(File parentPathFile) {
             this.uri = Uri.fromFile(parentPathFile);
+            return this;
         }
 
-        public void setParentPath(String parentPath) {
+        public QueueSet setParentPath(String parentPath) {
             this.uri = Uri.fromFile(new File(parentPath));
+            return this;
         }
 
         public int getReadBufferSize() {
@@ -264,8 +264,9 @@ public class DownloadContext {
                     ? DownloadTask.Builder.DEFAULT_READ_BUFFER_SIZE : readBufferSize;
         }
 
-        public void setReadBufferSize(int readBufferSize) {
+        public QueueSet setReadBufferSize(int readBufferSize) {
             this.readBufferSize = readBufferSize;
+            return this;
         }
 
         public int getFlushBufferSize() {
@@ -273,8 +274,9 @@ public class DownloadContext {
                     ? DownloadTask.Builder.DEFAULT_FLUSH_BUFFER_SIZE : flushBufferSize;
         }
 
-        public void setFlushBufferSize(int flushBufferSize) {
+        public QueueSet setFlushBufferSize(int flushBufferSize) {
             this.flushBufferSize = flushBufferSize;
+            return this;
         }
 
         public int getSyncBufferSize() {
@@ -282,8 +284,9 @@ public class DownloadContext {
                     ? DownloadTask.Builder.DEFAULT_SYNC_BUFFER_SIZE : syncBufferSize;
         }
 
-        public void setSyncBufferSize(int syncBufferSize) {
+        public QueueSet setSyncBufferSize(int syncBufferSize) {
             this.syncBufferSize = syncBufferSize;
+            return this;
         }
 
         public int getSyncBufferIntervalMillis() {
@@ -292,8 +295,9 @@ public class DownloadContext {
                     : syncBufferIntervalMillis;
         }
 
-        public void setSyncBufferIntervalMillis(int syncBufferIntervalMillis) {
+        public QueueSet setSyncBufferIntervalMillis(int syncBufferIntervalMillis) {
             this.syncBufferIntervalMillis = syncBufferIntervalMillis;
+            return this;
         }
 
         public boolean getAutoCallbackToUIThread() {
@@ -302,8 +306,9 @@ public class DownloadContext {
                     : autoCallbackToUIThread;
         }
 
-        public void setAutoCallbackToUIThread(Boolean autoCallbackToUIThread) {
+        public QueueSet setAutoCallbackToUIThread(Boolean autoCallbackToUIThread) {
             this.autoCallbackToUIThread = autoCallbackToUIThread;
+            return this;
         }
 
         public int getMinIntervalMillisCallbackProcess() {
@@ -312,17 +317,19 @@ public class DownloadContext {
                     : minIntervalMillisCallbackProcess;
         }
 
-        public void setMinIntervalMillisCallbackProcess(
+        public QueueSet setMinIntervalMillisCallbackProcess(
                 Integer minIntervalMillisCallbackProcess) {
             this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
+            return this;
         }
 
         public Object getTag() {
             return tag;
         }
 
-        public void setTag(Object tag) {
+        public QueueSet setTag(Object tag) {
             this.tag = tag;
+            return this;
         }
 
         public boolean isPassIfAlreadyCompleted() {
@@ -331,8 +338,9 @@ public class DownloadContext {
                     : passIfAlreadyCompleted;
         }
 
-        public void setPassIfAlreadyCompleted(boolean passIfAlreadyCompleted) {
+        public QueueSet setPassIfAlreadyCompleted(boolean passIfAlreadyCompleted) {
             this.passIfAlreadyCompleted = passIfAlreadyCompleted;
+            return this;
         }
 
         public Builder commit() {

@@ -232,6 +232,13 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         this.tag = tag;
     }
 
+    public static void enqueue(DownloadTask[] tasks, DownloadListener listener) {
+        for (DownloadTask task : tasks) {
+            task.listener = listener;
+        }
+        OkDownload.with().downloadDispatcher().enqueue(tasks);
+    }
+
     public void enqueue(DownloadListener listener) {
         this.listener = listener;
         OkDownload.with().downloadDispatcher().enqueue(this);
