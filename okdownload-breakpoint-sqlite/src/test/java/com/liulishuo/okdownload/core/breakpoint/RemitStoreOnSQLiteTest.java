@@ -184,6 +184,14 @@ public class RemitStoreOnSQLiteTest {
 
         store.syncCacheToDB(1);
         verify(store.helper).removeInfo(eq(1));
+        verify(store.helper, never()).insert(eq(info));
+
+        when(info.getFilename()).thenReturn("filename");
+        store.syncCacheToDB(1);
+        verify(store.helper, never()).insert(eq(info));
+
+        when(info.getTotalOffset()).thenReturn(1L);
+        store.syncCacheToDB(1);
         verify(store.helper).insert(eq(info));
     }
 
