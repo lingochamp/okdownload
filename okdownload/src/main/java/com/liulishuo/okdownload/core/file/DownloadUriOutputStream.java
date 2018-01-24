@@ -20,8 +20,11 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.support.annotation.NonNull;
 import android.system.ErrnoException;
 import android.system.Os;
+
+import com.liulishuo.okdownload.core.Util;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -30,13 +33,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-import com.liulishuo.okdownload.core.Util;
-
 public class DownloadUriOutputStream implements DownloadOutputStream {
 
-    private FileChannel channel;
-    private ParcelFileDescriptor pdf;
-    private BufferedOutputStream out;
+    @NonNull private final FileChannel channel;
+    @NonNull private final ParcelFileDescriptor pdf;
+    @NonNull private final BufferedOutputStream out;
 
     public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws
             FileNotFoundException {
@@ -46,6 +47,13 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
         final FileOutputStream fos = new FileOutputStream(pdf.getFileDescriptor());
         channel = fos.getChannel();
         out = new BufferedOutputStream(fos, bufferSize);
+    }
+
+    DownloadUriOutputStream(@NonNull FileChannel channel, @NonNull ParcelFileDescriptor pdf,
+                            @NonNull BufferedOutputStream out) {
+        this.channel = channel;
+        this.pdf = pdf;
+        this.out = out;
     }
 
     @Override
