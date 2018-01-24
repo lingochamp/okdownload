@@ -22,7 +22,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="@dimen/activity_padding_top"
-    tools:context=".QueueActivity">
+    tools:context=".BunchActivity">
 
     <android.support.v7.widget.CardView
         android:id="@+id/startOrCancelView"
