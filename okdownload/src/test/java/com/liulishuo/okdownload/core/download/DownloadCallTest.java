@@ -222,13 +222,13 @@ public class DownloadCallTest {
 
         final DownloadListener mockListener = OkDownload.with().callbackDispatcher().dispatch();
 
-        when(mockCache.isUserCanceled()).thenReturn(true);
+        call.canceled = true;
         call.execute();
         verify(mockListener, never()).taskEnd(any(DownloadTask.class), any(EndCause.class),
                 nullable(Exception.class));
 
         when(mockCache.getOutputStream()).thenReturn(mock(MultiPointOutputStream.class));
-        when(mockCache.isUserCanceled()).thenReturn(false);
+        call.canceled = false;
         call.execute();
         verify(mockListener).taskEnd(mockTask, EndCause.COMPLETED, null);
         verify(mockStore)

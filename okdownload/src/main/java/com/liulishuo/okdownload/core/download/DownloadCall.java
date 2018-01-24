@@ -53,7 +53,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     @NonNull private final ArrayList<DownloadChain> blockChainList;
 
     @Nullable private volatile DownloadCache cache;
-    private volatile boolean canceled;
+    volatile boolean canceled;
     volatile boolean finishing;
 
 
@@ -74,7 +74,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     public boolean cancel() {
-        synchronized (this){
+        synchronized (this) {
             if (canceled) return false;
             if (finishing) return false;
             this.canceled = true;
