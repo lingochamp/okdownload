@@ -75,8 +75,10 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
         BreakpointInfo newInfo = new BreakpointInfo(id, task.getUrl(), task.getParentPath(),
                 task.getFilename());
-        storedInfos.put(id, newInfo);
-        unStoredTasks.remove(id);
+        synchronized (this){
+            storedInfos.put(id, newInfo);
+            unStoredTasks.remove(id);
+        }
         return newInfo;
     }
 
@@ -103,7 +105,9 @@ public class BreakpointStoreOnCache implements BreakpointStore {
             if (onCacheOne == breakpointInfo) return true;
 
             // replace
-            this.storedInfos.put(breakpointInfo.id, breakpointInfo.copy());
+            synchronized (this) {
+                this.storedInfos.put(breakpointInfo.id, breakpointInfo.copy());
+            }
             return true;
         }
 
@@ -113,8 +117,10 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     @Override
     public void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception) {
         if (cause == EndCause.COMPLETED) {
-            storedInfos.remove(id);
-            if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));
+            synchronized (this){
+                storedInfos.remove(id);
+                if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));
+            }
         }
     }
 
