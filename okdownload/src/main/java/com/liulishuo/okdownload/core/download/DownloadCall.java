@@ -54,6 +54,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Nullable private volatile DownloadCache cache;
     private volatile boolean canceled;
+    volatile boolean finishing;
 
 
     private DownloadCall(DownloadTask task, boolean asyncExecuted) {
@@ -72,11 +73,15 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         return new DownloadCall(task, asyncExecuted);
     }
 
-    public void cancel() {
-        if (canceled) return;
+    public boolean cancel() {
+        synchronized (this){
+            if (canceled) return false;
+            if (finishing) return false;
+            this.canceled = true;
+        }
+
         OkDownload.with().downloadDispatcher().flyingCanceled(this);
 
-        this.canceled = true;
         final DownloadCache cache = this.cache;
         if (cache != null) cache.setUserCanceled();
 
@@ -84,9 +89,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         for (DownloadChain chain : chains) {
             chain.cancel();
         }
+
+        return true;
     }
 
     public boolean isCanceled() { return canceled; }
+
+    public boolean isFinishing() { return finishing; }
 
     @Override
     public void execute() throws InterruptedException {
@@ -141,9 +150,10 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
 
             // finish
+            finishing = true;
             blockChainList.clear();
 
-            if (cache.isUserCanceled()) break;
+            if (canceled) break;
 
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
@@ -185,6 +195,11 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         // non-cancel handled on here
         if (cause == EndCause.CANCELED) {
             throw new IllegalAccessError("can't recognize cancelled on here");
+        }
+
+        synchronized (this) {
+            if (canceled) return;
+            finishing = true;
         }
 
         OkDownload.with().breakpointStore().onTaskEnd(task.getId(), cause, realCause);

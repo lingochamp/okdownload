@@ -27,6 +27,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
+import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
@@ -290,6 +291,22 @@ public class DownloadCallTest {
         verify(call, times(3)).submitChain(any(DownloadChain.class));
         verify(runningBlockList).addAll(eq(chains));
         verify(runningBlockList).removeAll(eq(chains));
+    }
+
+    @Test
+    public void cancel() {
+        assertThat(call.cancel()).isTrue();
+        // canceled
+        assertThat(call.cancel()).isFalse();
+    }
+
+
+    @Test
+    public void cancel_finishing() {
+        call.finishing = true;
+        assertThat(call.cancel()).isFalse();
+        final DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
+        verify(dispatcher, never()).flyingCanceled(eq(call));
     }
 
     private void mockLocalCheck(boolean isAvailable) {
