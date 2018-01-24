@@ -46,6 +46,7 @@
         <activity android:name=".EachBlockProgressActivity"/>
         <activity android:name=".ManagerActivity"/>
         <activity android:name=".comprehensive.ComprehensiveActivity"/>
+        <activity android:name=".BunchActivity"/>
     </application>
 
 </manifest>

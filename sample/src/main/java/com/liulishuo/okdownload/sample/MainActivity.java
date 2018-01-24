@@ -28,6 +28,8 @@ public class MainActivity extends BaseListActivity {
                 EachBlockProgressActivity.class);
         holder.addItem(R.string.queue_download_title, R.string.queue_download_desc,
                 QueueActivity.class);
+        holder.addItem(R.string.bunch_download_title, R.string.bunch_download_desc,
+                BunchActivity.class);
         holder.addItem(R.string.task_manager_title, R.string.task_manager_desc,
                 ManagerActivity.class);
 //        holder.addItem(R.string.comprehensive_case_title, R.string.comprehensive_case_desc,
