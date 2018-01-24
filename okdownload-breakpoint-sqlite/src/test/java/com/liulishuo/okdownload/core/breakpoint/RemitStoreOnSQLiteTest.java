@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
+import android.database.sqlite.SQLiteDatabase;
+
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
@@ -202,5 +204,25 @@ public class RemitStoreOnSQLiteTest {
 
         RemitStoreOnSQLite.setRemitToDBDelayMillis(1);
         assertThat(remitHelper.delayMillis).isEqualTo(1);
+    }
+
+    @Test
+    public void bunchTaskCanceled() {
+        final int[] ids = new int[2];
+        ids[0] = 1;
+        ids[1] = 2;
+
+        final SQLiteDatabase db = mock(SQLiteDatabase.class);
+        when(helper.getWritableDatabase()).thenReturn(db);
+
+        store.bunchTaskCanceled(ids);
+
+        verify(remitHelper).endAndEnsureToDB(eq(1));
+        verify(remitHelper).endAndEnsureToDB(eq(2));
+        verify(db).beginTransaction();
+        verify(db).setTransactionSuccessful();
+        verify(db).endTransaction();
+
+
     }
 }
