@@ -218,7 +218,8 @@ public class DownloadDispatcherTest {
     }
 
     @Test
-    public void cancel_readyAsyncCall() {
+    public void cancel_readyAsyncCall() throws IOException {
+        mockOkDownload();
         final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
         final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
 
@@ -235,7 +236,9 @@ public class DownloadDispatcherTest {
     }
 
     @Test
-    public void cancel_runningAsync() {
+    public void cancel_runningAsync() throws IOException {
+        mockOkDownload();
+
         final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
         final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
         final DownloadTask task = mock(DownloadTask.class);
@@ -265,7 +268,9 @@ public class DownloadDispatcherTest {
     }
 
     @Test
-    public void cancel_bunch() {
+    public void cancel_bunch() throws IOException {
+        mockOkDownload();
+
         final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
         final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
 
