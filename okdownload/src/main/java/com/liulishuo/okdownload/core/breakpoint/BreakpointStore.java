@@ -40,6 +40,8 @@ public interface BreakpointStore {
 
     void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception);
 
+    void bunchTaskCanceled(int[] ids);
+
     void discard(int id);
 
     int findOrCreateId(@NonNull DownloadTask task);

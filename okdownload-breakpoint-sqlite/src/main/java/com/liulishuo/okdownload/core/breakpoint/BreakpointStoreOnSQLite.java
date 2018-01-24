@@ -84,6 +84,9 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
         }
     }
 
+    @Override public void bunchTaskCanceled(int[] ids) {
+    }
+
     @Override public void discard(int id) {
         onCache.discard(id);
         helper.removeInfo(id);

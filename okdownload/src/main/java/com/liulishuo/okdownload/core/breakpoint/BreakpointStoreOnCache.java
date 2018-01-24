@@ -124,6 +124,9 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         }
     }
 
+    @Override public void bunchTaskCanceled(int[] ids) {
+    }
+
     @Override public synchronized void discard(int id) {
         storedInfos.remove(id);
         if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));

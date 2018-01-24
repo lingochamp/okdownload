@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload.core.breakpoint;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -90,6 +91,22 @@ public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
         }
     }
 
+    @Override public void bunchTaskCanceled(int[] ids) {
+        onCache.bunchTaskCanceled(ids);
+        if (ids.length > 0) {
+            final SQLiteDatabase database = helper.getWritableDatabase();
+            database.beginTransaction();
+            try {
+                for (int id : ids) {
+                    remitHelper.endAndEnsureToDB(id);
+                }
+                database.setTransactionSuccessful();
+            } finally {
+                database.endTransaction();
+            }
+        }
+    }
+
     @Override public void discard(int id) {
         onCache.discard(id);
 
@@ -98,12 +115,11 @@ public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
     }
 
     @Override public void syncCacheToDB(int id) throws IOException {
-        Util.i(TAG, "syncCacheToDB " + id);
-
+        Util.d(TAG, "syncCacheToDB " + id);
         helper.removeInfo(id);
 
         final BreakpointInfo info = onCache.get(id);
-        if (info == null) return;
+        if (info == null || info.getFilename() == null || info.getTotalOffset() <= 0) return;
 
         helper.insert(info);
     }
