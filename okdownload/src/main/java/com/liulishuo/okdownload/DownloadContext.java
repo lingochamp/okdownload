@@ -81,7 +81,8 @@ public class DownloadContext {
         }
 
         if (isSerial) {
-            final List<DownloadTask> scheduleTaskList = Arrays.asList(tasks);
+            final List<DownloadTask> scheduleTaskList = new ArrayList<>();
+            Collections.addAll(scheduleTaskList, tasks);
             Collections.sort(scheduleTaskList);
             executeOnSerialExecutor(new Runnable() {
                 @Override public void run() {
