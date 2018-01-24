@@ -20,6 +20,7 @@ import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.download.DownloadCall;
 
@@ -36,13 +37,17 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
+import static com.liulishuo.okdownload.core.cause.EndCause.CANCELED;
 import static com.liulishuo.okdownload.core.cause.EndCause.FILE_BUSY;
 import static com.liulishuo.okdownload.core.cause.EndCause.SAME_TASK_BUSY;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -213,21 +218,113 @@ public class DownloadDispatcherTest {
     }
 
     @Test
+    public void cancel_readyAsyncCall() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
+
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getId()).thenReturn(1);
+        final DownloadCall call = spy(DownloadCall.create(task, false));
+        readyAsyncCalls.add(call);
+        dispatcher.cancel(task);
+        verify(call, never()).cancel();
+        verify(breakpointStore, never()).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
+
+        verify(listener).taskEnd(eq(task), eq(CANCELED), nullable(Exception.class));
+        assertThat(readyAsyncCalls.isEmpty()).isTrue();
+    }
+
+    @Test
+    public void cancel_runningAsync() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getId()).thenReturn(1);
+        final DownloadCall call = spy(DownloadCall.create(task, false));
+
+        runningAsyncCalls.add(call);
+        dispatcher.cancel(task);
+        verify(call).cancel();
+        verify(listener).taskEnd(eq(task), eq(CANCELED), nullable(Exception.class));
+        verify(breakpointStore).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
+    }
+
+    @Test
+    public void cancel_runningSync() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getId()).thenReturn(1);
+        final DownloadCall call = spy(DownloadCall.create(task, false));
+
+        runningSyncCalls.add(call);
+        dispatcher.cancel(task);
+        verify(call).cancel();
+        verify(listener).taskEnd(eq(task), eq(CANCELED), nullable(Exception.class));
+        verify(breakpointStore).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
+    }
+
+    @Test
+    public void cancel_bunch() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final BreakpointStore breakpointStore = OkDownload.with().breakpointStore();
+
+        final DownloadTask readyASyncCallTask = mock(DownloadTask.class);
+        when(readyASyncCallTask.getId()).thenReturn(1);
+        final DownloadCall readyAsyncCall = spy(DownloadCall.create(readyASyncCallTask, false));
+        readyAsyncCalls.add(readyAsyncCall);
+
+        final DownloadTask runningAsyncCallTask = mock(DownloadTask.class);
+        when(runningAsyncCallTask.getId()).thenReturn(2);
+        final DownloadCall runningAsyncCall = spy(DownloadCall.create(runningAsyncCallTask, false));
+        runningSyncCalls.add(runningAsyncCall);
+
+        final DownloadTask runningSyncCallTask = mock(DownloadTask.class);
+        when(runningSyncCallTask.getId()).thenReturn(3);
+        final DownloadCall runningSyncCall = spy(DownloadCall.create(runningSyncCallTask, false));
+        runningSyncCalls.add(runningSyncCall);
+
+        DownloadTask[] tasks = new DownloadTask[3];
+        tasks[0] = readyASyncCallTask;
+        tasks[1] = runningAsyncCallTask;
+        tasks[2] = runningSyncCallTask;
+
+        dispatcher.cancel(tasks);
+
+        verify(listener).taskEnd(eq(readyASyncCallTask), eq(CANCELED), nullable(Exception.class));
+        verify(listener).taskEnd(eq(runningAsyncCallTask), eq(CANCELED), nullable(Exception.class));
+        verify(listener).taskEnd(eq(runningSyncCallTask), eq(CANCELED), nullable(Exception.class));
+
+        verify(breakpointStore, never()).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
+
+        ArgumentCaptor<int[]> callCaptor = ArgumentCaptor.forClass(int[].class);
+
+        verify(breakpointStore).bunchTaskCanceled(callCaptor.capture());
+        final int[] bunchTaskCanceledIds = callCaptor.getValue();
+        assertThat(bunchTaskCanceledIds[0]).isEqualTo(2);
+        assertThat(bunchTaskCanceledIds[1]).isEqualTo(3);
+
+        verify(readyAsyncCall, never()).cancel();
+        verify(runningAsyncCall).cancel();
+        verify(runningSyncCall).cancel();
+    }
+
+    @Test
     public void cancelAll() {
-        readyAsyncCalls.add(mock(DownloadCall.class));
-        readyAsyncCalls.add(mock(DownloadCall.class));
-        readyAsyncCalls.add(mock(DownloadCall.class));
-        readyAsyncCalls.add(mock(DownloadCall.class));
+        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
 
-        runningAsyncCalls.add(mock(DownloadCall.class));
-        runningAsyncCalls.add(mock(DownloadCall.class));
-        runningAsyncCalls.add(mock(DownloadCall.class));
-        runningAsyncCalls.add(mock(DownloadCall.class));
+        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true)));
 
-        runningSyncCalls.add(mock(DownloadCall.class));
-        runningSyncCalls.add(mock(DownloadCall.class));
-        runningSyncCalls.add(mock(DownloadCall.class));
-        runningSyncCalls.add(mock(DownloadCall.class));
+        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false)));
+        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false)));
+        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false)));
+        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false)));
 
         dispatcher.cancelAll();
 

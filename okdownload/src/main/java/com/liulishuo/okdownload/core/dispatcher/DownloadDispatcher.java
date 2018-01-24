@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DownloadDispatcher {
     // same id will be discard
@@ -56,7 +57,10 @@ public class DownloadDispatcher {
     // for the case of tasks has been cancelled but didn't remove from runningAsyncCalls list yet.
     private volatile int flyingCanceledAsyncCallCount;
     private @Nullable
-    ExecutorService executorService;
+    volatile ExecutorService executorService;
+
+    // for avoiding processCalls when doing enqueue/cancel operation
+    private final AtomicInteger skipProceedCallCount = new AtomicInteger();
 
     public DownloadDispatcher() {
         this(new ArrayList<DownloadCall>(), new ArrayList<DownloadCall>(),
@@ -80,7 +84,42 @@ public class DownloadDispatcher {
         return executorService;
     }
 
-    public synchronized void enqueue(DownloadTask task) {
+    public void enqueue(DownloadTask[] tasks) {
+        skipProceedCallCount.incrementAndGet();
+        enqueueLocked(tasks);
+        skipProceedCallCount.decrementAndGet();
+    }
+
+    public void enqueue(DownloadTask task) {
+        skipProceedCallCount.incrementAndGet();
+        enqueueLocked(task);
+        skipProceedCallCount.decrementAndGet();
+    }
+
+    private synchronized void enqueueLocked(DownloadTask[] tasks) {
+        Util.d(TAG, "start enqueueLocked for bunch task: " + tasks.length);
+        final List<DownloadTask> taskList = new ArrayList<>();
+        Collections.addAll(taskList, tasks);
+        if (taskList.size() > 1) Collections.sort(taskList);
+        final int originReadyAsyncCallSize = readyAsyncCalls.size();
+
+        for (DownloadTask task : taskList) {
+            enqueueIgnorePriority(task);
+        }
+
+        if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
+
+        Util.d(TAG, "end enqueueLocked for bunch task: " + tasks.length);
+    }
+
+    private synchronized void enqueueLocked(DownloadTask task) {
+        Util.d(TAG, "enqueueLocked for single task: " + task);
+        final int originReadyAsyncCallSize = readyAsyncCalls.size();
+        enqueueIgnorePriority(task);
+        if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
+    }
+
+    private synchronized void enqueueIgnorePriority(DownloadTask task) {
         if (inspectCompleted(task)) return;
         if (inspectForConflict(task)) return;
 
@@ -91,18 +130,17 @@ public class DownloadDispatcher {
         } else {
             // priority
             readyAsyncCalls.add(call);
-            Collections.sort(readyAsyncCalls);
         }
     }
 
     public void execute(DownloadTask task) {
+        Util.d(TAG, "execute: " + task);
         final DownloadCall call;
 
         synchronized (this) {
             if (inspectCompleted(task)) return;
             if (inspectForConflict(task)) return;
 
-            Util.d(TAG, "execute " + task);
 
             call = DownloadCall.create(task, false);
             runningSyncCalls.add(call);
@@ -111,36 +149,134 @@ public class DownloadDispatcher {
         syncRunCall(call);
     }
 
-    public synchronized void cancelAll() {
+    public void cancelAll() {
+        skipProceedCallCount.incrementAndGet();
+        // assemble tasks
+        List<DownloadTask> taskList = new ArrayList<>();
+        for (DownloadCall call : readyAsyncCalls) taskList.add(call.task);
+        for (DownloadCall call : runningAsyncCalls) taskList.add(call.task);
+        for (DownloadCall call : runningSyncCalls) taskList.add(call.task);
 
+        if (!taskList.isEmpty()) {
+            DownloadTask[] tasks = new DownloadTask[taskList.size()];
+            cancelLocked(taskList.toArray(tasks));
+        }
+
+        skipProceedCallCount.decrementAndGet();
+    }
+
+    public void cancel(DownloadTask[] tasks) {
+        skipProceedCallCount.incrementAndGet();
+        cancelLocked(tasks);
+        skipProceedCallCount.decrementAndGet();
+        processCalls();
+    }
+
+    public boolean cancel(DownloadTask task) {
+        skipProceedCallCount.incrementAndGet();
+        final boolean result = cancelLocked(task);
+        skipProceedCallCount.decrementAndGet();
+        processCalls();
+        return result;
+    }
+
+    private synchronized void cancelLocked(DownloadTask[] tasks) {
+        Util.d(TAG, "start cancel bunch task manually: " + tasks.length);
+
+        final List<DownloadCall> needCallbackCalls = new ArrayList<>();
+        final List<DownloadCall> needCancelCalls = new ArrayList<>();
+        try {
+            for (DownloadTask task : tasks) {
+                filterCanceledCalls(task, needCallbackCalls, needCancelCalls);
+            }
+        } finally {
+            handleCanceledCalls(needCallbackCalls, needCancelCalls);
+            Util.d(TAG, "finish cancel bunch task manually: " + tasks.length);
+        }
+    }
+
+    private synchronized boolean cancelLocked(DownloadTask task) {
+        Util.d(TAG, "cancel manually: " + task.getId());
+        final List<DownloadCall> needCallbackCalls = new ArrayList<>();
+        final List<DownloadCall> needCancelCalls = new ArrayList<>();
+
+        try {
+            filterCanceledCalls(task, needCallbackCalls, needCancelCalls);
+        } finally {
+            handleCanceledCalls(needCallbackCalls, needCancelCalls);
+        }
+
+        return needCallbackCalls.size() > 0 || needCancelCalls.size() > 0;
+    }
+
+    private synchronized void filterCanceledCalls(@NonNull DownloadTask task,
+                                                  @NonNull List<DownloadCall> needCallbackCalls,
+                                                  @NonNull List<DownloadCall> needCancelCalls) {
         for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
             DownloadCall call = i.next();
-            i.remove();
+            if (call.task == task) {
+                if (call.isCanceled() || call.isFinishing()) return;
 
-            if (call.isCanceled()) continue;
-            OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
-                    EndCause.CANCELED,
-                    null);
+                i.remove();
+                needCallbackCalls.add(call);
+                return;
+            }
         }
 
         for (DownloadCall call : runningAsyncCalls) {
-            if (call.isCanceled()) continue;
-            call.cancel();
-            OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
-                    EndCause.CANCELED,
-                    null);
+            if (call.task == task) {
+                needCallbackCalls.add(call);
+                needCancelCalls.add(call);
+                return;
+            }
         }
 
         for (DownloadCall call : runningSyncCalls) {
-            if (call.isCanceled()) continue;
-            call.cancel();
-            OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
-                    EndCause.CANCELED,
-                    null);
+            if (call.task == task) {
+                needCallbackCalls.add(call);
+                needCancelCalls.add(call);
+                return;
+            }
+        }
+    }
+
+    private synchronized void handleCanceledCalls(@NonNull List<DownloadCall> needCallbackCalls,
+                                                  @NonNull List<DownloadCall> needCancelCalls) {
+        Util.d(TAG, "handle cancel calls, cancel calls: " + needCancelCalls.size());
+        if (!needCancelCalls.isEmpty()) {
+            ArrayList<Integer> idList = new ArrayList<>(needCancelCalls.size());
+
+            for (DownloadCall call : needCancelCalls) {
+                if (call.cancel()) {
+                    idList.add(call.task.getId());
+                } else {
+                    needCallbackCalls.remove(call);
+                }
+            }
+
+            // bunch ids of task which need to be canceled
+            if (idList.size() == 1) {
+                OkDownload.with().breakpointStore()
+                        .onTaskEnd(idList.get(0), EndCause.CANCELED, null);
+            } else {
+                int[] ids = new int[idList.size()];
+                for (int i = 0; i < idList.size(); i++) ids[i] = idList.get(i);
+                if (ids.length > 0) OkDownload.with().breakpointStore().bunchTaskCanceled(ids);
+            }
+        }
+
+        Util.d(TAG, "handle cancel calls, callback cancel event: " + needCallbackCalls.size());
+        if (!needCallbackCalls.isEmpty()) {
+            for (DownloadCall call : needCallbackCalls) {
+                OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
+                        EndCause.CANCELED,
+                        null);
+            }
         }
     }
 
     @Nullable public synchronized DownloadTask findSameTask(DownloadTask task) {
+        Util.d(TAG, "findSameTask: " + task.getId());
         for (DownloadCall call : readyAsyncCalls) {
             if (call.isCanceled()) continue;
             if (call.task.equals(task)) return call.task;
@@ -159,57 +295,8 @@ public class DownloadDispatcher {
         return null;
     }
 
-    public synchronized boolean cancel(DownloadTask task) {
-        Util.d(TAG, "cancel manually: " + task.getId());
-        boolean canceled = false;
-        try {
-            for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {
-                DownloadCall call = i.next();
-                if (call.task == task) {
-                    if (call.isCanceled()) return false;
-
-                    // cancel manually from queue.
-                    i.remove();
-                    canceled = true;
-                    return true;
-                }
-            }
-
-            for (DownloadCall call : runningAsyncCalls) {
-                if (call.task == task) {
-                    if (call.isCanceled()) return false;
-
-                    call.cancel();
-                    processCalls();
-                    canceled = true;
-                    return true;
-                }
-            }
-
-            for (DownloadCall call : runningSyncCalls) {
-                if (call.task == task) {
-                    if (call.isCanceled()) return false;
-
-                    call.cancel();
-                    canceled = true;
-                    return true;
-                }
-            }
-        } finally {
-            if (canceled) {
-                OkDownload.with().breakpointStore()
-                        .onTaskEnd(task.getId(), EndCause.CANCELED, null);
-
-                OkDownload.with().callbackDispatcher().dispatch().taskEnd(task,
-                        EndCause.CANCELED,
-                        null);
-            }
-        }
-
-        return false;
-    }
-
     public synchronized boolean isRunning(DownloadTask task) {
+        Util.d(TAG, "isRunning: " + task.getId());
         for (DownloadCall call : runningSyncCalls) {
             if (call.isCanceled()) continue;
             if (call.task.equals(task)) {
@@ -228,6 +315,7 @@ public class DownloadDispatcher {
     }
 
     public synchronized boolean isPending(DownloadTask task) {
+        Util.d(TAG, "isPending: " + task.getId());
         for (DownloadCall call : readyAsyncCalls) {
             if (call.isCanceled()) continue;
             if (call.task.equals(task)) return true;
@@ -242,6 +330,7 @@ public class DownloadDispatcher {
     }
 
     public synchronized void flyingCanceled(DownloadCall call) {
+        Util.d(TAG, "flying canceled: " + call.task.getId());
         if (call.asyncExecuted) flyingCanceledAsyncCallCount++;
     }
 
@@ -255,6 +344,7 @@ public class DownloadDispatcher {
     }
 
     public synchronized boolean isFileConflictAfterRun(@NonNull DownloadTask task) {
+        Util.d(TAG, "is file conflict after run: " + task.getId());
         final String path = task.getPath();
         if (path == null) return false;
 
@@ -319,6 +409,7 @@ public class DownloadDispatcher {
     }
 
     private synchronized void processCalls() {
+        if (skipProceedCallCount.get() > 0) return;
         if (runningAsyncSize() >= maxParallelRunningCount) return;
         if (readyAsyncCalls.isEmpty()) return;
 
