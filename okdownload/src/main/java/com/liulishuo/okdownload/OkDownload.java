@@ -24,7 +24,6 @@ import android.support.annotation.Nullable;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
-import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
@@ -183,7 +182,7 @@ public class OkDownload {
             }
 
             if (connectionFactory == null) {
-                connectionFactory = new DownloadUrlConnection.Factory();
+                connectionFactory = Util.createDefaultConnectionFactory();
             }
 
             if (outputStreamFactory == null) {

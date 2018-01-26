@@ -62,6 +62,7 @@ dependencies {
     testCompile dep.junit
     compile project(':okdownload')
     implementation project(':okdownload-breakpoint-sqlite')
+    implementation project(':okdownload-connection-okhttp')
 }
 
 kotlin {

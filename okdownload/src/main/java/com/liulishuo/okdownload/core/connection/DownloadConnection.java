@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.connection;
 
+import android.support.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -55,7 +57,7 @@ public interface DownloadConnection {
          *
          * @return a Map of header fields
          */
-        Map<String, List<String>> getResponseHeaderFields();
+        @Nullable Map<String, List<String>> getResponseHeaderFields();
 
         /**
          * Returns the value of the named header field, which would be the response-header field.
@@ -67,7 +69,7 @@ public interface DownloadConnection {
          * @return the value of the named header field, or <code>null</code>
          * if there is no such field in the header.
          */
-        String getResponseHeaderField(String name);
+        @Nullable String getResponseHeaderField(String name);
     }
 
     interface Factory {

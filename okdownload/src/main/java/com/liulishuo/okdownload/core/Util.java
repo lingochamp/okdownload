@@ -26,6 +26,8 @@ import android.util.Log;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
+import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
@@ -230,5 +232,22 @@ public class Util {
         }
 
         return new BreakpointStoreOnCache();
+    }
+
+    public static @NonNull DownloadConnection.Factory createDefaultConnectionFactory() {
+        final String okhttpConnectionClassName
+                = "com.liulishuo.okdownload.core.connection.DownloadOkHttp3Connection$Factory";
+        try {
+            final Constructor constructor = Class.forName(okhttpConnectionClassName)
+                    .getDeclaredConstructor();
+            return (DownloadConnection.Factory) constructor.newInstance();
+        } catch (ClassNotFoundException ignored) {
+        } catch (InstantiationException ignored) {
+        } catch (IllegalAccessException ignored) {
+        } catch (NoSuchMethodException ignored) {
+        } catch (InvocationTargetException ignored) {
+        }
+
+        return new DownloadUrlConnection.Factory();
     }
 }

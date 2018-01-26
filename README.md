@@ -52,6 +52,8 @@ okcat -y=okcat-okdownload -c
 com.liulishuo.okdownload:okdownload:{latest_version}
 // provide sqlite to store breakpoints
 com.liulishuo.okdownload:sqlite:{latest_version}
+// provide okhttp to connect to backend
+com.liulishuo.okdownload:okhttp:{latest_version}
 ```
 
 ## WHY OKDOWNLOAD
@@ -114,7 +116,7 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 - [] Support speed limit
 - [] Support download task on independent process with import `okdownload-process`
 - [] Support RxJava
-- [] Support using OkHttp as connection handler with import `okdownload-connection-okhttp`
+- [x] Support using OkHttp as connection handler with import `com.liulishuo.okdownload:okhttp`
 - [] Support using OkDownload on kotlin style such as DSL with import `okdownload-kotlin-enhance`
 - [] Provide Benchmark on `benchmark` application
 - [] Provide `connectionPool` library to maintain connection for default `DownloadUrlConnection` instead of disconnect each time

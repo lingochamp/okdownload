@@ -28,4 +28,13 @@ android {
 
 dependencies {
     testCompile dep.junit
+    testCompile dep.mockito
+    testCompile dep.assertj
+    testCompile project(':okdownload')
+
+    provided project(':okdownload')
+    implementation dep.okhttp3
 }
+
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')

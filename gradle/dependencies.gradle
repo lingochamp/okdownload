@@ -44,7 +44,10 @@ ext {
             supportV7                   : "com.android.support:appcompat-v7:$supportLibrariesVersion",
             supportDesign               : "com.android.support:design:$supportLibrariesVersion",
             supportCardview             : "com.android.support:cardview-v7:$supportLibrariesVersion",
-            supportConstraintLayout     : "com.android.support.constraint:constraint-layout:1.0.2"
+            supportConstraintLayout     : "com.android.support.constraint:constraint-layout:1.0.2",
+
+            // for okdownload-connection-okhttp
+            okhttp3                     : "com.squareup.okhttp3:okhttp:3.9.1"
 
     ]
 
