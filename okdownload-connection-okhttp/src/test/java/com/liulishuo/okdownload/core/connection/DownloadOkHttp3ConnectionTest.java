@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class DownloadOkHttp3ConnectionTest {
+
     private DownloadOkHttp3Connection connection;
 
     private static final String URL = "https://jacksgong.com";
@@ -57,6 +58,21 @@ public class DownloadOkHttp3ConnectionTest {
         initMocks(this);
 
         connection = new DownloadOkHttp3Connection(client, URL);
+    }
+
+    @Test
+    public void release() throws Exception {
+        final Call call = mock(Call.class);
+        when(client.newCall(any(Request.class))).thenReturn(call);
+
+        final ResponseBody body = mock(ResponseBody.class);
+        connection.response = createResponseBuilder()
+                .body(body).build();
+
+        connection.release();
+
+        verify(body).close();
+        assertThat(connection.response).isNull();
     }
 
     @Test
@@ -118,12 +134,16 @@ public class DownloadOkHttp3ConnectionTest {
 
     @Test
     public void addHeader_getRequestHeaderFiles_meet() throws IOException {
+        assertThat(connection.getRequestProperty("no-exist-key")).isNull();
+
         DownloadOkHttp3Connection.Factory creator = new DownloadOkHttp3Connection.Factory();
         DownloadOkHttp3Connection connection = (DownloadOkHttp3Connection) creator.create(URL);
 
         connection.addHeader("mock", "mock");
         connection.addHeader("mock1", "mock2");
         connection.addHeader("mock1", "mock3");
+
+        assertThat(connection.getRequestProperty("mock")).isEqualTo("mock");
 
         Map<String, List<String>> headers = connection.getRequestProperties();
 

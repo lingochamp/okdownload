@@ -33,7 +33,7 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
     @NonNull private final Request.Builder requestBuilder;
 
     private Request request;
-    private Response response;
+    Response response;
 
     DownloadOkHttp3Connection(@NonNull OkHttpClient client,
                               @NonNull Request.Builder requestBuilder) {
