@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * taskStart->connect->progress<-->progress(currentOffset)->taskEnd
+ * taskStart->(retry)->connect->progress<-->progress(currentOffset)->taskEnd
  */
 public abstract class DownloadListener1 implements DownloadListener,
         Listener1Assist.Listener1Callback {
