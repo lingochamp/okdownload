@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core.listener.assist;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -176,15 +177,19 @@ public class Listener1Assist {
     }
 
     public interface Listener1Callback {
-        void taskStart(DownloadTask task, @NonNull Listener1Model model);
+        void taskStart(@NonNull DownloadTask task, @NonNull Listener1Model model);
 
-        void retry(DownloadTask task, @NonNull ResumeFailedCause cause);
+        void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause);
 
-        void connected(DownloadTask task, int blockCount, long currentOffset, long totalLength);
+        void connected(@NonNull DownloadTask task, @IntRange(from = 0) int blockCount,
+                       @IntRange(from = 0) long currentOffset,
+                       @IntRange(from = 0) long totalLength);
 
-        void progress(DownloadTask task, long currentOffset, long totalLength);
+        void progress(@NonNull DownloadTask task, @IntRange(from = 0) long currentOffset,
+                      @IntRange(from = 0) long totalLength);
 
-        void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+        void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                     @Nullable Exception realCause,
                      @NonNull Listener1Model model);
     }
 }

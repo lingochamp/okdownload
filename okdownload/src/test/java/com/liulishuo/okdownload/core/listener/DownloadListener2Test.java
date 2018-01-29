@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core.listener;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
@@ -35,11 +36,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class DownloadListener2Test {
 
     private DownloadListener2 listener2 = new DownloadListener2() {
-        @Override public void taskStart(DownloadTask task) {
+        @Override public void taskStart(@NonNull DownloadTask task) {
         }
 
         @Override
-        public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                            @Nullable Exception realCause) {
         }
     };
 

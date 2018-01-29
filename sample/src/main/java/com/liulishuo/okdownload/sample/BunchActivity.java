@@ -108,23 +108,23 @@ public class BunchActivity extends BaseSampleActivity {
         listener = new DownloadListener1() {
 
             @Override
-            public void taskStart(DownloadTask task,
+            public void taskStart(@NonNull DownloadTask task,
                                   @NonNull Listener1Assist.Listener1Model model) {
                 fillPbInfo(task, "start");
             }
 
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
+            @Override public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
                 fillPbInfo(task, "retry");
             }
 
             @Override
-            public void connected(DownloadTask task, int blockCount, long currentOffset,
+            public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
                                   long totalLength) {
                 fillPbInfo(task, "connected");
             }
 
             @Override
-            public void progress(DownloadTask task, long currentOffset, long totalLength) {
+            public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
                 calcSpeed(task, currentOffset);
 
                 fillPbInfo(task, "progress");
@@ -138,7 +138,7 @@ public class BunchActivity extends BaseSampleActivity {
                 ProgressUtil.calcProgressToViewAndMark(progressBar, currentOffset, totalLength);
             }
 
-            @Override public void taskEnd(DownloadTask task, EndCause cause,
+            @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                                           @android.support.annotation.Nullable Exception realCause,
                                           @NonNull Listener1Assist.Listener1Model model) {
                 fillPbInfo(task, "end " + cause);

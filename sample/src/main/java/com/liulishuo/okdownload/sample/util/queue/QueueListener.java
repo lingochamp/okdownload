@@ -116,7 +116,8 @@ class QueueListener extends DownloadListener1 {
     }
 
     @Override
-    public void taskStart(DownloadTask task, @NonNull Listener1Assist.Listener1Model model) {
+    public void taskStart(@NonNull DownloadTask task,
+                          @NonNull Listener1Assist.Listener1Model model) {
         final String status = "taskStart";
         TagUtil.saveStatus(task, status);
 
@@ -127,7 +128,7 @@ class QueueListener extends DownloadListener1 {
         holder.statusTv.setText(status);
     }
 
-    @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
+    @Override public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
         final String status = "retry";
         TagUtil.saveStatus(task, status);
 
@@ -138,7 +139,7 @@ class QueueListener extends DownloadListener1 {
     }
 
     @Override
-    public void connected(DownloadTask task, int blockCount, long currentOffset,
+    public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
                           long totalLength) {
         final String status = "connected";
         TagUtil.saveStatus(task, status);
@@ -154,7 +155,8 @@ class QueueListener extends DownloadListener1 {
                 false);
     }
 
-    @Override public void progress(DownloadTask task, long currentOffset, long totalLength) {
+    @Override
+    public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
         final String status = "progress";
         TagUtil.saveStatus(task, status);
         TagUtil.saveOffset(task, currentOffset);
@@ -169,7 +171,8 @@ class QueueListener extends DownloadListener1 {
     }
 
     @Override
-    public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+    public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                        @Nullable Exception realCause,
                         @NonNull Listener1Assist.Listener1Model model) {
         final String status = cause.toString();
         TagUtil.saveStatus(task, status);

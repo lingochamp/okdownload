@@ -358,11 +358,11 @@ public class DownloadContext {
             this.queueListener = queueListener;
         }
 
-        @Override public void taskStart(DownloadTask task) {
+        @Override public void taskStart(@NonNull DownloadTask task) {
         }
 
         @Override
-        public void taskEnd(DownloadTask task, EndCause cause,
+        public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                             @Nullable Exception realCause) {
             if (remainCount.decrementAndGet() <= 0) queueListener.queueEnd();
             Util.d(TAG, "taskEnd and remainCount" + remainCount);

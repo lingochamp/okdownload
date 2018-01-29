@@ -68,7 +68,8 @@ public class MultipleDownloadListener extends DownloadListener1 {
     }
 
     @Override
-    public void taskStart(DownloadTask task, @NonNull Listener1Assist.Listener1Model model) {
+    public void taskStart(@NonNull DownloadTask task,
+                          @NonNull Listener1Assist.Listener1Model model) {
         final String status = "Start";
         MultipleTaskUtil.saveStatus(task, status);
 
@@ -78,7 +79,8 @@ public class MultipleDownloadListener extends DownloadListener1 {
         holder.getStatusTv().setText(status);
     }
 
-    @Override public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+    @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                  @Nullable Exception realCause,
                                   @NonNull Listener1Assist.Listener1Model model) {
         final String status = cause.name() + (realCause != null ? realCause : "");
         MultipleTaskUtil.saveStatus(task, status);
@@ -90,8 +92,8 @@ public class MultipleDownloadListener extends DownloadListener1 {
         holder.setToStart(task, this);
     }
 
-    @Override public void connected(DownloadTask task, int blockCount, long currentOffset,
-                                       long totalLength) {
+    @Override public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
+                                    long totalLength) {
         final String status = "Connected";
         MultipleTaskUtil.saveStatus(task, status);
         MultipleTaskUtil.saveTotal(task, totalLength);
@@ -104,7 +106,8 @@ public class MultipleDownloadListener extends DownloadListener1 {
         ProgressUtil.calcProgressToViewAndMark(holder.getProgressBar(), totalLength, currentOffset);
     }
 
-    @Override public void progress(DownloadTask task, long currentOffset, long totalLength) {
+    @Override
+    public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
         final String status = "Progress(" + Util
                 .humanReadableBytes(currentOffset, false) + "/"
                 + Util.humanReadableBytes(totalLength, false) + ")";
@@ -118,7 +121,7 @@ public class MultipleDownloadListener extends DownloadListener1 {
         ProgressUtil.updateProgressToViewWithMark(holder.getProgressBar(), currentOffset);
     }
 
-    @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
+    @Override public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
         final String status = "Retry: " + cause.name();
         MultipleTaskUtil.saveStatus(task, status);
 

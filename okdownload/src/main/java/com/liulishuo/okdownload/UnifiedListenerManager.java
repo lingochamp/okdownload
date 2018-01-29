@@ -103,7 +103,7 @@ public class UnifiedListenerManager {
     }
 
     private final DownloadListener hostListener = new DownloadListener() {
-        @Override public void taskStart(DownloadTask task) {
+        @Override public void taskStart(@NonNull DownloadTask task) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -113,8 +113,9 @@ public class UnifiedListenerManager {
             }
         }
 
-        @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
-                                                    ResumeFailedCause cause) {
+        @Override
+        public void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                          @NonNull ResumeFailedCause cause) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -125,7 +126,8 @@ public class UnifiedListenerManager {
 
         }
 
-        @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+        @Override public void downloadFromBreakpoint(@NonNull DownloadTask task,
+                                                     @NonNull BreakpointInfo info) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -135,7 +137,7 @@ public class UnifiedListenerManager {
             }
         }
 
-        @Override public void connectStart(DownloadTask task, int blockIndex,
+        @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                            @NonNull Map<String, List<String>> requestHeaderFields) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
@@ -146,8 +148,9 @@ public class UnifiedListenerManager {
             }
         }
 
-        @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                         @NonNull Map<String, List<String>> responseHeaderFields) {
+        @Override
+        public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                               @NonNull Map<String, List<String>> responseHeaderFields) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -157,7 +160,8 @@ public class UnifiedListenerManager {
             }
         }
 
-        @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+        @Override
+        public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
 
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
@@ -168,7 +172,8 @@ public class UnifiedListenerManager {
             }
         }
 
-        @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
+        @Override
+        public void fetchStart(@NonNull DownloadTask task, int blockIndex, long contentLength) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -179,7 +184,8 @@ public class UnifiedListenerManager {
 
         }
 
-        @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
+        @Override
+        public void fetchProgress(@NonNull DownloadTask task, int blockIndex, long increaseBytes) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -189,7 +195,8 @@ public class UnifiedListenerManager {
             }
         }
 
-        @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
+        @Override
+        public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 
@@ -200,7 +207,8 @@ public class UnifiedListenerManager {
         }
 
         @Override
-        public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+        public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                            @Nullable Exception realCause) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
 

@@ -43,7 +43,7 @@ public class CallbackDispatcher {
             private Handler uiHandler = new Handler(Looper.getMainLooper());
 
             @Override
-            public void taskStart(final DownloadTask task) {
+            public void taskStart(@NonNull final DownloadTask task) {
                 Util.i(TAG, "taskStart: " + task.getId());
                 inspectTaskStart(task);
                 if (task.isAutoCallbackToUIThread()) {
@@ -59,7 +59,7 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void connectStart(final DownloadTask task, final int blockIndex,
+            public void connectStart(@NonNull final DownloadTask task, final int blockIndex,
                                      @NonNull final Map<String, List<String>> requestHeaderFields) {
                 Util.i(TAG, "connectStart: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
@@ -74,7 +74,7 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void connectEnd(final DownloadTask task, final int blockIndex,
+            public void connectEnd(@NonNull final DownloadTask task, final int blockIndex,
                                    final int responseCode,
                                    @NonNull final Map<String, List<String>> requestHeaderFields) {
                 Util.i(TAG, "connectEnd: " + task.getId());
@@ -91,8 +91,8 @@ public class CallbackDispatcher {
                 }
             }
 
-            @Override public void splitBlockEnd(final DownloadTask task,
-                                                final BreakpointInfo info) {
+            @Override public void splitBlockEnd(@NonNull final DownloadTask task,
+                                                @NonNull final BreakpointInfo info) {
                 Util.i(TAG, "splitBlockEnd: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
@@ -106,8 +106,9 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void downloadFromBeginning(final DownloadTask task, final BreakpointInfo info,
-                                              final ResumeFailedCause cause) {
+            public void downloadFromBeginning(@NonNull final DownloadTask task,
+                                              @NonNull final BreakpointInfo info,
+                                              @NonNull final ResumeFailedCause cause) {
                 Util.i(TAG, "downloadFromBeginning: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
@@ -121,7 +122,8 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void downloadFromBreakpoint(final DownloadTask task, final BreakpointInfo info) {
+            public void downloadFromBreakpoint(@NonNull final DownloadTask task,
+                                               @NonNull final BreakpointInfo info) {
                 Util.i(TAG, "downloadFromBreakpoint: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
@@ -135,7 +137,7 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void fetchStart(final DownloadTask task, final int blockIndex,
+            public void fetchStart(@NonNull final DownloadTask task, final int blockIndex,
                                    final long contentLength) {
                 Util.i(TAG, "fetchStart: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
@@ -150,7 +152,7 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void fetchProgress(final DownloadTask task, final int blockIndex,
+            public void fetchProgress(@NonNull final DownloadTask task, final int blockIndex,
                                       final long increaseBytes) {
                 Util.i(TAG, "fetchProgress: " + task.getId());
                 if (task.getMinIntervalMillisCallbackProcess() > 0) {
@@ -170,7 +172,7 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void fetchEnd(final DownloadTask task, final int blockIndex,
+            public void fetchEnd(@NonNull final DownloadTask task, final int blockIndex,
                                  final long contentLength) {
                 Util.i(TAG, "fetchEnd: " + task.getId());
                 if (task.isAutoCallbackToUIThread()) {
@@ -185,7 +187,7 @@ public class CallbackDispatcher {
             }
 
             @Override
-            public void taskEnd(final DownloadTask task, final EndCause cause,
+            public void taskEnd(@NonNull final DownloadTask task, @NonNull final EndCause cause,
                                 @Nullable final Exception realCause) {
                 Util.i(TAG, "taskEnd: " + task.getId() + " " + cause);
                 inspectTaskEnd(task, cause, realCause);

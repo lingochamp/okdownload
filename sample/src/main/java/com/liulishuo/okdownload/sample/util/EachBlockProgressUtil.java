@@ -150,49 +150,56 @@ public class EachBlockProgressUtil {
 
     public static DownloadListener createSampleListener(final TextView extInfoTv) {
         return new DownloadListener() {
-            @Override public void taskStart(DownloadTask task) {
+            @Override public void taskStart(@NonNull DownloadTask task) {
                 extInfoTv.setText(R.string.task_start);
             }
 
-            @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
-                                                        ResumeFailedCause cause) {
+            @Override public void downloadFromBeginning(@NonNull DownloadTask task,
+                                                        @NonNull BreakpointInfo info,
+                                                        @NonNull ResumeFailedCause cause) {
                 extInfoTv.setText(R.string.download_from_beginning);
             }
 
-            @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+            @Override public void downloadFromBreakpoint(@NonNull DownloadTask task,
+                                                         @NonNull BreakpointInfo info) {
                 extInfoTv.setText(R.string.download_from_breakpoint);
             }
 
-            @Override public void connectStart(DownloadTask task, int blockIndex,
+            @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeaders) {
                 extInfoTv.setText(R.string.connect_start);
             }
 
-            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>> responseHeaders) {
+            @Override
+            public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                                   @NonNull Map<String, List<String>> responseHeaders) {
                 extInfoTv.setText(R.string.connect_end);
             }
 
-            @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+            @Override
+            public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
                 extInfoTv.setText(R.string.split_end);
             }
 
             @Override
-            public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
+            public void fetchStart(@NonNull DownloadTask task, int blockIndex, long contentLength) {
                 extInfoTv.setText(R.string.fetch_start);
             }
 
             @Override
-            public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
+            public void fetchProgress(@NonNull DownloadTask task, int blockIndex,
+                                      long increaseBytes) {
                 extInfoTv.setText(R.string.fetch_progress);
             }
 
-            @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
+            @Override
+            public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
                 extInfoTv.setText(R.string.fetch_end);
             }
 
             @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+            public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                @Nullable Exception realCause) {
                 final String status = "Task" + task.getId() + " End with: " + cause;
                 extInfoTv.setText(status);
             }

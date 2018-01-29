@@ -185,12 +185,12 @@ public class DownloadSerialQueue extends DownloadListener2 implements Runnable {
         SERIAL_EXECUTOR.execute(this);
     }
 
-    @Override public void taskStart(DownloadTask task) {
+    @Override public void taskStart(@NonNull DownloadTask task) {
         this.runningTask = task;
     }
 
     @Override
-    public synchronized void taskEnd(DownloadTask task, EndCause cause,
+    public synchronized void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                                      @Nullable Exception realCause) {
         if (cause != EndCause.CANCELED && task == runningTask) runningTask = null;
     }

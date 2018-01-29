@@ -123,18 +123,21 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend 
     }
 
     public interface Listener4SpeedCallback {
-        void infoReady(DownloadTask task, @NonNull BreakpointInfo info, boolean fromBreakpoint,
+        void infoReady(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                       boolean fromBreakpoint,
                        @NonNull Listener4SpeedModel model);
 
-        void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
+        void progressBlock(@NonNull DownloadTask task, int blockIndex, long currentBlockOffset,
                            @NonNull SpeedCalculator blockSpeed);
 
-        void progress(DownloadTask task, long currentOffset, @NonNull SpeedCalculator taskSpeed);
+        void progress(@NonNull DownloadTask task, long currentOffset,
+                      @NonNull SpeedCalculator taskSpeed);
 
-        void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
+        void blockEnd(@NonNull DownloadTask task, int blockIndex, BlockInfo info,
                       @NonNull SpeedCalculator blockSpeed);
 
-        void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+        void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                     @Nullable Exception realCause,
                      @NonNull SpeedCalculator taskSpeed);
     }
 }

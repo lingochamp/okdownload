@@ -50,49 +50,56 @@ public class ListenerSample {
     public DownloadListener listener() {
         return new DownloadListener() {
 
-            @Override public void taskStart(DownloadTask task) {
+            @Override public void taskStart(@NonNull DownloadTask task) {
                 log("taskStart");
             }
 
-            @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
-                                                        ResumeFailedCause cause) {
+            @Override public void downloadFromBeginning(@NonNull DownloadTask task,
+                                                        @NonNull BreakpointInfo info,
+                                                        @NonNull ResumeFailedCause cause) {
                 log("downloadFromBeginning");
             }
 
-            @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+            @Override public void downloadFromBreakpoint(@NonNull DownloadTask task,
+                                                         @NonNull BreakpointInfo info) {
                 log("downloadFromBreakpoint");
             }
 
-            @Override public void connectStart(DownloadTask task, int blockIndex,
+            @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeader) {
                 log("connectStart");
             }
 
-            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>> responseHeader) {
+            @Override
+            public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                                   @NonNull Map<String, List<String>> responseHeader) {
                 log("connectEnd");
             }
 
-            @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+            @Override
+            public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
                 log("splitBlockEnd");
             }
 
             @Override
-            public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
+            public void fetchStart(@NonNull DownloadTask task, int blockIndex, long contentLength) {
                 log("fetchStart");
             }
 
             @Override
-            public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
+            public void fetchProgress(@NonNull DownloadTask task, int blockIndex,
+                                      long increaseBytes) {
                 log("fetchProgress");
             }
 
-            @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
+            @Override
+            public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
                 log("fetchEnd");
             }
 
             @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+            public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                @Nullable Exception realCause) {
                 log("taskEnd");
             }
         };
@@ -101,28 +108,30 @@ public class ListenerSample {
     public DownloadListener1 lisetner1() {
         return new DownloadListener1() {
             @Override
-            public void taskStart(DownloadTask task,
-                                  Listener1Assist.Listener1Model model) {
+            public void taskStart(@NonNull DownloadTask task,
+                                  @NonNull Listener1Assist.Listener1Model model) {
                 log("taskStart");
             }
 
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
+            @Override
+            public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
                 log("retry");
             }
 
             @Override
-            public void connected(DownloadTask task, int blockCount, long currentOffset,
+            public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
                                   long totalLength) {
                 log("connected");
             }
 
             @Override
-            public void progress(DownloadTask task, long currentOffset, long totalLength) {
+            public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
                 log("progress");
             }
 
             @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+            public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                @Nullable Exception realCause,
                                 @NonNull Listener1Assist.Listener1Model model) {
                 log("taskEnd");
             }
@@ -131,12 +140,13 @@ public class ListenerSample {
 
     public DownloadListener2 lisetner2() {
         return new DownloadListener2() {
-            @Override public void taskStart(DownloadTask task) {
+            @Override public void taskStart(@NonNull DownloadTask task) {
                 log("taskStart");
             }
 
             @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+            public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                @Nullable Exception realCause) {
                 log("taskEnd");
             }
         };
@@ -144,38 +154,39 @@ public class ListenerSample {
 
     public DownloadListener3 listener3() {
         return new DownloadListener3() {
-            @Override protected void started(DownloadTask task) {
+            @Override protected void started(@NonNull DownloadTask task) {
                 log("started");
             }
 
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) {
+            @Override
+            public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
                 log("retry");
             }
 
             @Override
-            public void connected(DownloadTask task, int blockCount, long currentOffset,
+            public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
                                   long totalLength) {
                 log("connected");
             }
 
             @Override
-            public void progress(DownloadTask task, long currentOffset, long totalLength) {
+            public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
                 log("progress");
             }
 
-            @Override protected void completed(DownloadTask task) {
+            @Override protected void completed(@NonNull DownloadTask task) {
                 log("completed");
             }
 
-            @Override protected void canceled(DownloadTask task) {
+            @Override protected void canceled(@NonNull DownloadTask task) {
                 log("canceled");
             }
 
-            @Override protected void error(DownloadTask task, Exception e) {
+            @Override protected void error(@NonNull DownloadTask task, @NonNull Exception e) {
                 log("error");
             }
 
-            @Override protected void warn(DownloadTask task) {
+            @Override protected void warn(@NonNull DownloadTask task) {
                 log("warn");
             }
         };
@@ -183,7 +194,7 @@ public class ListenerSample {
 
     public DownloadListener4 listener4() {
         return new DownloadListener4() {
-            @Override public void taskStart(DownloadTask task) {
+            @Override public void taskStart(@NonNull DownloadTask task) {
                 log("taskStart");
             }
 
@@ -194,13 +205,14 @@ public class ListenerSample {
                 log("infoReady");
             }
 
-            @Override public void connectStart(DownloadTask task, int blockIndex,
+            @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeader) {
                 log("connectStart");
             }
 
-            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>> responseHeader) {
+            @Override
+            public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                                   @NonNull Map<String, List<String>> responseHeader) {
                 log("connectEnd");
             }
 
@@ -228,45 +240,49 @@ public class ListenerSample {
 
     public DownloadListener4WithSpeed listener4WithSpeed() {
         return new DownloadListener4WithSpeed() {
-            @Override public void taskStart(DownloadTask task) {
+            @Override public void taskStart(@NonNull DownloadTask task) {
                 log("taskStart");
             }
 
             @Override
-            public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+            public void infoReady(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                   boolean fromBreakpoint,
                                   @NonNull Listener4SpeedAssistExtend.Listener4SpeedModel model) {
                 log("infoReady");
             }
 
-            @Override public void connectStart(DownloadTask task, int blockIndex,
+            @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeader) {
                 log("connectStart");
             }
 
-            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>> responseHeader) {
+            @Override
+            public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                                   @NonNull Map<String, List<String>> responseHeader) {
                 log("connectEnd");
             }
 
             @Override
-            public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
+            public void progressBlock(@NonNull DownloadTask task, int blockIndex,
+                                      long currentBlockOffset,
                                       @NonNull SpeedCalculator blockSpeed) {
                 log("progressBlock");
             }
 
-            @Override public void progress(DownloadTask task, long currentOffset,
+            @Override public void progress(@NonNull DownloadTask task, long currentOffset,
                                            @NonNull SpeedCalculator taskSpeed) {
                 log("progress");
             }
 
-            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
-                                           @NonNull SpeedCalculator blockSpeed) {
+            @Override
+            public void blockEnd(@NonNull DownloadTask task, int blockIndex, BlockInfo info,
+                                 @NonNull SpeedCalculator blockSpeed) {
                 log("blockEnd");
             }
 
             @Override
-            public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+            public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                @Nullable Exception realCause,
                                 @NonNull SpeedCalculator taskSpeed) {
                 log("taskEnd");
             }

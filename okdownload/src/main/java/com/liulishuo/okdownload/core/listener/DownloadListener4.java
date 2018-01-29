@@ -59,31 +59,37 @@ public abstract class DownloadListener4 implements DownloadListener,
         this.assist.setAssistExtend(assistExtend);
     }
 
-    @Override public final void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
-                                                      ResumeFailedCause cause) { }
+    @Override public final void downloadFromBeginning(@NonNull DownloadTask task,
+                                                      @NonNull BreakpointInfo info,
+                                                      @NonNull ResumeFailedCause cause) { }
 
-    @Override public final void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+    @Override public final void downloadFromBreakpoint(@NonNull DownloadTask task,
+                                                       @NonNull BreakpointInfo info) {
         initData(task, info, true);
     }
 
-    @Override public final void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+    @Override
+    public final void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
         initData(task, info, false);
     }
 
-    @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
+    @Override
+    public void fetchStart(@NonNull DownloadTask task, int blockIndex, long contentLength) {
     }
 
     @Override
-    public final void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
+    public final void fetchProgress(@NonNull DownloadTask task, int blockIndex,
+                                    long increaseBytes) {
         assist.fetchProgress(task, blockIndex, increaseBytes);
     }
 
-    @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
+    @Override public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
         assist.fetchEnd(task, blockIndex);
     }
 
     @Override
-    public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+    public final void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                              @Nullable Exception realCause) {
         assist.taskEnd(task, cause, realCause);
     }
 

@@ -30,30 +30,34 @@ import java.util.Map;
  * taskStart->taskEnd
  */
 public abstract class DownloadListener2 implements DownloadListener {
-    @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
-                                                ResumeFailedCause cause) {
+    @Override
+    public void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                      @NonNull ResumeFailedCause cause) {
     }
 
-    @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+    @Override
+    public void downloadFromBreakpoint(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
     }
 
-    @Override public void connectStart(DownloadTask task, int blockIndex,
+    @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                        @NonNull Map<String, List<String>> requestHeaderFields) {
     }
 
-    @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
+    @Override public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
     }
 
-    @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+    @Override public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
     }
 
-    @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
+    @Override
+    public void fetchStart(@NonNull DownloadTask task, int blockIndex, long contentLength) {
     }
 
-    @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
+    @Override
+    public void fetchProgress(@NonNull DownloadTask task, int blockIndex, long increaseBytes) {
     }
 
-    @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
+    @Override public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
     }
 }

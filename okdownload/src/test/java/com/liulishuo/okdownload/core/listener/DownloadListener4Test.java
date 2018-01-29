@@ -80,13 +80,14 @@ public class DownloadListener4Test {
             public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
                                 @NonNull Listener4Assist.Listener4Model model) { }
 
-            @Override public void taskStart(DownloadTask task) { }
+            @Override public void taskStart(@NonNull DownloadTask task) { }
 
-            @Override public void connectStart(DownloadTask task, int blockIndex,
+            @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeader) { }
 
-            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>> responseHeader) { }
+            @Override
+            public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                                   @NonNull Map<String, List<String>> responseHeader) { }
         });
     }
 

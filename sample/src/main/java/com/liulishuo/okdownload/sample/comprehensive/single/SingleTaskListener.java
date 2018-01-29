@@ -63,31 +63,33 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         this(viewAdapter, false);
     }
 
-    @Override public void taskStart(DownloadTask task) {
+    @Override public void taskStart(@NonNull DownloadTask task) {
         updateStatus("taskStart " + task.getId());
     }
 
     @Override
-    public void infoReady(DownloadTask task, @NonNull BreakpointInfo info, boolean fromBreakpoint,
+    public void infoReady(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                          boolean fromBreakpoint,
                           @NonNull Listener4SpeedAssistExtend.Listener4SpeedModel model) {
         this.blockCurrentOffsetMap = model.cloneBlockCurrentOffsetMap();
         if (viewAdapter != null) viewAdapter.refreshData(info, null);
     }
 
-    @Override public void connectStart(DownloadTask task, int blockIndex,
+    @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                        @NonNull Map<String, List<String>> requestHeaderFields) {
         updateStatus("connectStart " + blockIndex + " " + requestHeaderFields);
     }
 
-    @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
+    @Override public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
         updateStatus(
                 "connectEnd " + blockIndex + " " + responseCode + " " + responseHeaderFields);
 
     }
 
-    @Override public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
-                                        @NonNull SpeedCalculator blockSpeed) {
+    @Override
+    public void progressBlock(@NonNull DownloadTask task, int blockIndex, long currentBlockOffset,
+                              @NonNull SpeedCalculator blockSpeed) {
         if (detail && viewAdapter != null) {
             if (blockIndex >= viewAdapter.blockViewSize()) return;
 
@@ -96,14 +98,14 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
         }
     }
 
-    @Override public void progress(DownloadTask task, long currentOffset,
+    @Override public void progress(@NonNull DownloadTask task, long currentOffset,
                                    @NonNull SpeedCalculator taskSpeed) {
         if (detail && viewAdapter != null) {
             viewAdapter.setTaskProcess(currentOffset, taskSpeed.speed());
         }
     }
 
-    @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
+    @Override public void blockEnd(@NonNull DownloadTask task, int blockIndex, BlockInfo info,
                                    @NonNull SpeedCalculator blockSpeed) {
         if (detail && viewAdapter != null) {
             viewAdapter.onBlocksEnd(blockIndex, blockSpeed);
@@ -111,7 +113,8 @@ class SingleTaskListener extends DownloadListener4WithSpeed {
 
     }
 
-    @Override public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
+    @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                                  @Nullable Exception realCause,
                                   @NonNull SpeedCalculator taskSpeed) {
         if (detail && viewAdapter != null) {
             viewAdapter.onTaskEnd(taskSpeed.averageSpeed());

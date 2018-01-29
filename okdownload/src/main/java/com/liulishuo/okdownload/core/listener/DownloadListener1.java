@@ -45,44 +45,49 @@ public abstract class DownloadListener1 implements DownloadListener,
         this(new Listener1Assist());
     }
 
-    @Override public final void taskStart(DownloadTask task) {
+    @Override public final void taskStart(@NonNull DownloadTask task) {
         assist.taskStart(task);
     }
 
-    @Override public void downloadFromBeginning(DownloadTask task, BreakpointInfo info,
-                                                ResumeFailedCause cause) {
+    @Override
+    public void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                      @NonNull ResumeFailedCause cause) {
         assist.downloadFromBeginning(task, cause);
     }
 
-    @Override public void downloadFromBreakpoint(DownloadTask task, BreakpointInfo info) {
+    @Override
+    public void downloadFromBreakpoint(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
         assist.downloadFromBreakpoint(task.getId(), info);
     }
 
-    @Override public void connectStart(DownloadTask task, int blockIndex,
+    @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                        @NonNull Map<String, List<String>> requestHeaderFields) {
     }
 
-    @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
+    @Override public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
         assist.connectEnd(task);
     }
 
-    @Override public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
+    @Override public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
         assist.splitBlockEnd(task, info);
     }
 
-    @Override public void fetchStart(DownloadTask task, int blockIndex, long contentLength) {
-    }
-
-    @Override public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        assist.fetchProgress(task, increaseBytes);
-    }
-
-    @Override public void fetchEnd(DownloadTask task, int blockIndex, long contentLength) {
+    @Override
+    public void fetchStart(@NonNull DownloadTask task, int blockIndex, long contentLength) {
     }
 
     @Override
-    public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
+    public void fetchProgress(@NonNull DownloadTask task, int blockIndex, long increaseBytes) {
+        assist.fetchProgress(task, increaseBytes);
+    }
+
+    @Override public void fetchEnd(@NonNull DownloadTask task, int blockIndex, long contentLength) {
+    }
+
+    @Override
+    public final void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
+                              @Nullable Exception realCause) {
         assist.taskEnd(task, cause, realCause);
     }
 

@@ -49,24 +49,26 @@ public class DownloadListener3Test {
         initMocks(this);
 
         listener3 = spy(new DownloadListener3() {
-            @Override protected void started(DownloadTask task) { }
-
-            @Override public void retry(DownloadTask task, @NonNull ResumeFailedCause cause) { }
+            @Override protected void started(@NonNull DownloadTask task) { }
 
             @Override
-            public void connected(DownloadTask task, int blockCount, long currentOffset,
+            public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) { }
+
+            @Override
+            public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
                                   long totalLength) { }
 
             @Override
-            public void progress(DownloadTask task, long currentOffset, long totalLength) { }
+            public void progress(@NonNull DownloadTask task, long currentOffset,
+                                 long totalLength) { }
 
-            @Override protected void completed(DownloadTask task) { }
+            @Override protected void completed(@NonNull DownloadTask task) { }
 
-            @Override protected void canceled(DownloadTask task) { }
+            @Override protected void canceled(@NonNull DownloadTask task) { }
 
-            @Override protected void error(DownloadTask task, Exception e) { }
+            @Override protected void error(@NonNull DownloadTask task, @NonNull Exception e) { }
 
-            @Override protected void warn(DownloadTask task) { }
+            @Override protected void warn(@NonNull DownloadTask task) { }
         });
         // if here isn't set manually there is a different instance on callback, it's very odd.
         listener3.assist.setCallback(listener3);

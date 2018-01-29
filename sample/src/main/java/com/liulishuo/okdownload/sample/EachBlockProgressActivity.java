@@ -238,12 +238,12 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                            final TextView block2SpeedTv, final TextView block3SpeedTv) {
         task.enqueue(new DownloadListener4WithSpeed() {
 
-            @Override public void taskStart(DownloadTask task) {
+            @Override public void taskStart(@NonNull DownloadTask task) {
                 statusTv.setText(R.string.task_start);
             }
 
             @Override
-            public void infoReady(DownloadTask task, @NonNull BreakpointInfo info,
+            public void infoReady(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                   boolean fromBreakpoint,
                                   @NonNull Listener4SpeedAssistExtend.Listener4SpeedModel model) {
                 EachBlockProgressUtil
@@ -253,14 +253,15 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                         .initProgress(info, taskPb, block0Pb, block1Pb, block2Pb, block3Pb);
             }
 
-            @Override public void connectStart(DownloadTask task, int blockIndex,
+            @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
                                                @NonNull Map<String, List<String>> requestHeaders) {
                 final String status = "connectStart " + blockIndex + " " + requestHeaders;
                 statusTv.setText(status);
             }
 
-            @Override public void connectEnd(DownloadTask task, int blockIndex, int responseCode,
-                                             @NonNull Map<String, List<String>> responseHeaders) {
+            @Override
+            public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
+                                   @NonNull Map<String, List<String>> responseHeaders) {
                 final String status = "connectEnd " + blockIndex + " " + responseCode + " "
                         + responseHeaders;
                 statusTv.setText(status);
@@ -268,7 +269,8 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
             }
 
             @Override
-            public void progressBlock(DownloadTask task, int blockIndex, long currentBlockOffset,
+            public void progressBlock(@NonNull DownloadTask task, int blockIndex,
+                                      long currentBlockOffset,
                                       @NonNull SpeedCalculator blockSpeed) {
                 final ProgressBar progressBar = EachBlockProgressUtil
                         .getProgressBar(blockIndex, block0Pb, block1Pb, block2Pb, block3Pb);
@@ -282,7 +284,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
 
             }
 
-            @Override public void progress(DownloadTask task, long currentOffset,
+            @Override public void progress(@NonNull DownloadTask task, long currentOffset,
                                            @NonNull SpeedCalculator taskSpeed) {
                 statusTv.setText(R.string.fetch_progress);
 
@@ -290,8 +292,9 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
                 taskSpeedTv.setText(taskSpeed.speed());
             }
 
-            @Override public void blockEnd(DownloadTask task, int blockIndex, BlockInfo info,
-                                           @NonNull SpeedCalculator blockSpeed) {
+            @Override
+            public void blockEnd(@NonNull DownloadTask task, int blockIndex, BlockInfo info,
+                                 @NonNull SpeedCalculator blockSpeed) {
                 final TextView speedTv = EachBlockProgressUtil.getSpeedTv(blockIndex,
                         block0SpeedTv, block1SpeedTv, block2SpeedTv, block3SpeedTv);
 
@@ -299,7 +302,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
             }
 
 
-            @Override public void taskEnd(DownloadTask task, EndCause cause,
+            @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                                           @android.support.annotation.Nullable Exception realCause,
                                           @NonNull SpeedCalculator taskSpeed) {
                 statusTv.setText(cause.toString());
