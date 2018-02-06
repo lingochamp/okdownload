@@ -22,42 +22,57 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
+import java.util.Map;
 
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class DownloadUrlConnectionTest {
+    @Mock
+    private Proxy proxy;
 
     @Mock
-    private Proxy mockProxy;
+    private URLConnection urlConnection;
 
     @Mock
-    private URLConnection mockConnection;
+    private URL url;
 
     @Mock
-    private URL mockURL;
+    private Map<String, List<String>> headerFields;
+
+    @Mock
+    private InputStream inputStream;
+
+    private DownloadUrlConnection downloadUrlConnection;
 
     @Before
     public void setup() throws Exception {
         initMocks(this);
 
-        Mockito.when(mockURL.openConnection()).thenReturn(mockConnection);
-        Mockito.when(mockURL.openConnection(mockProxy)).thenReturn(mockConnection);
+        Mockito.when(url.openConnection()).thenReturn(urlConnection);
+        Mockito.when(url.openConnection(proxy)).thenReturn(urlConnection);
+
+        downloadUrlConnection = new DownloadUrlConnection(urlConnection);
     }
 
     @Test
     public void construct_noConfiguration_noAssigned() throws IOException {
         DownloadUrlConnection.Factory factory = new DownloadUrlConnection.Factory();
 
-        factory.create("http://blog.dreamtobe.cn");
+        factory.create("https://jacksgong.com");
 
-        verify(mockConnection, never()).setConnectTimeout(anyInt());
-        verify(mockConnection, never()).setReadTimeout(anyInt());
+        verify(urlConnection, never()).setConnectTimeout(anyInt());
+        verify(urlConnection, never()).setReadTimeout(anyInt());
     }
 
     @Test
@@ -66,15 +81,72 @@ public class DownloadUrlConnectionTest {
 
         DownloadUrlConnection.Factory factory = new DownloadUrlConnection.Factory(
                 new DownloadUrlConnection.Configuration()
-                        .proxy(mockProxy)
+                        .proxy(proxy)
                         .connectTimeout(123)
                         .readTimeout(456)
         );
 
-        factory.create(mockURL);
+        factory.create(url);
 
-        verify(mockURL).openConnection(mockProxy);
-        verify(mockConnection).setConnectTimeout(123);
-        verify(mockConnection).setReadTimeout(456);
+        verify(url).openConnection(proxy);
+        verify(urlConnection).setConnectTimeout(123);
+        verify(urlConnection).setReadTimeout(456);
     }
+
+    @Test
+    public void addHeader() throws Exception {
+        downloadUrlConnection.addHeader("name1", "value1");
+        verify(urlConnection).addRequestProperty(eq("name1"), eq("value1"));
+    }
+
+    @Test
+    public void execute() throws Exception {
+        downloadUrlConnection.execute();
+        verify(urlConnection).connect();
+    }
+
+    @Test
+    public void getResponseCode() throws Exception {
+        assertThat(downloadUrlConnection.getResponseCode())
+                .isEqualTo(DownloadConnection.NO_RESPONSE_CODE);
+    }
+
+    @Test
+    public void getInputStream() throws Exception {
+        when(urlConnection.getInputStream()).thenReturn(inputStream);
+        assertThat(downloadUrlConnection.getInputStream()).isEqualTo(inputStream);
+    }
+
+    @Test
+    public void getResponseHeaderFields() throws Exception {
+        when(urlConnection.getHeaderFields()).thenReturn(headerFields);
+        assertThat(downloadUrlConnection.getResponseHeaderFields()).isEqualTo(headerFields);
+    }
+
+    @Test
+    public void getResponseHeaderField() throws Exception {
+        when(urlConnection.getHeaderField("key1")).thenReturn("value1");
+        assertThat(downloadUrlConnection.getResponseHeaderField("key1")).isEqualTo("value1");
+    }
+
+    @Test
+    public void release() throws Exception {
+        when(urlConnection.getInputStream()).thenReturn(inputStream);
+        downloadUrlConnection.release();
+        verify(inputStream).close();
+    }
+
+    @Test
+    public void getRequestProperties() throws Exception {
+        when(urlConnection.getRequestProperties()).thenReturn(headerFields);
+        assertThat(downloadUrlConnection.getRequestProperties()).isEqualTo(headerFields);
+    }
+
+    @Test
+    public void getRequestProperty() throws Exception {
+        when(urlConnection.getRequestProperty("key1")).thenReturn("value1");
+        assertThat(downloadUrlConnection.getRequestProperty("key1")).isEqualTo("value1");
+    }
+
+
 }

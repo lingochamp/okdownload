@@ -29,6 +29,10 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     protected URLConnection connection;
 
+    DownloadUrlConnection(URLConnection connection) {
+        this.connection = connection;
+    }
+
     public DownloadUrlConnection(String originUrl, Configuration configuration) throws IOException {
         this(new URL(originUrl), configuration);
     }
