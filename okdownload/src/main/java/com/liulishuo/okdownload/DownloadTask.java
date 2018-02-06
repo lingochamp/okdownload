@@ -262,8 +262,8 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         return priority;
     }
 
-    public Builder toBuilder() {
-        final Builder builder = new Builder(this.url, this.uri)
+    public Builder toBuilder(String anotherUrl, Uri anotherUri) {
+        final Builder builder = new Builder(anotherUrl, anotherUri)
                 .setPriority(priority)
                 .setReadBufferSize(readBufferSize)
                 .setFlushBufferSize(flushBufferSize)
@@ -274,11 +274,16 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
                 .setHeaderMapFields(headerMapFields)
                 .setPassIfAlreadyCompleted(passIfAlreadyCompleted);
 
-        if (getFilenameHolder().isFilenameProvidedByConstruct()) {
+        final File anotherFile = new File(anotherUri.getPath());
+        if (!anotherFile.isFile()) {
             builder.setFilename(getFilename());
         }
 
         return builder;
+    }
+
+    public Builder toBuilder() {
+        return toBuilder(this.url, this.uri);
     }
 
     public void setTags(DownloadTask oldTask) {

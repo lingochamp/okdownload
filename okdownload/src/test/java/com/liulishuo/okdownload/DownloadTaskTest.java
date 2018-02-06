@@ -200,4 +200,28 @@ public class DownloadTaskTest {
                 .build();
         assertThat(noFilenameTask.equals(anotherTask)).isTrue();
     }
+
+    @Test
+    public void toBuilder() {
+        final Uri uri = mock(Uri.class);
+        when(uri.getPath()).thenReturn(parentPath);
+
+        DownloadTask task = new DownloadTask
+                .Builder("url", uri)
+                .setFilename("filename1")
+                .build();
+
+        final Uri anotherUri = mock(Uri.class);
+        when(anotherUri.getPath()).thenReturn(parentPath + filename);
+
+        DownloadTask buildTask = task.toBuilder().build();
+        assertThat(buildTask.getUrl()).isEqualTo("url");
+        assertThat(buildTask.getUri()).isEqualTo(uri);
+        assertThat(buildTask.getFilename()).isEqualTo("filename1");
+
+        buildTask = task.toBuilder("anotherUrl", anotherUri).build();
+        assertThat(buildTask.getUrl()).isEqualTo("anotherUrl");
+        assertThat(buildTask.getUri()).isEqualTo(anotherUri);
+        assertThat(buildTask.getFilename()).isEqualTo(filename);
+    }
 }
