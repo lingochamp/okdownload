@@ -56,7 +56,7 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 com.liulishuo.okdownload:okhttp:{latest_version}
 ```
 
-Snapshots of the development version are available in [Sonatype's `snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/), you can include on your gradle project through:
+Snapshots of the development version are available in [Sonatype's `snapshots` repository](https://oss.sonatype.org/content/repositories/snapshots/), you can include on your gradle project through:
 
 ```groovy
 repositories {
