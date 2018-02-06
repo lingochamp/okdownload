@@ -93,8 +93,11 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     @Override
     public void release() {
-        if (connection instanceof HttpURLConnection) {
-            ((HttpURLConnection) connection).disconnect();
+        // the same to response#close on okhttp
+        // real execute RealBufferedSource.InputStream#close
+        try {
+            connection.getInputStream().close();
+        } catch (IOException ignored) {
         }
     }
 
