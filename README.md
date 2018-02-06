@@ -56,6 +56,23 @@ com.liulishuo.okdownload:sqlite:{latest_version}
 com.liulishuo.okdownload:okhttp:{latest_version}
 ```
 
+Snapshots of the development version are available in [Sonatype's `snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/), you can include on your gradle project through:
+
+```groovy
+repositories {
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+```
+
+```groovy
+// core
+com.liulishuo.okdownload:okdownload:1.0.0-SNAPSHOT
+// provide sqlite to store breakpoints
+com.liulishuo.okdownload:sqlite:1.0.0-SNAPSHOT
+// provide okhttp to connect to backend
+com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
+```
+
 ## WHY OKDOWNLOAD
 
 ### STABILITY and RELIABLE
