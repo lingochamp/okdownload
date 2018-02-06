@@ -1,3 +1,17 @@
 rootProject.name = 'okdownload-root'
 
 include ':okdownload', ':okdownload-process', ':okdownload-connection-okhttp', ':okdownload-breakpoint-sqlite', ':okdownload-kotlin-enhance', ':benchmark', ':okdownload-filedownloader', 'sample'
+
+ext.isCiServer = System.getenv().containsKey("CI")
+ext.isMasterBranch = System.getenv()["CIRRUS_BRANCH"] == "master"
+
+buildCache {
+    local {
+        enabled = !isCiServer
+    }
+    remote(HttpBuildCache) {
+        url = 'http://' + System.getenv().getOrDefault("CIRRUS_HTTP_CACHE_HOST", "localhost:12321") + "/"
+        enabled = isCiServer
+        push = isMasterBranch
+    }
+}

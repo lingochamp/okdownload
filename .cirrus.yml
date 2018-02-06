@@ -1,0 +1,15 @@
+container:
+  image: cirrusci/android-sdk:26
+  cpu: 4
+  memory: 12G
+
+check_android_task:
+  gradle_cache:
+    folder: ~/.gradle/caches
+  android_cache:
+    folder: ~/.android/build-cache
+  check_script: ./gradlew check connectedCheck
+  codecov_script: curl -s https://codecov.io/bash | bash
+  cleanup_before_cache_script:
+    - rm -fr ~/.gradle/caches/4.*
+    - find ~/.gradle/caches/ -name "*.lock" -type f -delete
