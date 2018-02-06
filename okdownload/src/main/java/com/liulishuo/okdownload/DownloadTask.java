@@ -210,7 +210,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         this.lastCallbackProcessTimestamp.set(lastCallbackProcessTimestamp);
     }
 
-    public synchronized void addTag(int key, Object value) {
+    public synchronized DownloadTask addTag(int key, Object value) {
         if (keyTagMap == null) {
             synchronized (this) {
                 if (keyTagMap == null) keyTagMap = new SparseArray<>();
@@ -218,6 +218,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         }
 
         keyTagMap.put(key, value);
+        return this;
     }
 
     public synchronized void removeTag(int key) {
