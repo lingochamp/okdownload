@@ -36,6 +36,7 @@ import java.util.HashMap;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -76,6 +77,20 @@ public class DownloadContextTest {
         queueSet = new DownloadContext.QueueSet();
         context = spy(new DownloadContext(tasks, queueListener, queueSet));
         builder = spy(new DownloadContext.Builder(queueSet));
+    }
+
+    @Test
+    public void startOnSerial() {
+        doNothing().when(context).start(eq(listener), anyBoolean());
+        context.startOnSerial(listener);
+        verify(context).start(eq(listener), eq(true));
+    }
+
+    @Test
+    public void startOnParallel() {
+        doNothing().when(context).start(eq(listener), anyBoolean());
+        context.startOnParallel(listener);
+        verify(context).start(eq(listener), eq(false));
     }
 
     @Test

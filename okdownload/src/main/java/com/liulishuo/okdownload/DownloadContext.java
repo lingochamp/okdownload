@@ -67,6 +67,14 @@ public class DownloadContext {
         return tasks;
     }
 
+    public void startOnSerial(DownloadListener listener) {
+        start(listener, true);
+    }
+
+    public void startOnParallel(DownloadListener listener) {
+        start(listener, false);
+    }
+
     public void start(final DownloadListener listener, boolean isSerial) {
         Util.d(TAG, "start " + isSerial);
         isStarted = true;
