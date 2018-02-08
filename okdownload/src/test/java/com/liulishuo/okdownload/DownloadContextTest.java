@@ -238,4 +238,14 @@ public class DownloadContextTest {
         builder.unbind(mockTask);
         assertThat(builder.boundTaskList).isEmpty();
     }
+
+    @Test
+    public void replaceTask() {
+        final DownloadTask oldTask = tasks[0];
+        final DownloadTask newTask = mock(DownloadTask.class);
+
+        context.alter().replaceTask(oldTask, newTask);
+
+        assertThat(tasks[0]).isEqualTo(newTask);
+    }
 }

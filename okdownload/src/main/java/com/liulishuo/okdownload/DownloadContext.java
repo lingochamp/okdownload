@@ -109,6 +109,10 @@ public class DownloadContext {
         Util.d(TAG, "start finish " + isSerial);
     }
 
+    public AlterContext alter() {
+        return new AlterContext(this);
+    }
+
     public void stop() {
         if (isStarted) OkDownload.with().downloadDispatcher().cancel(tasks);
         isStarted = false;
@@ -374,6 +378,36 @@ public class DownloadContext {
                             @Nullable Exception realCause) {
             if (remainCount.decrementAndGet() <= 0) queueListener.queueEnd();
             Util.d(TAG, "taskEnd and remainCount" + remainCount);
+        }
+    }
+
+    /**
+     * The Alter helper for the {@link DownloadContext}.
+     */
+    static class AlterContext {
+        private final DownloadContext context;
+
+        AlterContext(DownloadContext context) {
+            this.context = context;
+        }
+
+        /**
+         * Replace the {@code oldTask} to the {@code newTask}
+         *
+         * @param oldTask the old task which has been added to the context.
+         * @param newTask the new task which will be replace the {@code oldTask} on the
+         *                {@code context}.
+         */
+        public AlterContext replaceTask(DownloadTask oldTask, DownloadTask newTask) {
+            final DownloadTask[] tasks = context.tasks;
+            for (int i = 0; i < tasks.length; i++) {
+                final DownloadTask task = tasks[i];
+                if (task == oldTask) {
+                    tasks[i] = newTask;
+                }
+            }
+
+            return this;
         }
     }
 }
