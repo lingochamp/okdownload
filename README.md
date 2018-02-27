@@ -11,7 +11,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ## WHY REWRITE DOWNLOADER
 
 - FileDownloader framework is not easy to write unit-test, it is not a testable framework, so it is not stable enough.
-- The core library of FileDownloader is too complex and not pure enough, so 5K+ star 1K+ fork with around 10 PR.
+- The core library of FileDownloader is too complex and not pure enough, so 6K+ star 1K+ fork with around 10 PR.
 
 ## Compare to FileDownloader
 
