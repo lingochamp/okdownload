@@ -36,6 +36,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ## LISTENER
 
 ![][listener_img]
+![][check_before_chain_img]
 
 ## DEBUG
 
@@ -163,6 +164,6 @@ limitations under the License.
 [bunch_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/bunch-download.gif
 [queue_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/queue-download.gif
 [listener_img]: https://github.com/lingochamp/okdownload/raw/master/art/listener.png
-[listener_img]: https://github.com/lingochamp/okdownload/raw/master/art/check_before_chain.png
+[check_before_chain_img]: https://github.com/lingochamp/okdownload/raw/master/art/check_before_chain.png
 [build_status_svg]: https://travis-ci.org/lingochamp/okdownload.svg?branch=master
 [build_status_link]: https://travis-ci.org/lingochamp/okdownload
