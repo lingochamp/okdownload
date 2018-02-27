@@ -35,6 +35,8 @@ import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 
 import java.io.IOException;
@@ -310,6 +312,22 @@ public class DownloadCallTest {
 
         final int result = call.compareTo(compareCall);
         assertThat(result).isEqualTo(3);
+    }
+
+    @Test
+    public void start() throws InterruptedException {
+        final DownloadCache cache = mock(DownloadCache.class);
+        doNothing().when(call).startBlocks(ArgumentMatchers.<DownloadChain>anyList());
+
+        call.start(cache, info);
+        ArgumentCaptor<List<DownloadChain>> captor = ArgumentCaptor.forClass(List.class);
+        verify(call).startBlocks(captor.capture());
+
+        final List<DownloadChain> chainList = captor.getValue();
+        assertThat(chainList.size()).isEqualTo(3);
+        assertThat(chainList.get(0).getBlockIndex()).isEqualTo(0);
+        assertThat(chainList.get(1).getBlockIndex()).isEqualTo(1);
+        assertThat(chainList.get(2).getBlockIndex()).isEqualTo(2);
     }
 
     @Test
