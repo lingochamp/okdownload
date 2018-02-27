@@ -77,13 +77,14 @@ public class CallbackDispatcher {
             public void connectTrialEnd(@NonNull final DownloadTask task, final int responseCode,
                                         @NonNull final Map<String, List<String>> headerFields) {
                 Util.d(TAG, "connectTrialEnd: " + task.getId());
-                if (task.isAutoCallbackToUIThread()) uiHandler.post(new Runnable() {
-                    @Override public void run() {
-                        task.getListener()
-                                .connectTrialEnd(task, responseCode, headerFields);
-                    }
-                });
-                else {
+                if (task.isAutoCallbackToUIThread()) {
+                    uiHandler.post(new Runnable() {
+                        @Override public void run() {
+                            task.getListener()
+                                    .connectTrialEnd(task, responseCode, headerFields);
+                        }
+                    });
+                } else {
                     task.getListener()
                             .connectTrialEnd(task, responseCode, headerFields);
                 }
