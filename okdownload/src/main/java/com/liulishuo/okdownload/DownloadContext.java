@@ -384,7 +384,7 @@ public class DownloadContext {
     /**
      * The Alter helper for the {@link DownloadContext}.
      */
-    static class AlterContext {
+    public static class AlterContext {
         private final DownloadContext context;
 
         AlterContext(DownloadContext context) {
