@@ -20,6 +20,7 @@ import android.net.Uri;
 
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
+import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
 import org.junit.After;
@@ -222,5 +223,91 @@ public class DownloadTaskTest {
         assertThat(buildTask.getUrl()).isEqualTo("anotherUrl");
         assertThat(buildTask.getUri()).isEqualTo(anotherUri);
         assertThat(buildTask.getFilename()).isEqualTo(filename);
+    }
+
+    @Test
+    public void profile() {
+        final String url = "url";
+        final Uri uri = mock(Uri.class);
+        when(uri.getPath()).thenReturn("~/path");
+
+        // basic profile
+        DownloadTask task = new DownloadTask.Builder(url, uri)
+                .setReadBufferSize(1)
+                .setFlushBufferSize(2)
+                .setSyncBufferSize(3)
+                .setSyncBufferIntervalMillis(4)
+                .setMinIntervalMillisCallbackProcess(5)
+                .setAutoCallbackToUIThread(true)
+                .build();
+        assertThat(task.getReadBufferSize()).isEqualTo(1);
+        assertThat(task.getFlushBufferSize()).isEqualTo(2);
+        assertThat(task.getSyncBufferSize()).isEqualTo(3);
+        assertThat(task.getSyncBufferIntervalMills()).isEqualTo(4);
+        assertThat(task.getMinIntervalMillisCallbackProcess()).isEqualTo(5);
+        assertThat(task.isAutoCallbackToUIThread()).isTrue();
+
+        // setTag
+        task.setTag("tag");
+        assertThat(task.getTag()).isEqualTo("tag");
+        task.removeTag();
+        assertThat(task.getTag()).isNull();
+
+        // addTag
+        task.addTag(1, "tag1");
+        task.addTag(2, "tag2");
+        assertThat(task.getTag(1)).isEqualTo("tag1");
+        assertThat(task.getTag(2)).isEqualTo("tag2");
+        task.removeTag(1);
+        assertThat(task.getTag(1)).isNull();
+
+        // callback process timestamp
+        task.setLastCallbackProcessTs(1L);
+        assertThat(task.getLastCallbackProcessTs()).isEqualTo(1L);
+
+        // setTags
+        DownloadTask oldTask = new DownloadTask.Builder(url, uri).build();
+        DownloadTask newTask = new DownloadTask.Builder(url, uri).build();
+        oldTask.setTag("tag");
+        oldTask.addTag(0, "tag0");
+        newTask.setTags(oldTask);
+        assertThat(newTask.getTag()).isEqualTo("tag");
+        assertThat(newTask.getTag(0)).isEqualTo("tag0");
+    }
+
+    @Test
+    public void operation() {
+        final DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
+
+        final String url = "url";
+        final Uri uri = mock(Uri.class);
+        when(uri.getPath()).thenReturn("~/path");
+        DownloadTask task = new DownloadTask.Builder(url, uri).build();
+
+        // enqueue
+        final DownloadListener listener = mock(DownloadListener.class);
+        task.enqueue(listener);
+        assertThat(task.getListener()).isEqualTo(listener);
+        verify(dispatcher).enqueue(eq(task));
+
+        // cancel
+        task.cancel();
+        verify(dispatcher).cancel(eq(task));
+
+        // execute
+        task.execute(listener);
+        assertThat(task.getListener()).isEqualTo(listener);
+        verify(dispatcher).execute(eq(task));
+    }
+
+    @Test
+    public void taskCallbackWrapper() {
+        final DownloadTask task = mock(DownloadTask.class);
+
+        DownloadTask.TaskCallbackWrapper.setLastCallbackProcessTs(task, 10L);
+        verify(task).setLastCallbackProcessTs(eq(10L));
+
+        DownloadTask.TaskCallbackWrapper.getLastCallbackProcessTs(task);
+        verify(task).getLastCallbackProcessTs();
     }
 }
