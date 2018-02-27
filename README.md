@@ -33,7 +33,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ![][single_download_img]![][each_block_progress_img]
 ![][bunch_download_img]![][queue_download_img]
 
-## LISTENER
+## GRAPH
 
 ![][listener_img]
 ![][check_before_chain_img]
