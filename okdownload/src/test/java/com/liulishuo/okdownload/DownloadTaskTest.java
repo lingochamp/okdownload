@@ -20,7 +20,6 @@ import android.net.Uri;
 
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
-import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
 import org.junit.After;
@@ -171,7 +170,7 @@ public class DownloadTaskTest {
         final BreakpointInfo info = mock(BreakpointInfo.class);
         when(info.getFilenameHolder()).thenReturn(mock(DownloadStrategy.FilenameHolder.class));
         new DownloadStrategy().validFilenameFromResponse("response-filename",
-                noFilenameTask, info, mock(DownloadConnection.Connected.class));
+                noFilenameTask, info);
 
         // compare to:
         // 1. uri is directory

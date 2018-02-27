@@ -26,6 +26,9 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.assist.Listener4Assist;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * When download from resume:
  * taskStart->infoReady->connectStart->connectEnd->
@@ -59,18 +62,24 @@ public abstract class DownloadListener4 implements DownloadListener,
         this.assist.setAssistExtend(assistExtend);
     }
 
+    @Override
+    public void connectTrialStart(@NonNull DownloadTask task,
+                                  @NonNull Map<String, List<String>> requestHeaderFields) {
+    }
+
+    @Override public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                          @NonNull Map<String, List<String>> responseHeaderFields) {
+    }
+
     @Override public final void downloadFromBeginning(@NonNull DownloadTask task,
                                                       @NonNull BreakpointInfo info,
-                                                      @NonNull ResumeFailedCause cause) { }
+                                                      @NonNull ResumeFailedCause cause) {
+        initData(task, info, false);
+    }
 
     @Override public final void downloadFromBreakpoint(@NonNull DownloadTask task,
                                                        @NonNull BreakpointInfo info) {
         initData(task, info, true);
-    }
-
-    @Override
-    public final void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-        initData(task, info, false);
     }
 
     @Override

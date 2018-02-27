@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.interceptor.connect;
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -45,7 +47,7 @@ public class RedirectInterceptor implements Interceptor.Connect {
      */
     private static final int HTTP_PERMANENT_REDIRECT = 308;
 
-    @Override
+    @NonNull @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         int redirectCount = 0;
 

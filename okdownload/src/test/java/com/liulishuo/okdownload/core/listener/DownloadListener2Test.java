@@ -56,6 +56,16 @@ public class DownloadListener2Test {
     }
 
     @Test
+    public void connectTrialStart() throws Exception {
+        listener2.connectTrialStart(task, headerFields);
+    }
+
+    @Test
+    public void connectTrialEnd() throws Exception {
+        listener2.connectTrialEnd(task, 200, headerFields);
+    }
+
+    @Test
     public void downloadFromBeginning() throws Exception {
         listener2.downloadFromBeginning(task, info, cause);
     }
@@ -73,11 +83,6 @@ public class DownloadListener2Test {
     @Test
     public void connectEnd() throws Exception {
         listener2.connectEnd(task, 1, 200, headerFields);
-    }
-
-    @Test
-    public void splitBlockEnd() throws Exception {
-        listener2.splitBlockEnd(task, info);
     }
 
     @Test

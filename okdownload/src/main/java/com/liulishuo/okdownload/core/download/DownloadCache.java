@@ -18,11 +18,16 @@ package com.liulishuo.okdownload.core.download;
 
 import android.support.annotation.NonNull;
 
-import java.io.IOException;
-
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.exception.FileBusyAfterRunException;
+import com.liulishuo.okdownload.core.exception.InterruptException;
+import com.liulishuo.okdownload.core.exception.PreAllocateException;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
+import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
+
+import java.io.IOException;
+import java.net.SocketException;
 
 public class DownloadCache {
     private String redirectLocation;
@@ -120,6 +125,26 @@ public class DownloadCache {
     public void setPreAllocateFailed(IOException realCause) {
         this.isPreAllocateFailed = true;
         this.realCause = realCause;
+    }
+
+    public void catchException(IOException e) {
+        if (isUserCanceled()) return; // ignored
+
+        if (e instanceof ResumeFailedException) {
+            setPreconditionFailed(e);
+        } else if (e instanceof ServerCanceledException) {
+            setServerCanceled(e);
+        } else if (e == FileBusyAfterRunException.SIGNAL) {
+            setFileBusyAfterRun();
+        } else if (e instanceof PreAllocateException) {
+            setPreAllocateFailed(e);
+        } else if (e != InterruptException.SIGNAL) {
+            setUnknownError(e);
+            if (!(e instanceof SocketException)) {
+                // we know socket exception, so ignore it,  otherwise print stack trace.
+                e.printStackTrace();
+            }
+        }
     }
 
     static class PreError extends DownloadCache {

@@ -84,34 +84,38 @@ public class Listener1Assist {
     }
 
     public void downloadFromBeginning(DownloadTask task,
+                                      @NonNull BreakpointInfo info,
                                       ResumeFailedCause cause) {
-        final Listener1Model model = findModel(task.getId());
+        final Listener1Model model = assignModelIfNeed(task.getId(), info);
         if (model == null) return;
 
         if (model.isStarted && callback != null) {
             callback.retry(task, cause);
         }
 
-        model.blockCount = 0;
-        model.totalLength = 0;
-        model.currentOffset.set(0);
-
         model.isStarted = true;
         model.isFromResumed = false;
         model.isFirstConnect = true;
     }
 
-    public void downloadFromBreakpoint(int id, BreakpointInfo info) {
-        final Listener1Model model = findModel(id);
+    public void downloadFromBreakpoint(int id, @NonNull BreakpointInfo info) {
+        final Listener1Model model = assignModelIfNeed(id, info);
         if (model == null) return;
+
+        model.isStarted = true;
+        model.isFromResumed = true;
+        model.isFirstConnect = true;
+    }
+
+    @Nullable private Listener1Model assignModelIfNeed(int id, @NonNull BreakpointInfo info) {
+        final Listener1Model model = findModel(id);
+        if (model == null) return null;
 
         model.blockCount = info.getBlockCount();
         model.totalLength = info.getTotalLength();
         model.currentOffset.set(info.getTotalOffset());
 
-        model.isStarted = true;
-        model.isFromResumed = true;
-        model.isFirstConnect = true;
+        return model;
     }
 
     public void connectEnd(DownloadTask task) {
@@ -120,23 +124,8 @@ public class Listener1Assist {
 
         if (model.isFromResumed && model.isFirstConnect) {
             model.isFirstConnect = false;
-            // from break point.
-            if (callback != null) {
-                callback.connected(task, model.blockCount, model.currentOffset.get(),
-                        model.totalLength);
-            }
         }
-    }
 
-    public void splitBlockEnd(DownloadTask task, BreakpointInfo info) {
-        final Listener1Model model = findModel(task.getId());
-        if (model == null) return;
-
-        model.blockCount = info.getBlockCount();
-        model.totalLength = info.getTotalLength();
-        model.currentOffset.set(info.getTotalOffset());
-
-        // if not from resume we get info after block end, so callback on here.
         if (callback != null) {
             callback.connected(task, model.blockCount, model.currentOffset.get(),
                     model.totalLength);

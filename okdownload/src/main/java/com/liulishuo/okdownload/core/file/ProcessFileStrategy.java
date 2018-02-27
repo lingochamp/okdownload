@@ -17,11 +17,13 @@
 package com.liulishuo.okdownload.core.file;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
@@ -132,20 +134,34 @@ public class ProcessFileStrategy {
             }
         }
 
+        @Nullable public ResumeFailedCause getCause() {
+            checkIfNeed();
+
+            if (!infoRight) {
+                return INFO_DIRTY;
+            } else if (!fileExist) {
+                return FILE_NOT_EXIST;
+            } else if (!outputStreamSupport) {
+                return OUTPUT_STREAM_NOT_SUPPORT;
+            }
+
+            return null;
+        }
+
         public void callbackCause() {
             checkIfNeed();
 
             final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
             if (isAvailable) {
                 dispatcher.dispatch().downloadFromBreakpoint(task, info);
-            } else if (!infoRight) {
-                dispatcher.dispatch().downloadFromBeginning(task, info, INFO_DIRTY);
-            } else if (!fileExist) {
-                dispatcher.dispatch().downloadFromBeginning(task, info, FILE_NOT_EXIST);
-            } else if (!outputStreamSupport) {
-                dispatcher.dispatch().downloadFromBeginning(task, info, OUTPUT_STREAM_NOT_SUPPORT);
             } else {
-                throw new IllegalStateException();
+                final ResumeFailedCause failedCause = getCause();
+                if (failedCause == null) {
+                    throw new IllegalStateException();
+                } else {
+                    dispatcher.dispatch().downloadFromBeginning(task, info, failedCause);
+                }
+
             }
         }
     }

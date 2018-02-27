@@ -37,6 +37,36 @@ import java.util.Map;
 public interface DownloadListener {
     void taskStart(@NonNull DownloadTask task);
 
+    /**
+     * On start trial connect state.
+     * <p/>
+     * The trial connection is used for:
+     * 1. check whether the local info is valid to resume downloading
+     * 2. get the instance length of this resource.
+     * 3. check whether the resource support accept range.
+     *
+     * @param task                the host task.
+     * @param requestHeaderFields the request header fields for this connection.
+     */
+    void connectTrialStart(@NonNull DownloadTask task,
+                           @NonNull Map<String, List<String>> requestHeaderFields);
+
+    /**
+     * On end trial connect state.
+     * <p/>
+     * The trial connection is used for:
+     * 1. check whether the local info is valid to resume downloading
+     * 2. get the instance length of this resource.
+     * 3. check whether the resource support accept range.
+     *
+     * @param task                 the host task.
+     * @param responseCode         the response code of this trial connection.
+     * @param responseHeaderFields the response header fields for this trial connection.
+     */
+    void connectTrialEnd(@NonNull DownloadTask task,
+                         int responseCode,
+                         @NonNull Map<String, List<String>> responseHeaderFields);
+
     void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                @NonNull ResumeFailedCause cause);
 
@@ -48,8 +78,6 @@ public interface DownloadListener {
     void connectEnd(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                     int responseCode,
                     @NonNull Map<String, List<String>> responseHeaderFields);
-
-    void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info);
 
     void fetchStart(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                     @IntRange(from = 0) long contentLength);

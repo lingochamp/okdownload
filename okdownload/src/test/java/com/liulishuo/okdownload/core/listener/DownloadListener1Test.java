@@ -95,7 +95,7 @@ public class DownloadListener1Test {
     public void downloadFromBeginning() {
         final ResumeFailedCause cause = mock(ResumeFailedCause.class);
         listener1.downloadFromBeginning(task, info, cause);
-        verify(listener1.assist).downloadFromBeginning(eq(task), eq(cause));
+        verify(listener1.assist).downloadFromBeginning(eq(task), eq(info), eq(cause));
     }
 
     @Test
@@ -108,12 +108,6 @@ public class DownloadListener1Test {
     public void connectEnd() {
         listener1.connectEnd(task, 1, 200, tmpFields);
         verify(listener1.assist).connectEnd(eq(task));
-    }
-
-    @Test
-    public void splitBlockEnd() {
-        listener1.splitBlockEnd(task, info);
-        verify(listener1.assist).splitBlockEnd(eq(task), eq(info));
     }
 
     @Test

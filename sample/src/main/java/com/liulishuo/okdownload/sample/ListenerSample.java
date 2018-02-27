@@ -54,6 +54,18 @@ public class ListenerSample {
                 log("taskStart");
             }
 
+            @Override
+            public void connectTrialStart(@NonNull DownloadTask task,
+                                          @NonNull Map<String, List<String>> requestHeaderFields) {
+                log("connectTrialStart");
+            }
+
+            @Override
+            public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                        @NonNull Map<String, List<String>> responseHeaderFields) {
+                log("connectTrialEnd");
+            }
+
             @Override public void downloadFromBeginning(@NonNull DownloadTask task,
                                                         @NonNull BreakpointInfo info,
                                                         @NonNull ResumeFailedCause cause) {
@@ -74,11 +86,6 @@ public class ListenerSample {
             public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                    @NonNull Map<String, List<String>> responseHeader) {
                 log("connectEnd");
-            }
-
-            @Override
-            public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-                log("splitBlockEnd");
             }
 
             @Override

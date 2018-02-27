@@ -24,12 +24,5 @@ public class FileBusyAfterRunException extends IOException {
     }
 
     public static final FileBusyAfterRunException SIGNAL = new FileBusyAfterRunException() {
-        @Override public StackTraceElement[] getStackTrace() {
-            throw new IllegalAccessError("Stack is ignored for signal");
-        }
-
-        @Override public void printStackTrace() {
-            throw new IllegalAccessError("Stack is ignored for signal");
-        }
     };
 }

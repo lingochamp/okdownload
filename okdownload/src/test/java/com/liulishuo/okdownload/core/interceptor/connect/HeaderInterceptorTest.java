@@ -37,7 +37,7 @@ import java.util.Map;
 
 import static com.liulishuo.okdownload.TestUtils.mockDownloadChain;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
-import static com.liulishuo.okdownload.core.download.DownloadChain.CHUNKED_CONTENT_LENGTH;
+import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -78,7 +78,7 @@ public class HeaderInterceptorTest {
         verify(connection).addHeader(nameCaptor.capture(), valueCaptor.capture());
 
         assertThat(nameCaptor.getAllValues()).containsExactly("Range");
-        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=0-");
+        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=0-9");
 
 
         when(chain.getBlockIndex()).thenReturn(1);
@@ -152,7 +152,6 @@ public class HeaderInterceptorTest {
                 .resumeAvailableResponseCheck(eq(connected), eq(0), eq(info));
         verify(OkDownload.with().downloadStrategy()
                 .resumeAvailableResponseCheck(connected, 0, info)).inspect();
-        verify(OkDownload.with().downloadDispatcher()).isFileConflictAfterRun(eq(chain.getTask()));
 
         ArgumentCaptor<Long> contentLengthCaptor = ArgumentCaptor.forClass(Long.class);
         verify(chain).setResponseContentLength(contentLengthCaptor.capture());
@@ -162,18 +161,5 @@ public class HeaderInterceptorTest {
         interceptor.interceptConnect(chain);
         verify(chain, times(2)).setResponseContentLength(contentLengthCaptor.capture());
         assertThat(contentLengthCaptor.getAllValues()).containsOnly(-1L, 10L);
-    }
-
-    @Test
-    public void parseContentDisposition() {
-        String filename = HeaderInterceptor
-                .parseContentDisposition("attachment; ...filename ii=\"hello world\"");
-        assertThat(filename).isNull();
-        filename = HeaderInterceptor
-                .parseContentDisposition("attachment; filename=\"hello world\"");
-        assertThat(filename).isEqualTo("hello world");
-        filename = HeaderInterceptor
-                .parseContentDisposition("attachment; filename=genome.jpeg\nabc");
-        assertThat(filename).isEqualTo("genome.jpeg");
     }
 }

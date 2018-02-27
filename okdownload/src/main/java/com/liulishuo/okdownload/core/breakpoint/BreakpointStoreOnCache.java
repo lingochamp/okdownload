@@ -69,7 +69,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         return storedInfos.get(id);
     }
 
-    @Override
+    @NonNull @Override
     public BreakpointInfo createAndInsert(@NonNull DownloadTask task) {
         final int id = task.getId();
 

@@ -55,11 +55,12 @@
     <!-- listener -->
     <string name="info_ready">Info Ready</string>
     <string name="task_start">Task Start</string>
+    <string name="connect_trial_start">Connect Trial Start</string>
+    <string name="connect_trial_end">Connect Trial End</string>
     <string name="download_from_beginning">Download from Beginning</string>
     <string name="download_from_breakpoint">Download from Breakpoint</string>
     <string name="connect_start">Connect Start</string>
     <string name="connect_end">Connect End</string>
-    <string name="split_end">Split End</string>
     <string name="fetch_start">Fetch Start</string>
     <string name="fetch_progress">Fetch Progress</string>
     <string name="fetch_end">Fetch End</string>

@@ -19,12 +19,8 @@ package com.liulishuo.okdownload.core.interceptor;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadCache;
 import com.liulishuo.okdownload.core.download.DownloadChain;
-import com.liulishuo.okdownload.core.exception.FileBusyAfterRunException;
 import com.liulishuo.okdownload.core.exception.InterruptException;
-import com.liulishuo.okdownload.core.exception.PreAllocateException;
-import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.RetryException;
-import com.liulishuo.okdownload.core.exception.ServerCancelledException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 
 import org.junit.Before;
@@ -82,7 +78,7 @@ public class RetryInterceptorTest {
 
         verify(chain, times(2)).processConnect();
         verify(chain).resetConnectForRetry();
-        verify(interceptor, never()).handleException(any(IOException.class), eq(cache));
+        verify(cache, never()).catchException(any(IOException.class));
     }
 
     @Test
@@ -92,7 +88,7 @@ public class RetryInterceptorTest {
 
         thrown.expect(InterruptException.class);
         interceptor.interceptConnect(chain);
-        verify(interceptor).handleException(any(IOException.class), eq(cache));
+        verify(cache).catchException(any(IOException.class));
     }
 
     @Test
@@ -104,7 +100,7 @@ public class RetryInterceptorTest {
         thrown.expect(IOException.class);
         interceptor.interceptConnect(chain);
 
-        verify(interceptor).handleException(any(IOException.class), eq(cache));
+        verify(cache).catchException(any(IOException.class));
         verify(connection).release();
     }
 
@@ -118,56 +114,8 @@ public class RetryInterceptorTest {
         interceptor.interceptFetch(chain);
 
         final int blockIndex = chain.getBlockIndex();
-        verify(interceptor).handleException(any(IOException.class), eq(cache));
+        verify(cache).catchException(any(IOException.class));
         verify(outputStream).ensureSyncComplete(eq(blockIndex));
         verify(outputStream).close(eq(blockIndex));
-    }
-
-    @Test
-    public void handleException_resumeFailed() throws IOException {
-        doThrow(ResumeFailedException.class).doReturn(connected).when(chain).processConnect();
-
-        interceptor.handleException(mock(ResumeFailedException.class), cache);
-
-        verify(cache).setPreconditionFailed(any(ResumeFailedException.class));
-    }
-
-    @Test
-    public void handleException_serverCancelled() throws IOException {
-        doThrow(ServerCancelledException.class).doReturn(connected).when(chain).processConnect();
-
-        interceptor.handleException(mock(ServerCancelledException.class), cache);
-
-        verify(cache).setServerCanceled(any(ServerCancelledException.class));
-    }
-
-    @Test
-    public void handleException_fileBusy() throws IOException {
-        doThrow(FileBusyAfterRunException.class).doReturn(connected).when(chain).processConnect();
-
-        thrown.expect(FileBusyAfterRunException.class);
-        interceptor.interceptConnect(chain);
-
-        verify(cache).setFileBusyAfterRun();
-    }
-
-    @Test
-    public void handleException_preallocateFailed() throws IOException {
-        doThrow(PreAllocateException.class).doReturn(connected).when(chain).processConnect();
-
-        thrown.expect(PreAllocateException.class);
-        interceptor.interceptConnect(chain);
-
-        verify(cache).setPreAllocateFailed(any(PreAllocateException.class));
-    }
-
-    @Test
-    public void handleException_othersException() throws IOException {
-        doThrow(IOException.class).doReturn(connected).when(chain).processConnect();
-
-        thrown.expect(IOException.class);
-        interceptor.interceptConnect(chain);
-
-        verify(cache).setUnknownError(any(IOException.class));
     }
 }

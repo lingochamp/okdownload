@@ -19,16 +19,6 @@ package com.liulishuo.okdownload.core.download;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
@@ -45,20 +35,26 @@ import com.liulishuo.okdownload.core.interceptor.connect.CallServerInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.HeaderInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.RedirectInterceptor;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class DownloadChain implements Runnable {
 
     private static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload Cancel Block", false));
 
-    public static final int CHUNKED_CONTENT_LENGTH = -1;
-
     private final int blockIndex;
 
     @NonNull private final DownloadTask task;
     @NonNull private final BreakpointInfo info;
     @NonNull private final DownloadCache cache;
-    @Nullable private Thread parkThread;
 
     final List<Interceptor.Connect> connectInterceptorList = new ArrayList<>();
     final List<Interceptor.Fetch> fetchInterceptorList = new ArrayList<>();
@@ -79,22 +75,21 @@ public class DownloadChain implements Runnable {
         return new DownloadChain(blockIndex, task, info, cache);
     }
 
-    static DownloadChain createFirstBlockChain(Thread parkThread, DownloadTask task,
-                                               @NonNull BreakpointInfo info,
-                                               DownloadCache cache) {
-        final DownloadChain chain = new DownloadChain(0, task, info, cache);
-        chain.parkThread = parkThread;
-
-        return chain;
-    }
-
-    private DownloadChain(int blockIndex, DownloadTask task, @NonNull BreakpointInfo info,
-                          DownloadCache cache) {
+    private DownloadChain(int blockIndex, @NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                          @NonNull DownloadCache cache) {
         this.blockIndex = blockIndex;
         this.task = task;
         this.cache = cache;
         this.info = info;
         this.callbackDispatcher = OkDownload.with().callbackDispatcher();
+    }
+
+    public long getResponseContentLength() {
+        return responseContentLength;
+    }
+
+    public void setResponseContentLength(long responseContentLength) {
+        this.responseContentLength = responseContentLength;
     }
 
     public void cancel() {
@@ -108,15 +103,6 @@ public class DownloadChain implements Runnable {
         currentThread.interrupt();
 
         EXECUTOR.execute(cancelRunnable);
-    }
-
-    public boolean isOtherBlockPark() {
-        return parkThread != null;
-    }
-
-    public void unparkOtherBlock() {
-        LockSupport.unpark(parkThread);
-        parkThread = null;
     }
 
     @NonNull public DownloadTask getTask() {
@@ -210,15 +196,6 @@ public class DownloadChain implements Runnable {
         dispatcher.dispatch().fetchEnd(task, blockIndex, totalFetchedBytes);
     }
 
-    public void setResponseContentLength(long responseContentLength) {
-        this.responseContentLength = responseContentLength;
-    }
-
-    public long getResponseContentLength() {
-        return responseContentLength;
-    }
-
-
     public void resetConnectForRetry() {
         connectIndex = 1;
         if (connection != null) connection.release();
@@ -260,9 +237,6 @@ public class DownloadChain implements Runnable {
             // interrupt.
         } finally {
             finished.set(true);
-            if (isOtherBlockPark()) {
-                unparkOtherBlock();
-            }
         }
     }
 

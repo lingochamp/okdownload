@@ -45,6 +45,21 @@ public class DownloadListenerBunch implements DownloadListener {
     }
 
     @Override
+    public void connectTrialStart(@NonNull DownloadTask task,
+                                  @NonNull Map<String, List<String>> requestHeaderFields) {
+        for (DownloadListener listener : listenerList) {
+            listener.connectTrialStart(task, requestHeaderFields);
+        }
+    }
+
+    @Override public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                          @NonNull Map<String, List<String>> responseHeaderFields) {
+        for (DownloadListener listener : listenerList) {
+            listener.connectTrialEnd(task, responseCode, responseHeaderFields);
+        }
+    }
+
+    @Override
     public void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                       @NonNull ResumeFailedCause cause) {
         for (DownloadListener listener : listenerList) {
@@ -70,12 +85,6 @@ public class DownloadListenerBunch implements DownloadListener {
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
         for (DownloadListener listener : listenerList) {
             listener.connectEnd(task, blockIndex, responseCode, responseHeaderFields);
-        }
-    }
-
-    @Override public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-        for (DownloadListener listener : listenerList) {
-            listener.splitBlockEnd(task, info);
         }
     }
 

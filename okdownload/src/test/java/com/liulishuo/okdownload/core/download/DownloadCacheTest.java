@@ -16,6 +16,10 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import com.liulishuo.okdownload.core.exception.FileBusyAfterRunException;
+import com.liulishuo.okdownload.core.exception.PreAllocateException;
+import com.liulishuo.okdownload.core.exception.ResumeFailedException;
+import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 
 import org.junit.Before;
@@ -25,7 +29,12 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class DownloadCacheTest {
@@ -95,6 +104,61 @@ public class DownloadCacheTest {
         assertThat(cache.isInterrupt()).isFalse();
         cache.setPreAllocateFailed(realCause);
         assertThat(cache.isInterrupt()).isTrue();
+    }
+
+    @Test
+    public void catchException_userCanceled() {
+        when(cache.isUserCanceled()).thenReturn(true);
+        final IOException ioException = mock(IOException.class);
+
+        cache.catchException(ioException);
+
+        verify(cache, never()).setUnknownError(ioException);
+    }
+
+    @Test
+    public void catchException_ResumeFailed() {
+        final ResumeFailedException exception = mock(ResumeFailedException.class);
+
+        cache.catchException(exception);
+
+        verify(cache).setPreconditionFailed(eq(exception));
+    }
+
+    @Test
+    public void catchException_ServerCanceled() {
+        final ServerCanceledException exception = mock(ServerCanceledException.class);
+
+        cache.catchException(exception);
+
+        verify(cache).setServerCanceled(eq(exception));
+    }
+
+    @Test
+    public void catchException_fileBusy() throws IOException {
+        final FileBusyAfterRunException exception = FileBusyAfterRunException.SIGNAL;
+
+        cache.catchException(exception);
+
+        verify(cache).setFileBusyAfterRun();
+    }
+
+    @Test
+    public void catchException_preAllocateFailed() throws IOException {
+        final PreAllocateException exception = mock(PreAllocateException.class);
+
+        cache.catchException(exception);
+
+        verify(cache).setPreAllocateFailed(eq(exception));
+    }
+
+    @Test
+    public void catchException_othersException() throws IOException {
+        final IOException exception = mock(IOException.class);
+
+        cache.catchException(exception);
+
+        verify(cache).setUnknownError(eq(exception));
     }
 
 }

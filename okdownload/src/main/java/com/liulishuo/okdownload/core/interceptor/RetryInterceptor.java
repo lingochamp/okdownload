@@ -16,22 +16,19 @@
 
 package com.liulishuo.okdownload.core.interceptor;
 
+import android.support.annotation.NonNull;
+
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadCache;
 import com.liulishuo.okdownload.core.download.DownloadChain;
-import com.liulishuo.okdownload.core.exception.FileBusyAfterRunException;
 import com.liulishuo.okdownload.core.exception.InterruptException;
-import com.liulishuo.okdownload.core.exception.PreAllocateException;
-import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.RetryException;
-import com.liulishuo.okdownload.core.exception.ServerCancelledException;
 
 import java.io.IOException;
-import java.net.SocketException;
 
 public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch {
 
-    @Override
+    @NonNull @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         final DownloadCache cache = chain.getCache();
 
@@ -47,7 +44,7 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
                     continue;
                 }
 
-                handleException(e, cache);
+                chain.getCache().catchException(e);
                 final DownloadConnection connection = chain.getConnection();
                 if (connection != null) {
                     connection.release();
@@ -63,30 +60,11 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
         try {
             return chain.processFetch();
         } catch (IOException e) {
-            handleException(e, chain.getCache());
+            chain.getCache().catchException(e);
             throw e;
         } finally {
             chain.getOutputStream().ensureSyncComplete(chain.getBlockIndex());
             chain.getOutputStream().close(chain.getBlockIndex());
-        }
-    }
-
-    void handleException(IOException e, DownloadCache cache) {
-        if (cache.isUserCanceled()) return; // ignored
-
-        if (e instanceof ResumeFailedException) {
-            cache.setPreconditionFailed(e);
-        } else if (e instanceof ServerCancelledException) {
-            cache.setServerCanceled(e);
-        } else if (e == FileBusyAfterRunException.SIGNAL) {
-            cache.setFileBusyAfterRun();
-        } else if (e instanceof PreAllocateException) {
-            cache.setPreAllocateFailed(e);
-        } else if (e != InterruptException.SIGNAL) {
-            cache.setUnknownError(e);
-            if (!(e instanceof SocketException)) { // we know socket exception, so ignore it.
-                e.printStackTrace();
-            }
         }
     }
 }

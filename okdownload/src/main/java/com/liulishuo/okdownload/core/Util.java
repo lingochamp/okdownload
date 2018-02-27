@@ -23,7 +23,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
@@ -39,6 +42,22 @@ import java.util.concurrent.ThreadFactory;
 
 public class Util {
 
+    // request header fields.
+    public static final String RANGE = "Range";
+    public static final String IF_MATCH = "If-Match";
+
+    // response header fields.
+    public static final String CONTENT_LENGTH = "Content-Length";
+    public static final String CONTENT_RANGE = "Content-Range";
+    public static final String ETAG = "Etag";
+    public static final String TRANSFER_ENCODING = "Transfer-Encoding";
+    public static final String ACCEPT_RANGES = "Accept-Ranges";
+    public static final String CONTENT_DISPOSITION = "Content-Disposition";
+
+    // response header value.
+    public static final String VALUE_CHUNKED = "chunked";
+    public static final int CHUNKED_CONTENT_LENGTH = -1;
+
     public interface Logger {
         void e(String tag, String msg, Exception e);
 
@@ -53,6 +72,10 @@ public class Util {
 
     public static void setLogger(Logger l) {
         logger = l;
+    }
+
+    public static Logger getLogger() {
+        return logger;
     }
 
     public static void e(String tag, String msg, Exception e) {
@@ -131,44 +154,13 @@ public class Util {
         return fetchedLength == contentLength;
     }
 
-    public static boolean isFirstBlockMeetLenienceFull(long fetchedLength,
-                                                       long contentLength) {
-        return fetchedLength >= contentLength;
-    }
-
-    public static boolean isBlockComplete(int blockIndex, int blockCount, BlockInfo info) {
-        if (blockCount == 1) {
-            return isCorrectFull(info.getCurrentOffset(), info.getContentLength());
-        } else {
-            if (blockIndex == 0) {
-                // first block
-                return isFirstBlockMeetLenienceFull(info.getCurrentOffset(),
-                        info.getContentLength());
-            } else {
-                return isCorrectFull(info.getCurrentOffset(), info.getContentLength());
-            }
-        }
-    }
-
-    public static void resetBlockIfDirty(int blockIndex, int blockCount, long totalLength,
-                                         BlockInfo info) {
+    public static void resetBlockIfDirty(BlockInfo info) {
         boolean isDirty = false;
 
         if (info.getCurrentOffset() < 0) {
             isDirty = true;
-        } else if (blockCount == 1) {
-            if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;
-        } else {
-            if (blockIndex == 0) {
-                // first block
-                if (info.getCurrentOffset() > totalLength) isDirty = true;
-            } else if (blockIndex < blockCount - 1) {
-                // middle blocks
-                if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;
-            } else {
-                // last block
-                if (info.getCurrentOffset() > info.getContentLength()) isDirty = true;
-            }
+        } else if (info.getCurrentOffset() > info.getContentLength()) {
+            isDirty = true;
         }
 
         if (isDirty) {
@@ -249,5 +241,41 @@ public class Util {
         }
 
         return new DownloadUrlConnection.Factory();
+    }
+
+    public static void assembleBlock(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                     long instanceLength,
+                                     boolean isAcceptRange) {
+        final int blockCount;
+        if (OkDownload.with().downloadStrategy().isUseMultiBlock(isAcceptRange)) {
+            blockCount = OkDownload.with().downloadStrategy()
+                    .determineBlockCount(task, instanceLength);
+        } else {
+            blockCount = 1;
+        }
+
+        info.resetBlockInfos();
+        final long eachLength = instanceLength / blockCount;
+        long startOffset = 0;
+        long contentLength = 0;
+        for (int i = 0; i < blockCount; i++) {
+            startOffset = startOffset + contentLength;
+            if (i == 0) {
+                // first block
+                final long remainLength = instanceLength % blockCount;
+                contentLength = eachLength + remainLength;
+            } else {
+                contentLength = eachLength;
+            }
+
+            final BlockInfo blockInfo = new BlockInfo(startOffset, contentLength);
+            info.addBlock(blockInfo);
+        }
+    }
+
+    public static long parseContentLength(@Nullable String contentLength) {
+        if (contentLength == null) return CHUNKED_CONTENT_LENGTH;
+
+        return Long.parseLong(contentLength);
     }
 }

@@ -107,21 +107,22 @@ public class DownloadListener4Test {
 
         listener4.taskStart(task);
         listener4.downloadFromBeginning(task, info, resumeFailedCause);
+        verify(listener4.assist).infoReady(eq(task), eq(info), eq(false));
+
         listener4.connectStart(task, 0, tmpFields);
         listener4.connectEnd(task, 0, 206, tmpFields);
+
+        // another task coming.
         when(info.getBlockCount()).thenReturn(3);
         for (int i = 0; i < 3; i++) {
             final BlockInfo blockInfo = mock(BlockInfo.class);
             doReturn(blockInfo).when(info).getBlock(i);
         }
-        listener4.splitBlockEnd(task, info);
-        verify(listener4.assist).infoReady(eq(task), eq(info), eq(false));
-
-        // another task coming.
         listener4.taskStart(anotherTask);
         listener4.downloadFromBreakpoint(anotherTask, anotherInfo);
 
         listener4.fetchStart(task, 0, 30L);
+        listener4.downloadFromBreakpoint(task, info);
         listener4.connectStart(task, 1, tmpFields);
         listener4.connectEnd(task, 1, 206, tmpFields);
 
@@ -129,7 +130,6 @@ public class DownloadListener4Test {
         listener4.connectStart(anotherTask, 0, tmpFields);
         listener4.connectEnd(anotherTask, 0, 206, tmpFields);
         listener4.fetchProgress(anotherTask, 0, 2);
-
         listener4.fetchProgress(task, 1, 10);
         verify(listener4.assist).fetchProgress(eq(task), eq(1), eq(10L));
 

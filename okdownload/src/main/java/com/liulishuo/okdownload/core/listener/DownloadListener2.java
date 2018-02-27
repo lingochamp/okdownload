@@ -31,6 +31,15 @@ import java.util.Map;
  */
 public abstract class DownloadListener2 implements DownloadListener {
     @Override
+    public void connectTrialStart(@NonNull DownloadTask task,
+                                  @NonNull Map<String, List<String>> requestHeaderFields) {
+    }
+
+    @Override public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                          @NonNull Map<String, List<String>> responseHeaderFields) {
+    }
+
+    @Override
     public void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                       @NonNull ResumeFailedCause cause) {
     }
@@ -45,9 +54,6 @@ public abstract class DownloadListener2 implements DownloadListener {
 
     @Override public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
-    }
-
-    @Override public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
     }
 
     @Override

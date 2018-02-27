@@ -53,7 +53,8 @@ public class UnifiedListenerManager {
         }
     }
 
-    public synchronized boolean detachListener(DownloadTask task, DownloadListener listener) {
+    public synchronized boolean detachListener(@NonNull DownloadTask task,
+                                               DownloadListener listener) {
         final int id = task.getId();
         final List<DownloadListener> listenerList = realListenerMap.get(id);
 
@@ -65,7 +66,8 @@ public class UnifiedListenerManager {
         return result;
     }
 
-    public synchronized void attachListener(DownloadTask task, @NonNull DownloadListener listener) {
+    public synchronized void attachListener(@NonNull DownloadTask task,
+                                            @NonNull DownloadListener listener) {
         final int id = task.getId();
         ArrayList<DownloadListener> listenerList = realListenerMap.get(id);
         if (listenerList == null) {
@@ -78,12 +80,18 @@ public class UnifiedListenerManager {
         }
     }
 
-    public synchronized void attachAndEnqueueIfNotRun(DownloadTask task,
+    /**
+     * Attach the {@code listener} to this manager and enqueue the task if it isn't pending or
+     * running.
+     *
+     * @param task     the task will be enqueue if it isn't running.
+     * @param listener the listener will be attach to this manager.
+     */
+    public synchronized void attachAndEnqueueIfNotRun(@NonNull DownloadTask task,
                                                       @NonNull DownloadListener listener) {
         attachListener(task, listener);
-        final boolean pendingOrRunning = StatusUtil.isSameTaskPendingOrRunning(task);
 
-        if (!pendingOrRunning) {
+        if (!isTaskPendingOrRunning(task)) {
             task.enqueue(hostListener);
         }
     }
@@ -95,6 +103,12 @@ public class UnifiedListenerManager {
         task.enqueue(hostListener);
     }
 
+    /**
+     * Attach the {@code listener} to this manager and execute the {@code task}.
+     *
+     * @param task     the task will be execute.
+     * @param listener the listener will be attached to this manager.
+     */
     public synchronized void executeTaskWithUnifiedListener(@NonNull DownloadTask task,
                                                             @NonNull DownloadListener listener) {
         attachListener(task, listener);
@@ -102,7 +116,12 @@ public class UnifiedListenerManager {
         task.execute(hostListener);
     }
 
-    private final DownloadListener hostListener = new DownloadListener() {
+    // convenient for unit-test.
+    boolean isTaskPendingOrRunning(@NonNull DownloadTask task) {
+        return StatusUtil.isSameTaskPendingOrRunning(task);
+    }
+
+    final DownloadListener hostListener = new DownloadListener() {
         @Override public void taskStart(@NonNull DownloadTask task) {
             final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
             if (listeners == null) return;
@@ -110,6 +129,30 @@ public class UnifiedListenerManager {
             for (final DownloadListener realOne : listeners) {
                 if (realOne == null) continue;
                 realOne.taskStart(task);
+            }
+        }
+
+        @Override
+        public void connectTrialStart(@NonNull DownloadTask task,
+                                      @NonNull Map<String, List<String>> requestHeaderFields) {
+            final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
+            if (listeners == null) return;
+
+            for (final DownloadListener realOne : listeners) {
+                if (realOne == null) continue;
+                realOne.connectTrialStart(task, requestHeaderFields);
+            }
+        }
+
+        @Override
+        public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                    @NonNull Map<String, List<String>> responseHeaderFields) {
+            final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
+            if (listeners == null) return;
+
+            for (final DownloadListener realOne : listeners) {
+                if (realOne == null) continue;
+                realOne.connectTrialEnd(task, responseCode, responseHeaderFields);
             }
         }
 
@@ -157,18 +200,6 @@ public class UnifiedListenerManager {
             for (final DownloadListener realOne : listeners) {
                 if (realOne == null) continue;
                 realOne.connectEnd(task, blockIndex, responseCode, responseHeaderFields);
-            }
-        }
-
-        @Override
-        public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-
-            final DownloadListener[] listeners = getThreadSafeArray(task, realListenerMap);
-            if (listeners == null) return;
-
-            for (final DownloadListener realOne : listeners) {
-                if (realOne == null) continue;
-                realOne.splitBlockEnd(task, info);
             }
         }
 

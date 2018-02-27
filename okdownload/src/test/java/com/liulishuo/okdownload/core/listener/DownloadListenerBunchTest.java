@@ -36,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class DownloadListenerBunchTest {
+
     private DownloadListenerBunch listenerBunch;
 
     @Mock private DownloadListener listener1;
@@ -72,6 +73,22 @@ public class DownloadListenerBunchTest {
     }
 
     @Test
+    public void connectTrialStart() throws Exception {
+        listenerBunch.connectTrialStart(task, headerFields);
+
+        verify(listener1).connectTrialStart(eq(task), eq(headerFields));
+        verify(listener2).connectTrialStart(eq(task), eq(headerFields));
+    }
+
+    @Test
+    public void connectTrialEnd() throws Exception {
+        listenerBunch.connectTrialEnd(task, 200, headerFields);
+
+        verify(listener1).connectTrialEnd(eq(task), eq(200), eq(headerFields));
+        verify(listener2).connectTrialEnd(eq(task), eq(200), eq(headerFields));
+    }
+
+    @Test
     public void downloadFromBeginning() throws Exception {
         listenerBunch.downloadFromBeginning(task, info, resumeFailedCause);
 
@@ -101,14 +118,6 @@ public class DownloadListenerBunchTest {
 
         verify(listener1).connectEnd(eq(task), eq(1), eq(1), eq(headerFields));
         verify(listener2).connectEnd(eq(task), eq(1), eq(1), eq(headerFields));
-    }
-
-    @Test
-    public void splitBlockEnd() throws Exception {
-        listenerBunch.splitBlockEnd(task, info);
-
-        verify(listener1).splitBlockEnd(eq(task), eq(info));
-        verify(listener2).splitBlockEnd(eq(task), eq(info));
     }
 
     @Test

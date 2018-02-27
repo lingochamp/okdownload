@@ -107,21 +107,24 @@ public class Listener1AssistTest {
     @Test
     public void downloadFromBeginning() {
         assist.taskStart(task1);
+
+        when(info.getBlockCount()).thenReturn(2);
+        when(info.getTotalLength()).thenReturn(3L);
         final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
 
-        assist.downloadFromBeginning(task1, cause);
+        assist.downloadFromBeginning(task1, info, cause);
 
         assertThat(model.isStarted).isTrue();
         assertThat(model.isFromResumed).isFalse();
         assertThat(model.isFirstConnect).isTrue();
 
-        assertThat(model.blockCount).isZero();
-        assertThat(model.totalLength).isZero();
+        assertThat(model.blockCount).isEqualTo(2);
+        assertThat(model.totalLength).isEqualTo(3L);
         assertThat(model.currentOffset.get()).isZero();
 
         verify(callback, never()).retry(eq(task1), eq(cause));
 
-        assist.downloadFromBeginning(task1, cause);
+        assist.downloadFromBeginning(task1, info, cause);
         verify(callback).retry(eq(task1), eq(cause));
     }
 
@@ -157,24 +160,6 @@ public class Listener1AssistTest {
         assist.connectEnd(task1);
         assertThat(model.isFirstConnect).isFalse();
         verify(callback).connected(eq(task1), eq(0), eq(2L), eq(3L));
-    }
-
-    @Test
-    public void splitBlockEnd() {
-        assist.taskStart(task1);
-        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
-
-        when(info.getBlockCount()).thenReturn(1);
-        when(info.getTotalOffset()).thenReturn(2L);
-        when(info.getTotalLength()).thenReturn(3L);
-
-        assist.splitBlockEnd(task1, info);
-
-        assertThat(model.blockCount).isEqualTo(1);
-        assertThat(model.currentOffset.get()).isEqualTo(2);
-        assertThat(model.totalLength).isEqualTo(3);
-
-        verify(callback).connected(eq(task1), eq(1), eq(2L), eq(3L));
     }
 
     @Test

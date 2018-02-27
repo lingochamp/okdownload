@@ -154,6 +154,18 @@ public class EachBlockProgressUtil {
                 extInfoTv.setText(R.string.task_start);
             }
 
+            @Override
+            public void connectTrialStart(@NonNull DownloadTask task,
+                                          @NonNull Map<String, List<String>> requestHeaderFields) {
+                extInfoTv.setText(R.string.connect_trial_start);
+            }
+
+            @Override
+            public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                        @NonNull Map<String, List<String>> responseHeaderFields) {
+                extInfoTv.setText(R.string.connect_trial_end);
+            }
+
             @Override public void downloadFromBeginning(@NonNull DownloadTask task,
                                                         @NonNull BreakpointInfo info,
                                                         @NonNull ResumeFailedCause cause) {
@@ -174,11 +186,6 @@ public class EachBlockProgressUtil {
             public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                    @NonNull Map<String, List<String>> responseHeaders) {
                 extInfoTv.setText(R.string.connect_end);
-            }
-
-            @Override
-            public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-                extInfoTv.setText(R.string.split_end);
             }
 
             @Override

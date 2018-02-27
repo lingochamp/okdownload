@@ -50,9 +50,18 @@ public abstract class DownloadListener1 implements DownloadListener,
     }
 
     @Override
+    public void connectTrialStart(@NonNull DownloadTask task,
+                                  @NonNull Map<String, List<String>> requestHeaderFields) {
+    }
+
+    @Override public void connectTrialEnd(@NonNull DownloadTask task, int responseCode,
+                                          @NonNull Map<String, List<String>> responseHeaderFields) {
+    }
+
+    @Override
     public void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                       @NonNull ResumeFailedCause cause) {
-        assist.downloadFromBeginning(task, cause);
+        assist.downloadFromBeginning(task, info, cause);
     }
 
     @Override
@@ -67,10 +76,6 @@ public abstract class DownloadListener1 implements DownloadListener,
     @Override public void connectEnd(@NonNull DownloadTask task, int blockIndex, int responseCode,
                                      @NonNull Map<String, List<String>> responseHeaderFields) {
         assist.connectEnd(task);
-    }
-
-    @Override public void splitBlockEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-        assist.splitBlockEnd(task, info);
     }
 
     @Override
