@@ -101,8 +101,6 @@ public class DownloadChain implements Runnable {
         }
 
         currentThread.interrupt();
-
-        EXECUTOR.execute(cancelRunnable);
     }
 
     @NonNull public DownloadTask getTask() {
@@ -237,6 +235,7 @@ public class DownloadChain implements Runnable {
             // interrupt.
         } finally {
             finished.set(true);
+            if (cache.isUserCanceled()) EXECUTOR.execute(cancelRunnable);
         }
     }
 
