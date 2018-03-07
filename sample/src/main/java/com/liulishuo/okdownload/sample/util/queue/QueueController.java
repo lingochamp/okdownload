@@ -22,7 +22,7 @@ import android.util.Log;
 import android.widget.SeekBar;
 
 import com.liulishuo.okdownload.DownloadContext;
-import com.liulishuo.okdownload.DownloadQueueListener;
+import com.liulishuo.okdownload.DownloadContextListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.sample.R;
 import com.liulishuo.okdownload.sample.util.DemoUtil;
@@ -41,7 +41,7 @@ public class QueueController {
 
     private File queueDir;
 
-    public void initTasks(@NonNull Context context, @NonNull DownloadQueueListener listener) {
+    public void initTasks(@NonNull Context context, @NonNull DownloadContextListener listener) {
         final DownloadContext.QueueSet set = new DownloadContext.QueueSet();
         final File parentFile = new File(DemoUtil.getParentFile(context), "queue");
         this.queueDir = parentFile;

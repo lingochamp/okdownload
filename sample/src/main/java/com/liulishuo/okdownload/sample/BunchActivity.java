@@ -28,7 +28,7 @@ import android.widget.TextView;
 
 import com.liulishuo.okdownload.DownloadContext;
 import com.liulishuo.okdownload.DownloadListener;
-import com.liulishuo.okdownload.DownloadQueueListener;
+import com.liulishuo.okdownload.DownloadContextListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.cause.EndCause;
@@ -168,8 +168,8 @@ public class BunchActivity extends BaseSampleActivity {
                     totalCount = urls.length;
                     currentCount = 0;
 
-                    downloadContext = builder.setListener(new DownloadQueueListener() {
-                        @Override public void queueEnd() {
+                    downloadContext = builder.setListener(new DownloadContextListener() {
+                        @Override public void queueEnd(@NonNull DownloadContext context) {
                             v.setTag(null);
                             radioGroup.setEnabled(true);
                             deleteContainerView.setEnabled(true);

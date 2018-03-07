@@ -48,11 +48,11 @@ public class DownloadContext {
 
     private final DownloadTask[] tasks;
     volatile boolean isStarted = false;
-    @Nullable private final DownloadQueueListener queueListener;
+    @Nullable private final DownloadContextListener queueListener;
     private final QueueSet set;
 
     DownloadContext(@NonNull DownloadTask[] tasks,
-                    @Nullable DownloadQueueListener queueListener,
+                    @Nullable DownloadContextListener queueListener,
                     @NonNull QueueSet set) {
         this.tasks = tasks;
         this.queueListener = queueListener;
@@ -82,7 +82,7 @@ public class DownloadContext {
         if (queueListener != null) {
             targetListener = new DownloadListenerBunch.Builder()
                     .append(listener)
-                    .append(new QueueAttachListener(queueListener, tasks.length))
+                    .append(new QueueAttachListener(this, queueListener, tasks.length))
                     .build();
         } else {
             targetListener = listener;
@@ -124,11 +124,11 @@ public class DownloadContext {
         if (isAutoCallbackToUIThread) {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override public void run() {
-                    queueListener.queueEnd();
+                    queueListener.queueEnd(DownloadContext.this);
                 }
             });
         } else {
-            queueListener.queueEnd();
+            queueListener.queueEnd(this);
         }
     }
 
@@ -145,7 +145,7 @@ public class DownloadContext {
         final ArrayList<DownloadTask> boundTaskList;
 
         private final QueueSet set;
-        private DownloadQueueListener listener;
+        private DownloadContextListener listener;
 
         public Builder() {
             this(new QueueSet());
@@ -160,7 +160,7 @@ public class DownloadContext {
             this.boundTaskList = taskArrayList;
         }
 
-        public Builder setListener(DownloadQueueListener listener) {
+        public Builder setListener(DownloadContextListener listener) {
             this.listener = listener;
             return this;
         }
@@ -363,11 +363,14 @@ public class DownloadContext {
 
     private static class QueueAttachListener extends DownloadListener2 {
         private final AtomicInteger remainCount;
-        @NonNull private final DownloadQueueListener queueListener;
+        @NonNull private final DownloadContextListener queueListener;
+        @NonNull private final DownloadContext hostContext;
 
-        QueueAttachListener(@NonNull DownloadQueueListener queueListener, int taskCount) {
+        QueueAttachListener(@NonNull DownloadContext context,
+                            @NonNull DownloadContextListener queueListener, int taskCount) {
             remainCount = new AtomicInteger(taskCount);
             this.queueListener = queueListener;
+            this.hostContext = context;
         }
 
         @Override public void taskStart(@NonNull DownloadTask task) {
@@ -376,7 +379,7 @@ public class DownloadContext {
         @Override
         public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                             @Nullable Exception realCause) {
-            if (remainCount.decrementAndGet() <= 0) queueListener.queueEnd();
+            if (remainCount.decrementAndGet() <= 0) queueListener.queueEnd(hostContext);
             Util.d(TAG, "taskEnd and remainCount" + remainCount);
         }
     }

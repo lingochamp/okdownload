@@ -52,7 +52,7 @@ import static org.robolectric.annotation.Config.NONE;
 public class DownloadContextTest {
 
     @Mock private DownloadListener listener;
-    @Mock private DownloadQueueListener queueListener;
+    @Mock private DownloadContextListener queueListener;
 
     private DownloadContext context;
     private DownloadTask[] tasks;

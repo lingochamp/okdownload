@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload.sample;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.AppCompatRadioButton;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,7 +25,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import com.liulishuo.okdownload.DownloadQueueListener;
+import com.liulishuo.okdownload.DownloadContext;
+import com.liulishuo.okdownload.DownloadContextListener;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 import com.liulishuo.okdownload.sample.util.queue.QueueController;
 import com.liulishuo.okdownload.sample.util.queue.QueueRecyclerAdapter;
@@ -78,8 +80,8 @@ public class QueueActivity extends BaseSampleActivity {
                                 final CardView deleteActionView, final View deleteActionTv) {
         final QueueController controller = new QueueController();
         this.controller = controller;
-        controller.initTasks(this, new DownloadQueueListener() {
-            @Override public void queueEnd() {
+        controller.initTasks(this, new DownloadContextListener() {
+            @Override public void queueEnd(@NonNull DownloadContext context) {
                 actionView.setTag(null);
                 actionTv.setText(R.string.start);
                 // to cancel

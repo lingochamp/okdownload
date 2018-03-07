@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload;
 
-public interface DownloadQueueListener {
-    void queueEnd();
+import android.support.annotation.NonNull;
+
+public interface DownloadContextListener {
+    void queueEnd(@NonNull DownloadContext context);
 }
