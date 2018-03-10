@@ -306,7 +306,13 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         }
 
         public Builder(@NonNull String url, @NonNull File file) {
-            this(url, Uri.fromFile(file));
+            this.url = url;
+            if (file.exists()) {
+                this.uri = Uri.fromFile(file);
+            } else {
+                this.uri = Uri.fromFile(file.getParentFile());
+                this.filename = file.getName();
+            }
         }
 
         public Builder(@NonNull String url, @NonNull Uri uri) {

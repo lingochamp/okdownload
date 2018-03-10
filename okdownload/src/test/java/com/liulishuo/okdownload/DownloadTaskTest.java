@@ -301,6 +301,26 @@ public class DownloadTaskTest {
     }
 
     @Test
+    public void taskBuilder_constructWithFile() {
+        final String url = "https://jacksgong.com";
+        final File noExistFile = new File(parentPath, "no-exist");
+        DownloadTask task= new DownloadTask.Builder(url,noExistFile).build();
+        assertThat(task.getFilename()).isEqualTo(noExistFile.getName());
+        assertThat(task.getPath()).isEqualTo(noExistFile.getAbsolutePath());
+
+        final File existFile = new File(parentPath, filename);
+        task = new DownloadTask.Builder(url, existFile).build();
+        assertThat(task.getFilename()).isEqualTo(existFile.getName());
+        assertThat(task.getPath()).isEqualTo(existFile.getAbsolutePath());
+
+        final File existParentFile = new File(parentPath);
+        task = new DownloadTask.Builder(url, existParentFile).build();
+        assertThat(task.getFilename()).isNull();
+        assertThat(task.getPath()).isNull();
+        assertThat(task.getParentPath()).isEqualTo(existParentFile.getAbsolutePath());
+    }
+
+    @Test
     public void taskCallbackWrapper() {
         final DownloadTask task = mock(DownloadTask.class);
 
