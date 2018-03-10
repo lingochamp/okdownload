@@ -318,6 +318,12 @@ public class DownloadTaskTest {
         assertThat(task.getFilename()).isNull();
         assertThat(task.getPath()).isNull();
         assertThat(task.getParentPath()).isEqualTo(existParentFile.getAbsolutePath());
+
+        final File onlyFile = new File("path");
+        task = new DownloadTask.Builder(url, onlyFile).build();
+        assertThat(task.getFilename()).isNull();
+        assertThat(task.getPath()).isNull();
+        assertThat(task.getParentPath()).isEqualTo(onlyFile.getAbsolutePath());
     }
 
     @Test

@@ -307,7 +307,8 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
 
         public Builder(@NonNull String url, @NonNull File file) {
             this.url = url;
-            if (file.exists()) {
+            if (file.exists() || file.getParent() == null) {
+                // file exist or parent not exist
                 this.uri = Uri.fromFile(file);
             } else {
                 this.uri = Uri.fromFile(file.getParentFile());
