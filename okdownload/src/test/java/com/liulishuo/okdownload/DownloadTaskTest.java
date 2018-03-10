@@ -304,7 +304,7 @@ public class DownloadTaskTest {
     public void taskBuilder_constructWithFile() {
         final String url = "https://jacksgong.com";
         final File noExistFile = new File(parentPath, "no-exist");
-        DownloadTask task= new DownloadTask.Builder(url,noExistFile).build();
+        DownloadTask task = new DownloadTask.Builder(url, noExistFile).build();
         assertThat(task.getFilename()).isEqualTo(noExistFile.getName());
         assertThat(task.getPath()).isEqualTo(noExistFile.getAbsolutePath());
 
