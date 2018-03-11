@@ -95,6 +95,7 @@ com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 - [x] Ensure cancel operation is effective even if connection is waiting for response, input stream is reading or disconnect is very slow
 - [x] Always saving proceed of each task, so the breakpoint is always resumable even if the process is kill, since your import `com.liulishuo.okdownload:sqlite`
 - [x] Using trial connect to check whether resume available and get instance-length to ensure resume correct and avoid unnecessary TCP window cache before downloading each block
+- [x] Using the content length hid on the `Content-Range` when there isn't valid `Content-Length` on the response header
 - [] Check whether the network is really available before start downloading
 
 ### FLEXIBLE and PERFORMANCE

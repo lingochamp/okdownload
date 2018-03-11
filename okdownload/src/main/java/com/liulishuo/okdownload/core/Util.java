@@ -43,6 +43,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Util {
 
@@ -301,5 +303,22 @@ public class Util {
     public static boolean checkPermission(String permission) {
         final int perm = OkDownload.with().context().checkCallingOrSelfPermission(permission);
         return perm == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static long parseContentLengthFromContentRange(@Nullable String contentRange) {
+        if (contentRange == null || contentRange.length() == 0) return CHUNKED_CONTENT_LENGTH;
+        final String pattern = "bytes (\\d+)-(\\d+)/\\d+";
+        try {
+            final Pattern r = Pattern.compile(pattern);
+            final Matcher m = r.matcher(contentRange);
+            if (m.find()) {
+                final long rangeStart = Long.parseLong(m.group(1));
+                final long rangeEnd = Long.parseLong(m.group(2));
+                return rangeEnd - rangeStart + 1;
+            }
+        } catch (Exception e) {
+            Util.w("Util", "parse content-length from content-range failed " + e);
+        }
+        return CHUNKED_CONTENT_LENGTH;
     }
 }

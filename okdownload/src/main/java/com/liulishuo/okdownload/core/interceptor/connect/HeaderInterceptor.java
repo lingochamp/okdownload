@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
+import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
 import static com.liulishuo.okdownload.core.Util.RANGE;
 
@@ -102,8 +103,16 @@ public class HeaderInterceptor implements Interceptor.Connect {
                 strategy.resumeAvailableResponseCheck(connected, blockIndex, info);
         responseCheck.inspect();
 
-        chain.setResponseContentLength(
-                Util.parseContentLength(connected.getResponseHeaderField(CONTENT_LENGTH)));
+        final long contentLength;
+        final String contentLengthField = connected.getResponseHeaderField(CONTENT_LENGTH);
+        if (contentLengthField == null || contentLengthField.length() == 0) {
+            final String contentRangeField = connected.getResponseHeaderField(CONTENT_RANGE);
+            contentLength = Util.parseContentLengthFromContentRange(contentRangeField);
+        } else {
+            contentLength = Util.parseContentLength(contentLengthField);
+        }
+
+        chain.setResponseContentLength(contentLength);
         return connected;
     }
 }

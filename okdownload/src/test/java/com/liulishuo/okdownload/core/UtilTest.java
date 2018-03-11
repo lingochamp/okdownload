@@ -236,4 +236,15 @@ public class UtilTest {
         assertThat(Util.parseContentLength(null)).isEqualTo(CHUNKED_CONTENT_LENGTH);
         assertThat(Util.parseContentLength("123")).isEqualTo(123L);
     }
+
+    @Test
+    public void parseContentLengthFromContentRange() {
+        String length801ContentRange = "bytes 200-1000/67589";
+        assertThat(Util.parseContentLengthFromContentRange(length801ContentRange)).isEqualTo(801);
+
+        assertThat(Util.parseContentLengthFromContentRange(null)).isEqualTo(CHUNKED_CONTENT_LENGTH);
+        assertThat(Util.parseContentLengthFromContentRange("")).isEqualTo(CHUNKED_CONTENT_LENGTH);
+        assertThat(Util.parseContentLengthFromContentRange("invalid"))
+                .isEqualTo(CHUNKED_CONTENT_LENGTH);
+    }
 }

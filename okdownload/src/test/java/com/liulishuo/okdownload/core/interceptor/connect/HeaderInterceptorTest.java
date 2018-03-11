@@ -38,6 +38,8 @@ import java.util.Map;
 import static com.liulishuo.okdownload.TestUtils.mockDownloadChain;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
+import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
+import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -157,9 +159,15 @@ public class HeaderInterceptorTest {
         verify(chain).setResponseContentLength(contentLengthCaptor.capture());
         assertThat(contentLengthCaptor.getValue()).isEqualTo(CHUNKED_CONTENT_LENGTH);
 
-        when(connected.getResponseHeaderField("Content-Length")).thenReturn("10");
+        when(connected.getResponseHeaderField(CONTENT_LENGTH)).thenReturn("10");
         interceptor.interceptConnect(chain);
         verify(chain, times(2)).setResponseContentLength(contentLengthCaptor.capture());
         assertThat(contentLengthCaptor.getAllValues()).containsOnly(-1L, 10L);
+
+        when(connected.getResponseHeaderField(CONTENT_LENGTH)).thenReturn(null);
+        when(connected.getResponseHeaderField(CONTENT_RANGE)).thenReturn("bytes 2-5/333");
+        interceptor.interceptConnect(chain);
+        verify(chain, times(3)).setResponseContentLength(contentLengthCaptor.capture());
+        assertThat(contentLengthCaptor.getAllValues()).containsOnly(-1L, 10L, 4L);
     }
 }
