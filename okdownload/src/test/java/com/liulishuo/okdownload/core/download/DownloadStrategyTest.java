@@ -337,10 +337,10 @@ public class DownloadStrategyTest {
         doReturn(PackageManager.PERMISSION_DENIED).when(context)
                 .checkCallingOrSelfPermission(anyString());
         thrown.expect(IOException.class);
-        thrown.expectMessage("required for access network state but don't have the " +
-                "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this " +
-                "permission first on your AndroidManifest, so we can handle the case of " +
-                "downloading required wifi state.");
+        thrown.expectMessage("required for access network state but don't have the "
+                + "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this "
+                + "permission first on your AndroidManifest, so we can handle the case of "
+                + "downloading required wifi state.");
         strategy.inspectNetwork(task);
 
         doReturn(PackageManager.PERMISSION_GRANTED).when(context)

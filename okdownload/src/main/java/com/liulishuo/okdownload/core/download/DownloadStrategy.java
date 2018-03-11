@@ -310,10 +310,10 @@ public class DownloadStrategy {
         if (!task.isWifiRequired()) return;
 
         if (!Util.checkPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            throw new IOException("required for access network state but don't have the " +
-                    "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this " +
-                    "permission first on your AndroidManifest, so we can handle the case of " +
-                    "downloading required wifi state.");
+            throw new IOException("required for access network state but don't have the "
+                    + "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this "
+                    + "permission first on your AndroidManifest, so we can handle the case of "
+                    + "downloading required wifi state.");
         }
 
         if (Util.isNetworkNotOnWifiType()) {
