@@ -21,7 +21,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
-import android.system.ErrnoException;
 import android.system.Os;
 
 import com.liulishuo.okdownload.core.Util;
@@ -83,10 +82,9 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
                 Os.ftruncate(pdf.getFileDescriptor(), newLength);
-            } catch (ErrnoException e) {
+            } catch (Throwable e) {
                 Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
                         + " version(" + Build.VERSION.SDK_INT + "), because of " + e);
-                e.printStackTrace();
             }
         } else {
             Util.w(tag,
