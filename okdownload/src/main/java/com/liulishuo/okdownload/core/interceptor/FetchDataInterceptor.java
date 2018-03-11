@@ -18,15 +18,15 @@ package com.liulishuo.okdownload.core.interceptor;
 
 import android.support.annotation.NonNull;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.exception.InterruptException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class FetchDataInterceptor implements Interceptor.Fetch {
 
@@ -57,6 +57,7 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
             throw InterruptException.SIGNAL;
         }
 
+        OkDownload.with().downloadStrategy().inspectNetwork(chain.getTask());
         // fetch
         int fetchLength = inputStream.read(readBuffer);
         if (fetchLength == -1) {

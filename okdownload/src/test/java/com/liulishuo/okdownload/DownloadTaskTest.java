@@ -239,6 +239,7 @@ public class DownloadTaskTest {
                 .setSyncBufferIntervalMillis(4)
                 .setMinIntervalMillisCallbackProcess(5)
                 .setAutoCallbackToUIThread(true)
+                .setWifiRequired(true)
                 .build();
         assertThat(task.getReadBufferSize()).isEqualTo(1);
         assertThat(task.getFlushBufferSize()).isEqualTo(2);
@@ -246,6 +247,7 @@ public class DownloadTaskTest {
         assertThat(task.getSyncBufferIntervalMills()).isEqualTo(4);
         assertThat(task.getMinIntervalMillisCallbackProcess()).isEqualTo(5);
         assertThat(task.isAutoCallbackToUIThread()).isTrue();
+        assertThat(task.isWifiRequired()).isTrue();
 
         // setTag
         task.setTag("tag");

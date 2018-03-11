@@ -64,6 +64,7 @@ public class ConnectTrial {
     }
 
     public void executeTrial() throws IOException {
+        OkDownload.with().downloadStrategy().inspectNetwork(task);
         DownloadConnection connection = OkDownload.with().connectionFactory().create(task.getUrl());
         try {
             if (!Util.isEmpty(info.getEtag())) {

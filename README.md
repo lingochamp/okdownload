@@ -109,7 +109,7 @@ com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 - [x] Provide function to find running task reference on `DownloadDispatcher#findSameTask`
 - [x] Support one task with several various listeners and manage them easily with `UnifiedListenerManager`
 - [x] Support control batch of tasks with `DownloadContext`
-- [] Support only download on Wi-Fi network state
+- [x] Support only download on Wi-Fi network type
 - [x] Support control the whole queue size of running task on `DownloadDispatcher` with `DownloadDispatcher.setMaxParallelRunningCount`
 - [x] Provide `DownloadSerialQueue` to control dynamic serial download queue.
 - [] Provide `DownloadQueueListener` to listen to the process of batch of tasks

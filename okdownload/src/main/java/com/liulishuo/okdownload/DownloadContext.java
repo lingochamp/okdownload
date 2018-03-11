@@ -48,14 +48,14 @@ public class DownloadContext {
 
     private final DownloadTask[] tasks;
     volatile boolean isStarted = false;
-    @Nullable private final DownloadContextListener queueListener;
+    @Nullable final DownloadContextListener contextListener;
     private final QueueSet set;
 
     DownloadContext(@NonNull DownloadTask[] tasks,
-                    @Nullable DownloadContextListener queueListener,
+                    @Nullable DownloadContextListener contextListener,
                     @NonNull QueueSet set) {
         this.tasks = tasks;
-        this.queueListener = queueListener;
+        this.contextListener = contextListener;
         this.set = set;
     }
 
@@ -79,10 +79,10 @@ public class DownloadContext {
         Util.d(TAG, "start " + isSerial);
         isStarted = true;
         final DownloadListener targetListener;
-        if (queueListener != null) {
+        if (contextListener != null) {
             targetListener = new DownloadListenerBunch.Builder()
                     .append(listener)
-                    .append(new QueueAttachListener(this, queueListener, tasks.length))
+                    .append(new QueueAttachListener(this, contextListener, tasks.length))
                     .build();
         } else {
             targetListener = listener;
@@ -119,16 +119,16 @@ public class DownloadContext {
     }
 
     private void callbackQueueEndOnSerialLoop(boolean isAutoCallbackToUIThread) {
-        if (queueListener == null) return;
+        if (contextListener == null) return;
 
         if (isAutoCallbackToUIThread) {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override public void run() {
-                    queueListener.queueEnd(DownloadContext.this);
+                    contextListener.queueEnd(DownloadContext.this);
                 }
             });
         } else {
-            queueListener.queueEnd(this);
+            contextListener.queueEnd(this);
         }
     }
 
@@ -138,7 +138,7 @@ public class DownloadContext {
 
     public Builder toBuilder() {
         return new Builder(set, new ArrayList<>(Arrays.asList(tasks)))
-                .setListener(this.queueListener);
+                .setListener(this.contextListener);
     }
 
     public static class Builder {
@@ -191,6 +191,7 @@ public class DownloadContext {
             if (set.readBufferSize != null) taskBuilder.setReadBufferSize(set.readBufferSize);
             if (set.flushBufferSize != null) taskBuilder.setFlushBufferSize(set.flushBufferSize);
             if (set.syncBufferSize != null) taskBuilder.setSyncBufferSize(set.syncBufferSize);
+            if (set.wifiRequired != null) taskBuilder.setWifiRequired(set.wifiRequired);
             if (set.syncBufferIntervalMillis != null) {
                 taskBuilder.setSyncBufferIntervalMillis(set.syncBufferIntervalMillis);
             }
@@ -242,6 +243,7 @@ public class DownloadContext {
         private Integer minIntervalMillisCallbackProcess;
 
         private Boolean passIfAlreadyCompleted;
+        private Boolean wifiRequired;
 
         private Object tag;
 
@@ -257,19 +259,22 @@ public class DownloadContext {
             return uri;
         }
 
-        public QueueSet setParentPathUri(Uri uri) {
+        public QueueSet setParentPathUri(@NonNull Uri uri) {
             this.uri = uri;
             return this;
         }
 
-        public QueueSet setParentPathFile(File parentPathFile) {
+        public QueueSet setParentPathFile(@NonNull File parentPathFile) {
+            if (parentPathFile.isFile()) {
+                throw new IllegalArgumentException("parent path only accept directory path");
+            }
+
             this.uri = Uri.fromFile(parentPathFile);
             return this;
         }
 
-        public QueueSet setParentPath(String parentPath) {
-            this.uri = Uri.fromFile(new File(parentPath));
-            return this;
+        public QueueSet setParentPath(@NonNull String parentPath) {
+            return setParentPathFile(new File(parentPath));
         }
 
         public int getReadBufferSize() {
@@ -280,6 +285,16 @@ public class DownloadContext {
         public QueueSet setReadBufferSize(int readBufferSize) {
             this.readBufferSize = readBufferSize;
             return this;
+        }
+
+        public QueueSet setWifiRequired(Boolean wifiRequired) {
+            this.wifiRequired = wifiRequired;
+            return this;
+        }
+
+        public Boolean isWifiRequired() {
+            return wifiRequired == null
+                    ? DownloadTask.Builder.DEFAULT_IS_WIFI_REQUIRED : wifiRequired;
         }
 
         public int getFlushBufferSize() {

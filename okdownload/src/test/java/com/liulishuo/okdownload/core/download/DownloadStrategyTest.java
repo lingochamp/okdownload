@@ -16,12 +16,18 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 
@@ -30,7 +36,10 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -42,6 +51,7 @@ import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRE
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_RESET_RANGE_NOT_FROM_0;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -49,7 +59,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.robolectric.annotation.Config.NONE;
 
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = NONE)
 public class DownloadStrategyTest {
 
     private DownloadStrategy strategy;
@@ -310,6 +323,39 @@ public class DownloadStrategyTest {
                 .thenReturn("https://jacksgong.com/android-studio-ide-171.4408382-mac.dmg");
         result = strategy.determineFilename(null, task);
         assertThat(result).isEqualTo("android-studio-ide-171.4408382-mac.dmg");
+    }
 
+    @Test
+    public void inspectNetwork() throws IOException {
+        mockOkDownload();
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.isWifiRequired()).thenReturn(true);
+
+        final Context context = mock(Context.class);
+        final OkDownload okDownload = OkDownload.with();
+        doReturn(context).when(okDownload).context();
+        doReturn(PackageManager.PERMISSION_DENIED).when(context)
+                .checkCallingOrSelfPermission(anyString());
+        thrown.expect(IOException.class);
+        thrown.expectMessage("required for access network state but don't have the " +
+                "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this " +
+                "permission first on your AndroidManifest, so we can handle the case of " +
+                "downloading required wifi state.");
+        strategy.inspectNetwork(task);
+
+        doReturn(PackageManager.PERMISSION_GRANTED).when(context)
+                .checkCallingOrSelfPermission(anyString());
+        final ConnectivityManager manager = mock(ConnectivityManager.class);
+        doReturn(manager).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
+        doReturn(null).when(manager).getActiveNetworkInfo();
+
+        thrown.expect(NetworkPolicyException.class);
+        thrown.expectMessage("Only allows downloading this task on the wifi network type!");
+        strategy.inspectNetwork(task);
+
+        final NetworkInfo info = mock(NetworkInfo.class);
+        doReturn(info).when(manager).getActiveNetworkInfo();
+        doReturn(ConnectivityManager.TYPE_WIFI).when(info).getType();
+        strategy.inspectNetwork(task);
     }
 }

@@ -69,6 +69,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
     private DownloadListener listener;
     private volatile SparseArray<Object> keyTagMap;
     private Object tag;
+    private final boolean isWifiRequired;
 
     private final AtomicLong lastCallbackProcessTimestamp;
 
@@ -79,7 +80,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
                         int syncBufferSize, int syncBufferIntervalMills,
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
                         Map<String, List<String>> headerMapFields, @Nullable String filename,
-                        boolean passIfAlreadyCompleted) {
+                        boolean passIfAlreadyCompleted, boolean isWifiRequired) {
         try {
             this.url = url;
             this.uri = uri;
@@ -93,6 +94,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
             this.headerMapFields = headerMapFields;
             this.lastCallbackProcessTimestamp = new AtomicLong();
             this.passIfAlreadyCompleted = passIfAlreadyCompleted;
+            this.isWifiRequired = isWifiRequired;
 
             final File file = new File(uri.getPath());
             if (file.isFile()) {
@@ -138,6 +140,10 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
 
     public boolean isPassIfAlreadyCompleted() {
         return passIfAlreadyCompleted;
+    }
+
+    public boolean isWifiRequired() {
+        return isWifiRequired;
     }
 
     public DownloadStrategy.FilenameHolder getFilenameHolder() {
@@ -353,6 +359,10 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
          */
         private boolean passIfAlreadyCompleted = DEFAULT_PASS_IF_ALREADY_COMPLETED;
 
+        public static final boolean DEFAULT_IS_WIFI_REQUIRED = false;
+
+        private boolean isWifiRequired = DEFAULT_IS_WIFI_REQUIRED;
+
         public Builder setAutoCallbackToUIThread(boolean autoCallbackToUIThread) {
             this.autoCallbackToUIThread = autoCallbackToUIThread;
             return this;
@@ -423,11 +433,16 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
             return this;
         }
 
+        public Builder setWifiRequired(boolean wifiRequired) {
+            this.isWifiRequired = wifiRequired;
+            return this;
+        }
+
         public DownloadTask build() {
             return new DownloadTask(url, uri, priority, readBufferSize, flushBufferSize,
                     syncBufferSize, syncBufferIntervalMillis,
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
-                    headerMapFields, filename, passIfAlreadyCompleted);
+                    headerMapFields, filename, passIfAlreadyCompleted, isWifiRequired);
         }
     }
 

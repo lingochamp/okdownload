@@ -22,6 +22,7 @@ import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.listener.DownloadListenerBunch;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -60,6 +62,8 @@ public class DownloadContextTest {
     private DownloadContext.Builder builder;
     private DownloadContext.QueueSet queueSet;
 
+    private String filePath = "./exist-file";
+
     @BeforeClass
     public static void setupClass() throws IOException {
         Util.setLogger(mock(Util.Logger.class));
@@ -77,6 +81,14 @@ public class DownloadContextTest {
         queueSet = new DownloadContext.QueueSet();
         context = spy(new DownloadContext(tasks, queueListener, queueSet));
         builder = spy(new DownloadContext.Builder(queueSet));
+    }
+
+    @After
+    public void tearDown() {
+        final File file = new File(filePath);
+        if (file.exists()) {
+            file.delete();
+        }
     }
 
     @Test
@@ -157,6 +169,14 @@ public class DownloadContextTest {
         assertThat(builder.boundTaskList).containsExactly(mockTask);
     }
 
+    @Test
+    public void setListener() {
+        final DownloadContextListener listener = mock(DownloadContextListener.class);
+        builder.setListener(listener);
+        final DownloadContext context = builder.build();
+        assertThat(context.contextListener).isEqualTo(listener);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void builder_bind_noSetUri() {
         builder.bind("url");
@@ -170,6 +190,7 @@ public class DownloadContextTest {
         final Uri uri = mock(Uri.class);
         when(uri.getPath()).thenReturn("");
         queueSet.setParentPathUri(uri);
+        assertThat(queueSet.getDirUri()).isEqualTo(uri);
         builder.bind(url);
         final DownloadTask addedTask = builder.boundTaskList.get(0);
         assertThat(addedTask.getUrl()).isEqualTo(url);
@@ -184,45 +205,77 @@ public class DownloadContextTest {
 
         final int readBufferSize = 1;
         queueSet.setReadBufferSize(readBufferSize);
+        assertThat(queueSet.getReadBufferSize()).isEqualTo(readBufferSize);
         builder.bind(taskBuilder);
         verify(taskBuilder).setReadBufferSize(eq(readBufferSize));
 
         final int flushBufferSize = 2;
         queueSet.setFlushBufferSize(flushBufferSize);
+        assertThat(queueSet.getFlushBufferSize()).isEqualTo(flushBufferSize);
         builder.bind(taskBuilder);
         verify(taskBuilder).setFlushBufferSize(eq(flushBufferSize));
 
         final int syncBufferSize = 3;
         queueSet.setSyncBufferSize(syncBufferSize);
+        assertThat(queueSet.getSyncBufferSize()).isEqualTo(syncBufferSize);
         builder.bind(taskBuilder);
         verify(taskBuilder).setSyncBufferSize(eq(syncBufferSize));
 
         final int syncBufferIntervalMillis = 4;
         queueSet.setSyncBufferIntervalMillis(syncBufferIntervalMillis);
+        assertThat(queueSet.getSyncBufferIntervalMillis()).isEqualTo(syncBufferIntervalMillis);
         builder.bind(taskBuilder);
         verify(taskBuilder).setSyncBufferIntervalMillis(eq(syncBufferIntervalMillis));
 
         final boolean autoCallbackToUIThread = false;
         queueSet.setAutoCallbackToUIThread(autoCallbackToUIThread);
+        assertThat(queueSet.getAutoCallbackToUIThread()).isEqualTo(autoCallbackToUIThread);
         builder.bind(taskBuilder);
         verify(taskBuilder).setAutoCallbackToUIThread(eq(autoCallbackToUIThread));
 
         final int minIntervalMillisCallbackProgress = 5;
         queueSet.setMinIntervalMillisCallbackProcess(minIntervalMillisCallbackProgress);
+        assertThat(queueSet.getMinIntervalMillisCallbackProcess())
+                .isEqualTo(minIntervalMillisCallbackProgress);
         builder.bind(taskBuilder);
         verify(taskBuilder)
                 .setMinIntervalMillisCallbackProcess(eq(minIntervalMillisCallbackProgress));
 
         final Object tag = mock(Object.class);
         queueSet.setTag(tag);
+        assertThat(queueSet.getTag()).isEqualTo(tag);
         final DownloadTask task = mock(DownloadTask.class);
         doReturn(task).when(taskBuilder).build();
         builder.bind(taskBuilder);
         verify(task).setTag(tag);
 
         queueSet.setPassIfAlreadyCompleted(true);
+        assertThat(queueSet.isPassIfAlreadyCompleted()).isTrue();
         builder.bind(taskBuilder);
         verify(taskBuilder).setPassIfAlreadyCompleted(eq(true));
+
+        queueSet.setWifiRequired(true);
+        assertThat(queueSet.isWifiRequired()).isTrue();
+        builder.bind(taskBuilder);
+        verify(taskBuilder).setWifiRequired(eq(true));
+
+        queueSet.commit();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void setParentFile() throws IOException {
+        final String parentPath = "./parent";
+        final File parentPathFile = new File(parentPath);
+
+        queueSet.setParentPath(parentPath);
+        assertThat(queueSet.getDirUri().getPath()).isEqualTo(parentPathFile.getAbsolutePath());
+
+        queueSet.setParentPathFile(parentPathFile);
+        assertThat(queueSet.getDirUri().getPath()).isEqualTo(parentPathFile.getAbsolutePath());
+
+        File file = new File(filePath);
+        file.createNewFile();
+        queueSet.setParentPathFile(file);
     }
 
     @Test

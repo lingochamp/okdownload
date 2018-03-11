@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import android.Manifest;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -27,6 +28,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.RetryException;
 import com.liulishuo.okdownload.core.exception.ServerCanceledException;
@@ -302,5 +304,20 @@ public class DownloadStrategy {
         }
 
         return false;
+    }
+
+    public void inspectNetwork(@NonNull DownloadTask task) throws IOException {
+        if (!task.isWifiRequired()) return;
+
+        if (!Util.checkPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
+            throw new IOException("required for access network state but don't have the " +
+                    "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this " +
+                    "permission first on your AndroidManifest, so we can handle the case of " +
+                    "downloading required wifi state.");
+        }
+
+        if (Util.isNetworkNotOnWifiType()) {
+            throw new NetworkPolicyException();
+        }
     }
 }

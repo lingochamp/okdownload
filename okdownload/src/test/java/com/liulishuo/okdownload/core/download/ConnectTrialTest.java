@@ -82,6 +82,8 @@ public class ConnectTrialTest {
     public void executeTrial() throws Exception {
         connectTrial.executeTrial();
 
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
+        verify(downloadStrategy).inspectNetwork(eq(task));
         verify(connection).addHeader(eq(IF_MATCH), eq(etag));
         verify(connection).addHeader(eq(RANGE), eq("bytes=0-0"));
 

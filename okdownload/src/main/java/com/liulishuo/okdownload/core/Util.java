@@ -16,7 +16,11 @@
 
 package com.liulishuo.okdownload.core;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.StatFs;
 import android.support.annotation.NonNull;
@@ -277,5 +281,25 @@ public class Util {
         if (contentLength == null) return CHUNKED_CONTENT_LENGTH;
 
         return Long.parseLong(contentLength);
+    }
+
+    public static boolean isNetworkNotOnWifiType() {
+        final ConnectivityManager manager = (ConnectivityManager) OkDownload.with().context()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (manager == null) {
+            Util.w("Util", "failed to get connectivity manager!");
+            return true;
+        }
+
+        //noinspection MissingPermission, because we check permission accessable when invoked
+        @SuppressLint("MissingPermission") final NetworkInfo info = manager.getActiveNetworkInfo();
+
+        return info == null || info.getType() != ConnectivityManager.TYPE_WIFI;
+    }
+
+    public static boolean checkPermission(String permission) {
+        final int perm = OkDownload.with().context().checkCallingOrSelfPermission(permission);
+        return perm == PackageManager.PERMISSION_GRANTED;
     }
 }

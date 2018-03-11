@@ -18,15 +18,17 @@ package com.liulishuo.okdownload.core.interceptor.connect;
 
 import android.support.annotation.NonNull;
 
-import java.io.IOException;
-
+import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.interceptor.Interceptor;
 
+import java.io.IOException;
+
 public class CallServerInterceptor implements Interceptor.Connect {
     @NonNull @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
+        OkDownload.with().downloadStrategy().inspectNetwork(chain.getTask());
         return chain.getConnectionOrCreate().execute();
     }
 }

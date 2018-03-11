@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 LingoChamp Inc.
+ * Copyright (c) 2018 LingoChamp Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.core.interceptor;
+package com.liulishuo.okdownload.core.interceptor.connect;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
-import com.liulishuo.okdownload.core.download.DownloadCache;
+import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
-import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,24 +28,19 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class FetchDataInterceptorTest {
-    @Mock private InputStream inputStream;
-    @Mock private MultiPointOutputStream outputStream;
-    @Mock private DownloadTask task;
-    @Mock private DownloadChain chain;
+public class CallServerInterceptorTest {
 
-    private FetchDataInterceptor interceptor;
+    private CallServerInterceptor serverInterceptor;
+    @Mock private DownloadChain chain;
+    @Mock private DownloadConnection connection;
+    @Mock private DownloadTask task;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -55,27 +48,18 @@ public class FetchDataInterceptorTest {
     }
 
     @Before
-    public void setup() {
+    public void setUp() throws Exception {
         initMocks(this);
-
-        interceptor = new FetchDataInterceptor(0, inputStream, outputStream, task);
-        when(chain.getCache()).thenReturn(mock(DownloadCache.class));
+        serverInterceptor = new CallServerInterceptor();
+        when(chain.getConnectionOrCreate()).thenReturn(connection);
         when(chain.getTask()).thenReturn(task);
     }
 
     @Test
-    public void interceptFetch() throws IOException {
-        final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
-
-        doReturn(10).when(inputStream).read(any(byte[].class));
-        doReturn(true).when(dispatcher).isFetchProcessMoment(task);
-
-        interceptor.interceptFetch(chain);
+    public void interceptConnect() throws Exception {
+        serverInterceptor.interceptConnect(chain);
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         verify(downloadStrategy).inspectNetwork(eq(task));
-        verify(chain).increaseCallbackBytes(10L);
-        verify(chain).flushNoCallbackIncreaseBytes();
-        verify(outputStream).write(eq(0), any(byte[].class), eq(10));
     }
 }
