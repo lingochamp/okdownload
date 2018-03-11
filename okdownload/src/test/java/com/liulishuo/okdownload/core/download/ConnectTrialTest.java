@@ -34,7 +34,6 @@ import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.ACCEPT_RANGES;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_DISPOSITION;
-import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static com.liulishuo.okdownload.core.Util.ETAG;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
@@ -95,20 +94,20 @@ public class ConnectTrialTest {
     public void getInstanceLength() throws Exception {
         when(connected.getResponseHeaderField(CONTENT_RANGE))
                 .thenReturn("bytes 21010-47021/47022");
-        when(connected.getResponseHeaderField(CONTENT_LENGTH))
-                .thenReturn("100");
+//        when(connected.getResponseHeaderField(CONTENT_LENGTH))
+//                .thenReturn("100");
         connectTrial.executeTrial();
         assertThat(connectTrial.getInstanceLength()).isEqualTo(47022L);
         assertThat(connectTrial.isChunked()).isFalse();
 
         when(connected.getResponseHeaderField(CONTENT_RANGE))
                 .thenReturn(null);
-        connectTrial.executeTrial();
-        assertThat(connectTrial.getInstanceLength()).isEqualTo(100L);
-        assertThat(connectTrial.isChunked()).isFalse();
+//        connectTrial.executeTrial();
+//        assertThat(connectTrial.getInstanceLength()).isEqualTo(100L);
+//        assertThat(connectTrial.isChunked()).isFalse();
 
-        when(connected.getResponseHeaderField(CONTENT_LENGTH))
-                .thenReturn(null);
+//        when(connected.getResponseHeaderField(CONTENT_LENGTH))
+//                .thenReturn(null);
         connectTrial.executeTrial();
         assertThat(connectTrial.getInstanceLength()).isEqualTo(CHUNKED_CONTENT_LENGTH);
         assertThat(connectTrial.isChunked()).isTrue();

@@ -35,7 +35,6 @@ import java.util.regex.Pattern;
 import static com.liulishuo.okdownload.core.Util.ACCEPT_RANGES;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_DISPOSITION;
-import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static com.liulishuo.okdownload.core.Util.ETAG;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
@@ -208,11 +207,6 @@ public class ConnectTrial {
         final long instanceLength = parseContentRangeFoInstanceLength(
                 connected.getResponseHeaderField(CONTENT_RANGE));
         if (instanceLength != CHUNKED_CONTENT_LENGTH) return instanceLength;
-
-        // Content-Length
-        final long contentLength = Util.parseContentLength(
-                connected.getResponseHeaderField(CONTENT_LENGTH));
-        if (contentLength != CHUNKED_CONTENT_LENGTH) return contentLength;
 
         // chunked on here
         final boolean isChunked = parseTransferEncoding(connected
