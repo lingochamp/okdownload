@@ -22,6 +22,7 @@ import org.mockito.Mock;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ProtocolException;
 import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
@@ -39,6 +41,7 @@ import okio.BufferedSource;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -228,6 +231,14 @@ public class DownloadOkHttp3ConnectionTest {
         final Integer result = connection.getResponseCode();
         assertThat(result).isEqualTo(expectedCode);
 
+    }
+
+    @Test
+    public void setRequestMethod() throws ProtocolException {
+        final Request.Builder builder = mock(Request.Builder.class);
+        final DownloadOkHttp3Connection connection = new DownloadOkHttp3Connection(client, builder);
+        assertThat(connection.setRequestMethod("HEAD")).isTrue();
+        verify(builder).method(eq("HEAD"), nullable(RequestBody.class));
     }
 
     private Response.Builder createResponseBuilder() {

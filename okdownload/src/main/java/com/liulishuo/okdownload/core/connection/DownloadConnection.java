@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ProtocolException;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,28 @@ public interface DownloadConnection {
 
         InputStream getInputStream() throws IOException;
 
+        /**
+         * Set the method for the request, one of:
+         * <UL>
+         * <LI>GET
+         * <LI>POST
+         * <LI>HEAD
+         * <LI>OPTIONS
+         * <LI>PUT
+         * <LI>DELETE
+         * <LI>TRACE
+         * </UL> are legal, subject to protocol restrictions.  The default
+         * method is GET.
+         *
+         * @param method the HTTP method
+         * @return {@code true} if set effect, otherwise {@code false}.
+         * @throws ProtocolException if the method cannot be reset or if
+         *                           the requested method isn't valid for HTTP.
+         * @throws SecurityException if a security manager is set and the
+         *                           method is "TRACE", but the "allowHttpTrace"
+         *                           NetPermission is not granted.
+         */
+        boolean setRequestMethod(String method) throws ProtocolException;
 
         /**
          * Returns an unmodifiable Map of the header fields. The Map keys are Strings that represent

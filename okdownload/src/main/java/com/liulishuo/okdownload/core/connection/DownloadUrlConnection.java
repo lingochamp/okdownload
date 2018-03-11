@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.core.connection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -77,12 +78,20 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         }
 
         return DownloadConnection.NO_RESPONSE_CODE;
-
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
         return connection.getInputStream();
+    }
+
+    @Override public boolean setRequestMethod(String method) throws ProtocolException {
+        if (connection instanceof HttpURLConnection) {
+            ((HttpURLConnection) connection).setRequestMethod(method);
+            return true;
+        }
+
+        return false;
     }
 
     @Override

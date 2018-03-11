@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ProtocolException;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +82,11 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
         final ResponseBody body = response.body();
         if (body == null) throw new IOException("no body found on response!");
         return body.byteStream();
+    }
+
+    @Override public boolean setRequestMethod(String method) throws ProtocolException {
+        this.requestBuilder.method(method, null);
+        return true;
     }
 
     @Override public Map<String, List<String>> getResponseHeaderFields() {

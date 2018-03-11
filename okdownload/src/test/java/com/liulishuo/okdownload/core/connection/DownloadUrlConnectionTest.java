@@ -23,6 +23,8 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -32,6 +34,7 @@ import java.util.Map;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -148,5 +151,13 @@ public class DownloadUrlConnectionTest {
         assertThat(downloadUrlConnection.getRequestProperty("key1")).isEqualTo("value1");
     }
 
+    @Test
+    public void setRequestMethod() throws ProtocolException {
+        final HttpURLConnection httpURLConnection = mock(HttpURLConnection.class);
+        final DownloadUrlConnection connection = new DownloadUrlConnection(httpURLConnection);
+        assertThat(connection.setRequestMethod("HEAD")).isTrue();
+        verify(httpURLConnection).setRequestMethod(eq("HEAD"));
 
+        assertThat(downloadUrlConnection.setRequestMethod("HEAD")).isFalse();
+    }
 }
