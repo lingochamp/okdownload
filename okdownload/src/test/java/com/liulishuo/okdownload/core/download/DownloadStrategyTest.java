@@ -327,7 +327,6 @@ public class DownloadStrategyTest {
 
     @Test
     public void inspectNetwork() throws IOException {
-        mockOkDownload();
         final DownloadTask task = mock(DownloadTask.class);
         when(task.isWifiRequired()).thenReturn(true);
 
