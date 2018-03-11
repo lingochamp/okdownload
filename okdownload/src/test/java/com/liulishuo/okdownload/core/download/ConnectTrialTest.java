@@ -16,11 +16,13 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -29,18 +31,29 @@ import org.mockito.Mock;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Map;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.ACCEPT_RANGES;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_DISPOSITION;
+import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static com.liulishuo.okdownload.core.Util.ETAG;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
+import static com.liulishuo.okdownload.core.Util.METHOD_HEAD;
 import static com.liulishuo.okdownload.core.Util.RANGE;
+import static com.liulishuo.okdownload.core.Util.TRANSFER_ENCODING;
+import static com.liulishuo.okdownload.core.Util.VALUE_CHUNKED;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -66,7 +79,7 @@ public class ConnectTrialTest {
     public void setUp() throws Exception {
         initMocks(this);
 
-        connectTrial = new ConnectTrial(task, info);
+        connectTrial = spy(new ConnectTrial(task, info));
 
         final DownloadConnection.Factory factory = OkDownload.with().connectionFactory();
         final String url = "https://jacksgong.com";
@@ -88,6 +101,26 @@ public class ConnectTrialTest {
 
         verify(connection).execute();
         verify(connection).release();
+    }
+
+    @Test
+    public void executeTrial_needTrialHeadMethod() throws IOException {
+        when(connectTrial.isNeedTrialHeadMethodForInstanceLength(anyLong(), eq(connected)))
+                .thenReturn(true);
+        connectTrial.executeTrial();
+
+        verify(connectTrial).isNeedTrialHeadMethodForInstanceLength(anyLong(), eq(connected));
+        verify(connectTrial).trialHeadMethodForInstanceLength();
+    }
+
+    @Test
+    public void executeTrial_noNeedTrialHeadMethod() throws IOException {
+        when(connectTrial.isNeedTrialHeadMethodForInstanceLength(anyLong(), eq(connected)))
+                .thenReturn(false);
+        connectTrial.executeTrial();
+
+        verify(connectTrial).isNeedTrialHeadMethodForInstanceLength(anyLong(), eq(connected));
+        verify(connectTrial, never()).trialHeadMethodForInstanceLength();
     }
 
     @Test
@@ -166,5 +199,69 @@ public class ConnectTrialTest {
         when(connected.getResponseCode()).thenReturn(1);
         connectTrial.executeTrial();
         assertThat(connectTrial.getResponseCode()).isEqualTo(1);
+    }
+
+    @Test
+    public void isNeedTrialHeadMethodForInstanceLength_oldOneIsValid_false() {
+        assertThat(connectTrial.isNeedTrialHeadMethodForInstanceLength(1, connected)).isFalse();
+    }
+
+    @Test
+    public void isNeedTrialHeadMethodForInstanceLength_contentRangeValid_false() {
+        when(connected.getResponseHeaderField(CONTENT_RANGE)).thenReturn("has value");
+        assertThat(connectTrial
+                .isNeedTrialHeadMethodForInstanceLength(CHUNKED_CONTENT_LENGTH, connected))
+                .isFalse();
+    }
+
+
+    @Test
+    public void isNeedTrialHeadMethodForInstanceLength_chunked_false() {
+        when(connected.getResponseHeaderField(TRANSFER_ENCODING)).thenReturn(VALUE_CHUNKED);
+        assertThat(connectTrial
+                .isNeedTrialHeadMethodForInstanceLength(CHUNKED_CONTENT_LENGTH, connected))
+                .isFalse();
+    }
+
+
+    @Test
+    public void isNeedTrialHeadMethodForInstanceLength_contentLengthNotResponse_false() {
+        when(connected.getResponseHeaderField(CONTENT_LENGTH)).thenReturn(null);
+        assertThat(connectTrial
+                .isNeedTrialHeadMethodForInstanceLength(CHUNKED_CONTENT_LENGTH, connected))
+                .isFalse();
+    }
+
+    @Test
+    public void isNeedTrialHeadMethodForInstanceLength_true() {
+        when(connected.getResponseHeaderField(CONTENT_RANGE)).thenReturn(null);
+        when(connected.getResponseHeaderField(TRANSFER_ENCODING)).thenReturn("not chunked");
+        when(connected.getResponseHeaderField(CONTENT_LENGTH)).thenReturn("1");
+        assertThat(connectTrial
+                .isNeedTrialHeadMethodForInstanceLength(CHUNKED_CONTENT_LENGTH, connected))
+                .isTrue();
+    }
+
+    @Test
+    public void trialHeadMethodForInstanceLength() throws IOException {
+        final DownloadConnection.Factory factory = OkDownload.with().connectionFactory();
+        final DownloadConnection connection = mock(DownloadConnection.class);
+        when(factory.create(anyString())).thenReturn(connection);
+
+        final DownloadConnection.Connected connected = mock(DownloadConnection.Connected.class);
+        when(connection.execute()).thenReturn(connected);
+
+        when(connected.getResponseHeaderField(CONTENT_LENGTH)).thenReturn("10");
+
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+        final DownloadListener listener = mock(DownloadListener.class);
+        when(callbackDispatcher.dispatch()).thenReturn(listener);
+
+        connectTrial.trialHeadMethodForInstanceLength();
+
+        verify(connection).setRequestMethod(eq(METHOD_HEAD));
+        verify(listener).connectTrialStart(eq(task), nullable(Map.class));
+        verify(listener).connectTrialEnd(eq(task), anyInt(), nullable(Map.class));
+        assertThat(connectTrial.getInstanceLength()).isEqualTo(10L);
     }
 }

@@ -158,6 +158,6 @@ public class DownloadUrlConnectionTest {
         assertThat(connection.setRequestMethod("HEAD")).isTrue();
         verify(httpURLConnection).setRequestMethod(eq("HEAD"));
 
-        assertThat(downloadUrlConnection.setRequestMethod("HEAD")).isFalse();
+        assertThat(downloadUrlConnection.setRequestMethod("GET")).isFalse();
     }
 }

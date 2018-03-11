@@ -96,6 +96,7 @@ com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 - [x] Always saving proceed of each task, so the breakpoint is always resumable even if the process is kill, since your import `com.liulishuo.okdownload:sqlite`
 - [x] Using trial connect to check whether resume available and get instance-length to ensure resume correct and avoid unnecessary TCP window cache before downloading each block
 - [x] Using the content length hid on the `Content-Range` when there isn't valid `Content-Length` on the response header
+- [x] Using the another HEAD method request to check out the certain instance-length when the `Content-Range` and `Transfer-Encoding` isn't exist on the response header for the trial connection.
 - [] Check whether the network is really available before start downloading
 
 ### FLEXIBLE and PERFORMANCE

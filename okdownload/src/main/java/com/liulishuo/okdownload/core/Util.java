@@ -48,6 +48,9 @@ import java.util.regex.Pattern;
 
 public class Util {
 
+    // request method
+    public static final String METHOD_HEAD = "HEAD";
+
     // request header fields.
     public static final String RANGE = "Range";
     public static final String IF_MATCH = "If-Match";

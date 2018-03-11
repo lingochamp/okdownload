@@ -84,7 +84,7 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
         return body.byteStream();
     }
 
-    @Override public boolean setRequestMethod(String method) throws ProtocolException {
+    @Override public boolean setRequestMethod(@NonNull String method) throws ProtocolException {
         this.requestBuilder.method(method, null);
         return true;
     }

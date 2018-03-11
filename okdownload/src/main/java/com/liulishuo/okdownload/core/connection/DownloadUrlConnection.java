@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.connection;
 
+import android.support.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -85,7 +87,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         return connection.getInputStream();
     }
 
-    @Override public boolean setRequestMethod(String method) throws ProtocolException {
+    @Override public boolean setRequestMethod(@NonNull String method) throws ProtocolException {
         if (connection instanceof HttpURLConnection) {
             ((HttpURLConnection) connection).setRequestMethod(method);
             return true;

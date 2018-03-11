@@ -35,9 +35,11 @@ import java.util.regex.Pattern;
 import static com.liulishuo.okdownload.core.Util.ACCEPT_RANGES;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_DISPOSITION;
+import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static com.liulishuo.okdownload.core.Util.ETAG;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
+import static com.liulishuo.okdownload.core.Util.METHOD_HEAD;
 import static com.liulishuo.okdownload.core.Util.RANGE;
 import static com.liulishuo.okdownload.core.Util.TRANSFER_ENCODING;
 import static com.liulishuo.okdownload.core.Util.VALUE_CHUNKED;
@@ -65,6 +67,7 @@ public class ConnectTrial {
     public void executeTrial() throws IOException {
         OkDownload.with().downloadStrategy().inspectNetwork(task);
         DownloadConnection connection = OkDownload.with().connectionFactory().create(task.getUrl());
+        boolean isNeedTrialHeadMethod;
         try {
             if (!Util.isEmpty(info.getEtag())) {
                 connection.addHeader(IF_MATCH, info.getEtag());
@@ -80,10 +83,16 @@ public class ConnectTrial {
             this.instanceLength = findInstanceLength(connected);
             this.responseEtag = findEtag(connected);
             this.responseFilename = findFilename(connected);
-
             listener.connectTrialEnd(task, responseCode, connected.getResponseHeaderFields());
+
+            isNeedTrialHeadMethod = isNeedTrialHeadMethodForInstanceLength(instanceLength,
+                    connected);
         } finally {
             connection.release();
+        }
+
+        if (isNeedTrialHeadMethod) {
+            trialHeadMethodForInstanceLength();
         }
     }
 
@@ -217,6 +226,62 @@ public class ConnectTrial {
         }
 
         return CHUNKED_CONTENT_LENGTH;
+    }
+
+    boolean isNeedTrialHeadMethodForInstanceLength(
+            long oldInstanceLength, @NonNull DownloadConnection.Connected connected) {
+        if (oldInstanceLength != CHUNKED_CONTENT_LENGTH) {
+            // the instance length already has certain value.
+            return false;
+        }
+
+        final String contentRange = connected.getResponseHeaderField(CONTENT_RANGE);
+        if (contentRange != null && contentRange.length() > 0) {
+            // because of the Content-Range can certain the result is right, so pass.
+            return false;
+        }
+
+        final boolean isChunked = parseTransferEncoding(
+                connected.getResponseHeaderField(TRANSFER_ENCODING));
+        if (isChunked) {
+            // because of the Transfer-Encoding can certain the result is right, so pass.
+            return false;
+        }
+
+        final String contentLengthField = connected.getResponseHeaderField(CONTENT_LENGTH);
+        if (contentLengthField == null || contentLengthField.length() <= 0) {
+            // because of the response header isn't contain the Content-Length so the HEAD method
+            // request is useless, because we plan to get the right instance-length on the
+            // Content-Length field through the response header of non 0-0 Range HEAD method request
+            return false;
+        }
+
+        // because of the response header contain Content-Length, but because of we using Range: 0-0
+        // so we the Content-Length is always 1 now, we can't use it, so we try to use HEAD method
+        // request just for get the certain instance-length.
+        return true;
+    }
+
+    // if instance length is can't certain through transfer-encoding and content-range but the
+    // content-length is exist but can't be used, we will request HEAD method request to find out
+    // right one.
+    void trialHeadMethodForInstanceLength() throws IOException {
+        final DownloadConnection connection = OkDownload.with().connectionFactory()
+                .create(task.getUrl());
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        try {
+            connection.setRequestMethod(METHOD_HEAD);
+
+            listener.connectTrialStart(task, connection.getRequestProperties());
+            final DownloadConnection.Connected connectedForContentLength = connection.execute();
+            listener.connectTrialEnd(task, connectedForContentLength.getResponseCode(),
+                    connectedForContentLength.getResponseHeaderFields());
+
+            this.instanceLength = Util.parseContentLength(
+                    connectedForContentLength.getResponseHeaderField(CONTENT_LENGTH));
+        } finally {
+            connection.release();
+        }
     }
 
     private static boolean parseTransferEncoding(@Nullable String transferEncoding) {

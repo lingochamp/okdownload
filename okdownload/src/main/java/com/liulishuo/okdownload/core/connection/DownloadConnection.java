@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core.connection;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.IOException;
@@ -30,6 +31,29 @@ public interface DownloadConnection {
     int NO_RESPONSE_CODE = 0;
 
     void addHeader(String name, String value);
+
+    /**
+     * Set the method for the request, one of:
+     * <UL>
+     * <LI>GET
+     * <LI>POST
+     * <LI>HEAD
+     * <LI>OPTIONS
+     * <LI>PUT
+     * <LI>DELETE
+     * <LI>TRACE
+     * </UL> are legal, subject to protocol restrictions.  The default
+     * method is GET.
+     *
+     * @param method the HTTP method
+     * @return {@code true} if set effect, otherwise {@code false}.
+     * @throws ProtocolException if the method cannot be reset or if
+     *                           the requested method isn't valid for HTTP.
+     * @throws SecurityException if a security manager is set and the
+     *                           method is "TRACE", but the "allowHttpTrace"
+     *                           NetPermission is not granted.
+     */
+    boolean setRequestMethod(@NonNull String method) throws ProtocolException;
 
     /**
      * Invokes the request immediately, and blocks until the response can be processed or is in
@@ -47,29 +71,6 @@ public interface DownloadConnection {
         int getResponseCode() throws IOException;
 
         InputStream getInputStream() throws IOException;
-
-        /**
-         * Set the method for the request, one of:
-         * <UL>
-         * <LI>GET
-         * <LI>POST
-         * <LI>HEAD
-         * <LI>OPTIONS
-         * <LI>PUT
-         * <LI>DELETE
-         * <LI>TRACE
-         * </UL> are legal, subject to protocol restrictions.  The default
-         * method is GET.
-         *
-         * @param method the HTTP method
-         * @return {@code true} if set effect, otherwise {@code false}.
-         * @throws ProtocolException if the method cannot be reset or if
-         *                           the requested method isn't valid for HTTP.
-         * @throws SecurityException if a security manager is set and the
-         *                           method is "TRACE", but the "allowHttpTrace"
-         *                           NetPermission is not granted.
-         */
-        boolean setRequestMethod(String method) throws ProtocolException;
 
         /**
          * Returns an unmodifiable Map of the header fields. The Map keys are Strings that represent
