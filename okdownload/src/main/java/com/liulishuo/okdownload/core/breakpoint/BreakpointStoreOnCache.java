@@ -134,10 +134,9 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
     @Override
     public synchronized int findOrCreateId(@NonNull DownloadTask task) {
-        final SparseArray<BreakpointInfo> clonedMap = storedInfos.clone();
-        final int size = clonedMap.size();
+        final int size = storedInfos.size();
         for (int i = 0; i < size; i++) {
-            final BreakpointInfo info = clonedMap.valueAt(i);
+            final BreakpointInfo info = storedInfos.valueAt(i);
             if (info != null && info.isSameFrom(task)) {
                 return info.id;
             }
@@ -158,7 +157,10 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     // info maybe turn to equal to another one after get filename from response.
     @Override
     public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
-        final SparseArray<BreakpointInfo> clonedMap = storedInfos.clone();
+        final SparseArray<BreakpointInfo> clonedMap;
+        synchronized (this) {
+            clonedMap = storedInfos.clone();
+        }
         final int size = clonedMap.size();
         for (int i = 0; i < size; i++) {
             final BreakpointInfo info = clonedMap.valueAt(i);
