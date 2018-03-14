@@ -113,6 +113,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         // inspect task start
         inspectTaskStart();
         do {
+            // 0. check basic param before start
+            if (task.getUrl().length() <= 0) {
+                this.cache = new DownloadCache.PreError(
+                        new IOException("unexpected url: " + task.getUrl()));
+                break;
+            }
+
             if (canceled) break;
 
             // 1. create basic info if not exist

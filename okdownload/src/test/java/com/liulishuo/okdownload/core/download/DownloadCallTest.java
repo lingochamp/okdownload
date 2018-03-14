@@ -93,6 +93,7 @@ public class DownloadCallTest {
 
         final BreakpointStore store = OkDownload.with().breakpointStore();
         when(store.get(anyInt())).thenReturn(info);
+        when(task.getUrl()).thenReturn("https://jacksgong.com");
     }
 
     @Test
@@ -236,6 +237,22 @@ public class DownloadCallTest {
         // only once.
         final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
         verify(listener).taskStart(eq(task));
+    }
+
+    @Test
+    public void execute_urlIsEmpty() throws InterruptedException {
+        when(task.getUrl()).thenReturn("");
+
+        call.execute();
+
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+
+        verify(call, never()).start(any(DownloadCache.class), any(BreakpointInfo.class));
+
+        ArgumentCaptor<IOException> captor = ArgumentCaptor.forClass(IOException.class);
+        verify(listener).taskEnd(eq(task), eq(EndCause.ERROR), captor.capture());
+        IOException exception = captor.getValue();
+        assertThat(exception.getMessage()).isEqualTo("unexpected url: ");
     }
 
     @Test

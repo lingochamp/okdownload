@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
     private final int id;
-    private final String url;
+    @NonNull private final String url;
     private final Uri uri;
     private final boolean isUriIsDirectory;
     private final Map<String, List<String>> headerMapFields;
@@ -158,7 +158,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         return isUriIsDirectory;
     }
 
-    public String getUrl() {
+    @NonNull public String getUrl() {
         return url;
     }
 
