@@ -150,7 +150,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
         }
 
         final int id = allocateId();
-        unStoredTasks.put(id, task);
+        unStoredTasks.put(id, task.toBuilder().build());
         return id;
     }
 

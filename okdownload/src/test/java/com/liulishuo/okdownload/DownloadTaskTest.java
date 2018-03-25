@@ -338,4 +338,26 @@ public class DownloadTaskTest {
         DownloadTask.TaskCallbackWrapper.getLastCallbackProcessTs(task);
         verify(task).getLastCallbackProcessTs();
     }
+
+    @Test
+    public void toBuilder_compareIgnoreId() {
+        DownloadTask task = new DownloadTask
+                .Builder("https://jacksgong.com", parentPath, filename)
+                .build();
+
+        DownloadTask cloneTask = task.toBuilder().build();
+        assertThat(cloneTask.compareIgnoreId(task)).isTrue();
+
+        task = new DownloadTask
+                .Builder("https://www.jacksgong.com", new File(parentPath))
+                .build();
+        cloneTask = task.toBuilder().build();
+        assertThat(cloneTask.compareIgnoreId(task)).isTrue();
+
+        task = new DownloadTask
+                .Builder("https://jacksgong.com", "non-exist-parent", "non-exist")
+                .build();
+        cloneTask = task.toBuilder().build();
+        assertThat(cloneTask.compareIgnoreId(task)).isTrue();
+    }
 }
