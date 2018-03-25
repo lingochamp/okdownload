@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.core.breakpoint;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import org.junit.Before;
@@ -101,7 +102,7 @@ public class BreakpointStoreOnCacheTest {
 
     @Test
     public void unStoredTasks() {
-        final SparseArray<DownloadTask> unStoredTasks = new SparseArray<>();
+        final SparseArray<IdentifiedTask> unStoredTasks = new SparseArray<>();
         final SparseArray<BreakpointInfo> storedInfos = new SparseArray<>();
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
                 new HashMap<String, String>(),
@@ -121,7 +122,7 @@ public class BreakpointStoreOnCacheTest {
 
     @Test
     public void findAnotherInfoFromCompare() {
-        final SparseArray<DownloadTask> unStoredTasks = new SparseArray<>();
+        final SparseArray<IdentifiedTask> unStoredTasks = new SparseArray<>();
         final SparseArray<BreakpointInfo> storedInfos = new SparseArray<>();
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
                 new HashMap<String, String>(),
@@ -148,7 +149,7 @@ public class BreakpointStoreOnCacheTest {
         final List<Integer> sortedOccupiedIds = new ArrayList<>();
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
                 new HashMap<String, String>(),
-                new SparseArray<DownloadTask>(),
+                new SparseArray<IdentifiedTask>(),
                 sortedOccupiedIds);
 
         assertThat(storeOnCache.allocateId()).isEqualTo(1);
@@ -188,7 +189,7 @@ public class BreakpointStoreOnCacheTest {
         urlFilenameMap.put(url1, filename1);
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
                 urlFilenameMap,
-                new SparseArray<DownloadTask>(),
+                new SparseArray<IdentifiedTask>(),
                 new ArrayList<Integer>());
         assertThat(storeOnCache.getResponseFilename(url1)).isEqualTo(filename1);
         assertThat(storeOnCache.getResponseFilename(url2)).isNull();

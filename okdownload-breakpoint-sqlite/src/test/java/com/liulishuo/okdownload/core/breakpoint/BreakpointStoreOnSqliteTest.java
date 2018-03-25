@@ -30,6 +30,7 @@ import java.io.IOException;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doReturn;
@@ -62,10 +63,16 @@ public class BreakpointStoreOnSqliteTest {
         store.close();
     }
 
+    private static DownloadTask mockTask() {
+        DownloadTask task = mock(DownloadTask.class);
+        doReturn(mock(DownloadTask.MockTaskForCompare.class)).when(task).mock(anyInt());
+        return task;
+    }
+
     @Test
     public void get_createAndInsert_onSyncToFilesystemSuccess_update() throws IOException {
-        final int id1 = store.findOrCreateId(mock(DownloadTask.class));
-        final int id2 = store.findOrCreateId(mock(DownloadTask.class));
+        final int id1 = store.findOrCreateId(mockTask());
+        final int id2 = store.findOrCreateId(mockTask());
         assertThat(id1).isNotEqualTo(id2);
         verify(onCache, times(2)).findOrCreateId(any(DownloadTask.class));
 

@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     private final SparseArray<BreakpointInfo> storedInfos;
     private final HashMap<String, String> responseFilenameMap;
 
-    private final SparseArray<DownloadTask> unStoredTasks;
+    private final SparseArray<IdentifiedTask> unStoredTasks;
     private final List<Integer> sortedOccupiedIds;
 
     public BreakpointStoreOnCache() {
@@ -41,7 +42,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
     BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos,
                            HashMap<String, String> responseFilenameMap,
-                           SparseArray<DownloadTask> unStoredTasks,
+                           SparseArray<IdentifiedTask> unStoredTasks,
                            List<Integer> sortedOccupiedIds) {
         this.unStoredTasks = unStoredTasks;
         this.storedInfos = storedInfos;
@@ -144,13 +145,13 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
         final int unStoredSize = unStoredTasks.size();
         for (int i = 0; i < unStoredSize; i++) {
-            final DownloadTask another = unStoredTasks.valueAt(i);
+            final IdentifiedTask another = unStoredTasks.valueAt(i);
             if (another == null) continue;
             if (another.compareIgnoreId(task)) return another.getId();
         }
 
         final int id = allocateId();
-        unStoredTasks.put(id, task.toBuilder().build());
+        unStoredTasks.put(id, task.mock(id));
         return id;
     }
 
@@ -229,5 +230,4 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
         return newId;
     }
-
 }

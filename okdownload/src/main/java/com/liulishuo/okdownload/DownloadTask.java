@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
+import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
@@ -40,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@link StatusUtil} to help you more convenient to get its status stored on database with task's
  * {@link #getId()}.
  */
-public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
+public class DownloadTask extends IdentifiedTask implements Cloneable, Comparable<DownloadTask> {
     private final int id;
     @NonNull private final String url;
     private final Uri uri;
@@ -144,7 +145,7 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
     /**
      * This id can be used on {@link BreakpointStore}
      */
-    public int getId() {
+    @Override public int getId() {
         return this.id;
     }
 
@@ -208,12 +209,16 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         return url;
     }
 
+    @NonNull @Override protected File getProvidedPathFile() {
+        return this.providedPathFile;
+    }
+
     /**
      * Get the parent path of the file store downloaded data.
      *
      * @return the parent path of the file store downloaded data.
      */
-    @NonNull public String getParentPath() {
+    @Override @NonNull public String getParentPath() {
         if (isUriIsDirectory) return uri.getPath();
 
         return new File(uri.getPath()).getParentFile().getAbsolutePath();
@@ -718,17 +723,6 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         return false;
     }
 
-    public boolean compareIgnoreId(DownloadTask another) {
-        if (!url.equals(another.url)) return false;
-
-        if (providedPathFile.equals(another.providedPathFile)) return true;
-
-        // cover the case of filename is provided by response.
-        final String filename = getFilename();
-        final String anotherFilename = another.getFilename();
-        return anotherFilename != null && filename != null && anotherFilename.equals(filename);
-    }
-
     @Override public int hashCode() {
         return (url + providedPathFile.toString() + filenameHolder.get()).hashCode();
     }
@@ -736,6 +730,10 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
     @Override public String toString() {
         return super.toString() + "@" + id + "@" + url + "@" + providedPathFile.toString()
                 + "/" + filenameHolder.get();
+    }
+
+    @NonNull public MockTaskForCompare mock(int id) {
+        return new MockTaskForCompare(id, this);
     }
 
     public static class TaskCallbackWrapper {
@@ -746,6 +744,42 @@ public class DownloadTask implements Cloneable, Comparable<DownloadTask> {
         public static void setLastCallbackProcessTs(DownloadTask task,
                                                     long lastCallbackProcessTimestamp) {
             task.setLastCallbackProcessTs(lastCallbackProcessTimestamp);
+        }
+    }
+
+    public static class MockTaskForCompare extends IdentifiedTask {
+        final int id;
+        @NonNull final String url;
+        @NonNull final File providedPathFile;
+        @Nullable final String filename;
+        @NonNull final String parentPath;
+
+        public MockTaskForCompare(int id, @NonNull DownloadTask task) {
+            this.id = id;
+            this.url = task.url;
+            this.parentPath = task.getParentPath();
+            this.providedPathFile = task.providedPathFile;
+            this.filename = task.getFilename();
+        }
+
+        @Override public int getId() {
+            return id;
+        }
+
+        @NonNull @Override public String getUrl() {
+            return url;
+        }
+
+        @NonNull @Override protected File getProvidedPathFile() {
+            return providedPathFile;
+        }
+
+        @NonNull @Override public String getParentPath() {
+            return parentPath;
+        }
+
+        @Nullable @Override public String getFilename() {
+            return filename;
         }
     }
 }

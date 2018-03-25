@@ -18,6 +18,7 @@ package com.liulishuo.okdownload;
 
 import android.net.Uri;
 
+import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
@@ -340,24 +341,24 @@ public class DownloadTaskTest {
     }
 
     @Test
-    public void toBuilder_compareIgnoreId() {
+    public void mockTaskForCompare() {
         DownloadTask task = new DownloadTask
                 .Builder("https://jacksgong.com", parentPath, filename)
                 .build();
 
-        DownloadTask cloneTask = task.toBuilder().build();
-        assertThat(cloneTask.compareIgnoreId(task)).isTrue();
+        IdentifiedTask identifiedTask = task.mock(0);
+        assertThat(identifiedTask.compareIgnoreId(task)).isTrue();
 
         task = new DownloadTask
                 .Builder("https://www.jacksgong.com", new File(parentPath))
                 .build();
-        cloneTask = task.toBuilder().build();
-        assertThat(cloneTask.compareIgnoreId(task)).isTrue();
+        identifiedTask = task.mock(0);
+        assertThat(identifiedTask.compareIgnoreId(task)).isTrue();
 
         task = new DownloadTask
                 .Builder("https://jacksgong.com", "non-exist-parent", "non-exist")
                 .build();
-        cloneTask = task.toBuilder().build();
-        assertThat(cloneTask.compareIgnoreId(task)).isTrue();
+        identifiedTask = task.mock(0);
+        assertThat(identifiedTask.compareIgnoreId(task)).isTrue();
     }
 }
