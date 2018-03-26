@@ -97,13 +97,17 @@ public class SpeedCalculatorTest {
 
         calculator.downloading(1000);
 
-        now = 166;
+        now = 565;
         doReturn(now).when(calculator).nowMillis();
-        assertThat(calculator.speed()).isEqualTo("10.0 kB/s");
+        assertThat(calculator.speed()).isEqualTo("0 B/s");
+
+        now = 566;
+        doReturn(now).when(calculator).nowMillis();
+        assertThat(calculator.speed()).isEqualTo("2.0 kB/s");
 
         now = 1066;
         doReturn(now).when(calculator).nowMillis();
-        // because than 1 second and last speed is 10.0
-        assertThat(calculator.speed()).isEqualTo("10.0 kB/s");
+        // because than 1 second and last speed is 2.0
+        assertThat(calculator.speed()).isEqualTo("2.0 kB/s");
     }
 }
