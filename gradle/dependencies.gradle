@@ -1,14 +1,14 @@
 ext {
-    compileSdkVersion = 26
-    buildToolsVersion = '26.0.2'
+    compileSdkVersion = 27
+    buildToolsVersion = '27.0.3'
     minSdkVersion = 14
-    targetSdkVersion = 26
+    targetSdkVersion = 27
     sourceCompatibilityVersion = JavaVersion.VERSION_1_7
     targetCompatibilityVersion = JavaVersion.VERSION_1_7
     kotlin_version = '1.2.31'
     anko_version = '0.10.1'
     coroutines_version = '0.18'
-    supportLibrariesVersion = '26.0.2'
+    supportLibrariesVersion = '27.1.0'
 
     dep = [
             androidPlugin               : 'com.android.tools.build:gradle:3.0.0-beta6',

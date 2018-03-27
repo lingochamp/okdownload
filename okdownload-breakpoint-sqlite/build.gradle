@@ -25,13 +25,15 @@ android {
 }
 
 dependencies {
-    testCompile dep.junit
-    testCompile dep.mockito
-    testCompile dep.assertj
-    testCompile dep.robolectric
-    testCompile project(':okdownload')
+    testImplementation dep.junit
+    testImplementation dep.mockito
+    testImplementation dep.assertj
+    testImplementation dep.robolectric
+    testImplementation project(':okdownload')
+    
+    implementation dep.supportAnnotations
 
-    provided project(':okdownload')
+    compileOnly project(':okdownload')
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

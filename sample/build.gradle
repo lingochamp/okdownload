@@ -35,32 +35,32 @@ android {
 }
 
 dependencies {
-    compile dep.kotlin
+    implementation dep.kotlin
     //noinspection GradleDependency source code is not available on 26
-    compile dep.supportDesign
+    implementation dep.supportDesign
     //noinspection GradleDependency source code is not available on 26
-    compile dep.supportV7
+    implementation dep.supportV7
     // Appcompat-v7 (only Anko Commons)
-    compile dep.ankoSdk
-    compile dep.ankoV7Commons
+    implementation dep.ankoSdk
+    implementation dep.ankoV7Commons
     // Appcompat-v7 (Anko Layouts)
-    compile dep.ankoV7
-    compile dep.ankoSdk25Coroutines
-    compile dep.ankoCoroutines
+    implementation dep.ankoV7
+    implementation dep.ankoSdk25Coroutines
+    implementation dep.ankoCoroutines
     // CardView-v7
-    compile dep.ankoCardviewV7
+    implementation dep.ankoCardviewV7
     //noinspection GradleDependency
-    compile dep.supportCardview
+    implementation dep.supportCardview
     // Design
-    compile dep.ankoDesign
-    compile dep.ankoDesignCoroutines
+    implementation dep.ankoDesign
+    implementation dep.ankoDesignCoroutines
     // RecyclerView-v7
-    compile dep.ankoRecyclerviewV7
-    compile dep.ankoRecyclerviewV7Coroutines
-    compile dep.kotlinxCoroutines
-    compile dep.supportConstraintLayout
-    testCompile dep.junit
-    compile project(':okdownload')
+    implementation dep.ankoRecyclerviewV7
+    implementation dep.ankoRecyclerviewV7Coroutines
+    implementation dep.kotlinxCoroutines
+    implementation dep.supportConstraintLayout
+    testImplementation dep.junit
+    implementation project(':okdownload')
     implementation project(':okdownload-breakpoint-sqlite')
     implementation project(':okdownload-connection-okhttp')
 }

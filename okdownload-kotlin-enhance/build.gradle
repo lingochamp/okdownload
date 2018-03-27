@@ -26,8 +26,8 @@ android {
 }
 
 dependencies {
-    testCompile dep.junit
-    compile dep.kotlin
-    provided project(':okdownload')
+    testImplementation dep.junit
+    implementation dep.kotlin
+    compileOnly project(':okdownload')
 }
 

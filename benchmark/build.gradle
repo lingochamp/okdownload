@@ -36,11 +36,11 @@ android {
 }
 
 dependencies {
-    compile dep.kotlin
+    implementation dep.kotlin
 
-    compile dep.supportV7
-    compile dep.supportDesign
-    compile dep.supportConstraintLayout
+    implementation dep.supportV7
+    implementation dep.supportDesign
+    implementation dep.supportConstraintLayout
 
-    testCompile dep.junit
+    testImplementation dep.junit
 }
