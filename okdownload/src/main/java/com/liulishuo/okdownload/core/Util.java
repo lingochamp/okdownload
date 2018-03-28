@@ -77,9 +77,32 @@ public class Util {
         void i(String tag, String msg);
     }
 
-    private static Logger logger;
+    public static class EmptyLogger implements Logger {
+        @Override public void e(String tag, String msg, Exception e) { }
 
-    public static void setLogger(Logger l) {
+        @Override public void w(String tag, String msg) { }
+
+        @Override public void d(String tag, String msg) { }
+
+        @Override public void i(String tag, String msg) { }
+    }
+
+    private static Logger logger = new EmptyLogger();
+
+    /**
+     * Enable logger used for okdownload, and print each log with {@link Log}.
+     */
+    public static void enableConsoleLog() {
+        logger = null;
+    }
+
+    /**
+     * Set the logger which using on okdownload.
+     * default one is {@link EmptyLogger}.
+     *
+     * @param l if provide logger is {@code null} we will using {@link Log} as default.
+     */
+    public static void setLogger(@Nullable Logger l) {
         logger = l;
     }
 

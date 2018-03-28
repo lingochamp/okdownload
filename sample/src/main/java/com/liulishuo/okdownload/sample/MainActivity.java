@@ -17,9 +17,18 @@
 package com.liulishuo.okdownload.sample;
 
 
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+
+import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.sample.base.BaseListActivity;
 
 public class MainActivity extends BaseListActivity {
+
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Util.enableConsoleLog();
+    }
 
     @Override protected void setupAdapter(BaseListActivity.ItemsHolder holder) {
         holder.addItem(R.string.single_download_title, R.string.single_download_desc,
