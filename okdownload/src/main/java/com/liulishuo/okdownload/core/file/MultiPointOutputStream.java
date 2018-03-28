@@ -147,7 +147,8 @@ public class MultiPointOutputStream {
                     for (int i = 0; i < size; i++) {
                         final int blockIndex = outputStreamMap.keyAt(i);
                         // because we get no sync length value before flush and sync,
-                        // so the length only possible less than or equal to the real persist length.
+                        // so the length only possible less than or equal to the real persist
+                        // length.
                         final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
                         if (noSyncLength > 0) {
                             increaseLengthMap.put(blockIndex, noSyncLength);
@@ -175,13 +176,13 @@ public class MultiPointOutputStream {
                 }
             } finally {
                 syncRunning = false;
-                final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
-                parkThreadList.toArray(parkThreadArray);
-                for (Thread thread : parkThreadArray) {
-                    if (thread == null) break; // on end.
+                synchronized (parkThreadList) {
+                    final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
+                    parkThreadList.toArray(parkThreadArray);
+                    for (Thread thread : parkThreadArray) {
+                        if (thread == null) continue; // on end.
 
-                    LockSupport.unpark(thread);
-                    synchronized (parkThreadList) {
+                        LockSupport.unpark(thread);
                         parkThreadList.remove(thread);
                     }
                 }
