@@ -62,7 +62,7 @@ public class MultiPointOutputStream {
     private final boolean supportSeek;
     private final boolean isPreAllocateLength;
 
-    boolean syncRunning;
+    volatile boolean syncRunning;
 
     public MultiPointOutputStream(@NonNull DownloadTask task,
                                   @NonNull BreakpointInfo info) {
@@ -89,7 +89,7 @@ public class MultiPointOutputStream {
         inspectAndPersist();
     }
 
-    private ArrayList<Thread> parkThreadList = new ArrayList<>();
+    private final ArrayList<Thread> parkThreadList = new ArrayList<>();
     private static final long WAIT_SYNC_NANO = TimeUnit.MILLISECONDS.toNanos(100);
 
     public void ensureSyncComplete(int blockIndex) {
@@ -98,7 +98,9 @@ public class MultiPointOutputStream {
             // sync to store
             if (syncRunning) {
                 // wait for sync
-                parkThreadList.add(Thread.currentThread());
+                synchronized (parkThreadList) {
+                    parkThreadList.add(Thread.currentThread());
+                }
                 while (true) {
                     LockSupport.parkNanos(WAIT_SYNC_NANO);
                     if (!syncRunning) break;
@@ -108,7 +110,6 @@ public class MultiPointOutputStream {
             // sync once, make sure data has been synced.
             syncRunning = true;
             syncRunnable.run();
-
         }
     }
 
@@ -131,54 +132,59 @@ public class MultiPointOutputStream {
     private final Runnable syncRunnable = new Runnable() {
         @Override
         public void run() {
-            boolean success;
-            final int size;
-            synchronized (noSyncLengthMap) {
-                // make sure the length of noSyncLengthMap is equal to outputStreamMap
-                size = noSyncLengthMap.size();
-            }
-
-            final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
-
             try {
-                for (int i = 0; i < size; i++) {
-                    final int blockIndex = outputStreamMap.keyAt(i);
-                    // because we get no sync length value before flush and sync,
-                    // so the length only possible less than or equal to the real persist length.
-                    final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
-                    if (noSyncLength > 0) {
-                        increaseLengthMap.put(blockIndex, noSyncLength);
-                        final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
-                        outputStream.flushAndSync();
+                syncRunning = true;
+                boolean success;
+                final int size;
+                synchronized (noSyncLengthMap) {
+                    // make sure the length of noSyncLengthMap is equal to outputStreamMap
+                    size = noSyncLengthMap.size();
+                }
+
+                final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+
+                try {
+                    for (int i = 0; i < size; i++) {
+                        final int blockIndex = outputStreamMap.keyAt(i);
+                        // because we get no sync length value before flush and sync,
+                        // so the length only possible less than or equal to the real persist length.
+                        final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
+                        if (noSyncLength > 0) {
+                            increaseLengthMap.put(blockIndex, noSyncLength);
+                            final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
+                            outputStream.flushAndSync();
+                        }
+                    }
+                    success = true;
+                } catch (IOException ignored) {
+                    success = false;
+                }
+
+                if (success) {
+                    final int increaseLengthSize = increaseLengthMap.size();
+                    long allIncreaseLength = 0;
+                    for (int i = 0; i < increaseLengthSize; i++) {
+                        final int blockIndex = increaseLengthMap.keyAt(i);
+                        final long noSyncLength = increaseLengthMap.valueAt(i);
+                        store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
+                        allIncreaseLength += noSyncLength;
+                        noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
+                    }
+                    allNoSyncLength.addAndGet(-allIncreaseLength);
+                    lastSyncTimestamp.set(SystemClock.uptimeMillis());
+                }
+            } finally {
+                syncRunning = false;
+                final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
+                parkThreadList.toArray(parkThreadArray);
+                for (Thread thread : parkThreadArray) {
+                    if (thread == null) break; // on end.
+
+                    LockSupport.unpark(thread);
+                    synchronized (parkThreadList) {
+                        parkThreadList.remove(thread);
                     }
                 }
-                success = true;
-            } catch (IOException ignored) {
-                success = false;
-            }
-
-            if (success) {
-                final int increaseLengthSize = increaseLengthMap.size();
-                long allIncreaseLength = 0;
-                for (int i = 0; i < increaseLengthSize; i++) {
-                    final int blockIndex = increaseLengthMap.keyAt(i);
-                    final long noSyncLength = increaseLengthMap.valueAt(i);
-                    store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
-                    allIncreaseLength += noSyncLength;
-                    noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
-                }
-                allNoSyncLength.addAndGet(-allIncreaseLength);
-                lastSyncTimestamp.set(SystemClock.uptimeMillis());
-            }
-
-            syncRunning = false;
-            final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
-            parkThreadList.toArray(parkThreadArray);
-            for (Thread thread : parkThreadArray) {
-                if (thread == null) break; // on end.
-
-                LockSupport.unpark(thread);
-                parkThreadList.remove(thread);
             }
         }
     };
