@@ -21,6 +21,14 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.util.SparseArray;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.exception.PreAllocateException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,14 +39,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
-
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.Util;
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
-import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
 public class MultiPointOutputStream {
     private static final String TAG = "MultiPointOutputStream";
@@ -192,26 +192,31 @@ public class MultiPointOutputStream {
         outputStream(blockIndex).close();
     }
 
-    private boolean firstOutputStream = true;
+    private volatile boolean firstOutputStream = true;
 
-    synchronized DownloadOutputStream outputStream(int blockIndex) throws
-            IOException {
-        final String path = task.getPath();
-        if (path == null) throw new FileNotFoundException("Filename is not ready!");
-        final File file = new File(path);
+    synchronized DownloadOutputStream outputStream(int blockIndex) throws IOException {
 
-        final File parentFile = file.getParentFile();
-        if (!parentFile.exists() && !parentFile.mkdirs()) {
-            throw new IOException("Create parent folder failed!");
-        }
+        @NonNull final Uri uri;
+        final boolean isFileScheme = task.getUri().getScheme().equals("file");
+        if (isFileScheme) {
+            final String path = task.getPath();
+            if (path == null) throw new FileNotFoundException("Filename is not ready!");
+            final File file = new File(path);
 
-        if (file.createNewFile()) {
-            Util.d(TAG, "Create new file: " + file.getName());
-        }
+            final File parentFile = file.getParentFile();
+            if (!parentFile.exists() && !parentFile.mkdirs()) {
+                throw new IOException("Create parent folder failed!");
+            }
 
-        final Uri uri;
-        if (task.isUriIsDirectory()) {
-            uri = Uri.fromFile(file);
+            if (file.createNewFile()) {
+                Util.d(TAG, "Create new file: " + file.getName());
+            }
+
+            if (task.isUriIsDirectory()) {
+                uri = Uri.fromFile(file);
+            } else {
+                uri = task.getUri();
+            }
         } else {
             uri = task.getUri();
         }
@@ -233,9 +238,14 @@ public class MultiPointOutputStream {
             if (!info.isChunked() && firstOutputStream && isPreAllocateLength) {
                 // pre allocate length
                 final long totalLength = info.getTotalLength();
-                final long requireSpace = totalLength - file.length();
-                if (requireSpace > 0) {
-                    inspectFreeSpace(path, requireSpace);
+                if (isFileScheme) {
+                    final String path = task.getPath();
+                    final long requireSpace = totalLength - new File(path).length();
+                    if (requireSpace > 0) {
+                        inspectFreeSpace(path, requireSpace);
+                        outputStream.setLength(totalLength);
+                    }
+                } else {
                     outputStream.setLength(totalLength);
                 }
             }

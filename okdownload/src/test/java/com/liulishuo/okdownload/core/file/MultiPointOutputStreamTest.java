@@ -19,6 +19,13 @@ package com.liulishuo.okdownload.core.file;
 import android.content.Context;
 import android.net.Uri;
 
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.exception.PreAllocateException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -32,13 +39,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
-import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -193,6 +193,25 @@ public class MultiPointOutputStreamTest {
         verify(outputStream, never()).setLength(anyLong());
     }
 
+    @Test
+    public void outputStream_nonFileScheme() throws IOException {
+        prepareOutputStreamEnv();
+
+        final Uri uri = task.getUri();
+        when(uri.getScheme()).thenReturn("content");
+
+        BlockInfo blockInfo = mock(BlockInfo.class);
+        when(info.getBlock(0)).thenReturn(blockInfo);
+        when(blockInfo.getRangeLeft()).thenReturn(0L);
+        when(info.getTotalLength()).thenReturn(20L);
+        when(info.isChunked()).thenReturn(false);
+
+        final DownloadOutputStream outputStream = multiPointOutputStream.outputStream(0);
+        verify(outputStream, never()).seek(anyLong());
+        verify(outputStream).setLength(eq(20L));
+        verify(multiPointOutputStream, never()).inspectFreeSpace(anyString(), anyLong());
+    }
+
     private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {
         when(OkDownload.with().outputStreamFactory().supportSeek()).thenReturn(true);
         when(OkDownload.with().processFileStrategy().isPreAllocateLength()).thenReturn(true);
@@ -202,6 +221,8 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream = spy(new MultiPointOutputStream(task, info));
         doNothing().when(multiPointOutputStream).inspectFreeSpace(anyString(), anyLong());
 
-        when(task.getUri()).thenReturn(mock(Uri.class));
+        final Uri uri = mock(Uri.class);
+        when(task.getUri()).thenReturn(uri);
+        when(uri.getScheme()).thenReturn("file");
     }
 }
