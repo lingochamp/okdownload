@@ -363,6 +363,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
 
     /**
      * Enqueue a bunch of {@code tasks} with the listener to the downloader dispatcher.
+     * <p>
+     * This operation is specially optimize for handle tasks instead of single task.
      *
      * @param tasks    the tasks will be executed when resources is available on the dispatcher
      *                 thread-pool.
@@ -403,6 +405,17 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      */
     public void cancel() {
         OkDownload.with().downloadDispatcher().cancel(this);
+    }
+
+    /**
+     * Cancel a bunch of {@code tasks}.
+     * <p>
+     * This operation is specially optimize for handle tasks instead of single task.
+     *
+     * @param tasks will be canceled with high effective.
+     */
+    public void cancel(DownloadTask[] tasks) {
+        OkDownload.with().downloadDispatcher().cancel(tasks);
     }
 
     /**

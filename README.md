@@ -135,6 +135,7 @@ com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 - [x] Support customize output stream handler with implement your own `DownloadOutputStream` to control output stream for each task
 - [x] Support register one whole download monitor to statistic all key step for each task easily with `DownloadMonitor`
 - [x] Support custom Logger used on okdownload with `Util.setLogger()` or just want to print log on the console with `Util.enableConsoleLog()`
+- [x] Support cancel and start a bunch of tasks instead of single task with special optimize with `DownloadTask.enqueue(tasks, listener)` and `DownloadTask.cancel(tasks)`
 - [] Support speed limit
 - [] Support download task on independent process with import `okdownload-process`
 - [] Support RxJava
