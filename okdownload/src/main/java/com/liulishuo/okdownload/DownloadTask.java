@@ -414,7 +414,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      *
      * @param tasks will be canceled with high effective.
      */
-    public void cancel(DownloadTask[] tasks) {
+    public static void cancel(DownloadTask[] tasks) {
         OkDownload.with().downloadDispatcher().cancel(tasks);
     }
 
