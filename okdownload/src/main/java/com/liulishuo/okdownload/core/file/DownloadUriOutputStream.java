@@ -40,8 +40,9 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
 
     public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws
             FileNotFoundException {
-        pdf = context.getContentResolver().openFileDescriptor(uri, "rw");
-        if (pdf == null) throw new IllegalArgumentException();
+        final ParcelFileDescriptor pdf = context.getContentResolver().openFileDescriptor(uri, "rw");
+        if (pdf == null) throw new FileNotFoundException("result of " + uri + " is null!");
+        this.pdf = pdf;
 
         final FileOutputStream fos = new FileOutputStream(pdf.getFileDescriptor());
         channel = fos.getChannel();
