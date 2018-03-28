@@ -176,14 +176,17 @@ public class MultiPointOutputStream {
                 }
             } finally {
                 syncRunning = false;
-                synchronized (parkThreadList) {
-                    final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
-                    parkThreadList.toArray(parkThreadArray);
-                    for (Thread thread : parkThreadArray) {
-                        if (thread == null) continue; // on end.
 
-                        LockSupport.unpark(thread);
-                        parkThreadList.remove(thread);
+                if (!parkThreadList.isEmpty()) {
+                    synchronized (parkThreadList) {
+                        final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
+                        parkThreadList.toArray(parkThreadArray);
+                        for (Thread thread : parkThreadArray) {
+                            if (thread == null) continue; // on end.
+
+                            LockSupport.unpark(thread);
+                            parkThreadList.remove(thread);
+                        }
                     }
                 }
             }
