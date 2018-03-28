@@ -19,7 +19,8 @@ android {
 
     defaultConfig {
         applicationId "com.liulishuo.okdownload.sample"
-        minSdkVersion rootProject.ext.minSdkVersion
+        // using 19, because we demo for content-uri(CATEGORY_OPENABLE)
+        minSdkVersion 19
         targetSdkVersion rootProject.ext.targetSdkVersion
 
         versionCode 1

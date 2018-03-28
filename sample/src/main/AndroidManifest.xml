@@ -47,6 +47,7 @@
         <activity android:name=".ManagerActivity"/>
         <activity android:name=".comprehensive.ComprehensiveActivity"/>
         <activity android:name=".BunchActivity"/>
+        <activity android:name=".ContentUriActivity"/>
     </application>
 
 </manifest>
