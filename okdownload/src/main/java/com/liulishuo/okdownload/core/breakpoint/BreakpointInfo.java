@@ -204,6 +204,7 @@ public class BreakpointInfo {
     public BreakpointInfo copyWithReplaceIdAndUrl(int replaceId, String newUrl) {
         final BreakpointInfo info = new BreakpointInfo(replaceId, newUrl, parentPath,
                 filenameHolder.get(), isTaskOnlyProvidedParentPath);
+        info.isChunked = this.isChunked;
         for (BlockInfo blockInfo : blockInfoList) {
             info.blockInfoList.add(blockInfo.copy());
         }

@@ -16,11 +16,11 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
+import com.liulishuo.okdownload.DownloadTask;
+
 import org.junit.Test;
 
 import java.io.File;
-
-import com.liulishuo.okdownload.DownloadTask;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -117,6 +117,28 @@ public class BreakpointInfoTest {
         assertThat(anotherInfo).isNotEqualTo(info);
         assertThat(anotherInfo.id).isEqualTo(2);
         assertThat(anotherInfo.getUrl()).isEqualTo("url");
+        assertThat(anotherInfo.getPath()).isEqualTo("/p-path/filename");
+        assertThat(anotherInfo.getBlockCount()).isEqualTo(1);
+        assertThat(anotherInfo.isChunked()).isTrue();
+
+        final BlockInfo newBlockInfo = anotherInfo.getBlock(0);
+        assertThat(newBlockInfo).isNotEqualTo(oldBlockInfo);
+        assertThat(newBlockInfo.getRangeLeft()).isEqualTo(oldBlockInfo.getRangeLeft());
+        assertThat(newBlockInfo.getRangeRight()).isEqualTo(oldBlockInfo.getRangeRight());
+    }
+
+    @Test
+    public void copyWithReplaceIdAndUrl() {
+        BreakpointInfo info = new BreakpointInfo(1, "url", "/p-path/", "filename");
+        final BlockInfo oldBlockInfo = new BlockInfo(0, 1);
+        info.addBlock(oldBlockInfo);
+        info.setChunked(true);
+
+        BreakpointInfo anotherInfo = info.copyWithReplaceIdAndUrl(2, "anotherUrl");
+
+        assertThat(anotherInfo).isNotEqualTo(info);
+        assertThat(anotherInfo.id).isEqualTo(2);
+        assertThat(anotherInfo.getUrl()).isEqualTo("anotherUrl");
         assertThat(anotherInfo.getPath()).isEqualTo("/p-path/filename");
         assertThat(anotherInfo.getBlockCount()).isEqualTo(1);
         assertThat(anotherInfo.isChunked()).isTrue();
