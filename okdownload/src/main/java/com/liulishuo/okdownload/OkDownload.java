@@ -62,7 +62,7 @@ public class OkDownload {
         this.processFileStrategy = processFileStrategy;
         this.downloadStrategy = downloadStrategy;
 
-        this.downloadDispatcher.setDownloadStore(store);
+        this.downloadDispatcher.setDownloadStore(Util.createRemitDatabase(store));
     }
 
     public DownloadDispatcher downloadDispatcher() { return downloadDispatcher; }

@@ -57,6 +57,7 @@ public class RemitStoreOnSQLiteTest {
 
     @Mock private BreakpointSQLiteHelper helper;
     @Mock private RemitSyncToDBHelper remitHelper;
+    @Mock private BreakpointStoreOnSQLite storeOnSQLite;
 
     private BreakpointStoreOnCache onCache;
 
@@ -65,7 +66,7 @@ public class RemitStoreOnSQLiteTest {
         initMocks(this);
 
         onCache = spy(new BreakpointStoreOnCache());
-        store = new RemitStoreOnSQLite(helper, onCache, remitHelper);
+        store = new RemitStoreOnSQLite(remitHelper, storeOnSQLite, onCache, helper);
     }
 
     @Test
@@ -76,7 +77,7 @@ public class RemitStoreOnSQLiteTest {
         store.createAndInsert(task);
 
         verify(onCache).createAndInsert(eq(task));
-        verify(store.helper, never()).insert(any(BreakpointInfo.class));
+        verify(helper, never()).insert(any(BreakpointInfo.class));
     }
 
 
@@ -87,8 +88,8 @@ public class RemitStoreOnSQLiteTest {
         when(remitHelper.isNotFreeToDatabase(1)).thenReturn(false);
         store.createAndInsert(task);
 
-        verify(onCache).createAndInsert(eq(task));
-        verify(store.helper).insert(any(BreakpointInfo.class));
+        verify(onCache, never()).createAndInsert(eq(task));
+        verify(storeOnSQLite).createAndInsert(eq(task));
     }
 
     @Test
@@ -108,7 +109,7 @@ public class RemitStoreOnSQLiteTest {
 
         store.onSyncToFilesystemSuccess(info, 0, 10);
         verify(onCache).onSyncToFilesystemSuccess(eq(info), eq(0), eq(10L));
-        verify(store.helper, never()).updateBlockIncrease(eq(info), eq(0), anyLong());
+        verify(helper, never()).updateBlockIncrease(eq(info), eq(0), anyLong());
     }
 
     @Test
@@ -118,11 +119,11 @@ public class RemitStoreOnSQLiteTest {
         when(info.getBlock(0)).thenReturn(mock(BlockInfo.class));
         when(remitHelper.isNotFreeToDatabase(1)).thenReturn(false);
 
-        doNothing().when(onCache).onSyncToFilesystemSuccess(info, 0, 10);
+        doNothing().when(storeOnSQLite).onSyncToFilesystemSuccess(info, 0, 10);
 
         store.onSyncToFilesystemSuccess(info, 0, 10);
-        verify(onCache).onSyncToFilesystemSuccess(eq(info), eq(0), eq(10L));
-        verify(store.helper).updateBlockIncrease(eq(info), eq(0), anyLong());
+        verify(onCache, never()).onSyncToFilesystemSuccess(eq(info), eq(0), eq(10L));
+        verify(storeOnSQLite).onSyncToFilesystemSuccess(eq(info), eq(0), eq(10L));
     }
 
     @Test
@@ -134,7 +135,7 @@ public class RemitStoreOnSQLiteTest {
         store.update(info);
 
         verify(onCache).update(eq(info));
-        verify(store.helper, never()).updateInfo(eq(info));
+        verify(helper, never()).updateInfo(eq(info));
     }
 
     @Test
@@ -145,8 +146,8 @@ public class RemitStoreOnSQLiteTest {
 
         store.update(info);
 
-        verify(onCache).update(eq(info));
-        verify(store.helper).updateInfo(eq(info));
+        verify(onCache, never()).update(eq(info));
+        verify(storeOnSQLite).update(eq(info));
     }
 
     @Test
@@ -183,22 +184,22 @@ public class RemitStoreOnSQLiteTest {
         when(onCache.get(1)).thenReturn(info);
 
         store.syncCacheToDB(1);
-        verify(store.helper).removeInfo(eq(1));
-        verify(store.helper, never()).insert(eq(info));
+        verify(helper).removeInfo(eq(1));
+        verify(helper, never()).insert(eq(info));
 
         when(info.getFilename()).thenReturn("filename");
         store.syncCacheToDB(1);
-        verify(store.helper, never()).insert(eq(info));
+        verify(helper, never()).insert(eq(info));
 
         when(info.getTotalOffset()).thenReturn(1L);
         store.syncCacheToDB(1);
-        verify(store.helper).insert(eq(info));
+        verify(helper).insert(eq(info));
     }
 
     @Rule public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void setRemitToDBDelayMillis() throws IOException {
+    public void setRemitToDBDelayMillis() {
         OkDownload.setSingletonInstance(mock(OkDownload.class));
 
         doReturn(mock(BreakpointStoreOnCache.class)).when(OkDownload.with()).breakpointStore();

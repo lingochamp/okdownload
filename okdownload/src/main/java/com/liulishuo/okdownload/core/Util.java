@@ -39,6 +39,7 @@ import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
@@ -230,19 +231,6 @@ public class Util {
         // You can import through com.liulishuo.okdownload:sqlite:{version}
         final String storeOnSqliteClassName
                 = "com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnSQLite";
-        final String remitStoreOnSqliteClassName
-                = "com.liulishuo.okdownload.core.breakpoint.RemitStoreOnSQLite";
-
-        try {
-            final Constructor constructor = Class.forName(remitStoreOnSqliteClassName)
-                    .getDeclaredConstructor(Context.class);
-            return (DownloadStore) constructor.newInstance(context);
-        } catch (ClassNotFoundException ignored) {
-        } catch (InstantiationException ignored) {
-        } catch (IllegalAccessException ignored) {
-        } catch (NoSuchMethodException ignored) {
-        } catch (InvocationTargetException ignored) {
-        }
 
         try {
             final Constructor constructor = Class.forName(storeOnSqliteClassName)
@@ -256,6 +244,19 @@ public class Util {
         }
 
         return new BreakpointStoreOnCache();
+    }
+
+    public static @NonNull DownloadStore createRemitDatabase(DownloadStore originStore) {
+        try {
+            final Method createRemitSelf = originStore.getClass()
+                    .getMethod("createRemitSelf");
+            return (DownloadStore) createRemitSelf.invoke(originStore);
+        } catch (IllegalAccessException ignored) {
+        } catch (NoSuchMethodException ignored) {
+        } catch (InvocationTargetException ignored) {
+        }
+
+        return originStore;
     }
 
     public static @NonNull DownloadConnection.Factory createDefaultConnectionFactory() {

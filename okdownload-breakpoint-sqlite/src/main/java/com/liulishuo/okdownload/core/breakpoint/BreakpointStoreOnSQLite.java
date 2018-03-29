@@ -109,4 +109,8 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
     void close() {
         helper.close();
     }
+
+    @NonNull public DownloadStore createRemitSelf() {
+        return new RemitStoreOnSQLite(this);
+    }
 }

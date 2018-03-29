@@ -16,7 +16,6 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,73 +27,82 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
 
-public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
-        implements RemitSyncToDBHelper.RemitAgent {
+public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, DownloadStore {
 
     private static final String TAG = "RemitStoreOnSQLite";
 
-    @NonNull final RemitSyncToDBHelper remitHelper;
+    @NonNull private final RemitSyncToDBHelper remitHelper;
 
-    RemitStoreOnSQLite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache,
-                       @NonNull RemitSyncToDBHelper remitHelper) {
-        super(helper, onCache);
-        this.remitHelper = remitHelper;
+    @NonNull private final BreakpointStoreOnSQLite onSQLiteWrapper;
+    @NonNull private final BreakpointSQLiteHelper sqLiteHelper;
+    @NonNull private final DownloadStore sqliteCache;
+
+    RemitStoreOnSQLite(@NonNull BreakpointStoreOnSQLite sqlite) {
+        this.remitHelper = new RemitSyncToDBHelper(this);
+
+        this.onSQLiteWrapper = sqlite;
+        this.sqliteCache = onSQLiteWrapper.onCache;
+        this.sqLiteHelper = onSQLiteWrapper.helper;
     }
 
-    RemitStoreOnSQLite(BreakpointSQLiteHelper helper, BreakpointStoreOnCache onCache) {
-        super(helper, onCache);
-        remitHelper = new RemitSyncToDBHelper(this);
+    RemitStoreOnSQLite(@NonNull RemitSyncToDBHelper helper, @NonNull BreakpointStoreOnSQLite sqlite,
+                       @NonNull DownloadStore sqliteCache,
+                       @NonNull BreakpointSQLiteHelper sqLiteHelper) {
+        this.remitHelper = helper;
+
+        this.onSQLiteWrapper = sqlite;
+        this.sqliteCache = sqliteCache;
+        this.sqLiteHelper = sqLiteHelper;
     }
 
-    public RemitStoreOnSQLite(Context context) {
-        super(context);
-        remitHelper = new RemitSyncToDBHelper(this);
+    @Nullable @Override public BreakpointInfo get(int id) {
+        return onSQLiteWrapper.get(id);
     }
 
     @NonNull @Override public BreakpointInfo createAndInsert(@NonNull DownloadTask task)
             throws IOException {
-        if (remitHelper.isNotFreeToDatabase(task.getId())) return onCache.createAndInsert(task);
+        if (remitHelper.isNotFreeToDatabase(task.getId())) return sqliteCache.createAndInsert(task);
 
-        return super.createAndInsert(task);
+        return onSQLiteWrapper.createAndInsert(task);
     }
 
     @Override public void onTaskStart(int id) {
-        super.onTaskStart(id);
+        onSQLiteWrapper.onTaskStart(id);
         remitHelper.onTaskStart(id);
     }
 
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
                                                     long increaseLength) {
         if (remitHelper.isNotFreeToDatabase(info.getId())) {
-            onCache.onSyncToFilesystemSuccess(info, blockIndex, increaseLength);
+            sqliteCache.onSyncToFilesystemSuccess(info, blockIndex, increaseLength);
             return;
         }
 
-        super.onSyncToFilesystemSuccess(info, blockIndex, increaseLength);
+        onSQLiteWrapper.onSyncToFilesystemSuccess(info, blockIndex, increaseLength);
     }
 
     @Override public boolean update(@NonNull BreakpointInfo info) throws IOException {
-        if (remitHelper.isNotFreeToDatabase(info.getId())) return onCache.update(info);
+        if (remitHelper.isNotFreeToDatabase(info.getId())) return sqliteCache.update(info);
 
-        return super.update(info);
+        return onSQLiteWrapper.update(info);
     }
 
     @Override
     public void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception) {
-        onCache.onTaskEnd(id, cause, exception);
+        sqliteCache.onTaskEnd(id, cause, exception);
 
         if (cause == EndCause.COMPLETED) {
             remitHelper.discard(id);
-            helper.removeInfo(id);
+            sqLiteHelper.removeInfo(id);
         } else {
             remitHelper.endAndEnsureToDB(id);
         }
     }
 
     @Override public void bunchTaskCanceled(int[] ids) {
-        onCache.bunchTaskCanceled(ids);
+        sqliteCache.bunchTaskCanceled(ids);
         if (ids.length > 0) {
-            final SQLiteDatabase database = helper.getWritableDatabase();
+            final SQLiteDatabase database = sqLiteHelper.getWritableDatabase();
             database.beginTransaction();
             try {
                 for (int id : ids) {
@@ -108,20 +116,33 @@ public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
     }
 
     @Override public void remove(int id) {
-        onCache.remove(id);
+        sqliteCache.remove(id);
 
         remitHelper.discard(id);
-        helper.removeInfo(id);
+        sqLiteHelper.removeInfo(id);
+    }
+
+    @Override public int findOrCreateId(@NonNull DownloadTask task) {
+        return onSQLiteWrapper.findOrCreateId(task);
+    }
+
+    @Nullable @Override
+    public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
+        return onSQLiteWrapper.findAnotherInfoFromCompare(task, ignored);
+    }
+
+    @Nullable @Override public String getResponseFilename(String url) {
+        return onSQLiteWrapper.getResponseFilename(url);
     }
 
     @Override public void syncCacheToDB(int id) throws IOException {
         Util.d(TAG, "syncCacheToDB " + id);
-        helper.removeInfo(id);
+        sqLiteHelper.removeInfo(id);
 
-        final BreakpointInfo info = onCache.get(id);
+        final BreakpointInfo info = sqliteCache.get(id);
         if (info == null || info.getFilename() == null || info.getTotalOffset() <= 0) return;
 
-        helper.insert(info);
+        sqLiteHelper.insert(info);
     }
 
     public static void setRemitToDBDelayMillis(int delayMillis) {
