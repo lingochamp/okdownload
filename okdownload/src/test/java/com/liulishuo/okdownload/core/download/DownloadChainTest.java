@@ -16,16 +16,10 @@
 
 package com.liulishuo.okdownload.core.download;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
-
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.interceptor.BreakpointInterceptor;
 import com.liulishuo.okdownload.core.interceptor.FetchDataInterceptor;
@@ -34,6 +28,14 @@ import com.liulishuo.okdownload.core.interceptor.RetryInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.CallServerInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.HeaderInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.RedirectInterceptor;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.Mock;
+
+import java.io.IOException;
+import java.util.List;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -45,10 +47,13 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 public class DownloadChainTest {
 
     private DownloadChain chain;
+
+    @Mock DownloadStore store;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -57,9 +62,11 @@ public class DownloadChainTest {
 
     @Before
     public void setup() {
+        initMocks(this);
         this.chain = spy(DownloadChain.createChain(0,
                 mock(DownloadTask.class), mock(BreakpointInfo.class),
-                mock(DownloadCache.class)));
+                mock(DownloadCache.class),
+                store));
     }
 
     @Test
@@ -72,7 +79,8 @@ public class DownloadChainTest {
 
         DownloadChain chain = DownloadChain.createChain(0,
                 mock(DownloadTask.class), info,
-                mock(DownloadCache.class));
+                mock(DownloadCache.class),
+                store);
 
         // using info url
         final DownloadConnection connection = chain.getConnectionOrCreate();
@@ -86,7 +94,7 @@ public class DownloadChainTest {
         when(cache.getRedirectLocation()).thenReturn(redirectLocation);
         chain = DownloadChain.createChain(0,
                 mock(DownloadTask.class), info,
-                cache);
+                cache, store);
 
         // using redirect location instead of info url.
         chain.getConnectionOrCreate();

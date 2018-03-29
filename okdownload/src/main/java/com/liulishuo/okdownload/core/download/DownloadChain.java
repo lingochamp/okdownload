@@ -23,6 +23,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.exception.InterruptException;
@@ -69,18 +70,22 @@ public class DownloadChain implements Runnable {
 
     private final CallbackDispatcher callbackDispatcher;
 
+    @NonNull private final DownloadStore store;
+
     static DownloadChain createChain(int blockIndex, DownloadTask task,
                                      @NonNull BreakpointInfo info,
-                                     DownloadCache cache) {
-        return new DownloadChain(blockIndex, task, info, cache);
+                                     @NonNull DownloadCache cache,
+                                     @NonNull DownloadStore store) {
+        return new DownloadChain(blockIndex, task, info, cache, store);
     }
 
     private DownloadChain(int blockIndex, @NonNull DownloadTask task, @NonNull BreakpointInfo info,
-                          @NonNull DownloadCache cache) {
+                          @NonNull DownloadCache cache, @NonNull DownloadStore store) {
         this.blockIndex = blockIndex;
         this.task = task;
         this.cache = cache;
         this.info = info;
+        this.store = store;
         this.callbackDispatcher = OkDownload.with().callbackDispatcher();
     }
 
@@ -221,6 +226,10 @@ public class DownloadChain implements Runnable {
     private AtomicBoolean finished = new AtomicBoolean(false);
 
     boolean isFinished() { return finished.get(); }
+
+    @NonNull public DownloadStore getDownloadStore() {
+        return store;
+    }
 
     @Override
     public void run() {

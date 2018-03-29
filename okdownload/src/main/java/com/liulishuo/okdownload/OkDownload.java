@@ -23,6 +23,7 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
@@ -48,18 +49,20 @@ public class OkDownload {
     @Nullable DownloadMonitor monitor;
 
     OkDownload(Context context, DownloadDispatcher downloadDispatcher,
-               CallbackDispatcher callbackDispatcher, BreakpointStore breakpointStore,
+               CallbackDispatcher callbackDispatcher, DownloadStore store,
                DownloadConnection.Factory connectionFactory,
                DownloadOutputStream.Factory outputStreamFactory,
                ProcessFileStrategy processFileStrategy, DownloadStrategy downloadStrategy) {
         this.context = context;
         this.downloadDispatcher = downloadDispatcher;
         this.callbackDispatcher = callbackDispatcher;
-        this.breakpointStore = breakpointStore;
+        this.breakpointStore = store;
         this.connectionFactory = connectionFactory;
         this.outputStreamFactory = outputStreamFactory;
         this.processFileStrategy = processFileStrategy;
         this.downloadStrategy = downloadStrategy;
+
+        this.downloadDispatcher.setDownloadStore(store);
     }
 
     public DownloadDispatcher downloadDispatcher() { return downloadDispatcher; }
@@ -116,7 +119,7 @@ public class OkDownload {
     public static class Builder {
         private DownloadDispatcher downloadDispatcher;
         private CallbackDispatcher callbackDispatcher;
-        private BreakpointStore breakpointStore;
+        private DownloadStore downloadStore;
         private DownloadConnection.Factory connectionFactory;
         private ProcessFileStrategy processFileStrategy;
         private DownloadStrategy downloadStrategy;
@@ -138,8 +141,8 @@ public class OkDownload {
             return this;
         }
 
-        public Builder breakpointStore(BreakpointStore breakpointStore) {
-            this.breakpointStore = breakpointStore;
+        public Builder downloadStore(DownloadStore downloadStore) {
+            this.downloadStore = downloadStore;
             return this;
         }
 
@@ -177,8 +180,8 @@ public class OkDownload {
                 callbackDispatcher = new CallbackDispatcher();
             }
 
-            if (breakpointStore == null) {
-                breakpointStore = Util.createDefaultDatabase(context);
+            if (downloadStore == null) {
+                downloadStore = Util.createDefaultDatabase(context);
             }
 
             if (connectionFactory == null) {
@@ -198,7 +201,7 @@ public class OkDownload {
             }
 
             OkDownload okDownload = new OkDownload(context, downloadDispatcher, callbackDispatcher,
-                    breakpointStore, connectionFactory, outputStreamFactory, processFileStrategy,
+                    downloadStore, connectionFactory, outputStreamFactory, processFileStrategy,
                     downloadStrategy);
 
             okDownload.setMonitor(monitor);

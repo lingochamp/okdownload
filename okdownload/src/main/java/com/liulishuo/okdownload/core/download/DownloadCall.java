@@ -25,7 +25,7 @@ import com.liulishuo.okdownload.core.NamedRunnable;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.exception.RetryException;
@@ -59,21 +59,25 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     volatile boolean canceled;
     volatile boolean finishing;
 
+    @NonNull private final DownloadStore store;
 
-    private DownloadCall(DownloadTask task, boolean asyncExecuted) {
-        this(task, asyncExecuted, new ArrayList<DownloadChain>());
+    private DownloadCall(DownloadTask task, boolean asyncExecuted, @NonNull DownloadStore store) {
+        this(task, asyncExecuted, new ArrayList<DownloadChain>(), store);
     }
 
     DownloadCall(DownloadTask task, boolean asyncExecuted,
-                 @NonNull ArrayList<DownloadChain> runningBlockList) {
+                 @NonNull ArrayList<DownloadChain> runningBlockList,
+                 @NonNull DownloadStore store) {
         super("download call: " + task.getId());
         this.task = task;
         this.asyncExecuted = asyncExecuted;
         this.blockChainList = runningBlockList;
+        this.store = store;
     }
 
-    public static DownloadCall create(DownloadTask task, boolean asyncExecuted) {
-        return new DownloadCall(task, asyncExecuted);
+    public static DownloadCall create(DownloadTask task, boolean asyncExecuted,
+                                      @NonNull DownloadStore store) {
+        return new DownloadCall(task, asyncExecuted, store);
     }
 
     public boolean cancel() {
@@ -107,7 +111,6 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
         // ready param
         final OkDownload okDownload = OkDownload.with();
-        final BreakpointStore store = okDownload.breakpointStore();
         final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
 
         // inspect task start
@@ -185,7 +188,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             // 7. retry if precondition failed.
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
-                store.discard(task.getId());
+                store.remove(task.getId());
                 try {
                     fileStrategy.discardProcess(task);
                 } catch (IOException e) {
@@ -224,7 +227,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     private void inspectTaskStart() {
-        OkDownload.with().breakpointStore().onTaskStart(task.getId());
+        store.onTaskStart(task.getId());
         OkDownload.with().callbackDispatcher().dispatch().taskStart(task);
     }
 
@@ -240,7 +243,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             finishing = true;
         }
 
-        OkDownload.with().breakpointStore().onTaskEnd(task.getId(), cause, realCause);
+        store.onTaskEnd(task.getId(), cause, realCause);
         if (cause == EndCause.COMPLETED) {
             OkDownload.with().processFileStrategy()
                     .completeProcessStream(cache.getOutputStream(), task);
@@ -252,7 +255,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     // this method is convenient for unit-test.
     DownloadCache createCache(@NonNull BreakpointInfo info) {
         final MultiPointOutputStream outputStream = OkDownload.with().processFileStrategy()
-                .createProcessStream(task, info);
+                .createProcessStream(task, info, store);
         return new DownloadCache(outputStream);
     }
 
@@ -272,7 +275,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
 
             Util.resetBlockIfDirty(blockInfo);
-            blockChainList.add(DownloadChain.createChain(i, task, info, cache));
+            blockChainList.add(DownloadChain.createChain(i, task, info, cache, store));
         }
 
         if (canceled) {

@@ -24,6 +24,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.download.DownloadCall;
 
@@ -40,9 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DownloadDispatcher {
-    // same id will be discard
-    // submit task to download server
-    // assemble breakpoint and start chain on block dispatcher
 
     private static final String TAG = "DownloadDispatcher";
 
@@ -62,16 +60,23 @@ public class DownloadDispatcher {
     // for avoiding processCalls when doing enqueue/cancel operation
     private final AtomicInteger skipProceedCallCount = new AtomicInteger();
 
+    private DownloadStore store;
+
     public DownloadDispatcher() {
         this(new ArrayList<DownloadCall>(), new ArrayList<DownloadCall>(),
                 new ArrayList<DownloadCall>());
     }
 
-    DownloadDispatcher(List<DownloadCall> readyAsyncCalls, List<DownloadCall> runningAsyncCalls,
+    DownloadDispatcher(List<DownloadCall> readyAsyncCalls,
+                       List<DownloadCall> runningAsyncCalls,
                        List<DownloadCall> runningSyncCalls) {
         this.readyAsyncCalls = readyAsyncCalls;
         this.runningAsyncCalls = runningAsyncCalls;
         this.runningSyncCalls = runningSyncCalls;
+    }
+
+    public void setDownloadStore(@NonNull DownloadStore store) {
+        this.store = store;
     }
 
     synchronized ExecutorService executorService() {
@@ -123,7 +128,7 @@ public class DownloadDispatcher {
         if (inspectCompleted(task)) return;
         if (inspectForConflict(task)) return;
 
-        final DownloadCall call = DownloadCall.create(task, true);
+        final DownloadCall call = DownloadCall.create(task, true, store);
         if (runningAsyncSize() < maxParallelRunningCount) {
             runningAsyncCalls.add(call);
             executorService().execute(call);
@@ -142,7 +147,7 @@ public class DownloadDispatcher {
             if (inspectForConflict(task)) return;
 
 
-            call = DownloadCall.create(task, false);
+            call = DownloadCall.create(task, false, store);
             runningSyncCalls.add(call);
         }
 
@@ -256,12 +261,11 @@ public class DownloadDispatcher {
 
             // bunch ids of task which need to be canceled
             if (idList.size() == 1) {
-                OkDownload.with().breakpointStore()
-                        .onTaskEnd(idList.get(0), EndCause.CANCELED, null);
+                store.onTaskEnd(idList.get(0), EndCause.CANCELED, null);
             } else {
                 int[] ids = new int[idList.size()];
                 for (int i = 0; i < idList.size(); i++) ids[i] = idList.get(i);
-                if (ids.length > 0) OkDownload.with().breakpointStore().bunchTaskCanceled(ids);
+                if (ids.length > 0) store.bunchTaskCanceled(ids);
             }
         }
 

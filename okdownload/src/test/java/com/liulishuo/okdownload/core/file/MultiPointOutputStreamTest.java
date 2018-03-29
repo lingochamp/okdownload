@@ -23,7 +23,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
 import org.junit.After;
@@ -68,6 +68,7 @@ public class MultiPointOutputStreamTest {
     private final String path = "./p-path/filename";
     @Mock private BreakpointInfo info;
     @Mock private DownloadTask task;
+    @Mock private DownloadStore store;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -80,7 +81,7 @@ public class MultiPointOutputStreamTest {
         initMocks(this);
         when(task.getPath()).thenReturn(path);
         when(task.getParentPath()).thenReturn(parentPath);
-        multiPointOutputStream = spy(new MultiPointOutputStream(task, info));
+        multiPointOutputStream = spy(new MultiPointOutputStream(task, info, store));
     }
 
     @After
@@ -122,7 +123,6 @@ public class MultiPointOutputStreamTest {
         when(info.getBlock(1)).thenReturn(mock(BlockInfo.class));
         multiPointOutputStream.syncRunning = false;
 
-        final BreakpointStore store = OkDownload.with().breakpointStore();
         multiPointOutputStream.allNoSyncLength.addAndGet(10);
         multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
         multiPointOutputStream.outputStreamMap.put(1, mock(DownloadOutputStream.class));
@@ -218,7 +218,7 @@ public class MultiPointOutputStreamTest {
         when(OkDownload.with().outputStreamFactory().create(any(Context.class), any(Uri.class),
                 anyInt())).thenReturn(mock(DownloadOutputStream.class));
         // recreate for new values of support-seek and pre-allocate-length.
-        multiPointOutputStream = spy(new MultiPointOutputStream(task, info));
+        multiPointOutputStream = spy(new MultiPointOutputStream(task, info, store));
         doNothing().when(multiPointOutputStream).inspectFreeSpace(anyString(), anyLong());
 
         final Uri uri = mock(Uri.class);

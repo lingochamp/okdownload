@@ -26,7 +26,7 @@ import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
 import java.io.File;
@@ -58,21 +58,22 @@ public class MultiPointOutputStream {
     private final int syncBufferIntervalMills;
     private final BreakpointInfo info;
     private final DownloadTask task;
-    private final BreakpointStore store;
+    private final DownloadStore store;
     private final boolean supportSeek;
     private final boolean isPreAllocateLength;
 
     volatile boolean syncRunning;
 
     public MultiPointOutputStream(@NonNull DownloadTask task,
-                                  @NonNull BreakpointInfo info) {
+                                  @NonNull BreakpointInfo info,
+                                  @NonNull DownloadStore store) {
         this.task = task;
         this.flushBufferSize = task.getFlushBufferSize();
         this.syncBufferSize = task.getSyncBufferSize();
         this.syncBufferIntervalMills = task.getSyncBufferIntervalMills();
         this.info = info;
 
-        this.store = OkDownload.with().breakpointStore();
+        this.store = store;
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
         this.isPreAllocateLength = OkDownload.with().processFileStrategy().isPreAllocateLength();
     }

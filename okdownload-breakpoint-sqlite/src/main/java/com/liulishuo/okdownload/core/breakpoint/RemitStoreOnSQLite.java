@@ -107,8 +107,8 @@ public class RemitStoreOnSQLite extends BreakpointStoreOnSQLite
         }
     }
 
-    @Override public void discard(int id) {
-        onCache.discard(id);
+    @Override public void remove(int id) {
+        onCache.remove(id);
 
         remitHelper.discard(id);
         helper.removeInfo(id);

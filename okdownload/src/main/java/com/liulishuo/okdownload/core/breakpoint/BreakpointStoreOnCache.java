@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class BreakpointStoreOnCache implements BreakpointStore {
+public class BreakpointStoreOnCache implements DownloadStore {
     private final SparseArray<BreakpointInfo> storedInfos;
     private final HashMap<String, String> responseFilenameMap;
 
@@ -128,7 +128,7 @@ public class BreakpointStoreOnCache implements BreakpointStore {
     @Override public void bunchTaskCanceled(int[] ids) {
     }
 
-    @Override public synchronized void discard(int id) {
+    @Override public synchronized void remove(int id) {
         storedInfos.remove(id);
         if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));
     }
@@ -157,7 +157,8 @@ public class BreakpointStoreOnCache implements BreakpointStore {
 
     // info maybe turn to equal to another one after get filename from response.
     @Override
-    public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
+    public BreakpointInfo findAnotherInfoFromCompare(@NonNull DownloadTask task,
+                                                     @NonNull BreakpointInfo ignored) {
         final SparseArray<BreakpointInfo> clonedMap;
         synchronized (this) {
             clonedMap = storedInfos.clone();

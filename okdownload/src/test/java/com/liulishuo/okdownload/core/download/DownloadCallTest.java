@@ -23,7 +23,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
@@ -68,6 +68,8 @@ public class DownloadCallTest {
     private DownloadTask task;
     @Mock
     private BreakpointInfo info;
+    @Mock
+    private DownloadStore store;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -75,11 +77,11 @@ public class DownloadCallTest {
     }
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup() {
         initMocks(this);
         when(task.getUri()).thenReturn(mock(Uri.class));
         when(task.getListener()).thenReturn(mock(DownloadListener.class));
-        call = spy(DownloadCall.create(task, false));
+        call = spy(DownloadCall.create(task, false, store));
 
         final Future mockFuture = mock(Future.class);
         doReturn(mockFuture).when(call).submitChain(any(DownloadChain.class));
@@ -91,15 +93,12 @@ public class DownloadCallTest {
         when(info.getBlock(1)).thenReturn(new BlockInfo(10, 10));
         when(info.getBlock(2)).thenReturn(new BlockInfo(20, 10));
 
-        final BreakpointStore store = OkDownload.with().breakpointStore();
         when(store.get(anyInt())).thenReturn(info);
         when(task.getUrl()).thenReturn("https://jacksgong.com");
     }
 
     @Test
     public void execute_createIfNon() throws IOException, InterruptedException {
-        final BreakpointStore store = OkDownload.with().breakpointStore();
-
         when(store.get(anyInt())).thenReturn(null);
         when(store.createAndInsert(task)).thenReturn(info);
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
@@ -210,10 +209,9 @@ public class DownloadCallTest {
         call.execute();
 
         verify(call, times(2)).start(eq(cache), eq(info));
-        final BreakpointStore store = OkDownload.with().breakpointStore();
         final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
         final int id = task.getId();
-        verify(store).discard(eq(id));
+        verify(store).remove(eq(id));
         verify(fileStrategy).discardProcess(eq(task));
     }
 
@@ -264,7 +262,6 @@ public class DownloadCallTest {
         final DownloadCache cache = mock(DownloadCache.class);
         final DownloadListener listener = mock(DownloadListener.class);
         final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
-        final BreakpointStore store = mock(BreakpointStore.class);
         final IOException iOException = mock(IOException.class);
         final MultiPointOutputStream multiPointOutputStream = mock(MultiPointOutputStream.class);
 
@@ -273,7 +270,6 @@ public class DownloadCallTest {
         doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
 
         doReturn(info).when(store).createAndInsert(eq(task));
-        doReturn(store).when(okDownload).breakpointStore();
         doReturn(listener).when(dispatcher).dispatch();
         doReturn(cache).when(call).createCache(eq(info));
         when(cache.getRealCause()).thenReturn(iOException);
@@ -350,7 +346,7 @@ public class DownloadCallTest {
     @Test
     public void startBlocks() throws InterruptedException {
         ArrayList<DownloadChain> runningBlockList = spy(new ArrayList<DownloadChain>());
-        call = spy(new DownloadCall(task, false, runningBlockList));
+        call = spy(new DownloadCall(task, false, runningBlockList, store));
 
         final Future mockFuture = mock(Future.class);
         doReturn(mockFuture).when(call).submitChain(any(DownloadChain.class));

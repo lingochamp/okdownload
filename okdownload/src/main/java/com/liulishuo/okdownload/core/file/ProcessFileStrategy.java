@@ -23,6 +23,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
@@ -36,8 +37,9 @@ import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.OUTPUT_STREA
 
 public class ProcessFileStrategy {
     @NonNull public MultiPointOutputStream createProcessStream(@NonNull DownloadTask task,
-                                                               @NonNull BreakpointInfo info) {
-        return new MultiPointOutputStream(task, info);
+                                                               @NonNull BreakpointInfo info,
+                                                               @NonNull DownloadStore store) {
+        return new MultiPointOutputStream(task, info, store);
     }
 
     public void completeProcessStream(@NonNull MultiPointOutputStream processOutputStream,

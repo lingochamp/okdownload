@@ -168,9 +168,9 @@ public class RemitStoreOnSQLiteTest {
 
     @Test
     public void discard() {
-        store.discard(1);
+        store.remove(1);
 
-        verify(onCache).discard(eq(1));
+        verify(onCache).remove(eq(1));
         verify(remitHelper).discard(eq(1));
         verify(helper).removeInfo(eq(1));
     }

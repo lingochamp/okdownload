@@ -99,7 +99,7 @@ public class DownloadStrategy {
         final BreakpointInfo anotherInfo = store.findAnotherInfoFromCompare(task, info);
         if (anotherInfo == null) return false;
 
-        store.discard(anotherInfo.getId());
+        store.remove(anotherInfo.getId());
 
         if (anotherInfo.getTotalOffset()
                 <= OkDownload.with().downloadStrategy().reuseIdledSameInfoThresholdBytes()) {

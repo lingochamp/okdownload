@@ -167,7 +167,7 @@ public class BreakpointStoreOnCacheTest {
         assertThat(storeOnCache.allocateId()).isEqualTo(8);
 
         assertThat(sortedOccupiedIds).containsExactly(1, 2, 3, 4, 5, 6, 7, 8);
-        storeOnCache.discard(6);
+        storeOnCache.remove(6);
         assertThat(sortedOccupiedIds).containsExactly(1, 2, 3, 4, 5, 7, 8);
         assertThat(storeOnCache.allocateId()).isEqualTo(6);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 LingoChamp Inc.
+ * Copyright (c) 2018 LingoChamp Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,25 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
-
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
 
-public interface BreakpointStore {
+public interface DownloadStore extends BreakpointStore {
 
-    @Nullable BreakpointInfo get(int id);
+    void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
+                                   long increaseLength);
 
-    int findOrCreateId(@NonNull DownloadTask task);
+    @NonNull BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException;
 
-    boolean update(@NonNull BreakpointInfo breakpointInfo) throws IOException;
 
-    void remove(int id);
+    void onTaskStart(int id);
 
-    @Nullable String getResponseFilename(String url);
+    void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception);
 
-    @Nullable BreakpointInfo findAnotherInfoFromCompare(@NonNull DownloadTask task,
-                                                        @NonNull BreakpointInfo ignored);
+    void bunchTaskCanceled(int[] ids);
 }

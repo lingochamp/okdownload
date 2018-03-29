@@ -26,7 +26,7 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
 
-public class BreakpointStoreOnSQLite implements BreakpointStore {
+public class BreakpointStoreOnSQLite implements DownloadStore {
 
     private static final String TAG = "BreakpointStoreOnSQLite";
     protected final BreakpointSQLiteHelper helper;
@@ -87,8 +87,8 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
     @Override public void bunchTaskCanceled(int[] ids) {
     }
 
-    @Override public void discard(int id) {
-        onCache.discard(id);
+    @Override public void remove(int id) {
+        onCache.remove(id);
         helper.removeInfo(id);
     }
 
@@ -97,7 +97,8 @@ public class BreakpointStoreOnSQLite implements BreakpointStore {
     }
 
     @Nullable @Override
-    public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
+    public BreakpointInfo findAnotherInfoFromCompare(@NonNull DownloadTask task,
+                                                     @NonNull BreakpointInfo ignored) {
         return onCache.findAnotherInfoFromCompare(task, ignored);
     }
 

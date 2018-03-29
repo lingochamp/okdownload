@@ -31,8 +31,8 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 
@@ -226,7 +226,7 @@ public class Util {
         return String.format(Locale.ENGLISH, "%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
-    public static @NonNull BreakpointStore createDefaultDatabase(Context context) {
+    public static @NonNull DownloadStore createDefaultDatabase(Context context) {
         // You can import through com.liulishuo.okdownload:sqlite:{version}
         final String storeOnSqliteClassName
                 = "com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnSQLite";
@@ -236,7 +236,7 @@ public class Util {
         try {
             final Constructor constructor = Class.forName(remitStoreOnSqliteClassName)
                     .getDeclaredConstructor(Context.class);
-            return (BreakpointStore) constructor.newInstance(context);
+            return (DownloadStore) constructor.newInstance(context);
         } catch (ClassNotFoundException ignored) {
         } catch (InstantiationException ignored) {
         } catch (IllegalAccessException ignored) {
@@ -247,7 +247,7 @@ public class Util {
         try {
             final Constructor constructor = Class.forName(storeOnSqliteClassName)
                     .getDeclaredConstructor(Context.class);
-            return (BreakpointStore) constructor.newInstance(context);
+            return (DownloadStore) constructor.newInstance(context);
         } catch (ClassNotFoundException ignored) {
         } catch (InstantiationException ignored) {
         } catch (IllegalAccessException ignored) {

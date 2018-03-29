@@ -16,11 +16,10 @@
 
 package com.liulishuo.okdownload.core.interceptor;
 
-import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 
@@ -37,6 +36,7 @@ import static com.liulishuo.okdownload.TestUtils.mockDownloadChain;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -50,6 +50,7 @@ public class BreakpointInterceptorTest {
     private BreakpointInterceptor interceptor;
 
     @Mock private BreakpointInfo mockInfo;
+    @Mock private DownloadStore store;
 
     private DownloadChain mockChain;
 
@@ -66,6 +67,7 @@ public class BreakpointInterceptorTest {
         initMocks(this);
 
         mockChain = mockDownloadChain();
+        when(mockChain.getDownloadStore()).thenReturn(store);
 
         interceptor = spy(new BreakpointInterceptor());
         new File(existPath).createNewFile();
@@ -78,9 +80,10 @@ public class BreakpointInterceptorTest {
 
     @Test
     public void interceptConnect_process() throws IOException {
+        when(store.update(any(BreakpointInfo.class))).thenReturn(true);
+
         interceptor.interceptConnect(mockChain);
 
-        final BreakpointStore store = OkDownload.with().breakpointStore();
         verify(store).update(mockChain.getInfo());
         verify(mockChain).processConnect();
     }

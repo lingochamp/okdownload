@@ -126,8 +126,8 @@ public class BreakpointStoreOnSqliteTest {
     public void discard() {
         final int id = store.findOrCreateId(mock(DownloadTask.class));
 
-        store.discard(id);
-        verify(onCache).discard(id);
+        store.remove(id);
+        verify(onCache).remove(id);
         verify(helper).removeInfo(id);
     }
 }

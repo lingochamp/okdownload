@@ -20,7 +20,7 @@ import android.support.annotation.NonNull;
 
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
-import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.exception.InterruptException;
@@ -43,7 +43,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         // update for connected.
-        final BreakpointStore store = OkDownload.with().breakpointStore();
+        final DownloadStore store = chain.getDownloadStore();
         try {
             if (!store.update(info)) {
                 throw new IOException("Update store failed!");
