@@ -19,18 +19,12 @@ package com.liulishuo.okdownload.core.breakpoint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
-
-import java.io.IOException;
 
 public interface DownloadStore extends BreakpointStore {
 
     void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
                                    long increaseLength);
-
-    @NonNull BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException;
-
 
     void onTaskStart(int id);
 

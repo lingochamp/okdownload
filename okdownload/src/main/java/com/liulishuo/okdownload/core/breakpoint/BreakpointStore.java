@@ -28,6 +28,8 @@ public interface BreakpointStore {
 
     @Nullable BreakpointInfo get(int id);
 
+    @NonNull BreakpointInfo createAndInsert(@NonNull DownloadTask task) throws IOException;
+
     int findOrCreateId(@NonNull DownloadTask task);
 
     boolean update(@NonNull BreakpointInfo breakpointInfo) throws IOException;
