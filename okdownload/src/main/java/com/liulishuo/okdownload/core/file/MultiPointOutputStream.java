@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.core.file;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
@@ -37,6 +38,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.LockSupport;
 
 public class MultiPointOutputStream {
     private static final String TAG = "MultiPointOutputStream";
@@ -61,10 +63,12 @@ public class MultiPointOutputStream {
     private final boolean isPreAllocateLength;
 
     volatile boolean syncRunning;
+    @NonNull private final Runnable syncRunnable;
 
-    public MultiPointOutputStream(@NonNull DownloadTask task,
-                                  @NonNull BreakpointInfo info,
-                                  @NonNull DownloadStore store) {
+    MultiPointOutputStream(@NonNull DownloadTask task,
+                           @NonNull BreakpointInfo info,
+                           @NonNull DownloadStore store,
+                           @Nullable Runnable syncRunnable) {
         this.task = task;
         this.flushBufferSize = task.getFlushBufferSize();
         this.syncBufferSize = task.getSyncBufferSize();
@@ -74,6 +78,22 @@ public class MultiPointOutputStream {
         this.store = store;
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
         this.isPreAllocateLength = OkDownload.with().processFileStrategy().isPreAllocateLength();
+        if (syncRunnable == null) {
+            this.syncRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    runSync();
+                }
+            };
+        } else {
+            this.syncRunnable = syncRunnable;
+        }
+    }
+
+    public MultiPointOutputStream(@NonNull DownloadTask task,
+                                  @NonNull BreakpointInfo info,
+                                  @NonNull DownloadStore store) {
+        this(task, info, store, null);
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
@@ -88,23 +108,35 @@ public class MultiPointOutputStream {
         inspectAndPersist();
     }
 
+    @Nullable volatile Thread parkForWaitingSyncThread;
+
     public void ensureSyncComplete(int blockIndex, boolean isAsync) {
         final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
         if (noSyncLength != null && noSyncLength.get() > 0) {
 
-            // sync once, make sure data has been synced.
-            if (!syncRunning && noSyncLength.get() > 0) {
-                syncRunning = true;
-                if (isAsync) {
+            if (isAsync) {
+                // if async sync-data we just make sure sync one time on the current.
+                if (!syncRunning) {
+                    syncRunning = true;
                     OkDownload.with().processFileStrategy().getFileLock()
                             .increaseLock(task.getPath());
                     executeSyncRunnableAsync();
-                } else {
-                    syncRunnable.run();
                 }
-                Util.d(TAG, "sync cache to disk manually task("
-                        + task.getId() + ") block(" + blockIndex + ")");
+            } else {
+                // if sync sync-data we need make sure all data sync to disk.
+                if (syncRunning) {
+                    parkForWaitingSyncThread = Thread.currentThread();
+                    while (isSyncRunning()) {
+                        parkThread(50);
+                    }
+                }
+
+                syncRunning = true;
+                syncRunnable.run();
             }
+
+            Util.d(TAG, "sync cache to disk certainly task("
+                    + task.getId() + ") block(" + blockIndex + ")");
         }
     }
 
@@ -125,61 +157,75 @@ public class MultiPointOutputStream {
     }
 
     // convenient for test
+    boolean isSyncRunning() {
+        return syncRunning;
+    }
+
+    // convenient for test
+    void parkThread(long milliseconds) {
+        LockSupport.park(TimeUnit.MILLISECONDS.toNanos(milliseconds));
+    }
+
+    // convenient for test
+    void unparkThread(Thread thread) {
+        LockSupport.unpark(thread);
+    }
+
+    // convenient for test
     void executeSyncRunnableAsync() {
         FILE_IO_EXECUTOR.execute(syncRunnable);
     }
 
-    private final Runnable syncRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                syncRunning = true;
-                boolean success;
-                final int size;
-                synchronized (noSyncLengthMap) {
-                    // make sure the length of noSyncLengthMap is equal to outputStreamMap
-                    size = noSyncLengthMap.size();
-                }
-
-                final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
-
-                try {
-                    for (int i = 0; i < size; i++) {
-                        final int blockIndex = outputStreamMap.keyAt(i);
-                        // because we get no sync length value before flush and sync,
-                        // so the length only possible less than or equal to the real persist
-                        // length.
-                        final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
-                        if (noSyncLength > 0) {
-                            increaseLengthMap.put(blockIndex, noSyncLength);
-                            final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
-                            outputStream.flushAndSync();
-                        }
-                    }
-                    success = true;
-                } catch (IOException ignored) {
-                    success = false;
-                }
-
-                if (success) {
-                    final int increaseLengthSize = increaseLengthMap.size();
-                    long allIncreaseLength = 0;
-                    for (int i = 0; i < increaseLengthSize; i++) {
-                        final int blockIndex = increaseLengthMap.keyAt(i);
-                        final long noSyncLength = increaseLengthMap.valueAt(i);
-                        store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
-                        allIncreaseLength += noSyncLength;
-                        noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
-                    }
-                    allNoSyncLength.addAndGet(-allIncreaseLength);
-                    lastSyncTimestamp.set(SystemClock.uptimeMillis());
-                }
-            } finally {
-                syncRunning = false;
-                OkDownload.with().processFileStrategy().getFileLock().decreaseLock(task.getPath());
+    // convenient for test
+    void runSync() {
+        try {
+            syncRunning = true;
+            boolean success;
+            final int size;
+            synchronized (noSyncLengthMap) {
+                // make sure the length of noSyncLengthMap is equal to outputStreamMap
+                size = noSyncLengthMap.size();
             }
+
+            final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+
+            try {
+                for (int i = 0; i < size; i++) {
+                    final int blockIndex = outputStreamMap.keyAt(i);
+                    // because we get no sync length value before flush and sync,
+                    // so the length only possible less than or equal to the real persist
+                    // length.
+                    final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
+                    if (noSyncLength > 0) {
+                        increaseLengthMap.put(blockIndex, noSyncLength);
+                        final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
+                        outputStream.flushAndSync();
+                    }
+                }
+                success = true;
+            } catch (IOException ignored) {
+                success = false;
+            }
+
+            if (success) {
+                final int increaseLengthSize = increaseLengthMap.size();
+                long allIncreaseLength = 0;
+                for (int i = 0; i < increaseLengthSize; i++) {
+                    final int blockIndex = increaseLengthMap.keyAt(i);
+                    final long noSyncLength = increaseLengthMap.valueAt(i);
+                    store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
+                    allIncreaseLength += noSyncLength;
+                    noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
+                }
+                allNoSyncLength.addAndGet(-allIncreaseLength);
+                lastSyncTimestamp.set(SystemClock.uptimeMillis());
+            }
+        } finally {
+            syncRunning = false;
+            OkDownload.with().processFileStrategy().getFileLock().decreaseLock(task.getPath());
+            if (parkForWaitingSyncThread != null) unparkThread(parkForWaitingSyncThread);
         }
-    };
+    }
 
     boolean isNeedPersist() {
         return allNoSyncLength.get() >= syncBufferSize
