@@ -142,8 +142,8 @@ public class CallbackDispatcher {
             public void connectEnd(@NonNull final DownloadTask task, final int blockIndex,
                                    final int responseCode,
                                    @NonNull final Map<String, List<String>> requestHeaderFields) {
-                Util.d(TAG, "<----- finish connection task(" + task.getId()
-                        + ") block(" + blockIndex + ") code[" + responseCode + "]" + requestHeaderFields);
+                Util.d(TAG, "<----- finish connection task(" + task.getId() + ") block("
+                        + blockIndex + ") code[" + responseCode + "]" + requestHeaderFields);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
