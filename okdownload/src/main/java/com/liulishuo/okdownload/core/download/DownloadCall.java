@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -81,6 +82,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     public boolean cancel() {
+        final long startCancelTime = SystemClock.uptimeMillis();
         synchronized (this) {
             if (canceled) return false;
             if (finishing) return false;
@@ -97,6 +99,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             chain.cancel();
         }
 
+        Util.d(TAG, "cancel task " + task.getId() + " consume: " + (SystemClock
+                .uptimeMillis() - startCancelTime) + "ms");
         return true;
     }
 
@@ -292,6 +296,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     @Override
     protected void finished() {
         OkDownload.with().downloadDispatcher().finish(this);
+        Util.d(TAG, "call is finished " + task.getId());
     }
 
     void startBlocks(List<DownloadChain> tasks) throws InterruptedException {

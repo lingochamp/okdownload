@@ -99,6 +99,9 @@ public class MultiPointOutputStream {
             // sync to store
             if (syncRunning) {
                 // wait for sync
+                Util.d(TAG,
+                        "start waiting for sync cache to disk task("
+                                + task.getId() + ") block(" + blockIndex + ")");
                 synchronized (parkThreadList) {
                     parkThreadList.add(Thread.currentThread());
                 }
@@ -106,6 +109,9 @@ public class MultiPointOutputStream {
                     LockSupport.parkNanos(WAIT_SYNC_NANO);
                     if (!syncRunning) break;
                 }
+                Util.d(TAG,
+                        "finish waiting for sync cache to disk task(" + task
+                                .getId() + ") block(" + blockIndex + ")");
             }
 
             // sync once, make sure data has been synced.

@@ -84,11 +84,17 @@ public class HeaderInterceptor implements Interceptor.Connect {
             throw InterruptException.SIGNAL;
         }
 
-        OkDownload.with().callbackDispatcher().dispatch().connectStart(task, blockIndex,
-                connection.getRequestProperties());
+        final Map<String, List<String>> requestHeaderFiles = connection.getRequestProperties();
+        Util.d(TAG, "-----> start connection task(" + task.getId()
+                + ") block(" + blockIndex + ") " + requestHeaderFiles);
+        OkDownload.with().callbackDispatcher().dispatch()
+                .connectStart(task, blockIndex, requestHeaderFiles);
+
         DownloadConnection.Connected connected = chain.processConnect();
 
         Map<String, List<String>> responseHeaderFields = connected.getResponseHeaderFields();
+        Util.d(TAG, "<----- finish connection task(" + task.getId()
+                + ") block(" + blockIndex + ") " + responseHeaderFields);
         if (responseHeaderFields == null) responseHeaderFields = new HashMap<>();
 
         OkDownload.with().callbackDispatcher().dispatch().connectEnd(task, blockIndex,

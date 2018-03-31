@@ -29,6 +29,8 @@ import com.liulishuo.okdownload.core.connection.DownloadConnection;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,7 +77,9 @@ public class ConnectTrial {
             connection.addHeader(RANGE, "bytes=0-0");
 
             final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
-            listener.connectTrialStart(task, connection.getRequestProperties());
+            final Map<String, List<String>> requestProperties = connection.getRequestProperties();
+            Util.d(TAG, "-----> start trial task(" + task.getId() + ") " + requestProperties);
+            listener.connectTrialStart(task, requestProperties);
 
             final DownloadConnection.Connected connected = connection.execute();
             this.responseCode = connected.getResponseCode();
@@ -83,7 +87,9 @@ public class ConnectTrial {
             this.instanceLength = findInstanceLength(connected);
             this.responseEtag = findEtag(connected);
             this.responseFilename = findFilename(connected);
-            listener.connectTrialEnd(task, responseCode, connected.getResponseHeaderFields());
+            final Map<String, List<String>> responseHeader = connected.getResponseHeaderFields();
+            Util.d(TAG, "<----- finish trial task(" + task.getId() + ") " + responseHeader);
+            listener.connectTrialEnd(task, responseCode, responseHeader);
 
             isNeedTrialHeadMethod = isNeedTrialHeadMethodForInstanceLength(instanceLength,
                     connected);

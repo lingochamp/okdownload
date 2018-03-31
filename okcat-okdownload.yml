@@ -5,7 +5,14 @@ package: com.liulishuo.okdownload.sample
 trans-msg-map:
         'taskEnd ' : 'TASK END'
         'downloadFromBreakpoint ': 'RESUMABLE'
+        '----->' : 'REQUEST'
+        '<-----' : 'RESPONSE'
+        'call is finished' : 'FINISH CALL'
+        'cancel task' : 'TASK CANCELED'
 
 highlight-list:
         - 'connectStart'
         - 'fetchEnd'
+        - 'task'
+        - 'block'
+        - 'waiting for sync cache to disk'
