@@ -60,6 +60,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     volatile boolean canceled;
     volatile boolean finishing;
 
+    private volatile Thread currentThread;
     @NonNull private final DownloadStore store;
 
     private DownloadCall(DownloadTask task, boolean asyncExecuted, @NonNull DownloadStore store) {
@@ -99,6 +100,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             chain.cancel();
         }
 
+        if (chains.isEmpty() && currentThread != null) {
+            Util.d(TAG,
+                    "interrupt thread with cancel operation because of chains are not running "
+                            + task.getId());
+            currentThread.interrupt();
+        }
+
         Util.d(TAG, "cancel task " + task.getId() + " consume: " + (SystemClock
                 .uptimeMillis() - startCancelTime) + "ms");
         return true;
@@ -110,6 +118,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     @Override
     public void execute() throws InterruptedException {
+        currentThread = Thread.currentThread();
+
         boolean retry;
         int retryCount = 0;
 
