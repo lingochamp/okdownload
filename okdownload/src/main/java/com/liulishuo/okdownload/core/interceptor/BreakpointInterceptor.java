@@ -18,7 +18,6 @@ package com.liulishuo.okdownload.core.interceptor;
 
 import android.support.annotation.NonNull;
 
-import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
@@ -26,7 +25,6 @@ import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.exception.InterruptException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 
-import java.io.File;
 import java.io.IOException;
 
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
@@ -53,11 +51,6 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         }
 
         return connected;
-    }
-
-    void discardOldFileIfExist(@NonNull String path) {
-        final File oldFile = new File(path);
-        if (oldFile.exists()) OkDownload.with().processFileStrategy().discardOldFile(oldFile);
     }
 
     @Override
