@@ -41,6 +41,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ## DEBUG
 
 You can use [okcat](https://github.com/Jacksgong/okcat) to read the detail on the sample(`-c` is just for clear old adb log before running):
+![][okcat_img]
 
 ```
 okcat -y=okcat-okdownload -c
@@ -173,3 +174,4 @@ limitations under the License.
 [check_before_chain_img]: https://github.com/lingochamp/okdownload/raw/master/art/check_before_chain.png
 [build_status_svg]: https://travis-ci.org/lingochamp/okdownload.svg?branch=master
 [build_status_link]: https://travis-ci.org/lingochamp/okdownload
+[okcat_img]: https://github.com/lingochamp/okdownload/raw/master/art/okcat.png
