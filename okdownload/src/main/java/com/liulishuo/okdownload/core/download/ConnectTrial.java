@@ -78,7 +78,6 @@ public class ConnectTrial {
 
             final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
             final Map<String, List<String>> requestProperties = connection.getRequestProperties();
-            Util.d(TAG, "-----> start trial task(" + task.getId() + ") " + requestProperties);
             listener.connectTrialStart(task, requestProperties);
 
             final DownloadConnection.Connected connected = connection.execute();
@@ -88,7 +87,6 @@ public class ConnectTrial {
             this.responseEtag = findEtag(connected);
             this.responseFilename = findFilename(connected);
             final Map<String, List<String>> responseHeader = connected.getResponseHeaderFields();
-            Util.d(TAG, "<----- finish trial task(" + task.getId() + ") " + responseHeader);
             listener.connectTrialEnd(task, responseCode, responseHeader);
 
             isNeedTrialHeadMethod = isNeedTrialHeadMethodForInstanceLength(instanceLength,

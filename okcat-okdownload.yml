@@ -9,6 +9,7 @@ trans-msg-map:
         '<-----' : 'RESPONSE'
         'call is finished' : 'FINISH CALL'
         'cancel task' : 'TASK CANCELED'
+        'finish cancel bunch task' : 'BUNCH TASK CANCELED'
 
 highlight-list:
         - 'connectStart'

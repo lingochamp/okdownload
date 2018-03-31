@@ -61,7 +61,7 @@ public class CallbackDispatcher {
             @Override
             public void connectTrialStart(@NonNull final DownloadTask task,
                                           @NonNull final Map<String, List<String>> headerFields) {
-                Util.d(TAG, "connectTrialStart: " + task.getId());
+                Util.d(TAG, "-----> start trial task(" + task.getId() + ") " + headerFields);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -76,7 +76,8 @@ public class CallbackDispatcher {
             @Override
             public void connectTrialEnd(@NonNull final DownloadTask task, final int responseCode,
                                         @NonNull final Map<String, List<String>> headerFields) {
-                Util.d(TAG, "connectTrialEnd: " + task.getId());
+                Util.d(TAG, "<----- finish trial task(" + task.getId()
+                        + ") code[" + responseCode + "]" + headerFields);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -124,7 +125,8 @@ public class CallbackDispatcher {
             @Override
             public void connectStart(@NonNull final DownloadTask task, final int blockIndex,
                                      @NonNull final Map<String, List<String>> requestHeaderFields) {
-                Util.d(TAG, "connectStart: " + task.getId());
+                Util.d(TAG, "-----> start connection task(" + task.getId()
+                        + ") block(" + blockIndex + ") " + requestHeaderFields);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -140,7 +142,8 @@ public class CallbackDispatcher {
             public void connectEnd(@NonNull final DownloadTask task, final int blockIndex,
                                    final int responseCode,
                                    @NonNull final Map<String, List<String>> requestHeaderFields) {
-                Util.d(TAG, "connectEnd: " + task.getId());
+                Util.d(TAG, "<----- finish connection task(" + task.getId()
+                        + ") block(" + blockIndex + ") code[" + responseCode + "]" + requestHeaderFields);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
@@ -172,7 +175,6 @@ public class CallbackDispatcher {
             @Override
             public void fetchProgress(@NonNull final DownloadTask task, final int blockIndex,
                                       final long increaseBytes) {
-                Util.d(TAG, "fetchProgress: " + task.getId());
                 if (task.getMinIntervalMillisCallbackProcess() > 0) {
                     DownloadTask.TaskCallbackWrapper
                             .setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
@@ -207,7 +209,10 @@ public class CallbackDispatcher {
             @Override
             public void taskEnd(@NonNull final DownloadTask task, @NonNull final EndCause cause,
                                 @Nullable final Exception realCause) {
-                Util.d(TAG, "taskEnd: " + task.getId() + " " + cause);
+                if (cause == EndCause.ERROR) {
+                    // only care about error.
+                    Util.d(TAG, "taskEnd: " + task.getId() + " " + cause + " " + realCause);
+                }
                 inspectTaskEnd(task, cause, realCause);
                 if (task.isAutoCallbackToUIThread()) {
                     uiHandler.post(new Runnable() {
