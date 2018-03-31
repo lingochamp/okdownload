@@ -394,8 +394,11 @@ public class DownloadContext {
         @Override
         public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                             @Nullable Exception realCause) {
-            if (remainCount.decrementAndGet() <= 0) queueListener.queueEnd(hostContext);
-            Util.d(TAG, "taskEnd and remainCount" + remainCount);
+            if (remainCount.decrementAndGet() <= 0) {
+                queueListener.queueEnd(hostContext);
+                // only log the last one
+                Util.d(TAG, "taskEnd and remainCount " + remainCount);
+            }
         }
     }
 

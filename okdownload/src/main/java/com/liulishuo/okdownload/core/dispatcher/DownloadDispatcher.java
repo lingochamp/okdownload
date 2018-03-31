@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload.core.dispatcher;
 
 
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -186,6 +187,7 @@ public class DownloadDispatcher {
     }
 
     private synchronized void cancelLocked(DownloadTask[] tasks) {
+        final long startCancelTime = SystemClock.uptimeMillis();
         Util.d(TAG, "start cancel bunch task manually: " + tasks.length);
 
         final List<DownloadCall> needCallbackCalls = new ArrayList<>();
@@ -196,7 +198,9 @@ public class DownloadDispatcher {
             }
         } finally {
             handleCanceledCalls(needCallbackCalls, needCancelCalls);
-            Util.d(TAG, "finish cancel bunch task manually: " + tasks.length);
+            Util.d(TAG,
+                    "finish cancel bunch task manually: " + tasks.length + " consume "
+                            + (SystemClock.uptimeMillis() - startCancelTime) + "ms");
         }
     }
 
