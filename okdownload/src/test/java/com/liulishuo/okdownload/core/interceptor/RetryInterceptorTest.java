@@ -115,7 +115,6 @@ public class RetryInterceptorTest {
 
         final int blockIndex = chain.getBlockIndex();
         verify(cache).catchException(any(IOException.class));
-        verify(outputStream).ensureSyncComplete(eq(blockIndex));
         verify(outputStream).close(eq(blockIndex));
     }
 }

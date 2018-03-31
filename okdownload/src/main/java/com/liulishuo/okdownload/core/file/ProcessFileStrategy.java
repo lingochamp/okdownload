@@ -36,6 +36,8 @@ import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.OUTPUT_STREAM_NOT_SUPPORT;
 
 public class ProcessFileStrategy {
+    private final FileLock fileLock = new FileLock();
+
     @NonNull public MultiPointOutputStream createProcessStream(@NonNull DownloadTask task,
                                                                @NonNull BreakpointInfo info,
                                                                @NonNull DownloadStore store) {
@@ -58,6 +60,10 @@ public class ProcessFileStrategy {
                 throw new IOException("Delete file failed!");
             }
         }
+    }
+
+    @NonNull public FileLock getFileLock() {
+        return fileLock;
     }
 
     public void discardOldFile(@NonNull File oldFile) {

@@ -136,6 +136,7 @@ com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 - [x] Support register one whole download monitor to statistic all key step for each task easily with `DownloadMonitor`
 - [x] Support custom Logger used on okdownload with `Util.setLogger()` or just want to print log on the console with `Util.enableConsoleLog()`
 - [x] Support cancel and start a bunch of tasks instead of single task with special optimize with `DownloadTask.enqueue(tasks, listener)` and `DownloadTask.cancel(tasks)`
+- [x] Keep cancel is efficient with let the last i/o operation flying on background and resolve the conflict the next time for same file i/o operation with `FileLock` class jobs. 
 - [] Support speed limit
 - [] Support download task on independent process with import `okdownload-process`
 - [] Support RxJava

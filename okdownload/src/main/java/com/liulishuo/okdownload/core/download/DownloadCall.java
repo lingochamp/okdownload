@@ -83,12 +83,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     public boolean cancel() {
-        final long startCancelTime = SystemClock.uptimeMillis();
         synchronized (this) {
             if (canceled) return false;
             if (finishing) return false;
             this.canceled = true;
         }
+
+        final long startCancelTime = SystemClock.uptimeMillis();
 
         OkDownload.with().downloadDispatcher().flyingCanceled(this);
 
@@ -167,7 +168,10 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 break;
             }
 
-            // 3. reuse another info if another info is idle and available for reuse.
+            // 3. waiting for file lock release after file path is confirmed.
+            fileStrategy.getFileLock().waitForRelease(task.getPath());
+
+            // 4. reuse another info if another info is idle and available for reuse.
             try {
                 OkDownload.with().downloadStrategy()
                         .inspectAnotherSameInfo(task, info, remoteCheck.getInstanceLength());
@@ -177,11 +181,11 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
 
             if (remoteCheck.isResumable()) {
-                //4. local check
+                // 5. local check
                 final BreakpointLocalCheck localCheck = createLocalCheck(info);
                 localCheck.check();
                 if (localCheck.isDirty()) {
-                    // 5. assemble block data
+                    // 6. assemble block data
                     assembleBlockAndCallbackFromBeginning(info, remoteCheck,
                             localCheck.getCauseOrThrow());
                 } else {
@@ -189,17 +193,17 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                             .downloadFromBreakpoint(task, info);
                 }
             } else {
-                // 5. assemble block data
+                // 6. assemble block data
                 assembleBlockAndCallbackFromBeginning(info, remoteCheck,
                         remoteCheck.getCauseOrThrow());
             }
 
-            // 6. start with cache and info.
+            // 7. start with cache and info.
             start(cache, info);
 
             if (canceled) break;
 
-            // 7. retry if precondition failed.
+            // 8. retry if precondition failed.
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.remove(task.getId());

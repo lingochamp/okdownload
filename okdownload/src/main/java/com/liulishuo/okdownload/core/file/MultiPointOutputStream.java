@@ -32,13 +32,11 @@ import com.liulishuo.okdownload.core.exception.PreAllocateException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.LockSupport;
 
 public class MultiPointOutputStream {
     private static final String TAG = "MultiPointOutputStream";
@@ -90,33 +88,23 @@ public class MultiPointOutputStream {
         inspectAndPersist();
     }
 
-    private final ArrayList<Thread> parkThreadList = new ArrayList<>();
-    private static final long WAIT_SYNC_NANO = TimeUnit.MILLISECONDS.toNanos(100);
-
-    public void ensureSyncComplete(int blockIndex) {
+    public void ensureSyncComplete(int blockIndex, boolean isAsync) {
         final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
         if (noSyncLength != null && noSyncLength.get() > 0) {
-            // sync to store
-            if (syncRunning) {
-                // wait for sync
-                Util.d(TAG,
-                        "start waiting for sync cache to disk task("
-                                + task.getId() + ") block(" + blockIndex + ")");
-                synchronized (parkThreadList) {
-                    parkThreadList.add(Thread.currentThread());
-                }
-                while (true) {
-                    LockSupport.parkNanos(WAIT_SYNC_NANO);
-                    if (!syncRunning) break;
-                }
-                Util.d(TAG,
-                        "finish waiting for sync cache to disk task(" + task
-                                .getId() + ") block(" + blockIndex + ")");
-            }
 
             // sync once, make sure data has been synced.
-            syncRunning = true;
-            syncRunnable.run();
+            if (!syncRunning && noSyncLength.get() > 0) {
+                syncRunning = true;
+                if (isAsync) {
+                    OkDownload.with().processFileStrategy().getFileLock()
+                            .increaseLock(task.getPath());
+                    executeSyncRunnableAsync();
+                } else {
+                    syncRunnable.run();
+                }
+                Util.d(TAG, "sync cache to disk manually task("
+                        + task.getId() + ") block(" + blockIndex + ")");
+            }
         }
     }
 
@@ -129,11 +117,16 @@ public class MultiPointOutputStream {
         }
     }
 
-    private void inspectAndPersist() {
+    void inspectAndPersist() {
         if (!syncRunning && isNeedPersist()) {
             syncRunning = true;
-            FILE_IO_EXECUTOR.execute(syncRunnable);
+            executeSyncRunnableAsync();
         }
+    }
+
+    // convenient for test
+    void executeSyncRunnableAsync() {
+        FILE_IO_EXECUTOR.execute(syncRunnable);
     }
 
     private final Runnable syncRunnable = new Runnable() {
@@ -183,24 +176,12 @@ public class MultiPointOutputStream {
                 }
             } finally {
                 syncRunning = false;
-
-                if (!parkThreadList.isEmpty()) {
-                    synchronized (parkThreadList) {
-                        final Thread[] parkThreadArray = new Thread[parkThreadList.size()];
-                        parkThreadList.toArray(parkThreadArray);
-                        for (Thread thread : parkThreadArray) {
-                            if (thread == null) continue; // on end.
-
-                            LockSupport.unpark(thread);
-                            parkThreadList.remove(thread);
-                        }
-                    }
-                }
+                OkDownload.with().processFileStrategy().getFileLock().decreaseLock(task.getPath());
             }
         }
     };
 
-    private boolean isNeedPersist() {
+    boolean isNeedPersist() {
         return allNoSyncLength.get() >= syncBufferSize
                 && SystemClock.uptimeMillis() - lastSyncTimestamp.get() >= syncBufferIntervalMills;
     }

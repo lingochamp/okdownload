@@ -102,7 +102,7 @@ public class DownloadChain implements Runnable {
 
         if (fetchIndex >= fetchInterceptorList.size() - 1) {
             // on the fetch looper.
-            getOutputStream().ensureSyncComplete(blockIndex);
+            getOutputStream().ensureSyncComplete(blockIndex, true);
         }
 
         currentThread.interrupt();

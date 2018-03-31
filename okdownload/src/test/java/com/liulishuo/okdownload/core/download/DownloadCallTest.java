@@ -28,7 +28,7 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
-import com.liulishuo.okdownload.core.exception.RetryException;
+import com.liulishuo.okdownload.core.file.FileLock;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
@@ -75,6 +75,8 @@ public class DownloadCallTest {
     private BreakpointInfo info;
     @Mock
     private DownloadStore store;
+    @Mock
+    private FileLock fileLock;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -100,6 +102,9 @@ public class DownloadCallTest {
 
         when(store.get(anyInt())).thenReturn(info);
         when(task.getUrl()).thenReturn("https://jacksgong.com");
+
+        final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
+        when(fileStrategy.getFileLock()).thenReturn(fileLock);
     }
 
     @Test
@@ -128,6 +133,19 @@ public class DownloadCallTest {
     }
 
     @Test
+    public void execute_waitForRelease() throws InterruptedException {
+        final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
+        doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doNothing().when(call).start(any(DownloadCache.class), eq(info));
+        when(task.getPath()).thenReturn("certain-path");
+
+        call.execute();
+
+        verify(fileLock).waitForRelease(eq("certain-path"));
+    }
+
+    @Test
     public void execute_reuseAnotherInfo() throws IOException, InterruptedException {
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
         doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
@@ -140,7 +158,7 @@ public class DownloadCallTest {
     }
 
     @Test
-    public void execute_localCheck() throws InterruptedException, RetryException {
+    public void execute_localCheck() throws InterruptedException {
         final BreakpointLocalCheck localCheck = mock(BreakpointLocalCheck.class);
         final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
