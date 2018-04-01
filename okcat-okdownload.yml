@@ -10,6 +10,7 @@ trans-msg-map:
         'call is finished' : 'FINISH CALL'
         'cancel task' : 'TASK CANCELED'
         'finish cancel bunch task' : 'BUNCH TASK CANCELED'
+        'discardFlyingSyncOrEnsureSyncFinish' : 'BLOCK FOR DB SYNC'
 
 highlight-list:
         - 'connectStart'

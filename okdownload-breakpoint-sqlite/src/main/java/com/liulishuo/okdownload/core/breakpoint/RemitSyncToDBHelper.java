@@ -33,6 +33,8 @@ class RemitSyncToDBHelper {
     @NonNull private final RemitAgent agent;
     @NonNull private final Handler handler;
 
+    private static final String TAG = "RemitSyncToDBHelper";
+
     long delayMillis;
 
     final List<Integer> freeToDBIdList = new ArrayList<>();
@@ -133,9 +135,13 @@ class RemitSyncToDBHelper {
 
         // is discard success
         if (handlingId == id) {
+            Util.d(TAG,
+                    "discardFlyingSyncOrEnsureSyncFinish park thread " + Thread.currentThread());
             // discard failed, so make sure sync finish
             cleanThreadParkInNextLoop();
             parkCurrentThread();
+            Util.d(TAG,
+                    "discardFlyingSyncOrEnsureSyncFinish unpark thread " + Thread.currentThread());
             return true;
         }
 
