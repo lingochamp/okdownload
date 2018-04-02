@@ -25,6 +25,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
@@ -258,21 +259,21 @@ public class DownloadStrategyTest {
         verify(filenameHolder).set(storeFilename);
     }
 
-//    @Test(expected = IOException.class)
-//    public void validFilenameFromResponse_notValid() throws IOException {
-//        final String taskFilename = "task-filename";
-//        when(task.getFilename()).thenReturn(taskFilename);
-//        when(task.getFilenameHolder()).thenReturn(mock(DownloadStrategy.FilenameHolder.class));
-//        final BreakpointInfo info = mock(BreakpointInfo.class);
-//        when(info.getFilenameHolder()).thenReturn(mock(DownloadStrategy.FilenameHolder.class));
-//
-//        final String responseFilename = "response-filename";
-//        final String determineFilename = "determine-filename";
-//        doReturn(determineFilename).when(strategy).determineFilename(responseFilename, task,
-//                connected);
-//
-//        strategy.validFilenameFromResponse(responseFilename, task, info, connected);
-//    }
+    @Test
+    public void validFilenameFromStore() {
+        final DownloadStrategy.FilenameHolder holder = new DownloadStrategy.FilenameHolder();
+        when(task.getUrl()).thenReturn("url");
+        when(task.getFilenameHolder()).thenReturn(holder);
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        doReturn(null).when(store).getResponseFilename("url");
+
+        assertThat(strategy.validFilenameFromStore(task)).isFalse();
+        assertThat(holder.get()).isNull();
+
+        doReturn("filename").when(store).getResponseFilename("url");
+        assertThat(strategy.validFilenameFromStore(task)).isTrue();
+        assertThat(holder.get()).isEqualTo("filename");
+    }
 
     @Test
     public void validFilenameFromResponse() throws IOException {

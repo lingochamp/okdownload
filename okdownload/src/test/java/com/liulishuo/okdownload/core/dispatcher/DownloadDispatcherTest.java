@@ -20,10 +20,13 @@ import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.download.DownloadCall;
+import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -70,6 +73,7 @@ public class DownloadDispatcherTest {
     private List<DownloadCall> runningSyncCalls;
 
     @Mock private DownloadStore store;
+    private File existFile = new File("./p-path/filename");
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -78,7 +82,7 @@ public class DownloadDispatcherTest {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         initMocks(this);
 
         readyAsyncCalls = new ArrayList<>();
@@ -91,6 +95,15 @@ public class DownloadDispatcherTest {
 
         doReturn(mock(ExecutorService.class)).when(dispatcher).executorService();
         doNothing().when(dispatcher).syncRunCall(any(DownloadCall.class));
+
+        existFile.getParentFile().mkdirs();
+        existFile.createNewFile();
+    }
+
+    @After
+    public void tearDown() {
+        existFile.delete();
+        existFile.getParentFile().delete();
     }
 
     private DownloadTask mockTask() {
@@ -427,6 +440,32 @@ public class DownloadDispatcherTest {
 
         DownloadDispatcher.setMaxParallelRunningCount(2);
         assertThat(dispatcher.maxParallelRunningCount).isEqualTo(2);
+    }
+
+    @Test
+    public void inspectCompleted() throws IOException {
+        mockOkDownload();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.isPassIfAlreadyCompleted()).thenReturn(true);
+        when(task.getId()).thenReturn(0);
+        when(task.getUrl()).thenReturn("url");
+        when(task.getParentFile()).thenReturn(existFile.getParentFile());
+
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        doReturn(existFile.getName()).when(store).getResponseFilename("url");
+
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
+        doReturn(false).when(downloadStrategy).validFilenameFromStore(task);
+
+        assertThat(dispatcher.inspectCompleted(task)).isFalse();
+        verify(callbackDispatcher, never()).dispatch();
+
+        doReturn(true).when(downloadStrategy).validFilenameFromStore(task);
+        assertThat(dispatcher.inspectCompleted(task)).isTrue();
+        final DownloadListener listener = callbackDispatcher.dispatch();
+        verify(listener).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class));
     }
 
     private static class MockDownloadDispatcher extends DownloadDispatcher {

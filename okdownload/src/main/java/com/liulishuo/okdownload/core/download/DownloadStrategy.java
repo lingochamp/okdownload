@@ -185,6 +185,18 @@ public class DownloadStrategy {
         return responseFileName;
     }
 
+    /**
+     * @return {@code true} success valid filename from store.
+     */
+    public boolean validFilenameFromStore(@NonNull DownloadTask task) {
+        final String filename = OkDownload.with().breakpointStore()
+                .getResponseFilename(task.getUrl());
+        if (filename == null) return false;
+
+        task.getFilenameHolder().set(filename);
+        return true;
+    }
+
     public static class FilenameHolder {
         private volatile String filename;
         private final boolean filenameProvidedByConstruct;

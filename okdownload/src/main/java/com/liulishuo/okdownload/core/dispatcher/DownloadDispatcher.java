@@ -386,8 +386,13 @@ public class DownloadDispatcher {
                 || inspectForConflict(task, runningSyncCalls);
     }
 
-    private boolean inspectCompleted(DownloadTask task) {
+    boolean inspectCompleted(DownloadTask task) {
         if (task.isPassIfAlreadyCompleted() && StatusUtil.isCompleted(task)) {
+            if (task.getFile() == null && !OkDownload.with().downloadStrategy()
+                    .validFilenameFromStore(task)) {
+                return false;
+            }
+
             OkDownload.with().callbackDispatcher().dispatch()
                     .taskEnd(task, EndCause.COMPLETED, null);
             return true;
