@@ -18,8 +18,10 @@ package com.liulishuo.okdownload.sample;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -113,7 +115,8 @@ public class BunchActivity extends BaseSampleActivity {
                 fillPbInfo(task, "start");
             }
 
-            @Override public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
+            @Override
+            public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
                 fillPbInfo(task, "retry");
             }
 
@@ -156,11 +159,14 @@ public class BunchActivity extends BaseSampleActivity {
             @Override public void onClick(final View v) {
                 if (v.getTag() == null) {
                     // start
+                    final long startTime = SystemClock.uptimeMillis();
                     v.setTag(new Object());
                     final DownloadContext.Builder builder = new DownloadContext.QueueSet()
                             .setParentPathFile(bunchDir)
                             .setMinIntervalMillisCallbackProcess(300)
                             .commit();
+                    Log.d("BunchActivity", "before bind bunch task consume "
+                            + (SystemClock.uptimeMillis() - startTime) + "ms");
                     for (int i = 0; i < urls.length; i++) {
                         builder.bind(urls[i]).addTag(INDEX_TAG, i);
                     }
@@ -168,6 +174,8 @@ public class BunchActivity extends BaseSampleActivity {
                     totalCount = urls.length;
                     currentCount = 0;
 
+                    Log.d("BunchActivity", "before build bunch task consume "
+                            + (SystemClock.uptimeMillis() - startTime) + "ms");
                     downloadContext = builder.setListener(new DownloadContextListener() {
                         @Override public void queueEnd(@NonNull DownloadContext context) {
                             v.setTag(null);
@@ -178,10 +186,15 @@ public class BunchActivity extends BaseSampleActivity {
                     }).build();
 
                     speedCalculator = new SpeedCalculator();
+                    Log.d("BunchActivity", "before bunch task consume "
+                            + (SystemClock.uptimeMillis() - startTime) + "ms");
                     downloadContext.start(listener, serialRb.isChecked());
                     deleteContainerView.setEnabled(false);
                     radioGroup.setEnabled(false);
                     startOrCancelTv.setText(R.string.cancel);
+                    Log.d("BunchActivity",
+                            "start bunch task consume " + (SystemClock
+                                    .uptimeMillis() - startTime) + "ms");
                 } else {
                     // stop
                     downloadContext.stop();
