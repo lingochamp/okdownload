@@ -22,12 +22,12 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import java.io.IOException;
+import java.util.List;
 
-public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, DownloadStore {
+public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, DownloadStore {
 
     private static final String TAG = "RemitStoreOnSQLite";
 
@@ -93,7 +93,6 @@ public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, Downl
 
         if (cause == EndCause.COMPLETED) {
             remitHelper.discard(id);
-            sqLiteHelper.removeInfo(id);
         } else {
             remitHelper.endAndEnsureToDB(id);
         }
@@ -102,16 +101,7 @@ public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, Downl
     @Override public void bunchTaskCanceled(int[] ids) {
         sqliteCache.bunchTaskCanceled(ids);
         if (ids.length > 0) {
-            final SQLiteDatabase database = sqLiteHelper.getWritableDatabase();
-            database.beginTransaction();
-            try {
-                for (int id : ids) {
-                    remitHelper.endAndEnsureToDB(id);
-                }
-                database.setTransactionSuccessful();
-            } finally {
-                database.endTransaction();
-            }
+            remitHelper.endAndEnsureToDB(ids);
         }
     }
 
@@ -119,7 +109,6 @@ public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, Downl
         sqliteCache.remove(id);
 
         remitHelper.discard(id);
-        sqLiteHelper.removeInfo(id);
     }
 
     @Override public int findOrCreateId(@NonNull DownloadTask task) {
@@ -127,7 +116,8 @@ public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, Downl
     }
 
     @Nullable @Override
-    public BreakpointInfo findAnotherInfoFromCompare(DownloadTask task, BreakpointInfo ignored) {
+    public BreakpointInfo findAnotherInfoFromCompare(@NonNull DownloadTask task,
+                                                     @NonNull BreakpointInfo ignored) {
         return onSQLiteWrapper.findAnotherInfoFromCompare(task, ignored);
     }
 
@@ -135,14 +125,31 @@ public class RemitStoreOnSQLite implements RemitSyncToDBHelper.RemitAgent, Downl
         return onSQLiteWrapper.getResponseFilename(url);
     }
 
+    // following accept database operation what is controlled by helper.
+    @Override public void syncCacheToDB(List<Integer> idList) throws IOException {
+        final SQLiteDatabase database = sqLiteHelper.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            for (Integer id : idList) {
+                syncCacheToDB(id);
+            }
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
+    }
+
     @Override public void syncCacheToDB(int id) throws IOException {
-        Util.d(TAG, "syncCacheToDB " + id);
         sqLiteHelper.removeInfo(id);
 
         final BreakpointInfo info = sqliteCache.get(id);
         if (info == null || info.getFilename() == null || info.getTotalOffset() <= 0) return;
 
         sqLiteHelper.insert(info);
+    }
+
+    @Override public void removeInfo(int id) {
+        sqLiteHelper.removeInfo(id);
     }
 
     public static void setRemitToDBDelayMillis(int delayMillis) {

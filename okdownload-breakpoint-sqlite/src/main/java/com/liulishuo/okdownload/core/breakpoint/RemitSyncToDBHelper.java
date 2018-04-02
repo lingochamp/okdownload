@@ -16,156 +16,75 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import com.liulishuo.okdownload.core.Util;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.LockSupport;
 
 class RemitSyncToDBHelper {
-    @NonNull private final RemitAgent agent;
-    @NonNull private final Handler handler;
 
-    private static final String TAG = "RemitSyncToDBHelper";
+    private final RemitSyncExecutor executor;
 
     long delayMillis;
 
-    final List<Integer> freeToDBIdList = new ArrayList<>();
-    @Nullable private volatile Thread parkThread;
+    RemitSyncToDBHelper(@NonNull final RemitSyncExecutor.RemitAgent agent) {
+        this(new RemitSyncExecutor(agent));
+    }
 
-    static final int INVALID_ID = BreakpointStoreOnCache.FIRST_ID - 1;
-    static final int WHAT_CLEAN_PARK = INVALID_ID;
-
-    volatile int handlingId = INVALID_ID;
-
-    RemitSyncToDBHelper(@NonNull final RemitAgent agent) {
-        this.agent = agent;
+    RemitSyncToDBHelper(@NonNull final RemitSyncExecutor executor) {
+        this.executor = executor;
         this.delayMillis = 1500;
-
-        final HandlerThread thread = new HandlerThread("OkDownload RemitHandoverToDB");
-        thread.start();
-        handler = new Handler(thread.getLooper(), new Handler.Callback() {
-            @Override public boolean handleMessage(Message msg) {
-
-                if (dispatchDelayedMessage(msg.what)) return true;
-
-                final int id = msg.what;
-                makeIdFreeToDatabase(id);
-
-                return true;
-            }
-        });
     }
 
     void shutdown() {
-        this.handler.getLooper().quit();
+        this.executor.shutdown();
     }
-
-    boolean dispatchDelayedMessage(int what) {
-        if (what == WHAT_CLEAN_PARK) {
-            if (parkThread != null) {
-                LockSupport.unpark(parkThread);
-                parkThread = null;
-            }
-            return true;
-        }
-
-        return false;
-    }
-
-    void makeIdFreeToDatabase(int id) {
-        try {
-            handlingId = id;
-            syncCacheToDB(id);
-            freeToDBIdList.add(id);
-        } catch (IOException e) {
-            Util.e("RemitSyncToDBHelper", "sync cache to database failed!", e);
-        } finally {
-            handlingId = INVALID_ID;
-            if (parkThread != null) {
-                LockSupport.unpark(parkThread);
-                parkThread = null;
-            }
-        }
-    }
-
 
     boolean isNotFreeToDatabase(int id) {
-        return !freeToDBIdList.contains(id);
+        return !executor.isFreeToDatabase(id);
     }
 
     void onTaskStart(int id) {
-        handler.sendEmptyMessageDelayed(id, delayMillis);
+        // discard pending sync if we can
+        executor.removePostWithId(id);
+
+        executor.postSyncInfoDelay(id, delayMillis);
     }
 
     void endAndEnsureToDB(int id) {
-        final boolean isAlreadySyncToDB = discardFlyingSyncOrEnsureSyncFinish(id);
+        executor.removePostWithId(id);
 
-        if (!isAlreadySyncToDB) {
-            try {
-                syncCacheToDB(id);
-            } catch (IOException e) {
-                Util.e("RemitSyncToDBHelper", "sync cache to database failed!", e);
-            }
+        // already synced
+        if (executor.isFreeToDatabase(id)) return;
+
+        // force sync for ids
+        executor.postSync(id);
+
+        // remove free state
+        executor.postRemoveFreeId(id);
+    }
+
+    void endAndEnsureToDB(int[] ids) {
+        // discard pending sync if we can
+        executor.removePostWithIds(ids);
+
+        // already finished delayed message
+        final List<Integer> willSyncIdList = new ArrayList<>();
+        for (int id : ids) {
+            if (!executor.isFreeToDatabase(id)) willSyncIdList.add(id);
         }
-        freeToDBIdList.remove((Integer) id);
+
+        if (willSyncIdList.isEmpty()) return;
+
+        // force sync for ids
+        executor.postSync(willSyncIdList);
+
+        // remove free state
+        executor.postRemoveFreeIds(willSyncIdList);
     }
 
     void discard(int id) {
-        discardFlyingSyncOrEnsureSyncFinish(id);
-        freeToDBIdList.remove((Integer) id);
-    }
-
-    boolean discardFlyingSyncOrEnsureSyncFinish(int id) {
-        // is already finished
-        if (freeToDBIdList.contains(id)) {
-            // already finished delayed message
-            return true;
-        }
-
-        // try to discard
-        discardDelayedId(id);
-
-        // is discard success
-        if (handlingId == id) {
-            Util.d(TAG,
-                    "discardFlyingSyncOrEnsureSyncFinish park thread " + Thread.currentThread());
-            // discard failed, so make sure sync finish
-            cleanThreadParkInNextLoop();
-            parkCurrentThread();
-            Util.d(TAG,
-                    "discardFlyingSyncOrEnsureSyncFinish unpark thread " + Thread.currentThread());
-            return true;
-        }
-
-        return false;
-    }
-
-    void syncCacheToDB(int id) throws IOException {
-        this.agent.syncCacheToDB(id);
-    }
-
-    interface RemitAgent {
-        void syncCacheToDB(int id) throws IOException;
-    }
-
-    void parkCurrentThread() {
-        LockSupport.park();
-    }
-
-    void cleanThreadParkInNextLoop() {
-        parkThread = Thread.currentThread();
-        handler.sendEmptyMessage(WHAT_CLEAN_PARK);
-    }
-
-    void discardDelayedId(int id) {
-        handler.removeMessages(id);
+        executor.removePostWithId(id);
+        executor.postRemoveInfo(id);
     }
 }

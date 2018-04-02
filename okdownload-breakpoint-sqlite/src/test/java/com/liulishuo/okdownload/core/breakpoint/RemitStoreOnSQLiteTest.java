@@ -33,6 +33,8 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -66,7 +68,7 @@ public class RemitStoreOnSQLiteTest {
         initMocks(this);
 
         onCache = spy(new BreakpointStoreOnCache());
-        store = new RemitStoreOnSQLite(remitHelper, storeOnSQLite, onCache, helper);
+        store = spy(new RemitStoreOnSQLite(remitHelper, storeOnSQLite, onCache, helper));
     }
 
     @Test
@@ -156,7 +158,6 @@ public class RemitStoreOnSQLiteTest {
 
         verify(onCache).onTaskEnd(eq(1), eq(EndCause.COMPLETED), nullable(Exception.class));
         verify(remitHelper).discard(eq(1));
-        verify(helper).removeInfo(eq(1));
     }
 
     @Test
@@ -168,12 +169,11 @@ public class RemitStoreOnSQLiteTest {
     }
 
     @Test
-    public void discard() {
+    public void remove() {
         store.remove(1);
 
         verify(onCache).remove(eq(1));
         verify(remitHelper).discard(eq(1));
-        verify(helper).removeInfo(eq(1));
     }
 
     @Test
@@ -221,17 +221,32 @@ public class RemitStoreOnSQLiteTest {
         ids[0] = 1;
         ids[1] = 2;
 
+        store.bunchTaskCanceled(ids);
+
+        verify(remitHelper).endAndEnsureToDB(eq(ids));
+    }
+
+    @Test
+    public void syncCacheToDB_list() throws IOException {
+        final List<Integer> ids = new ArrayList<>(2);
+        ids.add(1);
+        ids.add(2);
+
         final SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(helper.getWritableDatabase()).thenReturn(db);
 
-        store.bunchTaskCanceled(ids);
+        store.syncCacheToDB(ids);
 
-        verify(remitHelper).endAndEnsureToDB(eq(1));
-        verify(remitHelper).endAndEnsureToDB(eq(2));
+        verify(store).syncCacheToDB(eq(1));
+        verify(store).syncCacheToDB(eq(2));
         verify(db).beginTransaction();
         verify(db).setTransactionSuccessful();
         verify(db).endTransaction();
+    }
 
-
+    @Test
+    public void removeInfo() {
+        store.removeInfo(1);
+        verify(helper).removeInfo(eq(1));
     }
 }

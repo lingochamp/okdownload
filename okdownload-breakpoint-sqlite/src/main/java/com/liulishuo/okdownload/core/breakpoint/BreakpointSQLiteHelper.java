@@ -177,22 +177,24 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         values.put(FILENAME, filename);
 
         Cursor c = null;
-        try {
-            final String query = "SELECT " + FILENAME + " FROM " + RESPONSE_FILENAME_TABLE_NAME
-                    + " WHERE " + URL + " = ?";
-            c = db.rawQuery(query, new String[]{url});
-            if (c.moveToFirst()) {
-                // exist
-                if (!filename.equals(c.getString(c.getColumnIndex(FILENAME)))) {
-                    // replace if not equal
-                    db.replace(RESPONSE_FILENAME_TABLE_NAME, null, values);
+        synchronized (url.intern()) {
+            try {
+                final String query = "SELECT " + FILENAME + " FROM " + RESPONSE_FILENAME_TABLE_NAME
+                        + " WHERE " + URL + " = ?";
+                c = db.rawQuery(query, new String[]{url});
+                if (c.moveToFirst()) {
+                    // exist
+                    if (!filename.equals(c.getString(c.getColumnIndex(FILENAME)))) {
+                        // replace if not equal
+                        db.replace(RESPONSE_FILENAME_TABLE_NAME, null, values);
+                    }
+                } else {
+                    // insert
+                    db.insert(RESPONSE_FILENAME_TABLE_NAME, null, values);
                 }
-            } else {
-                // insert
-                db.insert(RESPONSE_FILENAME_TABLE_NAME, null, values);
+            } finally {
+                if (c != null) c.close();
             }
-        } finally {
-            if (c != null) c.close();
         }
     }
 
