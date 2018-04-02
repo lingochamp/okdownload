@@ -29,7 +29,7 @@ public abstract class IdentifiedTask {
 
     @NonNull protected abstract File getProvidedPathFile();
 
-    @NonNull public abstract String getParentPath();
+    @NonNull public abstract File getParentFile();
 
     @Nullable public abstract String getFilename();
 
@@ -38,7 +38,7 @@ public abstract class IdentifiedTask {
 
         if (getProvidedPathFile().equals(another.getProvidedPathFile())) return true;
 
-        if (!new File(getParentPath()).equals(new File(another.getParentPath()))) return false;
+        if (!getParentFile().equals(another.getParentFile())) return false;
 
         // cover the case of filename is provided by response.
         final String filename = getFilename();

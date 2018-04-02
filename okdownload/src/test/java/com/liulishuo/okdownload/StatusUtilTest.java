@@ -34,6 +34,7 @@ import static com.liulishuo.okdownload.StatusUtil.Status.COMPLETED;
 import static com.liulishuo.okdownload.StatusUtil.Status.PENDING;
 import static com.liulishuo.okdownload.StatusUtil.Status.RUNNING;
 import static com.liulishuo.okdownload.StatusUtil.Status.UNKNOWN;
+import static com.liulishuo.okdownload.TestUtils.assertFile;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -113,7 +114,7 @@ public class StatusUtilTest {
     public void isCompletedOrUnknown_infoNotExist() throws IOException {
         final DownloadTask task = mock(DownloadTask.class);
         when(task.getUrl()).thenReturn("url");
-        when(task.getParentPath()).thenReturn(file.getParent());
+        when(task.getParentFile()).thenReturn(file.getParentFile());
         file.getParentFile().mkdirs();
         file.createNewFile();
 
@@ -157,16 +158,16 @@ public class StatusUtilTest {
         when(info.getFilename()).thenReturn("filename");
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
 
-        // info exist and filename is null and filename from info is exist --> idle
-        when(info.getFilename()).thenReturn(file.getName());
-        when(task.getParentPath()).thenReturn(file.getParent());
+        // info exist and filename is null and file from info is exist --> idle
+        when(info.getFile()).thenReturn(file);
+        when(task.getParentFile()).thenReturn(file.getParentFile());
         when(task.getFilename()).thenReturn(null);
         when(info.getTotalLength()).thenReturn(1L);
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
 
         // info exist and filename is the same but offset not the same to total ---> idle
-        when(task.getFilename()).thenReturn(file.getName());
-        when(info.getFilename()).thenReturn(file.getName());
+        when(task.getFile()).thenReturn(file);
+        when(info.getFile()).thenReturn(file);
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
 
         // info exist and filename is the same and offset the same to total ---> completed
@@ -189,13 +190,13 @@ public class StatusUtilTest {
     }
 
     @Test
-    public void createFinder() throws IOException {
+    public void createFinder() {
         DownloadTask task = StatusUtil.createFinder(url, file.getParent(), null);
-        assertThat(task.getPath()).isNull();
+        assertThat(task.getFile()).isNull();
 
-        assertThat(task.getParentPath()).isEqualTo(file.getParentFile().getAbsolutePath());
+        assertFile(task.getParentFile()).isEqualTo(file.getParentFile());
 
         task = StatusUtil.createFinder(url, file.getParent(), file.getName());
-        assertThat(task.getPath()).isEqualTo(file.getAbsolutePath());
+        assertFile(task.getFile()).isEqualTo(file);
     }
 }

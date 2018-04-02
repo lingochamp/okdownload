@@ -29,7 +29,6 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.exception.RetryException;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
@@ -169,22 +168,19 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
 
             // 3. waiting for file lock release after file path is confirmed.
-            fileStrategy.getFileLock().waitForRelease(task.getPath());
+            fileStrategy.getFileLock().waitForRelease(task.getFile().getAbsolutePath());
 
             // 4. reuse another info if another info is idle and available for reuse.
-            try {
-                OkDownload.with().downloadStrategy()
-                        .inspectAnotherSameInfo(task, info, remoteCheck.getInstanceLength());
-            } catch (RetryException e) {
-                cache.catchException(e);
-                break;
-            }
+            OkDownload.with().downloadStrategy()
+                    .inspectAnotherSameInfo(task, info, remoteCheck.getInstanceLength());
 
             if (remoteCheck.isResumable()) {
                 // 5. local check
                 final BreakpointLocalCheck localCheck = createLocalCheck(info);
                 localCheck.check();
                 if (localCheck.isDirty()) {
+                    Util.d(TAG, "breakpoint invalid: download from beginning because of "
+                            + "local check is dirty " + task.getId() + " " + localCheck);
                     // 6. assemble block data
                     assembleBlockAndCallbackFromBeginning(info, remoteCheck,
                             localCheck.getCauseOrThrow());
@@ -193,6 +189,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                             .downloadFromBreakpoint(task, info);
                 }
             } else {
+                Util.d(TAG, "breakpoint invalid: download from beginning because of "
+                        + "remote check not resumable " + task.getId() + " " + remoteCheck);
                 // 6. assemble block data
                 assembleBlockAndCallbackFromBeginning(info, remoteCheck,
                         remoteCheck.getCauseOrThrow());

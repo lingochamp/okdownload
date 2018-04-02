@@ -19,8 +19,6 @@ package com.liulishuo.okdownload;
 import android.content.Context;
 import android.net.Uri;
 
-import java.io.IOException;
-
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
@@ -33,6 +31,10 @@ import com.liulishuo.okdownload.core.download.DownloadStrategy;
 import com.liulishuo.okdownload.core.file.DownloadOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
+import java.io.File;
+import java.io.IOException;
+
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -97,5 +99,21 @@ public class TestUtils {
         when(mockChain.getConnectionOrCreate()).thenReturn(mock(DownloadConnection.class));
 
         return mockChain;
+    }
+
+    public static AssertFile assertFile(File actual) {
+        return new AssertFile(actual);
+    }
+
+    public static class AssertFile {
+        final File actual;
+
+        public AssertFile(File actual) {
+            this.actual = actual;
+        }
+
+        public void isEqualTo(File expected) {
+            assertThat(actual.getAbsolutePath()).isEqualTo(expected.getAbsolutePath());
+        }
     }
 }

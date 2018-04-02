@@ -42,6 +42,7 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +88,7 @@ public class DownloadCallTest {
     public void setup() {
         initMocks(this);
         when(task.getUri()).thenReturn(mock(Uri.class));
+        when(task.getFile()).thenReturn(mock(File.class));
         when(task.getListener()).thenReturn(mock(DownloadListener.class));
         call = spy(DownloadCall.create(task, false, store));
 
@@ -138,11 +140,11 @@ public class DownloadCallTest {
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
         doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
-        when(task.getPath()).thenReturn("certain-path");
+        when(task.getFile()).thenReturn(new File("certain-path"));
 
         call.execute();
 
-        verify(fileLock).waitForRelease(eq("certain-path"));
+        verify(fileLock).waitForRelease(eq(new File("certain-path").getAbsolutePath()));
     }
 
     @Test

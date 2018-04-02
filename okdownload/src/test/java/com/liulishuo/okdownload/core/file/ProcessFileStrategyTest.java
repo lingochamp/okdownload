@@ -50,7 +50,7 @@ public class ProcessFileStrategyTest {
 
     @Mock private DownloadTask task;
     @Mock private BreakpointInfo info;
-    private final String existPath = "./exist-path";
+    private final File existFile = new File("./exist-path");
 
     @Before
     public void setup() throws IOException {
@@ -58,17 +58,17 @@ public class ProcessFileStrategyTest {
         strategy = new ProcessFileStrategy();
         localCheck = spy(strategy.resumeAvailableLocalCheck(task, info));
 
-        new File(existPath).createNewFile();
+        existFile.createNewFile();
     }
 
     @After
     public void tearDown() {
-        new File(existPath).delete();
+        existFile.delete();
     }
 
     @Test
     public void discardProcess() throws IOException {
-        when(task.getPath()).thenReturn("mock path");
+        when(task.getFile()).thenReturn(new File("mock path"));
 
         strategy.discardProcess(task);
         // nothing need to test.
@@ -106,8 +106,8 @@ public class ProcessFileStrategyTest {
 
     @Test
     public void isInfoRightToResume() {
-        when(task.getPath()).thenReturn(existPath);
-        when(info.getPath()).thenReturn(existPath);
+        when(task.getFile()).thenReturn(existFile);
+        when(info.getFile()).thenReturn(existFile);
         when(info.getBlockCount()).thenReturn(1);
         final BlockInfo blockInfo = mock(BlockInfo.class);
         when(info.getBlock(0)).thenReturn(blockInfo);
@@ -120,14 +120,14 @@ public class ProcessFileStrategyTest {
         when(blockInfo.getContentLength()).thenReturn(1L);
 
         // the filename in task is not equal to the filename in info.
-        when(task.getPath()).thenReturn(null);
+        when(task.getFile()).thenReturn(null);
         assertThat(localCheck.isInfoRightToResume()).isFalse();
-        when(task.getPath()).thenReturn(existPath);
+        when(task.getFile()).thenReturn(existFile);
 
         // the file path in info is null.
-        when(info.getPath()).thenReturn(null);
+        when(info.getFile()).thenReturn(null);
         assertThat(localCheck.isInfoRightToResume()).isFalse();
-        when(info.getPath()).thenReturn(existPath);
+        when(info.getFile()).thenReturn(existFile);
 
         // is chunked
         when(info.isChunked()).thenReturn(true);
@@ -174,13 +174,13 @@ public class ProcessFileStrategyTest {
 
     @Test
     public void isFileExistToResume() {
-        when(task.getPath()).thenReturn(existPath);
+        when(task.getFile()).thenReturn(existFile);
         assertThat(localCheck.isFileExistToResume()).isTrue();
 
-        when(task.getPath()).thenReturn(null);
+        when(task.getFile()).thenReturn(null);
         assertThat(localCheck.isFileExistToResume()).isFalse();
 
-        when(task.getPath()).thenReturn("no-exist");
+        when(task.getFile()).thenReturn(new File("no-exist"));
         assertThat(localCheck.isFileExistToResume()).isFalse();
     }
 

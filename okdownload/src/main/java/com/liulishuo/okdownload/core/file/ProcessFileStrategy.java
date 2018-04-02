@@ -50,11 +50,10 @@ public class ProcessFileStrategy {
 
     public void discardProcess(@NonNull DownloadTask task) throws IOException {
         // Remove target file.
-        final String path = task.getPath();
+        final File file = task.getFile();
         // Do nothing, because the filename hasn't found yet.
-        if (path == null) return;
+        if (file == null) return;
 
-        final File file = new File(path);
         if (file.exists()) {
             if (!file.delete()) {
                 throw new IOException("Delete file failed!");
@@ -101,9 +100,9 @@ public class ProcessFileStrategy {
 
             if (blockCount <= 0) return false;
             if (info.isChunked()) return false;
-            if (info.getPath() == null) return false;
-            final File fileOnTask = task.getPath() == null ? null : new File(task.getPath());
-            if (!new File(info.getPath()).equals(fileOnTask)) return false;
+            if (info.getFile() == null) return false;
+            final File fileOnTask = task.getFile();
+            if (!info.getFile().equals(fileOnTask)) return false;
 
             for (int i = 0; i < blockCount; i++) {
                 BlockInfo blockInfo = info.getBlock(i);
@@ -124,8 +123,8 @@ public class ProcessFileStrategy {
         }
 
         public boolean isFileExistToResume() {
-            final String filePath = task.getPath();
-            return filePath != null && new File(filePath).exists();
+            final File file = task.getFile();
+            return file != null && file.exists();
         }
 
         public boolean isAvailable() {

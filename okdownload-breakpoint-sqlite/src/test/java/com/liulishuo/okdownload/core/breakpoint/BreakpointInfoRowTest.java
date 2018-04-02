@@ -24,6 +24,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
+
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.CHUNKED;
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.ETAG;
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.FILENAME;
@@ -86,7 +88,7 @@ public class BreakpointInfoRowTest {
         assertThat(info.id).isEqualTo(10);
         assertThat(info.getUrl()).isEqualTo("url");
         assertThat(info.getEtag()).isEqualTo("etag");
-        assertThat(info.parentPath).isEqualTo("p-path");
+        assertThat(info.parentFile).isEqualTo(new File("p-path"));
         assertThat(info.getFilename()).isNull();
         assertThat(info.isTaskOnlyProvidedParentPath()).isTrue();
         assertThat(info.isChunked()).isFalse();

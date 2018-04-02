@@ -64,6 +64,7 @@ public class MultiPointOutputStream {
 
     volatile boolean syncRunning;
     @NonNull private final Runnable syncRunnable;
+    private String path;
 
     MultiPointOutputStream(@NonNull DownloadTask task,
                            @NonNull BreakpointInfo info,
@@ -88,6 +89,9 @@ public class MultiPointOutputStream {
         } else {
             this.syncRunnable = syncRunnable;
         }
+
+        final File file = task.getFile();
+        if (file != null) this.path = file.getAbsolutePath();
     }
 
     public MultiPointOutputStream(@NonNull DownloadTask task,
@@ -118,8 +122,8 @@ public class MultiPointOutputStream {
                 // if async sync-data we just make sure sync one time on the current.
                 if (!syncRunning) {
                     syncRunning = true;
-                    OkDownload.with().processFileStrategy().getFileLock()
-                            .increaseLock(task.getPath());
+                    inspectValidPath();
+                    OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
                     executeSyncRunnableAsync();
                 }
             } else {
@@ -222,7 +226,8 @@ public class MultiPointOutputStream {
             }
         } finally {
             syncRunning = false;
-            OkDownload.with().processFileStrategy().getFileLock().decreaseLock(task.getPath());
+            inspectValidPath();
+            OkDownload.with().processFileStrategy().getFileLock().decreaseLock(path);
             if (parkForWaitingSyncThread != null) unparkThread(parkForWaitingSyncThread);
         }
     }
@@ -241,13 +246,12 @@ public class MultiPointOutputStream {
     synchronized DownloadOutputStream outputStream(int blockIndex) throws IOException {
 
         @NonNull final Uri uri;
-        final boolean isFileScheme = task.getUri().getScheme().equals("file");
+        final boolean isFileScheme = Util.isUriFileScheme(task.getUri());
         if (isFileScheme) {
-            final String path = task.getPath();
-            if (path == null) throw new FileNotFoundException("Filename is not ready!");
-            final File file = new File(path);
+            final File file = task.getFile();
+            if (file == null) throw new FileNotFoundException("Filename is not ready!");
 
-            final File parentFile = file.getParentFile();
+            final File parentFile = task.getParentFile();
             if (!parentFile.exists() && !parentFile.mkdirs()) {
                 throw new IOException("Create parent folder failed!");
             }
@@ -256,11 +260,7 @@ public class MultiPointOutputStream {
                 Util.d(TAG, "Create new file: " + file.getName());
             }
 
-            if (task.isUriIsDirectory()) {
-                uri = Uri.fromFile(file);
-            } else {
-                uri = task.getUri();
-            }
+            uri = Uri.fromFile(file);
         } else {
             uri = task.getUri();
         }
@@ -283,10 +283,10 @@ public class MultiPointOutputStream {
                 // pre allocate length
                 final long totalLength = info.getTotalLength();
                 if (isFileScheme) {
-                    final String path = task.getPath();
-                    final long requireSpace = totalLength - new File(path).length();
+                    final File file = task.getFile();
+                    final long requireSpace = totalLength - file.length();
                     if (requireSpace > 0) {
-                        inspectFreeSpace(path, requireSpace);
+                        inspectFreeSpace(file.getAbsolutePath(), requireSpace);
                         outputStream.setLength(totalLength);
                     }
                 } else {
@@ -311,5 +311,9 @@ public class MultiPointOutputStream {
         if (freeSpace < requireSpace) {
             throw new PreAllocateException(requireSpace, freeSpace);
         }
+    }
+
+    private void inspectValidPath() {
+        if (path == null && task.getFile() != null) path = task.getFile().getAbsolutePath();
     }
 }

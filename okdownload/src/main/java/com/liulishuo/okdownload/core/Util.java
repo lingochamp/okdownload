@@ -17,12 +17,16 @@
 package com.liulishuo.okdownload.core;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.StatFs;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -36,6 +40,7 @@ import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -347,5 +352,34 @@ public class Util {
             Util.w("Util", "parse content-length from content-range failed " + e);
         }
         return CHUNKED_CONTENT_LENGTH;
+    }
+
+    public static boolean isUriContentScheme(@NonNull Uri uri) {
+        return uri.getScheme().equals(ContentResolver.SCHEME_CONTENT);
+    }
+
+    public static boolean isUriFileScheme(@NonNull Uri uri) {
+        return uri.getScheme().equals(ContentResolver.SCHEME_FILE);
+    }
+
+    @Nullable public static String getFilenameFromContentUri(@NonNull Uri contentUri) {
+        final ContentResolver resolver = OkDownload.with().context().getContentResolver();
+        final Cursor cursor = resolver.query(contentUri, null, null, null, null);
+        if (cursor != null) {
+            try {
+                cursor.moveToFirst();
+                return cursor
+                        .getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+            } finally {
+                cursor.close();
+            }
+        }
+
+        return null;
+    }
+
+    @NonNull public static File getParentFile(final File file) {
+        final File candidate = file.getParentFile();
+        return candidate == null ? new File("/") : candidate;
     }
 }

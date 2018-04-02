@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +96,7 @@ public class DownloadDispatcherTest {
     private DownloadTask mockTask() {
         final DownloadTask mockTask = mock(DownloadTask.class);
         when(mockTask.getListener()).thenReturn(mock(DownloadListener.class));
-        when(mockTask.getPath()).thenReturn("/sdcard/abc" + mockTask.hashCode());
+        when(mockTask.getFile()).thenReturn(new File("/sdcard/abc" + mockTask.hashCode()));
         return mockTask;
     }
 
@@ -127,17 +128,17 @@ public class DownloadDispatcherTest {
         verifyTaskEnd(mockRunningSyncTask, SAME_TASK_BUSY, null);
 
         final DownloadTask mockFileBusyTask1 = mockTask();
-        doReturn(mockReadyTask.getPath()).when(mockFileBusyTask1).getPath();
+        doReturn(mockReadyTask.getFile()).when(mockFileBusyTask1).getFile();
         dispatcher.enqueue(mockFileBusyTask1);
         verifyTaskEnd(mockFileBusyTask1, FILE_BUSY, null);
 
         final DownloadTask mockFileBusyTask2 = mockTask();
-        doReturn(mockRunningAsyncTask.getPath()).when(mockFileBusyTask2).getPath();
+        doReturn(mockRunningAsyncTask.getFile()).when(mockFileBusyTask2).getFile();
         dispatcher.execute(mockFileBusyTask2);
         verifyTaskEnd(mockFileBusyTask2, FILE_BUSY, null);
 
         final DownloadTask mockFileBusyTask3 = mockTask();
-        doReturn(mockRunningSyncTask.getPath()).when(mockFileBusyTask3).getPath();
+        doReturn(mockRunningSyncTask.getFile()).when(mockFileBusyTask3).getFile();
         dispatcher.enqueue(mockFileBusyTask3);
         verifyTaskEnd(mockFileBusyTask3, FILE_BUSY, null);
 
@@ -385,7 +386,7 @@ public class DownloadDispatcherTest {
     public void isFileConflictAfterRun() {
         final DownloadTask mockAsyncTask = mockTask();
         final DownloadTask samePathTask = mockTask();
-        doReturn(mockAsyncTask.getPath()).when(samePathTask).getPath();
+        doReturn(mockAsyncTask.getFile()).when(samePathTask).getFile();
         DownloadCall call = spy(DownloadCall.create(mockAsyncTask, true, store));
         runningAsyncCalls.add(call);
 
@@ -400,7 +401,7 @@ public class DownloadDispatcherTest {
         when(call.isCanceled()).thenReturn(false);
 
         final DownloadTask mockSyncTask = mockTask();
-        doReturn(mockSyncTask.getPath()).when(samePathTask).getPath();
+        doReturn(mockSyncTask.getFile()).when(samePathTask).getFile();
         runningSyncCalls.add(DownloadCall.create(mockSyncTask, false, store));
 
         isConflict = dispatcher.isFileConflictAfterRun(samePathTask);

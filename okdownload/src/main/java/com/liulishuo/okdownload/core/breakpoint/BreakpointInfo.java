@@ -32,18 +32,19 @@ public class BreakpointInfo {
     private final String url;
     private String etag;
 
-    final String parentPath;
+    @NonNull final File parentFile;
+    @Nullable private File targetFile;
     private final DownloadStrategy.FilenameHolder filenameHolder;
 
     private final List<BlockInfo> blockInfoList;
     private final boolean isTaskOnlyProvidedParentPath;
     private boolean isChunked;
 
-    public BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
+    public BreakpointInfo(int id, @NonNull String url, @NonNull File parentFile,
                           @Nullable String filename) {
         this.id = id;
         this.url = url;
-        this.parentPath = parentPath;
+        this.parentFile = parentFile;
         this.blockInfoList = new ArrayList<>();
 
         if (Util.isEmpty(filename)) {
@@ -52,14 +53,15 @@ public class BreakpointInfo {
         } else {
             filenameHolder = new DownloadStrategy.FilenameHolder(filename);
             isTaskOnlyProvidedParentPath = false;
+            targetFile = new File(parentFile, filename);
         }
     }
 
-    BreakpointInfo(int id, @NonNull String url, @NonNull String parentPath,
+    BreakpointInfo(int id, @NonNull String url, @NonNull File parentFile,
                    @Nullable String filename, boolean isTaskOnlyProvidedParentPath) {
         this.id = id;
         this.url = url;
-        this.parentPath = parentPath;
+        this.parentFile = parentFile;
         this.blockInfoList = new ArrayList<>();
 
         if (Util.isEmpty(filename)) {
@@ -168,13 +170,16 @@ public class BreakpointInfo {
         return filenameHolder;
     }
 
-    public String getPath() {
+    @Nullable public File getFile() {
         final String filename = this.filenameHolder.get();
-        return filename == null ? null : new File(parentPath, filename).getAbsolutePath();
+        if (filename == null) return null;
+        if (targetFile == null) targetFile = new File(parentFile, filename);
+
+        return targetFile;
     }
 
     public BreakpointInfo copy() {
-        final BreakpointInfo info = new BreakpointInfo(id, url, parentPath, filenameHolder.get(),
+        final BreakpointInfo info = new BreakpointInfo(id, url, parentFile, filenameHolder.get(),
                 isTaskOnlyProvidedParentPath);
         info.isChunked = this.isChunked;
         for (BlockInfo blockInfo : blockInfoList) {
@@ -184,7 +189,7 @@ public class BreakpointInfo {
     }
 
     public BreakpointInfo copyWithReplaceId(int replaceId) {
-        final BreakpointInfo info = new BreakpointInfo(replaceId, url, parentPath,
+        final BreakpointInfo info = new BreakpointInfo(replaceId, url, parentFile,
                 filenameHolder.get(), isTaskOnlyProvidedParentPath);
         info.isChunked = this.isChunked;
         for (BlockInfo blockInfo : blockInfoList) {
@@ -202,7 +207,7 @@ public class BreakpointInfo {
      * You can use this method to replace url for using breakpoint info from another task.
      */
     public BreakpointInfo copyWithReplaceIdAndUrl(int replaceId, String newUrl) {
-        final BreakpointInfo info = new BreakpointInfo(replaceId, newUrl, parentPath,
+        final BreakpointInfo info = new BreakpointInfo(replaceId, newUrl, parentFile,
                 filenameHolder.get(), isTaskOnlyProvidedParentPath);
         info.isChunked = this.isChunked;
         for (BlockInfo blockInfo : blockInfoList) {
@@ -212,7 +217,7 @@ public class BreakpointInfo {
     }
 
     public boolean isSameFrom(DownloadTask task) {
-        if (!new File(parentPath).equals(new File(task.getParentPath()))) {
+        if (!parentFile.equals(task.getParentFile())) {
             return false;
         }
 
@@ -223,7 +228,7 @@ public class BreakpointInfo {
 
         if (isTaskOnlyProvidedParentPath) {
             // filename is provided by response.
-            if (!task.isUriIsDirectory()) return false;
+            if (!task.isFilenameFromResponse()) return false;
 
             return otherFilename == null || otherFilename.equals(filenameHolder.get());
         }
@@ -234,7 +239,7 @@ public class BreakpointInfo {
     @Override public String toString() {
         return "id[" + id + "]" + " url[" + url + "]" + " etag[" + etag + "]"
                 + " isTaskOnlyProvidedParentPath[" + isTaskOnlyProvidedParentPath + "]"
-                + " parent path[" + parentPath + "]" + " filename[" + filenameHolder.get() + "]"
+                + " parent path[" + parentFile + "]" + " filename[" + filenameHolder.get() + "]"
                 + " block(s):" + blockInfoList.toString();
     }
 }

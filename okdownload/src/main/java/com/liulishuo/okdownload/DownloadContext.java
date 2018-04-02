@@ -19,6 +19,7 @@ package com.liulishuo.okdownload;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -76,6 +77,7 @@ public class DownloadContext {
     }
 
     public void start(final DownloadListener listener, boolean isSerial) {
+        final long startTime = SystemClock.uptimeMillis();
         Util.d(TAG, "start " + isSerial);
         isStarted = true;
         final DownloadListener targetListener;
@@ -106,7 +108,8 @@ public class DownloadContext {
         } else {
             DownloadTask.enqueue(tasks, targetListener);
         }
-        Util.d(TAG, "start finish " + isSerial);
+        Util.d(TAG,
+                "start finish " + isSerial + " " + (SystemClock.uptimeMillis() - startTime) + "ms");
     }
 
     public AlterContext alter() {
@@ -183,7 +186,7 @@ public class DownloadContext {
                         + " provide parentPath on QueueSet!");
             }
 
-            return bind(new DownloadTask.Builder(url, set.uri));
+            return bind(new DownloadTask.Builder(url, set.uri).setFilenameFromResponse(true));
         }
 
         public DownloadTask bind(@NonNull DownloadTask.Builder taskBuilder) {

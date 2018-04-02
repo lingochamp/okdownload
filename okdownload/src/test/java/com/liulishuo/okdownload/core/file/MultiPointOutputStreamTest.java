@@ -65,7 +65,7 @@ public class MultiPointOutputStreamTest {
     private MultiPointOutputStream multiPointOutputStream;
 
     private final String parentPath = "./p-path/";
-    private final String path = "./p-path/filename";
+    private final File existFile = new File("./p-path/filename");
     @Mock private BreakpointInfo info;
     @Mock private DownloadTask task;
     @Mock private DownloadStore store;
@@ -80,15 +80,15 @@ public class MultiPointOutputStreamTest {
     public void setup() {
         when(OkDownload.with().context()).thenReturn(application);
         initMocks(this);
-        when(task.getPath()).thenReturn(path);
-        when(task.getParentPath()).thenReturn(parentPath);
+        when(task.getFile()).thenReturn(existFile);
+        when(task.getParentFile()).thenReturn(new File(parentPath));
         multiPointOutputStream = spy(new MultiPointOutputStream(task, info, store, syncRunnable));
         doNothing().when(multiPointOutputStream).executeSyncRunnableAsync();
     }
 
     @After
     public void tearDown() {
-        final File file = new File(path);
+        final File file = existFile;
         if (file.exists()) {
             file.delete();
         }
@@ -138,7 +138,7 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.runSync();
 
         verify(store).onSyncToFilesystemSuccess(info, 1, 10);
-        verify(fileLock).decreaseLock(eq(path));
+        verify(fileLock).decreaseLock(eq(existFile.getAbsolutePath()));
         verify(multiPointOutputStream).unparkThread(eq(thread));
         assertThat(multiPointOutputStream.allNoSyncLength.get()).isZero();
         assertThat(multiPointOutputStream.noSyncLengthMap.get(1).get()).isZero();
@@ -171,7 +171,7 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.ensureSyncComplete(1, true);
 
         verify(multiPointOutputStream).executeSyncRunnableAsync();
-        verify(fileLock).increaseLock(eq(path));
+        verify(fileLock).increaseLock(eq(existFile.getAbsolutePath()));
         assertThat(multiPointOutputStream.syncRunning).isTrue();
     }
 

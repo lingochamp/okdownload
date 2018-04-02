@@ -259,7 +259,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         values.put(ID, info.id);
         values.put(URL, info.getUrl());
         values.put(ETAG, info.getEtag());
-        values.put(PARENT_PATH, info.parentPath);
+        values.put(PARENT_PATH, info.parentFile.getAbsolutePath());
         values.put(FILENAME, info.getFilename());
         values.put(TASK_ONLY_PARENT_PATH, info.isTaskOnlyProvidedParentPath() ? 1 : 0);
         values.put(CHUNKED, info.isChunked() ? 1 : 0);

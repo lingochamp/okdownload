@@ -47,6 +47,14 @@ public class BreakpointRemoteCheck {
         this.info = info;
     }
 
+    @Override public String toString() {
+        return "isAcceptRange[" + isAcceptRange + "] "
+                + "isResumable[" + isResumable + "] "
+                + "failedCause[" + failedCause + "] "
+                + "instanceLength[" + instanceLength + "] "
+                + super.toString();
+    }
+
     /**
      * Get the remote check failed cause.
      *
@@ -117,7 +125,7 @@ public class BreakpointRemoteCheck {
         this.instanceLength = instanceLength;
         this.isAcceptRange = isAcceptRange;
 
-        //2. check whether server cancelled.
+        //3. check whether server cancelled.
         if (downloadStrategy.isServerCanceled(responseCode, info.getTotalOffset() != 0)) {
             throw new ServerCanceledException(responseCode, info.getTotalOffset());
         }

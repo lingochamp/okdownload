@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +57,7 @@ public class BreakpointStoreOnCacheTest {
         final DownloadTask task = mock(DownloadTask.class);
 
         when(task.getId()).thenReturn(insertedId);
-        when(task.getParentPath()).thenReturn("/p-path/");
+        when(task.getParentFile()).thenReturn(new File("/p-path/"));
         when(task.getFilename()).thenReturn("filename");
         when(task.getUrl()).thenReturn("url");
         storeOnCache.createAndInsert(task);
@@ -83,7 +84,7 @@ public class BreakpointStoreOnCacheTest {
     public void update() {
         createAndInsert();
 
-        BreakpointInfo newOne = new BreakpointInfo(insertedId, "", "", "newOne");
+        BreakpointInfo newOne = new BreakpointInfo(insertedId, "", new File(""), "newOne");
 
         // replace
         storeOnCache.update(newOne);

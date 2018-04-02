@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -45,12 +46,13 @@ public class BreakpointSQLiteHelperTest {
     @Before
     public void setup() throws IOException {
         helper = new BreakpointSQLiteHelper(application);
-        final BreakpointInfo info1 = new BreakpointInfo(1, "url1", "p-path1", null);
+        final BreakpointInfo info1 = new BreakpointInfo(1, "url1", new File("p-path1"), null);
         info1.addBlock(new BlockInfo(0, 10));
         helper.insert(info1);
         insertedInfo1 = info1;
 
-        final BreakpointInfo info2 = new BreakpointInfo(2, "url2", "p-path2", "filename2");
+        final BreakpointInfo info2 = new BreakpointInfo(2, "url2", new File("p-path2"),
+                "filename2");
         info2.addBlock(new BlockInfo(0, 20));
         info2.addBlock(new BlockInfo(20, 20, 10));
         helper.insert(info2);
@@ -70,13 +72,15 @@ public class BreakpointSQLiteHelperTest {
         final BreakpointInfo info1 = infoSparseArray.get(insertedInfo1.id);
         assertThat(info1.getBlockCount()).isEqualTo(1);
         assertThat(info1.getUrl()).isEqualTo("url1");
-        assertThat(info1.parentPath).isEqualTo("p-path1");
+        assertThat(info1.parentFile.getAbsolutePath())
+                .isEqualTo(new File("p-path1").getAbsolutePath());
         assertThat(info1.getFilename()).isNull();
 
         final BreakpointInfo info2 = infoSparseArray.get(insertedInfo2.id);
         assertThat(info2.getBlockCount()).isEqualTo(2);
         assertThat(info2.getUrl()).isEqualTo("url2");
-        assertThat(info2.parentPath).isEqualTo("p-path2");
+        assertThat(info2.parentFile.getAbsolutePath())
+                .isEqualTo(new File("p-path2").getAbsolutePath());
         assertThat(info2.getFilename()).isEqualTo("filename2");
     }
 

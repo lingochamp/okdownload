@@ -16,7 +16,6 @@
 
 package com.liulishuo.okdownload;
 
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -59,28 +58,29 @@ public class StatusUtil {
         final BreakpointInfo info = store.get(task.getId());
 
         @Nullable String filename = task.getFilename();
-        @NonNull final String parentPath = task.getParentPath();
+        @NonNull final File parentFile = task.getParentFile();
+        @Nullable final File targetFile = task.getFile();
 
         if (info != null) {
             if (!info.isChunked() && info.getTotalLength() <= 0) {
                 return Status.UNKNOWN;
-            } else if ((filename != null && filename.equals(info.getFilename()))
-                    && new File(parentPath, filename).exists()
+            } else if ((targetFile != null && targetFile.equals(info.getFile()))
+                    && targetFile.exists()
                     && info.getTotalOffset() == info.getTotalLength()) {
                 return Status.COMPLETED;
-            } else if (filename == null && info.getFilename() != null
-                    && new File(parentPath, info.getFilename()).exists()) {
+            } else if (filename == null && info.getFile() != null
+                    && info.getFile().exists()) {
                 return Status.IDLE;
-            } else if (filename != null && filename.equals(info.getFilename())
-                    && new File(parentPath, filename).exists()) {
+            } else if (targetFile != null && targetFile.equals(info.getFile())
+                    && targetFile.exists()) {
                 return Status.IDLE;
             }
-        } else if (filename != null && new File(parentPath, filename).exists()) {
+        } else if (targetFile != null && targetFile.exists()) {
             return Status.COMPLETED;
         } else {
             filename = store.getResponseFilename(task.getUrl());
             if (filename != null) {
-                if (new File(parentPath, filename).exists()) {
+                if (new File(parentFile, filename).exists()) {
                     return Status.COMPLETED;
                 }
             }
@@ -112,10 +112,7 @@ public class StatusUtil {
     @NonNull static DownloadTask createFinder(@NonNull String url,
                                               @NonNull String parentPath,
                                               @Nullable String filename) {
-        final Uri uri = Uri.fromFile(new File(parentPath));
-
-        return new DownloadTask.Builder(url, uri)
-                .setFilename(filename)
+        return new DownloadTask.Builder(url, parentPath, filename)
                 .build();
     }
 

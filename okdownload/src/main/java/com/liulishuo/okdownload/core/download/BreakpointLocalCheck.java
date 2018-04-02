@@ -81,9 +81,9 @@ public class BreakpointLocalCheck {
 
         if (blockCount <= 0) return false;
         if (info.isChunked()) return false;
-        if (info.getPath() == null) return false;
-        final File fileOnTask = task.getPath() == null ? null : new File(task.getPath());
-        if (!new File(info.getPath()).equals(fileOnTask)) return false;
+        if (info.getFile() == null) return false;
+        final File fileOnTask = task.getFile();
+        if (!info.getFile().equals(fileOnTask)) return false;
 
         for (int i = 0; i < blockCount; i++) {
             BlockInfo blockInfo = info.getBlock(i);
@@ -104,8 +104,8 @@ public class BreakpointLocalCheck {
     }
 
     public boolean isFileExistToResume() {
-        final String filePath = task.getPath();
-        return filePath != null && new File(filePath).exists();
+        final File file = task.getFile();
+        return file != null && file.exists();
     }
 
     public void check() {
@@ -113,5 +113,12 @@ public class BreakpointLocalCheck {
         infoRight = isInfoRightToResume();
         outputStreamSupport = isOutputStreamSupportResume();
         isDirty = !infoRight || !fileExist || !outputStreamSupport;
+    }
+
+    @Override public String toString() {
+        return "fileExist[" + fileExist + "] "
+                + "infoRight[" + infoRight + "] "
+                + "outputStreamSupport[" + outputStreamSupport + "] "
+                + super.toString();
     }
 }

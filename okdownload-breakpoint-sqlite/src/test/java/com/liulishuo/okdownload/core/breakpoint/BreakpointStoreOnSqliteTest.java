@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -79,7 +80,7 @@ public class BreakpointStoreOnSqliteTest {
         final DownloadTask task = mock(DownloadTask.class);
         when(task.getId()).thenReturn(id2);
         when(task.getUrl()).thenReturn("url");
-        when(task.getParentPath()).thenReturn("p-path");
+        when(task.getParentFile()).thenReturn(new File("p-path"));
         doReturn("filename").when(task).getFilename();
 
         store.createAndInsert(task);

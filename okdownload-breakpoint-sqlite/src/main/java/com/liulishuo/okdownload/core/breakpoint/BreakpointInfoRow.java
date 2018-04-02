@@ -18,6 +18,8 @@ package com.liulishuo.okdownload.core.breakpoint;
 
 import android.database.Cursor;
 
+import java.io.File;
+
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.CHUNKED;
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.ETAG;
 import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.FILENAME;
@@ -75,7 +77,7 @@ public class BreakpointInfoRow {
     }
 
     public BreakpointInfo toInfo() {
-        final BreakpointInfo info = new BreakpointInfo(id, url, parentPath, filename,
+        final BreakpointInfo info = new BreakpointInfo(id, url, new File(parentPath), filename,
                 taskOnlyProvidedParentPath);
         info.setEtag(etag);
         info.setChunked(chunked);

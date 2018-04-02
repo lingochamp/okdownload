@@ -134,7 +134,7 @@ public class Listener4Assist {
 
         if (model == null) {
             model = new Listener4Model(
-                    new BreakpointInfo(task.getId(), task.getUrl(), task.getParentPath(),
+                    new BreakpointInfo(task.getId(), task.getUrl(), task.getParentFile(),
                             task.getFilename()), 0, new SparseArray<Long>());
 
             if (assistExtend != null) {

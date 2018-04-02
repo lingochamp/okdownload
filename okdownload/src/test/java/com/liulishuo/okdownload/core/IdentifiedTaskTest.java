@@ -32,8 +32,8 @@ public class IdentifiedTaskTest {
     private IdentifiedTask task;
     private IdentifiedTask another;
     private String url = "https://jacksgong.com";
-    private File providedPath = new File("/provided-path/filename");
-    private String parentPath = "/provided-path";
+    private File providedFile = new File("/provided-path/filename");
+    private File parentFile = new File("/provided-path");
     private String filename = "filename";
 
     @Before
@@ -48,11 +48,11 @@ public class IdentifiedTaskTest {
             }
 
             @NonNull @Override protected File getProvidedPathFile() {
-                return providedPath;
+                return providedFile;
             }
 
-            @NonNull @Override public String getParentPath() {
-                return parentPath;
+            @NonNull @Override public File getParentFile() {
+                return parentFile;
             }
 
             @Nullable @Override public String getFilename() {
@@ -70,11 +70,11 @@ public class IdentifiedTaskTest {
             }
 
             @NonNull @Override protected File getProvidedPathFile() {
-                return providedPath;
+                return providedFile;
             }
 
-            @NonNull @Override public String getParentPath() {
-                return parentPath;
+            @NonNull @Override public File getParentFile() {
+                return parentFile;
             }
 
             @Nullable @Override public String getFilename() {
@@ -95,10 +95,10 @@ public class IdentifiedTaskTest {
     @Test
     public void compareIgnoreId_providedPathFile() {
         when(another.getProvidedPathFile()).thenReturn(new File("/another-provided-path"));
-        when(another.getParentPath()).thenReturn("/another-provided-path");
+        when(another.getParentFile()).thenReturn(new File("/another-provided-path"));
         assertThat(task.compareIgnoreId(another)).isFalse();
 
-        when(another.getProvidedPathFile()).thenReturn(providedPath);
+        when(another.getProvidedPathFile()).thenReturn(providedFile);
         assertThat(task.compareIgnoreId(another)).isTrue();
     }
 
@@ -106,10 +106,10 @@ public class IdentifiedTaskTest {
     public void compareIgnoreId_parentPath() {
         when(another.getProvidedPathFile()).thenReturn(new File("/another-parent-path"));
 
-        when(another.getParentPath()).thenReturn("/another-parent-path");
+        when(another.getParentFile()).thenReturn(new File("/another-parent-path"));
         assertThat(task.compareIgnoreId(another)).isFalse();
 
-        when(another.getParentPath()).thenReturn(parentPath);
+        when(another.getParentFile()).thenReturn(parentFile);
         assertThat(task.compareIgnoreId(another)).isTrue();
     }
 

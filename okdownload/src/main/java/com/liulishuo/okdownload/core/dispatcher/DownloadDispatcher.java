@@ -103,6 +103,7 @@ public class DownloadDispatcher {
     }
 
     private synchronized void enqueueLocked(DownloadTask[] tasks) {
+        final long startTime = SystemClock.uptimeMillis();
         Util.d(TAG, "start enqueueLocked for bunch task: " + tasks.length);
         final List<DownloadTask> taskList = new ArrayList<>();
         Collections.addAll(taskList, tasks);
@@ -115,7 +116,8 @@ public class DownloadDispatcher {
 
         if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
 
-        Util.d(TAG, "end enqueueLocked for bunch task: " + tasks.length);
+        Util.d(TAG, "end enqueueLocked for bunch task: " + tasks.length + " consume "
+                + (SystemClock.uptimeMillis() - startTime) + "ms");
     }
 
     private synchronized void enqueueLocked(DownloadTask task) {
@@ -353,15 +355,15 @@ public class DownloadDispatcher {
 
     public synchronized boolean isFileConflictAfterRun(@NonNull DownloadTask task) {
         Util.d(TAG, "is file conflict after run: " + task.getId());
-        final String path = task.getPath();
-        if (path == null) return false;
+        final File file = task.getFile();
+        if (file == null) return false;
 
         // Other one is running, cancel the current task.
         for (DownloadCall syncCall : runningSyncCalls) {
             if (syncCall.isCanceled() || syncCall.task == task) continue;
 
-            final String otherPath = syncCall.task.getPath();
-            if (otherPath != null && new File(path).equals(new File(otherPath))) {
+            final File otherFile = syncCall.task.getFile();
+            if (otherFile != null && file.equals(otherFile)) {
                 return true;
             }
         }
@@ -369,8 +371,8 @@ public class DownloadDispatcher {
         for (DownloadCall asyncCall : runningAsyncCalls) {
             if (asyncCall.isCanceled() || asyncCall.task == task) continue;
 
-            final String otherPath = asyncCall.task.getPath();
-            if (otherPath != null && new File(path).equals(new File(otherPath))) {
+            final File otherFile = asyncCall.task.getFile();
+            if (otherFile != null && file.equals(otherFile)) {
                 return true;
             }
         }
@@ -405,9 +407,9 @@ public class DownloadDispatcher {
                 return true;
             }
 
-            final String path = call.task.getPath();
-            final String taskPah = task.getPath();
-            if (path != null && taskPah != null && new File(path).equals(new File(taskPah))) {
+            final File file = call.task.getFile();
+            final File taskFile = task.getFile();
+            if (file != null && taskFile != null && file.equals(taskFile)) {
                 callbackDispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
                 return true;
             }

@@ -45,7 +45,6 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     private final int id;
     @NonNull private final String url;
     private final Uri uri;
-    private final boolean isUriIsDirectory;
     private final Map<String, List<String>> headerMapFields;
 
     /**
@@ -79,15 +78,20 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     private final boolean isWifiRequired;
 
     private final AtomicLong lastCallbackProcessTimestamp;
+    private final boolean isFilenameFromResponse;
 
     @NonNull private final DownloadStrategy.FilenameHolder filenameHolder;
     @NonNull private final File providedPathFile;
+    @NonNull private final File directoryFile;
+
+    @Nullable private File targetFile;
 
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
                         Map<String, List<String>> headerMapFields, @Nullable String filename,
-                        boolean passIfAlreadyCompleted, boolean isWifiRequired) {
+                        boolean passIfAlreadyCompleted, boolean isWifiRequired,
+                        Boolean isFilenameFromResponse) {
         try {
             this.url = url;
             this.uri = uri;
@@ -103,30 +107,95 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
             this.passIfAlreadyCompleted = passIfAlreadyCompleted;
             this.isWifiRequired = isWifiRequired;
 
-            final File file = new File(uri.getPath());
-            if (file.isFile()) {
-                if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
-                    throw new IllegalArgumentException("Uri already provided filename!");
+            if (Util.isUriFileScheme(uri)) {
+                final File file = new File(uri.getPath());
+                if (isFilenameFromResponse != null) {
+                    if (isFilenameFromResponse) {
+                        // filename must from response.
+                        if (file.exists() && file.isFile()) {
+                            // it have already provided file for it.
+                            throw new IllegalArgumentException("If you want filename from "
+                                    + "response please make sure you provide path is directory "
+                                    + file.getPath());
+                        }
+
+                        if (!Util.isEmpty(filename)) {
+                            Util.w("DownloadTask", "Discard filename[" + filename
+                                    + "] because you set isFilenameFromResponse=true");
+                            filename = null;
+                        }
+
+                        directoryFile = file;
+                    } else {
+                        // filename must not from response.
+                        if (file.exists() && file.isDirectory() && Util.isEmpty(filename)) {
+                            // is directory but filename isn't provided.
+                            // not valid filename found.
+                            throw new IllegalArgumentException("If you don't want filename from"
+                                    + " response please make sure you have already provided valid "
+                                    + "filename or not directory path " + file.getPath());
+                        }
+
+                        if (Util.isEmpty(filename)) {
+                            filename = file.getName();
+                            directoryFile = Util.getParentFile(file);
+                        } else {
+                            directoryFile = file;
+                        }
+                    }
+                } else if (file.exists() && file.isDirectory()) {
+                    isFilenameFromResponse = true;
+                    directoryFile = file;
+                } else {
+                    // not exist or is file.
+                    isFilenameFromResponse = false;
+
+                    if (file.exists()) {
+                        // is file
+                        if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
+                            throw new IllegalArgumentException("Uri already provided filename!");
+                        }
+                        filename = file.getName();
+                        directoryFile = Util.getParentFile(file);
+                    } else {
+                        // not exist
+                        if (Util.isEmpty(filename)) {
+                            // filename is not provided, so we use the filename on path
+                            filename = file.getName();
+                            directoryFile = Util.getParentFile(file);
+                        } else {
+                            // filename is provided, so the path on file is directory
+                            directoryFile = file;
+                        }
+                    }
                 }
 
-                filename = file.getName();
-                isUriIsDirectory = false;
+                this.isFilenameFromResponse = isFilenameFromResponse;
             } else {
-                isUriIsDirectory = true;
+                this.isFilenameFromResponse = false;
+                directoryFile = new File(uri.getPath());
             }
 
             if (Util.isEmpty(filename)) {
                 filenameHolder = new DownloadStrategy.FilenameHolder();
-                providedPathFile = new File(uri.getPath());
+                providedPathFile = directoryFile;
             } else {
                 filenameHolder = new DownloadStrategy.FilenameHolder(filename);
-
-                if (isUriIsDirectory) providedPathFile = new File(uri.getPath(), filename);
-                else providedPathFile = new File(uri.getPath());
+                targetFile = new File(directoryFile, filename);
+                providedPathFile = targetFile;
             }
         } finally {
             this.id = OkDownload.with().breakpointStore().findOrCreateId(this);
         }
+    }
+
+    /**
+     * Whether the filename is from response rather than provided by user directly.
+     *
+     * @return {@code true} is the filename will assigned from response header.
+     */
+    public boolean isFilenameFromResponse() {
+        return isFilenameFromResponse;
     }
 
     /**
@@ -192,15 +261,6 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     }
 
     /**
-     * Whether you provide {@code uri} or file is directory.
-     *
-     * @return {@code true} is you provide {@code uri} or file path for this task is directory.
-     */
-    public boolean isUriIsDirectory() {
-        return isUriIsDirectory;
-    }
-
-    /**
      * Get the url for this task.
      *
      * @return the url for this task.
@@ -215,27 +275,30 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
 
     /**
      * Get the parent path of the file store downloaded data.
+     * <p>
+     * If the scheme of Uri isn't 'file' this value would be just a signal, not means real
+     * parent-file.
      *
      * @return the parent path of the file store downloaded data.
      */
-    @Override @NonNull public String getParentPath() {
-        if (isUriIsDirectory) return uri.getPath();
-
-        return new File(uri.getPath()).getParentFile().getAbsolutePath();
+    @Override @NonNull public File getParentFile() {
+        return directoryFile;
     }
 
     /**
-     * Get the path of file store downloaded data.
+     * Get the file which is used for storing downloaded data.
+     * <p>
+     * If the scheme of Uri isn't 'file' this value would be just a signal, not means real file.
      *
      * @return the path of file store downloaded data. {@code null} is there isn't filename found
      * yet for the file of this task.
      */
-    @Nullable public String getPath() {
+    @Nullable public File getFile() {
         final String filename = filenameHolder.get();
         if (filename == null) return null;
+        if (targetFile == null) targetFile = new File(directoryFile, filename);
 
-        return isUriIsDirectory
-                ? new File(uri.getPath(), filename).getAbsolutePath() : uri.getPath();
+        return targetFile;
     }
 
     /**
@@ -490,8 +553,12 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
          * @param filename   the filename of the file for store download data.
          */
         public Builder(@NonNull String url, @NonNull String parentPath, @Nullable String filename) {
-            this(url, new File(parentPath));
-            this.filename = filename;
+            this(url, Uri.fromFile(new File(parentPath)));
+            if (Util.isEmpty(filename)) {
+                this.isFilenameFromResponse = true;
+            } else {
+                this.filename = filename;
+            }
         }
 
         /**
@@ -502,13 +569,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
          */
         public Builder(@NonNull String url, @NonNull File file) {
             this.url = url;
-            if (file.exists() || file.getParent() == null) {
-                // file exist or parent not exist
-                this.uri = Uri.fromFile(file);
-            } else {
-                this.uri = Uri.fromFile(file.getParentFile());
-                this.filename = file.getName();
-            }
+            this.uri = Uri.fromFile(file);
         }
 
         /**
@@ -520,6 +581,9 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         public Builder(@NonNull String url, @NonNull Uri uri) {
             this.url = url;
             this.uri = uri;
+            if (Util.isUriContentScheme(uri)) {
+                this.filename = Util.getFilenameFromContentUri(uri);
+            }
         }
 
         // More larger more high.
@@ -557,6 +621,30 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         public static final boolean DEFAULT_IS_WIFI_REQUIRED = false;
 
         private boolean isWifiRequired = DEFAULT_IS_WIFI_REQUIRED;
+
+        private Boolean isFilenameFromResponse;
+
+        /**
+         * Set whether the provided Uri or path is just directory, and filename must be from
+         * response header or url path.
+         * <p>
+         * If you provided {@link #filename} the filename will be invalid for this supposed.
+         * If you provided content scheme Uri, this value is unaccepted.
+         *
+         * @param filenameFromResponse whether the provided Uri or path is just directory, and
+         *                             filename must be from response header or url path.
+         *                             if {@code null} this value will be discard.
+         */
+        public Builder setFilenameFromResponse(@Nullable Boolean filenameFromResponse) {
+            if (!Util.isUriFileScheme(uri)) {
+                throw new IllegalArgumentException(
+                        "Uri isn't file scheme we can't let filename from response");
+            }
+
+            isFilenameFromResponse = filenameFromResponse;
+
+            return this;
+        }
 
         /**
          * Set whether callback to UI thread automatically.
@@ -720,7 +808,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
             return new DownloadTask(url, uri, priority, readBufferSize, flushBufferSize,
                     syncBufferSize, syncBufferIntervalMillis,
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
-                    headerMapFields, filename, passIfAlreadyCompleted, isWifiRequired);
+                    headerMapFields, filename, passIfAlreadyCompleted, isWifiRequired,
+                    isFilenameFromResponse);
         }
     }
 
@@ -765,12 +854,12 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         @NonNull final String url;
         @NonNull final File providedPathFile;
         @Nullable final String filename;
-        @NonNull final String parentPath;
+        @NonNull final File parentFile;
 
         public MockTaskForCompare(int id, @NonNull DownloadTask task) {
             this.id = id;
             this.url = task.url;
-            this.parentPath = task.getParentPath();
+            this.parentFile = task.getParentFile();
             this.providedPathFile = task.providedPathFile;
             this.filename = task.getFilename();
         }
@@ -787,8 +876,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
             return providedPathFile;
         }
 
-        @NonNull @Override public String getParentPath() {
-            return parentPath;
+        @NonNull @Override public File getParentFile() {
+            return parentFile;
         }
 
         @Nullable @Override public String getFilename() {

@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload;
 
+import android.content.ContentResolver;
 import android.net.Uri;
 
 import com.liulishuo.okdownload.core.Util;
@@ -65,7 +66,7 @@ public class DownloadContextTest {
     private String filePath = "./exist-file";
 
     @BeforeClass
-    public static void setupClass() throws IOException {
+    public static void setupClass() {
         Util.setLogger(mock(Util.Logger.class));
     }
 
@@ -188,6 +189,7 @@ public class DownloadContextTest {
 
         final String url = "url";
         final Uri uri = mock(Uri.class);
+        when(uri.getScheme()).thenReturn(ContentResolver.SCHEME_FILE);
         when(uri.getPath()).thenReturn("");
         queueSet.setParentPathUri(uri);
         assertThat(queueSet.getDirUri()).isEqualTo(uri);

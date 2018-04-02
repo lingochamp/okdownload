@@ -30,10 +30,8 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
-import com.liulishuo.okdownload.core.exception.RetryException;
 import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.regex.Matcher;
@@ -92,8 +90,8 @@ public class DownloadStrategy {
     // this case meet only if there are another info task is idle and is the same after
     // this task has filename.
     public boolean inspectAnotherSameInfo(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
-                                          long instanceLength) throws RetryException {
-        if (!task.isUriIsDirectory()) return false;
+                                          long instanceLength) {
+        if (!task.isFilenameFromResponse()) return false;
 
         final BreakpointStore store = OkDownload.with().breakpointStore();
         final BreakpointInfo anotherInfo = store.findAnotherInfoFromCompare(task, info);
@@ -114,7 +112,7 @@ public class DownloadStrategy {
             return false;
         }
 
-        if (!new File(anotherInfo.getPath()).exists()) return false;
+        if (anotherInfo.getFile() == null || !anotherInfo.getFile().exists()) return false;
 
         info.reuseBlocks(anotherInfo);
 
