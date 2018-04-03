@@ -68,6 +68,8 @@ public class ConnectTrial {
 
     public void executeTrial() throws IOException {
         OkDownload.with().downloadStrategy().inspectNetworkOnWifi(task);
+        OkDownload.with().downloadStrategy().inspectNetworkAvailable();
+
         DownloadConnection connection = OkDownload.with().connectionFactory().create(task.getUrl());
         boolean isNeedTrialHeadMethod;
         try {

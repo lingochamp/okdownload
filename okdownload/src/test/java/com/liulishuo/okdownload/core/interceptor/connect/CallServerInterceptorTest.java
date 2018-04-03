@@ -61,5 +61,6 @@ public class CallServerInterceptorTest {
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         verify(downloadStrategy).inspectNetworkOnWifi(eq(task));
+        verify(downloadStrategy).inspectNetworkAvailable();
     }
 }

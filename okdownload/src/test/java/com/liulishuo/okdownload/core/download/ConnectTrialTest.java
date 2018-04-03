@@ -96,6 +96,7 @@ public class ConnectTrialTest {
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         verify(downloadStrategy).inspectNetworkOnWifi(eq(task));
+        verify(downloadStrategy).inspectNetworkAvailable();
         verify(connection).addHeader(eq(IF_MATCH), eq(etag));
         verify(connection).addHeader(eq(RANGE), eq("bytes=0-0"));
 
