@@ -443,6 +443,10 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     /**
      * Enqueue the task with the {@code listener} to the downloader dispatcher, what means it will
      * be run when resource is available and on the dispatcher thread pool.
+     * <p>
+     * If there are more than one task need to enqueue please using
+     * {@link #enqueue(DownloadTask[], DownloadListener)} instead, because the performance is
+     * optimized to handle bunch of tasks enqueue.
      *
      * @param listener the listener is used for listen the whole lifecycle of the task.
      */
@@ -465,6 +469,9 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      * Cancel the current task.
      * <p>
      * If the task is canceled all resourced about this task will be recycled.
+     * <p>
+     * If there are more than one task need to cancel, please using {@link #cancel(DownloadTask[])}
+     * instead, because the performance is optimized to handle bunch of tasks cancel.
      */
     public void cancel() {
         OkDownload.with().downloadDispatcher().cancel(this);
