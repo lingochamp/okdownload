@@ -2,6 +2,9 @@
 # More detail about okcat please move to https://github.com/Jacksgong/okcat
 package: com.liulishuo.okdownload.sample
 
+trans-tag-map:
+        'BunchActivity' : '[DEMO]'
+
 trans-msg-map:
         'taskEnd ' : 'TASK END'
         'downloadFromBreakpoint ': 'RESUMABLE'
