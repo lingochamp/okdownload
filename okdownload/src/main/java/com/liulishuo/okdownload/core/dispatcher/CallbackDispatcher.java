@@ -46,7 +46,8 @@ public class CallbackDispatcher {
             public void taskStart(@NonNull final DownloadTask task) {
                 Util.d(TAG, "taskStart: " + task.getId());
                 inspectTaskStart(task);
-                if (task.isAutoCallbackToUIThread()) {
+                if (task.isAutoCallbackToUIThread()
+                        && Looper.myLooper() != Looper.getMainLooper()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
                             task.getListener().taskStart(task);
@@ -214,7 +215,8 @@ public class CallbackDispatcher {
                     Util.d(TAG, "taskEnd: " + task.getId() + " " + cause + " " + realCause);
                 }
                 inspectTaskEnd(task, cause, realCause);
-                if (task.isAutoCallbackToUIThread()) {
+                if (task.isAutoCallbackToUIThread()
+                        && Looper.myLooper() != Looper.getMainLooper()) {
                     uiHandler.post(new Runnable() {
                         @Override public void run() {
                             task.getListener().taskEnd(task, cause, realCause);
