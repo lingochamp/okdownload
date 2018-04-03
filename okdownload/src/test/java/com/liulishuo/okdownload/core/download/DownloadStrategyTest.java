@@ -343,8 +343,7 @@ public class DownloadStrategyTest {
                 + "downloading required wifi state.");
         strategy.inspectNetwork(task);
 
-        doReturn(PackageManager.PERMISSION_GRANTED).when(context)
-                .checkCallingOrSelfPermission(anyString());
+        strategy.isHasAccessNetworkStatePermission = true;
         final ConnectivityManager manager = mock(ConnectivityManager.class);
         doReturn(manager).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
         doReturn(null).when(manager).getActiveNetworkInfo();
