@@ -32,6 +32,7 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.file.MultiPointOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -358,6 +359,14 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     Future<?> submitChain(DownloadChain chain) {
         return EXECUTOR.submit(chain);
+    }
+
+    public boolean equalsTask(@NonNull DownloadTask task) {
+        return this.task.equals(task);
+    }
+
+    @Nullable public File getFile() {
+        return this.task.getFile();
     }
 
     @Override

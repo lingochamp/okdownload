@@ -110,11 +110,20 @@ public class DownloadDispatcher {
         if (taskList.size() > 1) Collections.sort(taskList);
         final int originReadyAsyncCallSize = readyAsyncCalls.size();
 
+        final Collection<DownloadTask> completedTaskList = new ArrayList<>();
+        final Collection<DownloadTask> sameTaskConflictList = new ArrayList<>();
+        final Collection<DownloadTask> fileBusyList = new ArrayList<>();
+
         for (DownloadTask task : taskList) {
+            if (inspectCompleted(task, completedTaskList)) continue;
+            if (inspectForConflict(task, sameTaskConflictList, fileBusyList)) continue;
+
             enqueueIgnorePriority(task);
         }
-
         if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
+
+        OkDownload.with().callbackDispatcher()
+                .endTasks(completedTaskList, sameTaskConflictList, fileBusyList);
 
         Util.d(TAG, "end enqueueLocked for bunch task: " + tasks.length + " consume "
                 + (SystemClock.uptimeMillis() - startTime) + "ms");
@@ -122,15 +131,15 @@ public class DownloadDispatcher {
 
     private synchronized void enqueueLocked(DownloadTask task) {
         Util.d(TAG, "enqueueLocked for single task: " + task);
+        if (inspectCompleted(task)) return;
+        if (inspectForConflict(task)) return;
+
         final int originReadyAsyncCallSize = readyAsyncCalls.size();
         enqueueIgnorePriority(task);
         if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
     }
 
     private synchronized void enqueueIgnorePriority(DownloadTask task) {
-        if (inspectCompleted(task)) return;
-        if (inspectForConflict(task)) return;
-
         final DownloadCall call = DownloadCall.create(task, true, store);
         if (runningAsyncSize() < maxParallelRunningCount) {
             runningAsyncCalls.add(call);
@@ -379,42 +388,69 @@ public class DownloadDispatcher {
         return false;
     }
 
-    private boolean inspectForConflict(DownloadTask task) {
-        return inspectForConflict(task, readyAsyncCalls)
-                || inspectForConflict(task, runningAsyncCalls)
-                || inspectForConflict(task, runningSyncCalls);
+    private boolean inspectForConflict(@NonNull DownloadTask task) {
+        return inspectForConflict(task, null, null);
     }
 
-    boolean inspectCompleted(DownloadTask task) {
+    private boolean inspectForConflict(@NonNull DownloadTask task,
+                                       @Nullable Collection<DownloadTask> sameTaskList,
+                                       @Nullable Collection<DownloadTask> fileBusyList) {
+        return inspectForConflict(task, readyAsyncCalls, sameTaskList, fileBusyList)
+                || inspectForConflict(task, runningAsyncCalls, sameTaskList, fileBusyList)
+                || inspectForConflict(task, runningSyncCalls, sameTaskList, fileBusyList);
+    }
+
+    boolean inspectCompleted(@NonNull DownloadTask task) {
+        return inspectCompleted(task, null);
+    }
+
+    boolean inspectCompleted(@NonNull DownloadTask task,
+                             @Nullable Collection<DownloadTask> completedCollection) {
         if (task.isPassIfAlreadyCompleted() && StatusUtil.isCompleted(task)) {
             if (task.getFile() == null && !OkDownload.with().downloadStrategy()
                     .validFilenameFromStore(task)) {
                 return false;
             }
 
-            OkDownload.with().callbackDispatcher().dispatch()
-                    .taskEnd(task, EndCause.COMPLETED, null);
+            if (completedCollection != null) {
+                completedCollection.add(task);
+            } else {
+                OkDownload.with().callbackDispatcher().dispatch()
+                        .taskEnd(task, EndCause.COMPLETED, null);
+            }
+
             return true;
         }
 
         return false;
     }
 
-    private boolean inspectForConflict(DownloadTask task, Collection<DownloadCall> calls) {
+    boolean inspectForConflict(@NonNull DownloadTask task,
+                                       @NonNull Collection<DownloadCall> calls,
+                                       @Nullable Collection<DownloadTask> sameTaskList,
+                                       @Nullable Collection<DownloadTask> fileBusyList) {
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
         for (DownloadCall call : calls) {
             if (call.isCanceled()) continue;
 
-            if (call.task.equals(task)) {
-                callbackDispatcher.dispatch()
-                        .taskEnd(task, EndCause.SAME_TASK_BUSY, null);
+            if (call.equalsTask(task)) {
+                if (sameTaskList != null) {
+                    sameTaskList.add(task);
+                } else {
+                    callbackDispatcher.dispatch()
+                            .taskEnd(task, EndCause.SAME_TASK_BUSY, null);
+                }
                 return true;
             }
 
-            final File file = call.task.getFile();
+            final File file = call.getFile();
             final File taskFile = task.getFile();
             if (file != null && taskFile != null && file.equals(taskFile)) {
-                callbackDispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
+                if (fileBusyList != null) {
+                    fileBusyList.add(task);
+                } else {
+                    callbackDispatcher.dispatch().taskEnd(task, EndCause.FILE_BUSY, null);
+                }
                 return true;
             }
         }

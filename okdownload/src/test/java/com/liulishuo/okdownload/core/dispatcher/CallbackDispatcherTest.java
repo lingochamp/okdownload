@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.dispatcher;
 
+import android.os.Handler;
+
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.TestUtils;
@@ -26,16 +28,23 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.robolectric.annotation.Config.NONE;
 
 @RunWith(RobolectricTestRunner.class)
@@ -44,14 +53,21 @@ public class CallbackDispatcherTest {
 
     private CallbackDispatcher dispatcher;
 
+    @Mock private Handler handler;
+    @Mock private DownloadListener transmit;
+
     @Before
     public void setup() {
+        initMocks(this);
+
         TestUtils.initProvider();
-        dispatcher = new CallbackDispatcher();
+        dispatcher = new CallbackDispatcher(handler, transmit);
     }
 
     @Test
     public void dispatch() {
+        dispatcher = new CallbackDispatcher(handler);
+
         final DownloadTask task = mock(DownloadTask.class);
         final DownloadListener listener = mock(DownloadListener.class);
         when(task.getListener()).thenReturn(listener);
@@ -93,5 +109,49 @@ public class CallbackDispatcherTest {
 
         dispatcher.dispatch().taskEnd(task, endCause, exception);
         verify(listener).taskEnd(eq(task), eq(endCause), eq(exception));
+    }
+
+    @Test
+    public void endTasks() {
+        final Collection<DownloadTask> completedTaskCollection = new ArrayList<>();
+        final Collection<DownloadTask> sameTaskConflictCollection = new ArrayList<>();
+        final Collection<DownloadTask> fileBusyCollection = new ArrayList<>();
+
+        dispatcher
+                .endTasks(completedTaskCollection, sameTaskConflictCollection, fileBusyCollection);
+        verify(handler, never()).post(any(Runnable.class));
+
+        final DownloadTask autoUiTask = mock(DownloadTask.class);
+        final DownloadTask nonUiTask = mock(DownloadTask.class);
+
+        final DownloadListener nonUiListener = mock(DownloadListener.class);
+        final DownloadListener autoUiListener = mock(DownloadListener.class);
+
+        when(autoUiTask.getListener()).thenReturn(autoUiListener);
+        when(autoUiTask.isAutoCallbackToUIThread()).thenReturn(true);
+
+        when(nonUiTask.getListener()).thenReturn(nonUiListener);
+        when(nonUiTask.isAutoCallbackToUIThread()).thenReturn(false);
+
+        completedTaskCollection.add(autoUiTask);
+        completedTaskCollection.add(nonUiTask);
+
+        sameTaskConflictCollection.add(autoUiTask);
+        sameTaskConflictCollection.add(nonUiTask);
+
+        fileBusyCollection.add(autoUiTask);
+        fileBusyCollection.add(nonUiTask);
+
+        dispatcher
+                .endTasks(completedTaskCollection, sameTaskConflictCollection, fileBusyCollection);
+
+        verify(nonUiListener)
+                .taskEnd(eq(nonUiTask), eq(EndCause.COMPLETED), nullable(Exception.class));
+        verify(nonUiListener)
+                .taskEnd(eq(nonUiTask), eq(EndCause.SAME_TASK_BUSY), nullable(Exception.class));
+        verify(nonUiListener)
+                .taskEnd(eq(nonUiTask), eq(EndCause.FILE_BUSY), nullable(Exception.class));
+
+        verify(handler).post(any(Runnable.class));
     }
 }

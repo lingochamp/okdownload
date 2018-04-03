@@ -41,6 +41,7 @@ import org.robolectric.annotation.Config;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -227,6 +228,26 @@ public class DownloadDispatcherTest {
         for (int i = 0; i < dispatcher.maxParallelRunningCount; i++) {
             dispatcher.enqueue(mockTask());
         }
+    }
+
+    @Test
+    public void enqueue_tasks() throws IOException {
+        mockOkDownload();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+
+        DownloadTask[] tasks = new DownloadTask[]{mock(DownloadTask.class), mock(
+                DownloadTask.class), mock(DownloadTask.class)};
+
+        doReturn(true).when(dispatcher)
+                .inspectCompleted(any(DownloadTask.class), any(Collection.class));
+        doReturn(true).when(dispatcher)
+                .inspectForConflict(any(DownloadTask.class), any(Collection.class),
+                        any(Collection.class), any(Collection.class));
+
+        dispatcher.enqueue(tasks);
+
+        verify(callbackDispatcher)
+                .endTasks(any(Collection.class), any(Collection.class), any(Collection.class));
     }
 
     @Test
@@ -468,7 +489,74 @@ public class DownloadDispatcherTest {
         verify(listener).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class));
     }
 
-    private static class MockDownloadDispatcher extends DownloadDispatcher {
+    @Test
+    public void inspectCompleted_collection() throws IOException {
+        mockOkDownload();
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+        final DownloadListener listener = callbackDispatcher.dispatch();
+
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.isPassIfAlreadyCompleted()).thenReturn(true);
+        when(task.getId()).thenReturn(0);
+        when(task.getUrl()).thenReturn("url");
+        when(task.getParentFile()).thenReturn(existFile.getParentFile());
+
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        doReturn(existFile.getName()).when(store).getResponseFilename("url");
+        doReturn(true).when(downloadStrategy).validFilenameFromStore(task);
+        final Collection<DownloadTask> completedCollection = new ArrayList<>();
+
+        assertThat(dispatcher.inspectCompleted(task, completedCollection)).isTrue();
+        verify(listener, never()).taskEnd(eq(task), any(EndCause.class), nullable(Exception.class));
+        assertThat(completedCollection).containsExactly(task);
     }
 
+    @Test
+    public void inspectForConflict_sameTask() throws IOException {
+        mockOkDownload();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+        final DownloadListener listener = callbackDispatcher.dispatch();
+
+        DownloadTask task = mock(DownloadTask.class);
+        final Collection<DownloadCall> calls = new ArrayList<>();
+        final Collection<DownloadTask> sameTaskList = new ArrayList<>();
+        final Collection<DownloadTask> fileBusyList = new ArrayList<>();
+
+        final DownloadCall call = mock(DownloadCall.class);
+        when(call.equalsTask(task)).thenReturn(true);
+        calls.add(call);
+
+        assertThat(dispatcher.inspectForConflict(task, calls, sameTaskList, fileBusyList)).isTrue();
+        assertThat(sameTaskList).containsExactly(task);
+        assertThat(fileBusyList).isEmpty();
+        verify(listener, never()).taskEnd(eq(task), any(EndCause.class), nullable(Exception.class));
+    }
+
+    @Test
+    public void inspectForConflict_fileBusy() throws IOException {
+        mockOkDownload();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+        final DownloadListener listener = callbackDispatcher.dispatch();
+
+        DownloadTask task = mock(DownloadTask.class);
+        final Collection<DownloadCall> calls = new ArrayList<>();
+        final Collection<DownloadTask> sameTaskList = new ArrayList<>();
+        final Collection<DownloadTask> fileBusyList = new ArrayList<>();
+
+        final DownloadCall call = mock(DownloadCall.class);
+        final File file = mock(File.class);
+        when(task.getFile()).thenReturn(file);
+        when(call.getFile()).thenReturn(file);
+
+        calls.add(call);
+
+        assertThat(dispatcher.inspectForConflict(task, calls, sameTaskList, fileBusyList)).isTrue();
+        assertThat(sameTaskList).isEmpty();
+        assertThat(fileBusyList).containsExactly(task);
+        verify(listener, never()).taskEnd(eq(task), any(EndCause.class), nullable(Exception.class));
+    }
+
+    private static class MockDownloadDispatcher extends DownloadDispatcher {
+    }
 }

@@ -14,6 +14,7 @@ trans-msg-map:
         'cancel task' : 'TASK CANCELED'
         'finish cancel bunch task' : 'BUNCH TASK CANCELED'
         'breakpoint invalid' : 'CANNOT RESUME'
+        'endTasks' : 'BUNCH END CALLBACKS'
 
 highlight-list:
         - 'connectStart'
