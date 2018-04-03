@@ -36,6 +36,7 @@ import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -321,7 +322,26 @@ public class DownloadStrategy {
     Boolean isHasAccessNetworkStatePermission = null;
     private ConnectivityManager manager = null;
 
-    public void inspectNetwork(@NonNull DownloadTask task) throws IOException {
+    public void inspectNetworkAvailable() throws UnknownHostException {
+        if (isHasAccessNetworkStatePermission == null) {
+            isHasAccessNetworkStatePermission = Util
+                    .checkPermission(Manifest.permission.ACCESS_NETWORK_STATE);
+        }
+
+        // no permission will not check network available case.
+        if (!isHasAccessNetworkStatePermission) return;
+
+        if (manager == null) {
+            manager = (ConnectivityManager) OkDownload.with().context()
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
+
+        if (!Util.isNetworkAvailable(manager)) {
+            throw new UnknownHostException("network is not invalid!");
+        }
+    }
+
+    public void inspectNetworkOnWifi(@NonNull DownloadTask task) throws IOException {
         if (isHasAccessNetworkStatePermission == null) {
             isHasAccessNetworkStatePermission = Util
                     .checkPermission(Manifest.permission.ACCESS_NETWORK_STATE);

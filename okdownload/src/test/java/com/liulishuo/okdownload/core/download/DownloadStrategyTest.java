@@ -44,6 +44,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.UnknownHostException;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_CREATED_RANGE_NOT_FROM_0;
@@ -327,7 +328,7 @@ public class DownloadStrategyTest {
     }
 
     @Test
-    public void inspectNetwork() throws IOException {
+    public void inspectNetworkOnWifi() throws IOException {
         final DownloadTask task = mock(DownloadTask.class);
         when(task.isWifiRequired()).thenReturn(true);
 
@@ -341,7 +342,7 @@ public class DownloadStrategyTest {
                 + "permission of Manifest.permission.ACCESS_NETWORK_STATE, please declare this "
                 + "permission first on your AndroidManifest, so we can handle the case of "
                 + "downloading required wifi state.");
-        strategy.inspectNetwork(task);
+        strategy.inspectNetworkOnWifi(task);
 
         strategy.isHasAccessNetworkStatePermission = true;
         final ConnectivityManager manager = mock(ConnectivityManager.class);
@@ -350,11 +351,60 @@ public class DownloadStrategyTest {
 
         thrown.expect(NetworkPolicyException.class);
         thrown.expectMessage("Only allows downloading this task on the wifi network type!");
-        strategy.inspectNetwork(task);
+        strategy.inspectNetworkOnWifi(task);
 
         final NetworkInfo info = mock(NetworkInfo.class);
         doReturn(info).when(manager).getActiveNetworkInfo();
         doReturn(ConnectivityManager.TYPE_WIFI).when(info).getType();
-        strategy.inspectNetwork(task);
+        strategy.inspectNetworkOnWifi(task);
+    }
+
+    @Test
+    public void inspectNetworkAvailable_noPermission() throws UnknownHostException {
+        final Context context = mock(Context.class);
+        final OkDownload okDownload = OkDownload.with();
+        doReturn(context).when(okDownload).context();
+
+        final ConnectivityManager manager = mock(ConnectivityManager.class);
+        doReturn(manager).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
+        final NetworkInfo info = mock(NetworkInfo.class);
+        doReturn(info).when(manager).getActiveNetworkInfo();
+        doReturn(true).when(info).isConnected();
+
+        strategy.isHasAccessNetworkStatePermission = false;
+
+        strategy.inspectNetworkAvailable();
+    }
+
+    @Test
+    public void inspectNetworkAvailable_withPermission() throws UnknownHostException {
+        final Context context = mock(Context.class);
+        final OkDownload okDownload = OkDownload.with();
+        doReturn(context).when(okDownload).context();
+
+        final ConnectivityManager manager = mock(ConnectivityManager.class);
+        doReturn(manager).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
+        final NetworkInfo info = mock(NetworkInfo.class);
+        doReturn(info).when(manager).getActiveNetworkInfo();
+        doReturn(true).when(info).isConnected();
+
+        strategy.isHasAccessNetworkStatePermission = true;
+        // no throw
+        strategy.inspectNetworkAvailable();
+
+        doReturn(null).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
+        // no throw
+        strategy.inspectNetworkAvailable();
+
+        doReturn(manager).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
+        doReturn(null).when(manager).getActiveNetworkInfo();
+        thrown.expect(UnknownHostException.class);
+        thrown.expectMessage("network is not invalid!");
+        strategy.inspectNetworkAvailable();
+
+        doReturn(false).when(info).isConnected();
+        thrown.expect(UnknownHostException.class);
+        thrown.expectMessage("network is not invalid!");
+        strategy.inspectNetworkAvailable();
     }
 }

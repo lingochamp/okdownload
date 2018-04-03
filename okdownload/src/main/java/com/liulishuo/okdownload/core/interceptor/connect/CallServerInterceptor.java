@@ -28,7 +28,7 @@ import java.io.IOException;
 public class CallServerInterceptor implements Interceptor.Connect {
     @NonNull @Override
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
-        OkDownload.with().downloadStrategy().inspectNetwork(chain.getTask());
+        OkDownload.with().downloadStrategy().inspectNetworkOnWifi(chain.getTask());
         return chain.getConnectionOrCreate().execute();
     }
 }

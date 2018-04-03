@@ -57,7 +57,7 @@ public class FetchDataInterceptor implements Interceptor.Fetch {
             throw InterruptException.SIGNAL;
         }
 
-        OkDownload.with().downloadStrategy().inspectNetwork(chain.getTask());
+        OkDownload.with().downloadStrategy().inspectNetworkOnWifi(chain.getTask());
         // fetch
         int fetchLength = inputStream.read(readBuffer);
         if (fetchLength == -1) {

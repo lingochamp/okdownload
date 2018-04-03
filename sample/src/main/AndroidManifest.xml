@@ -20,6 +20,7 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- When you invoke BaseDownloadTask#setWifiRequired(true), you need declare ACCESS_NETWORK_STATE permission -->
+    <!-- The permission of ACCESS_NETWORK_STATE is not required, but if you add this permission we will check whether network is valid before start it-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
         android:allowBackup="true"

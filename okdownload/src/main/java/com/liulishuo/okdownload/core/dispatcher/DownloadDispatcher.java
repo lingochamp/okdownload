@@ -30,6 +30,7 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.download.DownloadCall;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -130,6 +131,7 @@ public class DownloadDispatcher {
     private synchronized void enqueueIgnorePriority(DownloadTask task) {
         if (inspectCompleted(task)) return;
         if (inspectForConflict(task)) return;
+        if (inspectNetworkAvailable(task)) return;
 
         final DownloadCall call = DownloadCall.create(task, true, store);
         if (runningAsyncSize() < maxParallelRunningCount) {
@@ -148,6 +150,7 @@ public class DownloadDispatcher {
         synchronized (this) {
             if (inspectCompleted(task)) return;
             if (inspectForConflict(task)) return;
+            if (inspectNetworkAvailable(task)) return;
 
 
             call = DownloadCall.create(task, false, store);
@@ -399,6 +402,18 @@ public class DownloadDispatcher {
         }
 
         return false;
+    }
+
+    boolean inspectNetworkAvailable(@NonNull DownloadTask task) {
+        try {
+            OkDownload.with().downloadStrategy().inspectNetworkAvailable();
+            return false;
+        } catch (UnknownHostException e) {
+
+            OkDownload.with().callbackDispatcher().dispatch()
+                    .taskEnd(task, EndCause.ERROR, e);
+            return true;
+        }
     }
 
     private boolean inspectForConflict(DownloadTask task, Collection<DownloadCall> calls) {

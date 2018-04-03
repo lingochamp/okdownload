@@ -73,7 +73,7 @@ public class FetchDataInterceptorTest {
         interceptor.interceptFetch(chain);
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
-        verify(downloadStrategy).inspectNetwork(eq(task));
+        verify(downloadStrategy).inspectNetworkOnWifi(eq(task));
         verify(chain).increaseCallbackBytes(10L);
         verify(chain).flushNoCallbackIncreaseBytes();
         verify(outputStream).write(eq(0), any(byte[].class), eq(10));

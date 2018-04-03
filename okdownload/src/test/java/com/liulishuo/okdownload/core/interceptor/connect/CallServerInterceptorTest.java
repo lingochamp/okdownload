@@ -60,6 +60,6 @@ public class CallServerInterceptorTest {
         serverInterceptor.interceptConnect(chain);
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
-        verify(downloadStrategy).inspectNetwork(eq(task));
+        verify(downloadStrategy).inspectNetworkOnWifi(eq(task));
     }
 }

@@ -40,6 +40,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +55,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -182,6 +184,7 @@ public class DownloadDispatcherTest {
 
     @Test
     public void enqueue_countIgnoreCanceled() {
+        doReturn(false).when(dispatcher).inspectNetworkAvailable(any(DownloadTask.class));
         maxRunningTask();
 
         assertThat(runningAsyncCalls).hasSize(dispatcher.maxParallelRunningCount);
@@ -466,6 +469,23 @@ public class DownloadDispatcherTest {
         assertThat(dispatcher.inspectCompleted(task)).isTrue();
         final DownloadListener listener = callbackDispatcher.dispatch();
         verify(listener).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class));
+    }
+
+    @Test
+    public void inspectNetworkAvailable() throws IOException {
+        mockOkDownload();
+
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadStrategy strategy = OkDownload.with().downloadStrategy();
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+
+        assertThat(dispatcher.inspectNetworkAvailable(task)).isFalse();
+        verify(listener, never()).taskEnd(eq(task), any(EndCause.class), nullable(Exception.class));
+
+        doThrow(UnknownHostException.class).when(strategy).inspectNetworkAvailable();
+        assertThat(dispatcher.inspectNetworkAvailable(task)).isTrue();
+        verify(listener)
+                .taskEnd(eq(task), eq(EndCause.ERROR), nullable(UnknownHostException.class));
     }
 
     private static class MockDownloadDispatcher extends DownloadDispatcher {
