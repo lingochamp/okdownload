@@ -317,10 +317,7 @@ public class Util {
         return Long.parseLong(contentLength);
     }
 
-    public static boolean isNetworkNotOnWifiType() {
-        final ConnectivityManager manager = (ConnectivityManager) OkDownload.with().context()
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-
+    public static boolean isNetworkNotOnWifiType(ConnectivityManager manager) {
         if (manager == null) {
             Util.w("Util", "failed to get connectivity manager!");
             return true;
@@ -381,5 +378,16 @@ public class Util {
     @NonNull public static File getParentFile(final File file) {
         final File candidate = file.getParentFile();
         return candidate == null ? new File("/") : candidate;
+    }
+
+    public static boolean isNetworkAvailable(ConnectivityManager manager) {
+        if (manager == null) {
+            Util.w("Util", "failed to get connectivity manager!");
+            return true;
+        }
+
+        //noinspection MissingPermission, because we check permission accessable when invoked
+        @SuppressLint("MissingPermission") final NetworkInfo info = manager.getActiveNetworkInfo();
+        return info != null && info.isConnected();
     }
 }

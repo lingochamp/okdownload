@@ -17,6 +17,8 @@
 package com.liulishuo.okdownload.core.download;
 
 import android.Manifest;
+import android.content.Context;
+import android.net.ConnectivityManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -317,6 +319,7 @@ public class DownloadStrategy {
     }
 
     Boolean isHasAccessNetworkStatePermission = null;
+    private ConnectivityManager manager = null;
 
     public void inspectNetwork(@NonNull DownloadTask task) throws IOException {
         if (isHasAccessNetworkStatePermission == null) {
@@ -333,7 +336,12 @@ public class DownloadStrategy {
                     + "downloading required wifi state.");
         }
 
-        if (Util.isNetworkNotOnWifiType()) {
+        if (manager == null) {
+            manager = (ConnectivityManager) OkDownload.with().context()
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
+
+        if (Util.isNetworkNotOnWifiType(manager)) {
             throw new NetworkPolicyException();
         }
     }
