@@ -25,6 +25,7 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -34,10 +35,15 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.robolectric.annotation.Config.NONE;
 
 @RunWith(RobolectricTestRunner.class) // for SparseArray
@@ -47,8 +53,22 @@ public class BreakpointStoreOnCacheTest {
     private BreakpointStoreOnCache storeOnCache;
     private final int insertedId = 6;
 
+    @Mock private KeyToIdMap keyToIdMap;
+    @Mock private BreakpointInfo info;
+    @Mock private DownloadTask task;
+
+    private SparseArray<BreakpointInfo> storedInfos;
+    private SparseArray<IdentifiedTask> unStoredTasks;
+    private List<Integer> sortedOccupiedIds;
+
     @Before
     public void setup() {
+        initMocks(this);
+
+        storedInfos = new SparseArray<>();
+        unStoredTasks = new SparseArray<>();
+        sortedOccupiedIds = new ArrayList<>();
+
         storeOnCache = new BreakpointStoreOnCache();
     }
 
@@ -108,9 +128,11 @@ public class BreakpointStoreOnCacheTest {
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
                 new HashMap<String, String>(),
                 unStoredTasks,
-                new ArrayList<Integer>());
+                new ArrayList<Integer>(),
+                keyToIdMap);
 
         DownloadTask task = mock(DownloadTask.class);
+        when(keyToIdMap.get(task)).thenReturn(null);
         when(task.getId()).thenReturn(insertedId);
         unStoredTasks.put(task.getId(), task);
         doReturn(true).when(task).compareIgnoreId(task);
@@ -128,7 +150,8 @@ public class BreakpointStoreOnCacheTest {
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
                 new HashMap<String, String>(),
                 unStoredTasks,
-                new ArrayList<Integer>());
+                new ArrayList<Integer>(),
+                keyToIdMap);
 
         final BreakpointInfo info1 = mock(BreakpointInfo.class);
         final BreakpointInfo info2 = mock(BreakpointInfo.class);
@@ -151,7 +174,8 @@ public class BreakpointStoreOnCacheTest {
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
                 new HashMap<String, String>(),
                 new SparseArray<IdentifiedTask>(),
-                sortedOccupiedIds);
+                sortedOccupiedIds,
+                keyToIdMap);
 
         assertThat(storeOnCache.allocateId()).isEqualTo(1);
         //when
@@ -191,7 +215,8 @@ public class BreakpointStoreOnCacheTest {
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
                 urlFilenameMap,
                 new SparseArray<IdentifiedTask>(),
-                new ArrayList<Integer>());
+                new ArrayList<Integer>(),
+                keyToIdMap);
         assertThat(storeOnCache.getResponseFilename(url1)).isEqualTo(filename1);
         assertThat(storeOnCache.getResponseFilename(url2)).isNull();
 
@@ -207,5 +232,83 @@ public class BreakpointStoreOnCacheTest {
         when(info.getUrl()).thenReturn(url1);
         storeOnCache.update(info);
         assertThat(storeOnCache.getResponseFilename(url1)).isEqualTo(filename2);
+    }
+
+    @Test
+    public void onTaskEnd_completed() {
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                new SparseArray<BreakpointInfo>(),
+                new HashMap<String, String>(),
+                new SparseArray<IdentifiedTask>(),
+                new ArrayList<Integer>(),
+                keyToIdMap));
+
+        doNothing().when(cache).remove(1);
+        cache.onTaskEnd(1, EndCause.COMPLETED, null);
+
+        verify(cache).remove(eq(1));
+    }
+
+
+    @Test
+    public void onTaskEnd_nonCompleted() {
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                new SparseArray<BreakpointInfo>(),
+                new HashMap<String, String>(),
+                new SparseArray<IdentifiedTask>(),
+                new ArrayList<Integer>(),
+                keyToIdMap));
+
+        doNothing().when(cache).remove(1);
+        cache.onTaskEnd(1, EndCause.CANCELED, null);
+        verify(cache, never()).remove(eq(1));
+        cache.onTaskEnd(1, EndCause.ERROR, null);
+        verify(cache, never()).remove(eq(1));
+        cache.onTaskEnd(1, EndCause.FILE_BUSY, null);
+        verify(cache, never()).remove(eq(1));
+        cache.onTaskEnd(1, EndCause.PRE_ALLOCATE_FAILED, null);
+        verify(cache, never()).remove(eq(1));
+        cache.onTaskEnd(1, EndCause.SAME_TASK_BUSY, null);
+        verify(cache, never()).remove(eq(1));
+    }
+
+    @Test
+    public void remove() {
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                storedInfos,
+                new HashMap<String, String>(),
+                unStoredTasks,
+                sortedOccupiedIds,
+                keyToIdMap));
+
+        storedInfos.put(1, info);
+        sortedOccupiedIds.add(1);
+
+        cache.remove(1);
+
+        assertThat(storedInfos.size()).isZero();
+        assertThat(sortedOccupiedIds).isEmpty();
+
+        verify(keyToIdMap).remove(eq(1));
+    }
+
+    @Test
+    public void findOrCreateId() {
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                storedInfos,
+                new HashMap<String, String>(),
+                unStoredTasks,
+                sortedOccupiedIds,
+                keyToIdMap));
+
+        when(keyToIdMap.get(task)).thenReturn(null);
+        when(cache.allocateId()).thenReturn(1);
+
+        assertThat(cache.findOrCreateId(task)).isEqualTo(1);
+        verify(keyToIdMap).add(eq(task), eq(1));
+
+        when(keyToIdMap.get(task)).thenReturn(2);
+        assertThat(cache.findOrCreateId(task)).isEqualTo(2);
+        verify(keyToIdMap, never()).add(eq(task), eq(2));
     }
 }

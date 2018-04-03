@@ -64,9 +64,12 @@ public class BreakpointStoreOnSqliteTest {
         store.close();
     }
 
+    private static int index = 0;
+
     private static DownloadTask mockTask() {
         DownloadTask task = mock(DownloadTask.class);
         doReturn(mock(DownloadTask.MockTaskForCompare.class)).when(task).mock(anyInt());
+        when(task.getUrl()).thenReturn("https://jacksgong.com/" + index++);
         return task;
     }
 
