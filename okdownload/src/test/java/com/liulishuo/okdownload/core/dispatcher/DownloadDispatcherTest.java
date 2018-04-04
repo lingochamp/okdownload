@@ -345,7 +345,7 @@ public class DownloadDispatcherTest {
     public void cancel_bunch() throws IOException {
         mockOkDownload();
 
-        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
 
         final DownloadTask readyASyncCallTask = mock(DownloadTask.class);
         when(readyASyncCallTask.getId()).thenReturn(1);
@@ -372,9 +372,11 @@ public class DownloadDispatcherTest {
 
         dispatcher.cancel(tasks);
 
-        verify(listener).taskEnd(eq(readyASyncCallTask), eq(CANCELED), nullable(Exception.class));
-        verify(listener).taskEnd(eq(runningAsyncCallTask), eq(CANCELED), nullable(Exception.class));
-        verify(listener).taskEnd(eq(runningSyncCallTask), eq(CANCELED), nullable(Exception.class));
+        ArgumentCaptor<Collection<DownloadTask>> callbackCanceledList = ArgumentCaptor
+                .forClass(Collection.class);
+        verify(callbackDispatcher).endTasksWithCanceled(callbackCanceledList.capture());
+        assertThat(callbackCanceledList.getValue())
+                .containsExactly(readyASyncCallTask, runningAsyncCallTask, runningSyncCallTask);
 
         verify(store, never()).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
 

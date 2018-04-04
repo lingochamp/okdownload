@@ -247,6 +247,34 @@ public class CallbackDispatcherTest {
     }
 
     @Test
+    public void endTasksWithCanceled() {
+        final Collection<DownloadTask> canceledCollection = new ArrayList<>();
+
+        final DownloadTask autoUiTask = mock(DownloadTask.class);
+        final DownloadTask nonUiTask = mock(DownloadTask.class);
+
+        final DownloadListener nonUiListener = mock(DownloadListener.class);
+        final DownloadListener autoUiListener = mock(DownloadListener.class);
+
+        when(autoUiTask.getListener()).thenReturn(autoUiListener);
+        when(autoUiTask.isAutoCallbackToUIThread()).thenReturn(true);
+
+        when(nonUiTask.getListener()).thenReturn(nonUiListener);
+        when(nonUiTask.isAutoCallbackToUIThread()).thenReturn(false);
+
+        canceledCollection.add(autoUiTask);
+        canceledCollection.add(nonUiTask);
+
+        dispatcher.endTasksWithCanceled(canceledCollection);
+
+        verify(nonUiListener)
+                .taskEnd(eq(nonUiTask), eq(EndCause.CANCELED), nullable(Exception.class));
+        verify(handler).post(any(Runnable.class));
+        verify(autoUiListener)
+                .taskEnd(eq(autoUiTask), eq(EndCause.CANCELED), nullable(Exception.class));
+    }
+
+    @Test
     public void isFetchProcessMoment_noMinInterval() {
         final DownloadTask task = mock(DownloadTask.class);
         when(task.getMinIntervalMillisCallbackProcess()).thenReturn(0);

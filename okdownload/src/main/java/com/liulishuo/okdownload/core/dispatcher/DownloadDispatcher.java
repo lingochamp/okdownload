@@ -292,10 +292,17 @@ public class DownloadDispatcher {
 
         Util.d(TAG, "handle cancel calls, callback cancel event: " + needCallbackCalls.size());
         if (!needCallbackCalls.isEmpty()) {
-            for (DownloadCall call : needCallbackCalls) {
+            if (needCallbackCalls.size() <= 1) {
+                final DownloadCall call = needCallbackCalls.get(0);
                 OkDownload.with().callbackDispatcher().dispatch().taskEnd(call.task,
                         EndCause.CANCELED,
                         null);
+            } else {
+                List<DownloadTask> callbackCanceledTasks = new ArrayList<>();
+                for (DownloadCall call : needCallbackCalls) {
+                    callbackCanceledTasks.add(call.task);
+                }
+                OkDownload.with().callbackDispatcher().endTasksWithCanceled(callbackCanceledTasks);
             }
         }
     }
