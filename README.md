@@ -8,27 +8,27 @@ A Reliable, Flexible, Fast and Powerful download engine.
 
 ---
 
-## Why Choose OkDownload
+## I. Why Choose
 
 In fact OkDownload is FileDownloader2, which extends all benefits from FileDownloader2 and beyond. More detail please move to [here](https://github.com/lingochamp/okdownload/wiki/Why-Choose-OkDownload)
 
-## How to Import OkDownload
+## II. How to Import
 
 We publish okdownload on jcenter, mavenCentral and Sonatype's snapshots repository, more detail about import OkDownload please move to [here](https://github.com/lingochamp/okdownload/wiki)
 
-## How to Use Okdownload
+## III. How to Use
 
-The simple use case such as start and cancel, download queue or get state or task info, please more to [here](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
-The advanced use case such as set max parallel running count, set remit database delay milliseconds or injection components, please move to [here](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
+- The simple use case such as start and cancel, download queue or get state or task info, please more to [here](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
+- The advanced use case such as set max parallel running count, set remit database delay milliseconds or injection components, please move to [here](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
 
-## SAMPLE
+## IV. SAMPLE
 
 ![][sample_home_img]
 
 ![][single_download_img]![][each_block_progress_img]
 ![][bunch_download_img]![][queue_download_img]
 
-## LICENSE
+## V. LICENSE
 
 ```
 Copyright (c) 2017 LingoChamp Inc.
