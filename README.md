@@ -18,8 +18,8 @@ We publish okdownload on jcenter, mavenCentral and Sonatype's snapshots reposito
 
 ## How to Use Okdownload
 
-- [Simple Use Guideline](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
-- [Advanced Use Guideline](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
+The simple use case such as start and cancel, download queue or get state or task info, please more to [here](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
+The advanced use case such as set max parallel running count, set remit database delay milliseconds or injection components, please move to [here](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
 
 ## SAMPLE
 
