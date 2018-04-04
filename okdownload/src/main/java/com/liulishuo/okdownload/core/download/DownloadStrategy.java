@@ -337,7 +337,7 @@ public class DownloadStrategy {
         }
 
         if (!Util.isNetworkAvailable(manager)) {
-            throw new UnknownHostException("network is not invalid!");
+            throw new UnknownHostException("network is not available!");
         }
     }
 

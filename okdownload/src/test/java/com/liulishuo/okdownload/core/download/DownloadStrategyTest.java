@@ -399,12 +399,12 @@ public class DownloadStrategyTest {
         doReturn(manager).when(context).getSystemService(eq(Context.CONNECTIVITY_SERVICE));
         doReturn(null).when(manager).getActiveNetworkInfo();
         thrown.expect(UnknownHostException.class);
-        thrown.expectMessage("network is not invalid!");
+        thrown.expectMessage("network is not available!");
         strategy.inspectNetworkAvailable();
 
         doReturn(false).when(info).isConnected();
         thrown.expect(UnknownHostException.class);
-        thrown.expectMessage("network is not invalid!");
+        thrown.expectMessage("network is not available!");
         strategy.inspectNetworkAvailable();
     }
 }
