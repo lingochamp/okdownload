@@ -40,6 +40,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,6 +56,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -248,6 +250,33 @@ public class DownloadDispatcherTest {
 
         verify(callbackDispatcher)
                 .endTasks(any(Collection.class), any(Collection.class), any(Collection.class));
+    }
+
+    @Test
+    public void enqueue_tasksWithNetworkNotAvailable() throws IOException {
+        mockOkDownload();
+        final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
+        final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
+
+        DownloadTask[] tasks = new DownloadTask[]{mock(DownloadTask.class), mock(
+                DownloadTask.class), mock(DownloadTask.class)};
+
+        doThrow(UnknownHostException.class).when(downloadStrategy).inspectNetworkAvailable();
+        dispatcher.enqueue(tasks);
+
+        final ArgumentCaptor<Collection<DownloadTask>> listCaptor = ArgumentCaptor
+                .forClass(Collection.class);
+
+        verify(callbackDispatcher, never())
+                .endTasks(any(Collection.class), any(Collection.class), any(Collection.class));
+        assertThat(readyAsyncCalls).isEmpty();
+        verify(dispatcher, never()).executorService();
+
+        final ArgumentCaptor<Exception> causeCaptor = ArgumentCaptor.forClass(Exception.class);
+        verify(callbackDispatcher).endTasksWithError(listCaptor.capture(), causeCaptor.capture());
+
+        assertThat(listCaptor.getValue()).containsExactly(tasks);
+        assertThat(causeCaptor.getValue()).isExactlyInstanceOf(UnknownHostException.class);
     }
 
     @Test

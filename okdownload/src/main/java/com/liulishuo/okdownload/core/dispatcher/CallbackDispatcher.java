@@ -79,6 +79,31 @@ public class CallbackDispatcher {
                 .getLastCallbackProcessTs(task) >= minInterval;
     }
 
+    public void endTasksWithError(@NonNull final Collection<DownloadTask> errorCollection,
+                                  @NonNull final Exception realCause) {
+        if (errorCollection.size() <= 0) return;
+
+        Util.d(TAG, "endTasksWithError error[" + errorCollection.size() + "] realCause: "
+                + realCause);
+
+        final Iterator<DownloadTask> iterator = errorCollection.iterator();
+        while (iterator.hasNext()) {
+            final DownloadTask task = iterator.next();
+            if (!task.isAutoCallbackToUIThread()) {
+                task.getListener().taskEnd(task, EndCause.ERROR, realCause);
+                iterator.remove();
+            }
+        }
+
+        uiHandler.post(new Runnable() {
+            @Override public void run() {
+                for (DownloadTask task : errorCollection) {
+                    task.getListener().taskEnd(task, EndCause.ERROR, realCause);
+                }
+            }
+        });
+    }
+
     public void endTasks(@NonNull final Collection<DownloadTask> completedTaskCollection,
                          @NonNull final Collection<DownloadTask> sameTaskConflictCollection,
                          @NonNull final Collection<DownloadTask> fileBusyCollection) {
@@ -91,30 +116,37 @@ public class CallbackDispatcher {
                 + "] sameTask[" + sameTaskConflictCollection.size()
                 + "] fileBusy[" + fileBusyCollection.size() + "]");
 
-        Iterator<DownloadTask> iterator = completedTaskCollection.iterator();
-        while (iterator.hasNext()) {
-            final DownloadTask task = iterator.next();
-            if (!task.isAutoCallbackToUIThread()) {
-                task.getListener().taskEnd(task, EndCause.COMPLETED, null);
-                iterator.remove();
+        if (completedTaskCollection.size() > 0) {
+            final Iterator<DownloadTask> iterator = completedTaskCollection.iterator();
+            while (iterator.hasNext()) {
+                final DownloadTask task = iterator.next();
+                if (!task.isAutoCallbackToUIThread()) {
+                    task.getListener().taskEnd(task, EndCause.COMPLETED, null);
+                    iterator.remove();
+                }
             }
         }
 
-        iterator = sameTaskConflictCollection.iterator();
-        while (iterator.hasNext()) {
-            final DownloadTask task = iterator.next();
-            if (!task.isAutoCallbackToUIThread()) {
-                task.getListener().taskEnd(task, EndCause.SAME_TASK_BUSY, null);
-                iterator.remove();
+
+        if (sameTaskConflictCollection.size() > 0) {
+            final Iterator<DownloadTask> iterator = sameTaskConflictCollection.iterator();
+            while (iterator.hasNext()) {
+                final DownloadTask task = iterator.next();
+                if (!task.isAutoCallbackToUIThread()) {
+                    task.getListener().taskEnd(task, EndCause.SAME_TASK_BUSY, null);
+                    iterator.remove();
+                }
             }
         }
 
-        iterator = fileBusyCollection.iterator();
-        while (iterator.hasNext()) {
-            final DownloadTask task = iterator.next();
-            if (!task.isAutoCallbackToUIThread()) {
-                task.getListener().taskEnd(task, EndCause.FILE_BUSY, null);
-                iterator.remove();
+        if (fileBusyCollection.size() > 0) {
+            final Iterator<DownloadTask> iterator = fileBusyCollection.iterator();
+            while (iterator.hasNext()) {
+                final DownloadTask task = iterator.next();
+                if (!task.isAutoCallbackToUIThread()) {
+                    task.getListener().taskEnd(task, EndCause.FILE_BUSY, null);
+                    iterator.remove();
+                }
             }
         }
 

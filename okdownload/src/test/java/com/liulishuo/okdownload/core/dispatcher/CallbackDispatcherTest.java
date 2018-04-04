@@ -154,4 +154,31 @@ public class CallbackDispatcherTest {
 
         verify(handler).post(any(Runnable.class));
     }
+
+    @Test
+    public void endTasksWithError() {
+        final Collection<DownloadTask> errorCollection = new ArrayList<>();
+        final Exception realCause = mock(Exception.class);
+
+        final DownloadTask autoUiTask = mock(DownloadTask.class);
+        final DownloadTask nonUiTask = mock(DownloadTask.class);
+
+        final DownloadListener nonUiListener = mock(DownloadListener.class);
+        final DownloadListener autoUiListener = mock(DownloadListener.class);
+
+        when(autoUiTask.getListener()).thenReturn(autoUiListener);
+        when(autoUiTask.isAutoCallbackToUIThread()).thenReturn(true);
+
+        when(nonUiTask.getListener()).thenReturn(nonUiListener);
+        when(nonUiTask.isAutoCallbackToUIThread()).thenReturn(false);
+
+        errorCollection.add(autoUiTask);
+        errorCollection.add(nonUiTask);
+
+        dispatcher.endTasksWithError(errorCollection, realCause);
+
+        verify(nonUiListener).taskEnd(eq(nonUiTask), eq(EndCause.ERROR), eq(realCause));
+
+        verify(handler).post(any(Runnable.class));
+    }
 }

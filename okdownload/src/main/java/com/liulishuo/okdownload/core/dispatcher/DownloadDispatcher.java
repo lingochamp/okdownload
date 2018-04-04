@@ -30,6 +30,7 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.download.DownloadCall;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -108,22 +109,28 @@ public class DownloadDispatcher {
         final List<DownloadTask> taskList = new ArrayList<>();
         Collections.addAll(taskList, tasks);
         if (taskList.size() > 1) Collections.sort(taskList);
+
         final int originReadyAsyncCallSize = readyAsyncCalls.size();
+        try {
+            OkDownload.with().downloadStrategy().inspectNetworkAvailable();
 
-        final Collection<DownloadTask> completedTaskList = new ArrayList<>();
-        final Collection<DownloadTask> sameTaskConflictList = new ArrayList<>();
-        final Collection<DownloadTask> fileBusyList = new ArrayList<>();
+            final Collection<DownloadTask> completedTaskList = new ArrayList<>();
+            final Collection<DownloadTask> sameTaskConflictList = new ArrayList<>();
+            final Collection<DownloadTask> fileBusyList = new ArrayList<>();
+            for (DownloadTask task : taskList) {
+                if (inspectCompleted(task, completedTaskList)) continue;
+                if (inspectForConflict(task, sameTaskConflictList, fileBusyList)) continue;
 
-        for (DownloadTask task : taskList) {
-            if (inspectCompleted(task, completedTaskList)) continue;
-            if (inspectForConflict(task, sameTaskConflictList, fileBusyList)) continue;
+                enqueueIgnorePriority(task);
+            }
+            OkDownload.with().callbackDispatcher()
+                    .endTasks(completedTaskList, sameTaskConflictList, fileBusyList);
 
-            enqueueIgnorePriority(task);
+        } catch (UnknownHostException e) {
+            final Collection<DownloadTask> errorList = new ArrayList<>(taskList);
+            OkDownload.with().callbackDispatcher().endTasksWithError(errorList, e);
         }
         if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
-
-        OkDownload.with().callbackDispatcher()
-                .endTasks(completedTaskList, sameTaskConflictList, fileBusyList);
 
         Util.d(TAG, "end enqueueLocked for bunch task: " + tasks.length + " consume "
                 + (SystemClock.uptimeMillis() - startTime) + "ms");
@@ -426,9 +433,9 @@ public class DownloadDispatcher {
     }
 
     boolean inspectForConflict(@NonNull DownloadTask task,
-                                       @NonNull Collection<DownloadCall> calls,
-                                       @Nullable Collection<DownloadTask> sameTaskList,
-                                       @Nullable Collection<DownloadTask> fileBusyList) {
+                               @NonNull Collection<DownloadCall> calls,
+                               @Nullable Collection<DownloadTask> sameTaskList,
+                               @Nullable Collection<DownloadTask> fileBusyList) {
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
         for (DownloadCall call : calls) {
             if (call.isCanceled()) continue;
