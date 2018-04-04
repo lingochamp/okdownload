@@ -51,6 +51,15 @@ public class DownloadContext {
     volatile boolean isStarted = false;
     @Nullable final DownloadContextListener contextListener;
     private final QueueSet set;
+    private Handler uiHandler;
+
+    DownloadContext(@NonNull DownloadTask[] tasks,
+                    @Nullable DownloadContextListener contextListener,
+                    @NonNull QueueSet set,
+                    @NonNull Handler uiHandler) {
+        this(tasks, contextListener, set);
+        this.uiHandler = uiHandler;
+    }
 
     DownloadContext(@NonNull DownloadTask[] tasks,
                     @Nullable DownloadContextListener contextListener,
@@ -97,7 +106,7 @@ public class DownloadContext {
             executeOnSerialExecutor(new Runnable() {
                 @Override public void run() {
                     for (DownloadTask task : scheduleTaskList) {
-                        if (!isStarted) {
+                        if (!isStarted()) {
                             callbackQueueEndOnSerialLoop(task.isAutoCallbackToUIThread());
                             break;
                         }
@@ -125,7 +134,8 @@ public class DownloadContext {
         if (contextListener == null) return;
 
         if (isAutoCallbackToUIThread) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
+            if (uiHandler == null) uiHandler = new Handler(Looper.getMainLooper());
+            uiHandler.post(new Runnable() {
                 @Override public void run() {
                     contextListener.queueEnd(DownloadContext.this);
                 }

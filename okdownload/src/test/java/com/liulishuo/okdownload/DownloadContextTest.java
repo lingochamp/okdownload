@@ -18,6 +18,7 @@ package com.liulishuo.okdownload;
 
 import android.content.ContentResolver;
 import android.net.Uri;
+import android.os.Handler;
 
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -110,6 +112,88 @@ public class DownloadContextTest {
     }
 
     @Test
+    public void start_serialNonStartedCallbackToUI() throws IOException {
+        mockOkDownload();
+
+        final DownloadTask[] tasks = new DownloadTask[2];
+        tasks[0] = spy(new DownloadTask.Builder("url1", "path", "filename1").build());
+        tasks[1] = spy(new DownloadTask.Builder("url2", "path", "filename1").build());
+        DownloadTask task = tasks[0];
+        when(task.isAutoCallbackToUIThread()).thenReturn(true);
+        task = tasks[1];
+        when(task.isAutoCallbackToUIThread()).thenReturn(false);
+
+        final Handler handler = mock(Handler.class);
+        when(handler.post(any(Runnable.class))).thenAnswer(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) {
+                final Runnable runnable = invocation.getArgument(0);
+                runnable.run();
+                return null;
+            }
+        });
+
+        context = spy(new DownloadContext(tasks, queueListener, queueSet, handler));
+        doAnswer(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) {
+                final Runnable runnable = invocation.getArgument(0);
+                runnable.run();
+                return null;
+            }
+        }).when(context).executeOnSerialExecutor(any(Runnable.class));
+        doNothing().when(tasks[0]).execute(any(DownloadListener.class));
+        doNothing().when(tasks[1]).execute(any(DownloadListener.class));
+        when(context.isStarted()).thenReturn(false);
+        context.start(listener, true);
+
+        verify(context).executeOnSerialExecutor(any(Runnable.class));
+        verify(tasks[0], never()).execute(any(DownloadListener.class));
+        verify(tasks[1], never()).execute(any(DownloadListener.class));
+        verify(handler).post(any(Runnable.class));
+        verify(queueListener).queueEnd(eq(context));
+    }
+
+    @Test
+    public void start_serialNonStartedCallbackDirectly() throws IOException {
+        mockOkDownload();
+
+        final DownloadTask[] tasks = new DownloadTask[2];
+        tasks[0] = spy(new DownloadTask.Builder("url1", "path", "filename1").build());
+        tasks[1] = spy(new DownloadTask.Builder("url2", "path", "filename1").build());
+        DownloadTask task = tasks[0];
+        when(task.isAutoCallbackToUIThread()).thenReturn(true);
+        task = tasks[1];
+        when(task.isAutoCallbackToUIThread()).thenReturn(false);
+
+        final Handler handler = mock(Handler.class);
+        when(handler.post(any(Runnable.class))).thenAnswer(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) {
+                final Runnable runnable = invocation.getArgument(0);
+                runnable.run();
+                return null;
+            }
+        });
+
+        context = spy(new DownloadContext(tasks, queueListener, queueSet, handler));
+        doAnswer(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) {
+                final Runnable runnable = invocation.getArgument(0);
+                runnable.run();
+                return null;
+            }
+        }).when(context).executeOnSerialExecutor(any(Runnable.class));
+        doNothing().when(tasks[0]).execute(any(DownloadListener.class));
+        doNothing().when(tasks[1]).execute(any(DownloadListener.class));
+
+        when(context.isStarted()).thenReturn(true, false);
+        context.start(listener, true);
+        verify(context).executeOnSerialExecutor(any(Runnable.class));
+        verify(tasks[0]).execute(any(DownloadListener.class));
+        verify(tasks[1], never()).execute(any(DownloadListener.class));
+        verify(handler, never()).post(any(Runnable.class));
+        verify(queueListener).queueEnd(eq(context));
+    }
+
+    @Test
     public void start_withoutQueueListener() throws IOException {
         mockOkDownload();
 
@@ -169,7 +253,7 @@ public class DownloadContextTest {
     }
 
     @Test
-    public void stop() throws IOException {
+    public void stop() {
         context.isStarted = true;
         context.stop();
         assertThat(context.isStarted()).isFalse();
