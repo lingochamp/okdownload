@@ -61,7 +61,7 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void setListener() throws Exception {
+    public void setListener() {
         assertThat(serialQueue.listenerBunch.contain(listener)).isTrue();
 
         final DownloadListener anotherListener = mock(DownloadListener.class);
@@ -72,7 +72,7 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void enqueue() throws Exception {
+    public void enqueue() {
         doNothing().when(serialQueue).startNewLooper();
         // order
         when(task1.compareTo(task2)).thenReturn(-1);
@@ -122,17 +122,32 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void resume() throws Exception {
+    public void resume() {
         serialQueue.paused = true;
+        serialQueue.looping = false;
+
+        doNothing().when(serialQueue).startNewLooper();
+        taskList.add(mock(DownloadTask.class));
+
+        serialQueue.resume();
+
+        verify(serialQueue).startNewLooper();
+        assertThat(serialQueue.paused).isFalse();
+        assertThat(serialQueue.looping).isTrue();
+    }
+
+    @Test
+    public void resume_notPaused() {
+        serialQueue = spy(new DownloadSerialQueue());
+        serialQueue.paused = false;
 
         serialQueue.resume();
 
         verify(serialQueue, never()).startNewLooper();
-        assertThat(serialQueue.paused).isFalse();
     }
 
     @Test
-    public void resume_listNotEmpty_unpark() throws Exception {
+    public void resume_listNotEmpty_unpark() {
         doNothing().when(serialQueue).startNewLooper();
         serialQueue.paused = true;
         taskList.add(task1);
@@ -143,7 +158,7 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void getWorkingTaskId() throws Exception {
+    public void getWorkingTaskId() {
         assertThat(serialQueue.getWorkingTaskId()).isEqualTo(DownloadSerialQueue.ID_INVALID);
 
         when(task1.getId()).thenReturn(1);
@@ -153,7 +168,7 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void getWaitingTaskCount() throws Exception {
+    public void getWaitingTaskCount() {
         assertThat(serialQueue.getWaitingTaskCount()).isZero();
 
         taskList.add(task1);
@@ -161,7 +176,7 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void shutdown() throws Exception {
+    public void shutdown() {
         taskList.add(task1);
         serialQueue.runningTask = task2;
 
@@ -173,7 +188,7 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void run() throws Exception {
+    public void run() {
         // empty
         serialQueue.looping = true;
         serialQueue.run();
@@ -203,13 +218,13 @@ public class DownloadSerialQueueTest {
     }
 
     @Test
-    public void taskStart() throws Exception {
+    public void taskStart() {
         serialQueue.taskStart(task1);
         assertThat(serialQueue.runningTask).isEqualTo(task1);
     }
 
     @Test
-    public void taskEnd() throws Exception {
+    public void taskEnd() {
         serialQueue.runningTask = task1;
         serialQueue.taskEnd(task1, EndCause.COMPLETED, null);
         assertThat(serialQueue.runningTask).isNull();
