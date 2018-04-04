@@ -39,11 +39,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -242,5 +244,39 @@ public class CallbackDispatcherTest {
         verify(nonUiListener).taskEnd(eq(nonUiTask), eq(EndCause.ERROR), eq(realCause));
         verify(handler).post(any(Runnable.class));
         verify(autoUiListener).taskEnd(eq(autoUiTask), eq(EndCause.ERROR), eq(realCause));
+    }
+
+    @Test
+    public void isFetchProcessMoment_noMinInterval() {
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getMinIntervalMillisCallbackProcess()).thenReturn(0);
+        assertThat(dispatcher.isFetchProcessMoment(task)).isTrue();
+    }
+
+    @Test
+    public void isFetchProcessMoment_largeThanMinInterval() {
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getMinIntervalMillisCallbackProcess()).thenReturn(1);
+        assertThat(dispatcher.isFetchProcessMoment(task)).isTrue();
+    }
+
+    @Test
+    public void isFetchProcessMoment_lessThanMinInterval() {
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getMinIntervalMillisCallbackProcess()).thenReturn(Integer.MAX_VALUE);
+        assertThat(dispatcher.isFetchProcessMoment(task)).isFalse();
+    }
+
+    @Test
+    public void fetchProgress_setMinInterval() {
+        final DownloadTask task = spy(new DownloadTask
+                .Builder("https://jacksgong.com", "parentPath", "filename")
+                .setMinIntervalMillisCallbackProcess(1)
+                .build());
+        final DownloadListener listener = mock(DownloadListener.class);
+        when(task.getListener()).thenReturn(listener);
+
+        dispatcher.dispatch().fetchProgress(task, 1, 2);
+        assertThat(DownloadTask.TaskCallbackWrapper.getLastCallbackProcessTs(task)).isNotZero();
     }
 }
