@@ -166,6 +166,7 @@ public class StatusUtilTest {
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
 
         // info exist and filename is the same but offset not the same to total ---> idle
+        when(task.getFilename()).thenReturn("filename");
         when(task.getFile()).thenReturn(file);
         when(info.getFile()).thenReturn(file);
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.IDLE);
@@ -198,5 +199,29 @@ public class StatusUtilTest {
 
         task = StatusUtil.createFinder(url, file.getParent(), file.getName());
         assertFile(task.getFile()).isEqualTo(file);
+    }
+
+    @Test
+    public void isSameTaskPendingOrRunning() throws IOException {
+        mockOkDownload();
+
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
+        when(dispatcher.findSameTask(task)).thenReturn(task);
+        assertThat(StatusUtil.isSameTaskPendingOrRunning(task)).isTrue();
+
+        when(dispatcher.findSameTask(task)).thenReturn(null);
+        assertThat(StatusUtil.isSameTaskPendingOrRunning(task)).isFalse();
+    }
+
+    @Test
+    public void getCurrentInfo_urlParentPathFilename() {
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+        final BreakpointInfo origin = mock(BreakpointInfo.class);
+
+        doReturn(origin).when(store).get(anyInt());
+
+        StatusUtil.getCurrentInfo("https://jacksgong.com", "parentPath", "filename");
+        verify(origin).copy();
     }
 }
