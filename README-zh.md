@@ -1,29 +1,29 @@
 # OkDownload
 
-A Reliable, Flexible, Fast and Powerful download engine.
+可靠，灵活，高性能以及强大的下载引擎。
 
 ![][okdownload_svg]
 [![][build_status_svg]][build_status_link]
 [![codecov](https://codecov.io/gh/lingochamp/okdownload/branch/master/graph/badge.svg)](https://codecov.io/gh/lingochamp/okdownload)
 
-> [中文文档](https://github.com/lingochamp/okdownload/blob/master/README-zh.md)
+> [ENGLISH](https://github.com/lingochamp/okdownload)
 
 ---
 
-## I. Why Choose
+## I. 为什么选择
 
-In fact OkDownload is FileDownloader2, which extends all benefits from FileDownloader and beyond. More detail please move to [here](https://github.com/lingochamp/okdownload/wiki/Why-Choose-OkDownload)
+实际上，OkDownload是FileDownloader2，它继承了所有FileDownloader的优点，甚至做了更多的优化以及更多的特性，相关更详细的描述请移步到[这里](https://github.com/lingochamp/okdownload/wiki/Why-Choose-OkDownload)
 
-## II. How to Import
+## II. 如何引入
 
-We publish okdownload on jcenter, mavenCentral and Sonatype's snapshots repository, more detail about import OkDownload please move to [here](https://github.com/lingochamp/okdownload/wiki)
+我们将OkDownload发布到了`jcenter`、`mavenCentral`以及`Sonatype's snapshots`仓库，更多关于如何引入OkDownload请移步到[这里](https://github.com/lingochamp/okdownload/wiki)
 
-## III. How to Use
+## III. 如何使用
 
-- The simple use case such as start and cancel, download queue or get state or task info, please more to [here](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
-- The advanced use case such as set max parallel running count, set remit database delay milliseconds or injection components, please move to [here](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
+- 简单的使用场景如启动、取消、队列下载或者是获取任务的状态与信息，请移步到[这里](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
+- 高级的使用场景如设置最大并行运行的任务数目、设置延时提交数据库的延时毫秒亦或是如何注入自定义组件，请移步到[这里](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
 
-## IV. SAMPLE
+## IV. 案例项目
 
 ![][sample_home_img]
 
