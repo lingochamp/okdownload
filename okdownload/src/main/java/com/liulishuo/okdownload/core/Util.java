@@ -380,6 +380,21 @@ public class Util {
         return candidate == null ? new File("/") : candidate;
     }
 
+    public static long getSizeFromContentUri(@NonNull Uri contentUri) {
+        final ContentResolver resolver = OkDownload.with().context().getContentResolver();
+        final Cursor cursor = resolver.query(contentUri, null, null, null, null);
+        if (cursor != null) {
+            try {
+                cursor.moveToFirst();
+                return cursor
+                        .getLong(cursor.getColumnIndex(OpenableColumns.SIZE));
+            } finally {
+                cursor.close();
+            }
+        }
+        return 0;
+    }
+
     public static boolean isNetworkAvailable(ConnectivityManager manager) {
         if (manager == null) {
             Util.w("Util", "failed to get connectivity manager!");

@@ -16,10 +16,12 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
@@ -104,8 +106,13 @@ public class BreakpointLocalCheck {
     }
 
     public boolean isFileExistToResume() {
-        final File file = task.getFile();
-        return file != null && file.exists();
+        final Uri uri = task.getUri();
+        if (Util.isUriContentScheme(uri)) {
+            return Util.getSizeFromContentUri(uri) > 0;
+        } else {
+            final File file = task.getFile();
+            return file != null && file.exists();
+        }
     }
 
     public void check() {
