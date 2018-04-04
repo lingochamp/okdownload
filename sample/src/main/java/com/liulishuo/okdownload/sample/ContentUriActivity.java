@@ -50,8 +50,10 @@ public class ContentUriActivity extends BaseSampleActivity {
     private ProgressBar progressBar;
     private View actionView;
     private TextView actionTv;
+    private TextView filenameTv;
 
     private DownloadTask task;
+    private Uri uri;
 
     @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,11 +67,17 @@ public class ContentUriActivity extends BaseSampleActivity {
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == WRITE_REQUEST_CODE && data != null && data.getData() != null) {
-            handleUri(data.getData());
+            uri = data.getData();
+            handleUri(uri);
         } else {
             Snackbar.make(actionView, "data of activity result is not valid", Snackbar.LENGTH_LONG)
                     .show();
         }
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        if (task != null) task.cancel();
     }
 
     private void initView() {
@@ -77,6 +85,7 @@ public class ContentUriActivity extends BaseSampleActivity {
         progressBar = findViewById(R.id.progressBar);
         actionView = findViewById(R.id.actionView);
         actionTv = findViewById(R.id.actionTv);
+        filenameTv = findViewById(R.id.filenameTv);
 
         statusTv.setText("-");
         actionTv.setText(R.string.choose_file);
@@ -87,12 +96,16 @@ public class ContentUriActivity extends BaseSampleActivity {
             @Override public void onClick(View v) {
                 if (actionView.getTag() == null) {
                     // choose file
-                    final Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    if (uri == null) {
+                        final Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
 
-                    intent.setType("application/apk");
-                    intent.putExtra(Intent.EXTRA_TITLE, "liulishuo.apk");
-                    startActivityForResult(intent, WRITE_REQUEST_CODE);
+                        intent.setType("application/apk");
+                        intent.putExtra(Intent.EXTRA_TITLE, "liulishuo.apk");
+                        startActivityForResult(intent, WRITE_REQUEST_CODE);
+                    } else {
+                        handleUri(uri);
+                    }
                 } else {
                     task.cancel();
                 }
@@ -105,6 +118,7 @@ public class ContentUriActivity extends BaseSampleActivity {
                 .setMinIntervalMillisCallbackProcess(300)
                 .build();
         this.task = task;
+        filenameTv.setText(task.getFilename());
         task.enqueue(new SampleListener());
     }
 
@@ -165,7 +179,7 @@ public class ContentUriActivity extends BaseSampleActivity {
             statusTv.setText(status);
 
             actionView.setTag(null);
-            actionTv.setText(R.string.choose_file);
+            actionTv.setText(R.string.start);
         }
     }
 }
