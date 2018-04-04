@@ -8,14 +8,18 @@ A Reliable, Flexible, Fast and Powerful download engine.
 
 ---
 
-## ANSWERS
+## Why Choose OkDownload
 
-- [Why Choose OkDownload instead of FileDownloader?](https://github.com/lingochamp/okdownload/wiki/Why-choose-OkDownload)
-- [How to Import OkDownload](https://github.com/lingochamp/okdownload/wiki)
+In fact OkDownload is FileDownloader2, which extends all benefits from FileDownloader2 and beyond. More detail please move to [here](https://github.com/lingochamp/okdownload/wiki/Why-Choose-OkDownload)
+
+## How to Import OkDownload
+
+We publish okdownload on jcenter, mavenCentral and Sonatype's snapshots repository, more detail about import OkDownload please move to [here](https://github.com/lingochamp/okdownload/wiki)
+
+## How to Use Okdownload
+
 - [Simple Use Guideline](https://github.com/lingochamp/okdownload/wiki/Simple-Use-Guideline)
 - [Advanced Use Guideline](https://github.com/lingochamp/okdownload/wiki/Advanced-Use-Guideline)
-- [QA](https://github.com/lingochamp/okdownload/wiki/QA)
-- [What about PR](https://github.com/lingochamp/okdownload/wiki/Welcome-PR)
 
 ## SAMPLE
 
@@ -23,10 +27,6 @@ A Reliable, Flexible, Fast and Powerful download engine.
 
 ![][single_download_img]![][each_block_progress_img]
 ![][bunch_download_img]![][queue_download_img]
-
-## LISTENER
-
-![][listener_img]
 
 ## LICENSE
 
