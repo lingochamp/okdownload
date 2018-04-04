@@ -33,11 +33,6 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ![][single_download_img]![][each_block_progress_img]
 ![][bunch_download_img]![][queue_download_img]
 
-## GRAPH
-
-![][listener_img]
-![][check_before_chain_img]
-
 ## DEBUG
 
 You can use [okcat](https://github.com/Jacksgong/okcat) to read the detail on the sample(`-c` is just for clear old adb log before running):
@@ -74,6 +69,88 @@ com.liulishuo.okdownload:sqlite:1.0.0-SNAPSHOT
 // provide okhttp to connect to backend
 com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 ```
+
+## SAMPLE
+
+#### 1. Start a task
+
+```java
+task = new DownloadTask.Builder(url, parentFile)
+         .setFilename(filename)
+         // the minimal interval millisecond for callback progress
+         .setMinIntervalMillisCallbackProcess(30)
+         // do re-download even if the task has already been completed in the past.
+         .setPassIfAlreadyCompleted(false)
+         .build();
+
+task.enqueue(listener);
+
+// cancel
+task.cancel();
+```
+
+#### 2. Start tasks
+
+```java
+// This method is optimize specially for bunch of tasks
+DownloadTask.enqueue(tasks, listener);
+
+// cancel, this method is also optmize specially for bunch of tasks
+DownloadTask.cancel(tasks);
+```
+
+#### 3. Start queue
+
+```java
+DownloadContext.Builder builder = new DownloadContext.QueueSet()
+        .setParentPathFile(parentFile)
+        .setMinIntervalMillisCallbackProcess(150)
+        .commit();
+builder.bind(url1);
+builder.bind(url2).addTag(key, value);
+builder.bind(url3).setTag(tag);
+builder.setListener(contextListener);
+
+DownloadTask task = new DownloadTask.Builder(url4, parentFile)
+        .setPriority(10).build();
+builder.bindSetTask(task);
+
+DownloadContext context = builder.build();
+
+context.startOnParallel(listener);
+
+// stop
+context.stop();
+```
+
+#### 4. Get download state beyond listener
+
+```java
+Status status = StatusUtil.getStatus(task)
+
+status = StatusUtil.getStatus(url, parentPath, null);
+status = StatusUtil.getStatus(url, parentPath, filename);
+
+boolean isCompleted = StatusUtil.isCompleted(task);
+isCompleted = StatusUtil.isCompleted(url, parentPath, null);
+isCompleted = StatusUtil.isCompleted(url, parentPath, filename);
+
+Status completedOrUnknown = StatusUtil.isCompletedOrUnknown(task);
+
+// If you set tag, so just get tag
+task.getTag();
+task.getTag(xxx);
+```
+
+#### 5. Get BreakpointInfo beyond listener
+
+```java
+BreakpointInfo info = OkDownload.with().breakpointStore().get(it);
+
+info = StatusUtil.getCurrentInfo(url, parentPath, null);
+info = StatusUtil.getCurrentInfo(url, parentPath, filename);
+```
+
 
 ## WHY OKDOWNLOAD
 
@@ -146,6 +223,11 @@ com.liulishuo.okdownload:okhttp:1.0.0-SNAPSHOT
 - [] Support using OkDownload on kotlin style such as DSL with import `okdownload-kotlin-enhance`
 - [] Provide Benchmark on `benchmark` application
 - [] Provide `connectionPool` library to maintain connection for default `DownloadUrlConnection` instead of disconnect each time
+
+## GRAPH
+
+![][listener_img]
+![][check_before_chain_img]
 
 ## LICENSE
 
