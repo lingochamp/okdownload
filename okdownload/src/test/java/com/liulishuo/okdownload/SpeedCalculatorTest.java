@@ -39,7 +39,7 @@ public class SpeedCalculatorTest {
     }
 
     @Test
-    public void calculate() throws InterruptedException {
+    public void calculate() {
         long now = 66;
         long firstTimestamp = now;
         doReturn(now).when(calculator).nowMillis();
@@ -109,5 +109,42 @@ public class SpeedCalculatorTest {
         doReturn(now).when(calculator).nowMillis();
         // because than 1 second and last speed is 2.0
         assertThat(calculator.speed()).isEqualTo("2.0 kB/s");
+    }
+
+    @Test
+    public void speedFromBegin() {
+        doReturn("1").when(calculator).getSpeedWithSIAndFlush();
+        assertThat(calculator.instantSpeed()).isEqualTo("1");
+    }
+
+    @Test
+    public void lastSpeed() {
+        calculator.bytesPerSecond = 1;
+        assertThat(calculator.lastSpeed()).isEqualTo("1 B/s");
+    }
+
+    @Test
+    public void getInstantSpeedDurationMillis() {
+        doReturn(2L).when(calculator).nowMillis();
+        calculator.timestamp = 1;
+        assertThat(calculator.getInstantSpeedDurationMillis()).isOne();
+    }
+
+    @Test
+    public void getSpeedWithBinaryAndFlush() {
+        doReturn(1054L).when(calculator).getInstantBytesPerSecondAndFlush();
+        assertThat(calculator.getSpeedWithBinaryAndFlush()).isEqualTo("1.0 KiB/s");
+    }
+
+    @Test
+    public void getSpeedWithSIAndFlush() {
+        doReturn(1054L).when(calculator).getInstantBytesPerSecondAndFlush();
+        assertThat(calculator.getSpeedWithSIAndFlush()).isEqualTo("1.1 kB/s");
+    }
+
+    @Test
+    public void averageSpeed() {
+        doReturn("1").when(calculator).speedFromBegin();
+        assertThat(calculator.averageSpeed()).isEqualTo("1");
     }
 }

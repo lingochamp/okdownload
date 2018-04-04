@@ -25,7 +25,7 @@ public class SpeedCalculator {
     long timestamp;
     long increaseBytes;
 
-    private long bytesPerSecond;
+    long bytesPerSecond;
 
     long beginTimestamp;
     long endTimestamp;
