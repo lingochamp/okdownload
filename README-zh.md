@@ -25,6 +25,14 @@
 
 ## IV. 案例项目
 
+### 调试
+
+> [如何调试](https://github.com/lingochamp/okdownload/wiki/Debug-OkDownload)
+
+![][okcat_img]
+
+### 截图
+
 ![][sample_home_img]
 
 ![][single_download_img]![][each_block_progress_img]
