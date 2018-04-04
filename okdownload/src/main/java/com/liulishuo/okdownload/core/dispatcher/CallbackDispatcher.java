@@ -45,11 +45,6 @@ public class CallbackDispatcher {
 
     private final Handler uiHandler;
 
-    CallbackDispatcher(@NonNull Handler handler, @NonNull DownloadListener transmit) {
-        this.uiHandler = handler;
-        this.transmit = transmit;
-    }
-
     CallbackDispatcher(@NonNull Handler handler) {
         this.uiHandler = handler;
         this.transmit = new DefaultTransmitListener();
