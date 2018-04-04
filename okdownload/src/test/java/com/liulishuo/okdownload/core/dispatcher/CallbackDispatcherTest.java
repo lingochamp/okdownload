@@ -29,6 +29,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -54,20 +56,25 @@ public class CallbackDispatcherTest {
     private CallbackDispatcher dispatcher;
 
     @Mock private Handler handler;
-    @Mock private DownloadListener transmit;
 
     @Before
     public void setup() {
         initMocks(this);
 
+        when(handler.post(any(Runnable.class))).thenAnswer(
+                new Answer() {
+                    @Override public Object answer(InvocationOnMock invocation) {
+                        final Runnable runnable = invocation.getArgument(0);
+                        runnable.run();
+                        return null;
+                    }
+                });
         TestUtils.initProvider();
-        dispatcher = new CallbackDispatcher(handler, transmit);
+        dispatcher = new CallbackDispatcher(handler);
     }
 
     @Test
-    public void dispatch() {
-        dispatcher = new CallbackDispatcher(handler);
-
+    public void dispatch_ui() {
         final DownloadTask task = mock(DownloadTask.class);
         final DownloadListener listener = mock(DownloadListener.class);
         when(task.getListener()).thenReturn(listener);
@@ -76,6 +83,55 @@ public class CallbackDispatcherTest {
         final ResumeFailedCause resumeFailedCause = mock(ResumeFailedCause.class);
         final EndCause endCause = mock(EndCause.class);
         final Exception exception = mock(Exception.class);
+
+        when(task.isAutoCallbackToUIThread()).thenReturn(true);
+
+        dispatcher.dispatch().taskStart(task);
+        verify(listener).taskStart(eq(task));
+
+        dispatcher.dispatch().connectTrialStart(task, headerFields);
+        verify(listener).connectTrialStart(eq(task), eq(headerFields));
+
+        dispatcher.dispatch().connectTrialEnd(task, 200, headerFields);
+        verify(listener).connectTrialEnd(eq(task), eq(200), eq(headerFields));
+
+        dispatcher.dispatch().downloadFromBeginning(task, info, resumeFailedCause);
+        verify(listener).downloadFromBeginning(eq(task), eq(info), eq(resumeFailedCause));
+
+        dispatcher.dispatch().downloadFromBreakpoint(task, info);
+        verify(listener).downloadFromBreakpoint(eq(task), eq(info));
+
+        dispatcher.dispatch().connectStart(task, 1, headerFields);
+        verify(listener).connectStart(eq(task), eq(1), eq(headerFields));
+
+        dispatcher.dispatch().connectEnd(task, 2, 200, headerFields);
+        verify(listener).connectEnd(eq(task), eq(2), eq(200), eq(headerFields));
+
+        dispatcher.dispatch().fetchStart(task, 1, 2L);
+        verify(listener).fetchStart(eq(task), eq(1), eq(2L));
+
+        dispatcher.dispatch().fetchProgress(task, 1, 2L);
+        verify(listener).fetchProgress(eq(task), eq(1), eq(2L));
+
+        dispatcher.dispatch().fetchEnd(task, 1, 2L);
+        verify(listener).fetchEnd(eq(task), eq(1), eq(2L));
+
+        dispatcher.dispatch().taskEnd(task, endCause, exception);
+        verify(listener).taskEnd(eq(task), eq(endCause), eq(exception));
+    }
+
+    @Test
+    public void dispatch_nonUi() {
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadListener listener = mock(DownloadListener.class);
+        when(task.getListener()).thenReturn(listener);
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        final Map<String, List<String>> headerFields = mock(Map.class);
+        final ResumeFailedCause resumeFailedCause = mock(ResumeFailedCause.class);
+        final EndCause endCause = mock(EndCause.class);
+        final Exception exception = mock(Exception.class);
+
+        when(task.isAutoCallbackToUIThread()).thenReturn(false);
 
         dispatcher.dispatch().taskStart(task);
         verify(listener).taskStart(eq(task));
@@ -153,6 +209,12 @@ public class CallbackDispatcherTest {
                 .taskEnd(eq(nonUiTask), eq(EndCause.FILE_BUSY), nullable(Exception.class));
 
         verify(handler).post(any(Runnable.class));
+        verify(autoUiListener)
+                .taskEnd(eq(autoUiTask), eq(EndCause.COMPLETED), nullable(Exception.class));
+        verify(autoUiListener)
+                .taskEnd(eq(autoUiTask), eq(EndCause.SAME_TASK_BUSY), nullable(Exception.class));
+        verify(autoUiListener)
+                .taskEnd(eq(autoUiTask), eq(EndCause.FILE_BUSY), nullable(Exception.class));
     }
 
     @Test
@@ -178,7 +240,7 @@ public class CallbackDispatcherTest {
         dispatcher.endTasksWithError(errorCollection, realCause);
 
         verify(nonUiListener).taskEnd(eq(nonUiTask), eq(EndCause.ERROR), eq(realCause));
-
         verify(handler).post(any(Runnable.class));
+        verify(autoUiListener).taskEnd(eq(autoUiTask), eq(EndCause.ERROR), eq(realCause));
     }
 }
