@@ -1,5 +1,7 @@
 package com.liulishuo.okdownload;
 
+import android.content.Context;
+
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
@@ -87,5 +89,19 @@ public class OkDownloadTest {
         assertThat(okDownload.monitor).isEqualTo(mockMonitor);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void with_noValidContext() {
+        OkDownloadProvider.context = null;
+        OkDownload.singleton = null;
 
+        OkDownload.with();
+    }
+
+    @Test
+    public void with_valid() {
+        OkDownloadProvider.context = mock(Context.class);
+        OkDownload.singleton = null;
+
+        assertThat(OkDownload.with()).isNotNull();
+    }
 }
