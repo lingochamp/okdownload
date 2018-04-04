@@ -109,11 +109,12 @@ DownloadContext.Builder builder = new DownloadContext.QueueSet()
 builder.bind(url1);
 builder.bind(url2).addTag(key, value);
 builder.bind(url3).setTag(tag);
-builder.setListener(contextListener);
 
 DownloadTask task = new DownloadTask.Builder(url4, parentFile)
         .setPriority(10).build();
 builder.bindSetTask(task);
+
+builder.setListener(contextListener);
 
 DownloadContext context = builder.build();
 
