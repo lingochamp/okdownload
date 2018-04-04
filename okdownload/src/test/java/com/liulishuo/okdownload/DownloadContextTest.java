@@ -29,6 +29,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -41,6 +43,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -112,14 +115,25 @@ public class DownloadContextTest {
 
         // without queue listener
         final DownloadTask[] tasks = new DownloadTask[2];
-        tasks[0] = new DownloadTask.Builder("url1", "path", "filename1").build();
-        tasks[1] = new DownloadTask.Builder("url2", "path", "filename1").build();
+        tasks[0] = spy(new DownloadTask.Builder("url1", "path", "filename1").build());
+        tasks[1] = spy(new DownloadTask.Builder("url2", "path", "filename1").build());
 
         context = spy(new DownloadContext(tasks, null, queueSet));
+        doAnswer(new Answer() {
+            @Override public Object answer(InvocationOnMock invocation) {
+                final Runnable runnable = invocation.getArgument(0);
+                runnable.run();
+                return null;
+            }
+        }).when(context).executeOnSerialExecutor(any(Runnable.class));
+        doNothing().when(tasks[0]).execute(any(DownloadListener.class));
+        doNothing().when(tasks[1]).execute(any(DownloadListener.class));
+
         assertThat(context.isStarted()).isFalse();
-        doNothing().when(context).executeOnSerialExecutor(any(Runnable.class));
         context.start(listener, true);
         verify(context).executeOnSerialExecutor(any(Runnable.class));
+        verify(tasks[0]).execute(any(DownloadListener.class));
+        verify(tasks[1]).execute(any(DownloadListener.class));
 
         assertThat(context.isStarted()).isTrue();
 
