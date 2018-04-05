@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -227,7 +229,7 @@ public class NotificationActivity extends BaseSampleActivity {
                 builder.setContentText(
                         "task end " + cause + " average speed: " + taskSpeed.averageSpeed());
 
-                actionTv.postDelayed(new Runnable() {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override public void run() {
                         actionTv.setText(R.string.start);
                         actionView.setTag(null);
