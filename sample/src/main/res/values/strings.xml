@@ -21,6 +21,7 @@
     <string name="title_multiple">Multiple</string>
     <string name="title_queue">Queue</string>
     <string name="title_content_uri">Content Uri</string>
+    <string name="title_notification">Notification</string>
     <string name="start_download">Start Download</string>
     <string name="cancel_download">Cancel download</string>
     <string name="start_same_task">Start Same Task</string>
@@ -49,6 +50,7 @@
     <string name="task_manager_title">Task Manager</string>
     <string name="task_manager_desc">On this demo we will using UnifiedListenerManager to manage all tasks and you can attach listener for a task any time any where.</string>
     <string name="content_uri_desc">On this demo we will using Content Uri to store data for the task instead of using accessible file path.</string>
+    <string name="notification_desc">On this demo we will show you simple case to use notification with okdownload.</string>
     <string name="comprehensive_case_title">Comprehensive Case</string>
     <string name="comprehensive_case_desc">On this demo you can see a comprehensive demo with several tabs switch among pages.</string>
     <string name="bunch_download_title">Bunch Download</string>

@@ -7,6 +7,7 @@ separator-regex-list:
 
 trans-tag-map:
         'BunchActivity' : '[DEMO]'
+        'NotificationActivity' : '[DEMO]'
 
 trans-msg-map:
         'taskEnd ' : 'TASK END'
