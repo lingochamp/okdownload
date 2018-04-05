@@ -37,6 +37,7 @@
 
 ![][single_download_img]![][each_block_progress_img]
 ![][bunch_download_img]![][queue_download_img]
+![][content_uri_img]![][notification_img]
 
 ## V. LICENSE
 
@@ -62,6 +63,9 @@ limitations under the License.
 [each_block_progress_img]: https://github.com/lingochamp/okdownload/raw/master/art/each-block-progress.gif
 [bunch_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/bunch-download.gif
 [queue_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/queue-download.gif
+[content_uri_img]: https://github.com/lingochamp/okdownload/raw/master/art/content-uri.gif
+[notification_img]: https://github.com/lingochamp/okdownload/raw/master/art/notification.gif
+[listener_img]: https://github.com/lingochamp/okdownload/raw/master/art/listener.png
 [listener_img]: https://github.com/lingochamp/okdownload/raw/master/art/listener.png
 [check_before_chain_img]: https://github.com/lingochamp/okdownload/raw/master/art/check_before_chain.png
 [build_status_svg]: https://travis-ci.org/lingochamp/okdownload.svg?branch=master
