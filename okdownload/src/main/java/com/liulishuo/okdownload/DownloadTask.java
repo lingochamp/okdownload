@@ -837,7 +837,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     }
 
     @Override public String toString() {
-        return super.toString() + "@" + id + "@" + url + "@" + providedPathFile.toString()
+        return super.toString() + "@" + id + "@" + url + "@" + directoryFile.toString()
                 + "/" + filenameHolder.get();
     }
 
