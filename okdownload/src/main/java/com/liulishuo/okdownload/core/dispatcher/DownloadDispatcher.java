@@ -258,7 +258,7 @@ public class DownloadDispatcher {
         }
 
         for (DownloadCall call : runningSyncCalls) {
-            if (call.task == task|| call.task.getId() == task.getId()) {
+            if (call.task == task || call.task.getId() == task.getId()) {
                 needCallbackCalls.add(call);
                 needCancelCalls.add(call);
                 return;
