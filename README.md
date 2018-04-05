@@ -33,7 +33,7 @@ We publish okdownload on jcenter, mavenCentral and Sonatype's snapshots reposito
 
 ### Screenshot
 
-![][sample_home_img]
+<img src="https://github.com/lingochamp/okdownload/raw/master/art/sample-home.jpeg" width="480">
 
 ![][single_download_img]![][each_block_progress_img]
 ![][bunch_download_img]![][queue_download_img]
