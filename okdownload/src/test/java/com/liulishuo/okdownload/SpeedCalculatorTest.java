@@ -112,7 +112,7 @@ public class SpeedCalculatorTest {
     }
 
     @Test
-    public void speedFromBegin() {
+    public void instantSpeed() {
         doReturn("1").when(calculator).getSpeedWithSIAndFlush();
         assertThat(calculator.instantSpeed()).isEqualTo("1");
     }
@@ -146,5 +146,11 @@ public class SpeedCalculatorTest {
     public void averageSpeed() {
         doReturn("1").when(calculator).speedFromBegin();
         assertThat(calculator.averageSpeed()).isEqualTo("1");
+    }
+
+    @Test
+    public void speedFromBegin() {
+        doReturn(1L).when(calculator).getBytesPerSecondFromBegin();
+        assertThat(calculator.speedFromBegin()).isEqualTo("1 B/s");
     }
 }
