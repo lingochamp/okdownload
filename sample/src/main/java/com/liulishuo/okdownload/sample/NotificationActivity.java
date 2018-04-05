@@ -71,7 +71,8 @@ public class NotificationActivity extends BaseSampleActivity {
 
         // for cancel action on notification.
         IntentFilter filter = new IntentFilter(CancelReceiver.ACTION);
-        registerReceiver(new CancelReceiver(), filter);
+        cancelReciver = new CancelReceiver();
+        registerReceiver(cancelReciver, filter);
 
         initTask();
         initNotification();
