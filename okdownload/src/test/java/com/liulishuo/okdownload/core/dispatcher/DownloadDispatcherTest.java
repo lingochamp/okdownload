@@ -342,6 +342,77 @@ public class DownloadDispatcherTest {
     }
 
     @Test
+    public void cancel_notSameReferenceButSameId_runningSync() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final DownloadTask runningSyncTask = mock(DownloadTask.class);
+        final DownloadTask runningAsyncTask = mock(DownloadTask.class);
+        final DownloadTask readyAsyncTask = mock(DownloadTask.class);
+        when(runningSyncTask.getId()).thenReturn(1);
+        when(runningAsyncTask.getId()).thenReturn(1);
+        when(readyAsyncTask.getId()).thenReturn(1);
+
+
+        final DownloadTask sameIdTask = mock(DownloadTask.class);
+        when(sameIdTask.getId()).thenReturn(1);
+
+        final DownloadCall runningSyncCall = spy(
+                DownloadCall.create(runningSyncTask, false, store));
+        runningSyncCalls.add(runningSyncCall);
+
+        dispatcher.cancel(sameIdTask);
+
+        verify(runningSyncCall).cancel();
+        verify(listener).taskEnd(eq(runningSyncTask), eq(CANCELED), nullable(Exception.class));
+        verify(store).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
+    }
+
+    @Test
+    public void cancel_notSameReferenceButSameId_runningAsync() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final DownloadTask runningSyncTask = mock(DownloadTask.class);
+        final DownloadTask runningAsyncTask = mock(DownloadTask.class);
+        final DownloadTask readyAsyncTask = mock(DownloadTask.class);
+        when(runningSyncTask.getId()).thenReturn(1);
+        when(runningAsyncTask.getId()).thenReturn(1);
+        when(readyAsyncTask.getId()).thenReturn(1);
+
+
+        final DownloadTask sameIdTask = mock(DownloadTask.class);
+        when(sameIdTask.getId()).thenReturn(1);
+
+        final DownloadCall runningAsyncCall = spy(
+                DownloadCall.create(runningAsyncTask, false, store));
+        runningAsyncCalls.add(runningAsyncCall);
+
+        dispatcher.cancel(sameIdTask);
+
+        verify(runningAsyncCall).cancel();
+        verify(listener).taskEnd(eq(runningAsyncTask), eq(CANCELED), nullable(Exception.class));
+        verify(store).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
+    }
+
+    @Test
+    public void cancel_notSameReferenceButSameId_readyAsync() {
+        final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
+        final DownloadTask runningSyncTask = mock(DownloadTask.class);
+        final DownloadTask runningAsyncTask = mock(DownloadTask.class);
+        final DownloadTask readyAsyncTask = mock(DownloadTask.class);
+        when(runningSyncTask.getId()).thenReturn(1);
+        when(runningAsyncTask.getId()).thenReturn(1);
+        when(readyAsyncTask.getId()).thenReturn(1);
+
+        final DownloadCall readyAsyncCall = spy(DownloadCall.create(readyAsyncTask, false, store));
+        readyAsyncCalls.add(readyAsyncCall);
+
+        final DownloadTask sameIdTask = mock(DownloadTask.class);
+        when(sameIdTask.getId()).thenReturn(1);
+
+        dispatcher.cancel(sameIdTask);
+
+        verify(listener).taskEnd(eq(readyAsyncTask), eq(CANCELED), nullable(Exception.class));
+    }
+
+    @Test
     public void cancel_bunch() throws IOException {
         mockOkDownload();
 
@@ -392,22 +463,28 @@ public class DownloadDispatcherTest {
         verify(runningSyncCall).cancel();
     }
 
+    private DownloadTask mockTask(int id) {
+        final DownloadTask task = mock(DownloadTask.class);
+        when(task.getId()).thenReturn(id);
+        return task;
+    }
+
     @Test
     public void cancelAll() {
-        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
-        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
-        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
-        readyAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(1), true, store)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(2), true, store)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(3), true, store)));
+        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(4), true, store)));
 
-        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
-        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
-        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
-        runningAsyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), true, store)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mockTask(5), true, store)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mockTask(6), true, store)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mockTask(7), true, store)));
+        runningAsyncCalls.add(spy(DownloadCall.create(mockTask(8), true, store)));
 
-        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false, store)));
-        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false, store)));
-        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false, store)));
-        runningSyncCalls.add(spy(DownloadCall.create(mock(DownloadTask.class), false, store)));
+        runningSyncCalls.add(spy(DownloadCall.create(mockTask(9), false, store)));
+        runningSyncCalls.add(spy(DownloadCall.create(mockTask(10), false, store)));
+        runningSyncCalls.add(spy(DownloadCall.create(mockTask(11), false, store)));
+        runningSyncCalls.add(spy(DownloadCall.create(mockTask(12), false, store)));
 
         dispatcher.cancelAll();
 

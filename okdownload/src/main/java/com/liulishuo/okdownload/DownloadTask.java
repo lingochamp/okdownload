@@ -466,7 +466,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     }
 
     /**
-     * Cancel the current task.
+     * Cancel the current task, if there is another same id task, it would be canceled too.
      * <p>
      * If the task is canceled all resourced about this task will be recycled.
      * <p>
@@ -478,7 +478,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     }
 
     /**
-     * Cancel a bunch of {@code tasks}.
+     * Cancel a bunch of {@code tasks} or with the same ids tasks.
      * <p>
      * This operation is specially optimize for handle tasks instead of single task.
      *
