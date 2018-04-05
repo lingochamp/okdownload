@@ -31,9 +31,23 @@ import java.util.Map;
 public class UnifiedListenerManager {
 
     final SparseArray<ArrayList<DownloadListener>> realListenerMap;
+    final List<Integer> autoRemoveListenerIdList = new ArrayList<>();
 
     public UnifiedListenerManager() {
         realListenerMap = new SparseArray<>();
+    }
+
+    public synchronized void detachListener(int id) {
+        realListenerMap.remove(id);
+    }
+
+    public synchronized void addAutoRemoveListenersWhenTaskEnd(int id) {
+        if (autoRemoveListenerIdList.contains(id)) return;
+        autoRemoveListenerIdList.add(id);
+    }
+
+    public synchronized void removeAutoRemoveListenersWhenTaskEnd(int id) {
+        autoRemoveListenerIdList.remove((Integer) id);
     }
 
     public synchronized void detachListener(DownloadListener listener) {
@@ -246,6 +260,10 @@ public class UnifiedListenerManager {
             for (final DownloadListener realOne : listeners) {
                 if (realOne == null) continue;
                 realOne.taskEnd(task, cause, realCause);
+            }
+
+            if (autoRemoveListenerIdList.contains(task.getId())) {
+                detachListener(task.getId());
             }
         }
     };

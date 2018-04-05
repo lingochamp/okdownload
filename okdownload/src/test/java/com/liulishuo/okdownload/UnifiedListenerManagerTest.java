@@ -190,6 +190,45 @@ public class UnifiedListenerManagerTest {
         verify(listener2).taskEnd(eq(task), eq(endCause), eq(exception));
     }
 
+    @Test
+    public void taskEnd_detachListener() {
+        final DownloadListener listener1 = mock(DownloadListener.class);
+        final ArrayList<DownloadListener> list = new ArrayList<>();
+        list.add(listener1);
+        listenerManager.realListenerMap.put(1, list);
+
+        final DownloadTask task = mockTask(1);
+        final DownloadListener listener = listenerManager.hostListener;
+
+        listenerManager.autoRemoveListenerIdList.add(1);
+        listener.taskEnd(task, EndCause.CANCELED, null);
+        assertThat(listenerManager.realListenerMap.size()).isZero();
+    }
+
+    @Test
+    public void detachListener_taskId() {
+        final ArrayList<DownloadListener> listenerList = new ArrayList<>();
+        listenerList.add(mock(DownloadListener.class));
+        listenerManager.realListenerMap.put(1, listenerList);
+
+        listenerManager.detachListener(1);
+        assertThat(listenerManager.realListenerMap.size()).isZero();
+    }
+
+    @Test
+    public void addAutoRemoveListenersWhenTaskEnd() {
+        listenerManager.addAutoRemoveListenersWhenTaskEnd(1);
+        listenerManager.addAutoRemoveListenersWhenTaskEnd(1);
+        assertThat(listenerManager.autoRemoveListenerIdList).containsExactly(1);
+    }
+
+    @Test
+    public void removeAutoRemoveListenersWhenTaskEnd() {
+        listenerManager.autoRemoveListenerIdList.add(1);
+        listenerManager.removeAutoRemoveListenersWhenTaskEnd(1);
+        assertThat(listenerManager.autoRemoveListenerIdList).isEmpty();
+    }
+
     private DownloadTask mockTask(int id) {
         final DownloadTask task = mock(DownloadTask.class);
         when(task.getId()).thenReturn(id);
