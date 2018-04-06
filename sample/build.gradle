@@ -62,8 +62,8 @@ dependencies {
     implementation dep.supportConstraintLayout
     testImplementation dep.junit
     implementation project(':okdownload')
-    implementation project(':okdownload-breakpoint-sqlite')
-    implementation project(':okdownload-connection-okhttp')
+    implementation project(':sqlite')
+    implementation project(':okhttp')
 }
 
 kotlin {
