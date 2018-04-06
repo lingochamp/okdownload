@@ -17,7 +17,7 @@ In fact OkDownload is FileDownloader2, which extends all benefits from FileDownl
 
 ## II. HOW TO IMPORT
 
-We publish okdownload on jcenter, mavenCentral and Sonatype's snapshots repository, more detail about import OkDownload please move to [here](https://github.com/lingochamp/okdownload/wiki)
+We publish okdownload on [jcenter](http://jcenter.bintray.com/), [mavenCentral](https://oss.sonatype.org/content/repositories/releases/) and [Sonatype's snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/), more detail about import OkDownload please move to [here](https://github.com/lingochamp/okdownload/wiki)
 
 ## III. HOW TO USE
 

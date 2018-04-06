@@ -17,7 +17,7 @@
 
 ## II. 如何引入
 
-我们将OkDownload发布到了`jcenter`、`mavenCentral`以及`Sonatype's snapshots`仓库，更多关于如何引入OkDownload请移步到[这里](https://github.com/lingochamp/okdownload/wiki)
+我们将OkDownload发布到了[jcenter](http://jcenter.bintray.com/)、[mavenCentral](https://oss.sonatype.org/content/repositories/releases/)以及[Sonatype's snapshots仓库](https://oss.sonatype.org/content/repositories/snapshots/)，更多关于如何引入OkDownload请移步到[这里](https://github.com/lingochamp/okdownload/wiki)
 
 ## III. 如何使用
 
