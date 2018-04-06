@@ -45,25 +45,14 @@ public class CallbackDispatcher {
 
     private final Handler uiHandler;
 
-    CallbackDispatcher(@NonNull Handler handler) {
+    CallbackDispatcher(@NonNull Handler handler, @NonNull DownloadListener transmit) {
         this.uiHandler = handler;
-        this.transmit = new DefaultTransmitListener();
+        this.transmit = transmit;
     }
 
     public CallbackDispatcher() {
         this.uiHandler = new Handler(Looper.getMainLooper());
-        this.transmit = new DefaultTransmitListener();
-    }
-
-    private void inspectTaskStart(DownloadTask task) {
-        final DownloadMonitor monitor = OkDownload.with().getMonitor();
-        if (monitor != null) monitor.taskStart(task);
-    }
-
-    private void inspectTaskEnd(final DownloadTask task, final EndCause cause,
-                                @Nullable final Exception realCause) {
-        final DownloadMonitor monitor = OkDownload.with().getMonitor();
-        if (monitor != null) monitor.taskEnd(task, cause, realCause);
+        this.transmit = new DefaultTransmitListener(uiHandler);
     }
 
     public boolean isFetchProcessMoment(DownloadTask task) {
@@ -192,7 +181,13 @@ public class CallbackDispatcher {
         return transmit;
     }
 
-    private class DefaultTransmitListener implements DownloadListener {
+    static class DefaultTransmitListener implements DownloadListener {
+        @NonNull private final Handler uiHandler;
+
+        DefaultTransmitListener(@NonNull Handler uiHandler) {
+            this.uiHandler = uiHandler;
+        }
+
         @Override
         public void taskStart(@NonNull final DownloadTask task) {
             Util.d(TAG, "taskStart: " + task.getId());
@@ -206,7 +201,6 @@ public class CallbackDispatcher {
             } else {
                 task.getListener().taskStart(task);
             }
-
         }
 
         @Override
@@ -247,6 +241,7 @@ public class CallbackDispatcher {
                                           @NonNull final BreakpointInfo info,
                                           @NonNull final ResumeFailedCause cause) {
             Util.d(TAG, "downloadFromBeginning: " + task.getId());
+            inspectDownloadFromBeginning(task, info, cause);
             if (task.isAutoCallbackToUIThread()) {
                 uiHandler.post(new Runnable() {
                     @Override public void run() {
@@ -262,6 +257,7 @@ public class CallbackDispatcher {
         public void downloadFromBreakpoint(@NonNull final DownloadTask task,
                                            @NonNull final BreakpointInfo info) {
             Util.d(TAG, "downloadFromBreakpoint: " + task.getId());
+            inspectDownloadFromBreakpoint(task, info);
             if (task.isAutoCallbackToUIThread()) {
                 uiHandler.post(new Runnable() {
                     @Override public void run() {
@@ -375,5 +371,31 @@ public class CallbackDispatcher {
                 task.getListener().taskEnd(task, cause, realCause);
             }
         }
+
+
+        void inspectDownloadFromBreakpoint(@NonNull DownloadTask task,
+                                           @NonNull BreakpointInfo info) {
+            final DownloadMonitor monitor = OkDownload.with().getMonitor();
+            if (monitor != null) monitor.trialConnectEnd(task, info, true, null);
+        }
+
+        void inspectDownloadFromBeginning(@NonNull DownloadTask task,
+                                          @NonNull BreakpointInfo info,
+                                          @NonNull ResumeFailedCause cause) {
+            final DownloadMonitor monitor = OkDownload.with().getMonitor();
+            if (monitor != null) monitor.trialConnectEnd(task, info, false, cause);
+        }
+
+        void inspectTaskStart(DownloadTask task) {
+            final DownloadMonitor monitor = OkDownload.with().getMonitor();
+            if (monitor != null) monitor.taskStart(task);
+        }
+
+        void inspectTaskEnd(final DownloadTask task, final EndCause cause,
+                            @Nullable final Exception realCause) {
+            final DownloadMonitor monitor = OkDownload.with().getMonitor();
+            if (monitor != null) monitor.taskEnd(task, cause, realCause);
+        }
+
     }
 }

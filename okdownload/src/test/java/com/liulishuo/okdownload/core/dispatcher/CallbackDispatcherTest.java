@@ -19,7 +19,9 @@ package com.liulishuo.okdownload.core.dispatcher;
 import android.os.Handler;
 
 import com.liulishuo.okdownload.DownloadListener;
+import com.liulishuo.okdownload.DownloadMonitor;
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.TestUtils;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
@@ -34,11 +36,13 @@ import org.mockito.stubbing.Answer;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -56,6 +60,7 @@ import static org.robolectric.annotation.Config.NONE;
 public class CallbackDispatcherTest {
 
     private CallbackDispatcher dispatcher;
+    private CallbackDispatcher.DefaultTransmitListener transmit;
 
     @Mock private Handler handler;
 
@@ -72,7 +77,8 @@ public class CallbackDispatcherTest {
                     }
                 });
         TestUtils.initProvider();
-        dispatcher = new CallbackDispatcher(handler);
+        transmit = spy(new CallbackDispatcher.DefaultTransmitListener(handler));
+        dispatcher = spy(new CallbackDispatcher(handler, transmit));
     }
 
     @Test
@@ -137,6 +143,7 @@ public class CallbackDispatcherTest {
 
         dispatcher.dispatch().taskStart(task);
         verify(listener).taskStart(eq(task));
+        verify(transmit).inspectTaskStart(eq(task));
 
         dispatcher.dispatch().connectTrialStart(task, headerFields);
         verify(listener).connectTrialStart(eq(task), eq(headerFields));
@@ -146,9 +153,11 @@ public class CallbackDispatcherTest {
 
         dispatcher.dispatch().downloadFromBeginning(task, info, resumeFailedCause);
         verify(listener).downloadFromBeginning(eq(task), eq(info), eq(resumeFailedCause));
+        verify(transmit).inspectDownloadFromBeginning(eq(task), eq(info), eq(resumeFailedCause));
 
         dispatcher.dispatch().downloadFromBreakpoint(task, info);
         verify(listener).downloadFromBreakpoint(eq(task), eq(info));
+        verify(transmit).inspectDownloadFromBreakpoint(eq(task), eq(info));
 
         dispatcher.dispatch().connectStart(task, 1, headerFields);
         verify(listener).connectStart(eq(task), eq(1), eq(headerFields));
@@ -167,6 +176,57 @@ public class CallbackDispatcherTest {
 
         dispatcher.dispatch().taskEnd(task, endCause, exception);
         verify(listener).taskEnd(eq(task), eq(endCause), eq(exception));
+        verify(transmit).inspectTaskEnd(eq(task), eq(endCause), eq(exception));
+    }
+
+    @Test
+    public void monitor_taskStart() throws IOException {
+        mockOkDownload();
+
+        final DownloadMonitor monitor = mock(DownloadMonitor.class);
+        final OkDownload okDownload = OkDownload.with();
+        when(okDownload.getMonitor()).thenReturn(monitor);
+
+        final DownloadTask task = mock(DownloadTask.class);
+
+        transmit.inspectTaskStart(task);
+        verify(monitor).taskStart(eq(task));
+    }
+
+    @Test
+    public void monitor_trialConnectEnd() throws IOException {
+        mockOkDownload();
+
+        final DownloadMonitor monitor = mock(DownloadMonitor.class);
+        final OkDownload okDownload = OkDownload.with();
+        when(okDownload.getMonitor()).thenReturn(monitor);
+
+        final DownloadTask task = mock(DownloadTask.class);
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        final ResumeFailedCause resumeFailedCause = mock(ResumeFailedCause.class);
+
+        transmit.inspectDownloadFromBeginning(task, info, resumeFailedCause);
+        verify(monitor).trialConnectEnd(eq(task), eq(info), eq(false), eq(resumeFailedCause));
+
+        transmit.inspectDownloadFromBreakpoint(task, info);
+        verify(monitor)
+                .trialConnectEnd(eq(task), eq(info), eq(true), nullable(ResumeFailedCause.class));
+    }
+
+    @Test
+    public void monitor_taskEnd() throws IOException {
+        mockOkDownload();
+
+        final DownloadMonitor monitor = mock(DownloadMonitor.class);
+        final OkDownload okDownload = OkDownload.with();
+        when(okDownload.getMonitor()).thenReturn(monitor);
+
+        final DownloadTask task = mock(DownloadTask.class);
+        final EndCause endCause = mock(EndCause.class);
+        final Exception exception = mock(Exception.class);
+
+        transmit.inspectTaskEnd(task, endCause, exception);
+        verify(monitor).taskEnd(eq(task), eq(endCause), eq(exception));
     }
 
     @Test
