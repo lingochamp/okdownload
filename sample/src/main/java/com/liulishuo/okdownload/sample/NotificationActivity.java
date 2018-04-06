@@ -58,14 +58,14 @@ public class NotificationActivity extends BaseSampleActivity {
         actionTv = findViewById(R.id.actionTv);
         actionView = findViewById(R.id.actionView);
 
+        initListener();
+        initTask();
+        initAction();
+
         // for cancel action on notification.
         IntentFilter filter = new IntentFilter(CancelReceiver.ACTION);
         cancelReceiver = new CancelReceiver(task);
         registerReceiver(cancelReceiver, filter);
-
-        initListener();
-        initTask();
-        initAction();
 
         GlobalTaskManager.getImpl().attachListener(task, listener);
         GlobalTaskManager.getImpl().addAutoRemoveListenersWhenTaskEnd(task.getId());
