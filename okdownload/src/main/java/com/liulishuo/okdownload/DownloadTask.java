@@ -23,6 +23,7 @@ import android.util.SparseArray;
 
 import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
@@ -47,6 +48,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     private final Uri uri;
     private final Map<String, List<String>> headerMapFields;
 
+    @Nullable private BreakpointInfo info;
     /**
      * This value more larger the priority more high.
      */
@@ -374,12 +376,27 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         return tag;
     }
 
+    /**
+     * Get the breakpoint info of this task.
+     *
+     * @return {@code null} Only if there isn't any info for this task yet, otherwise you can get
+     * the info for the task.
+     */
+    @Nullable public BreakpointInfo getInfo() {
+        if (info == null) info = OkDownload.with().breakpointStore().get(id);
+        return info;
+    }
+
     long getLastCallbackProcessTs() {
         return lastCallbackProcessTimestamp.get();
     }
 
     void setLastCallbackProcessTs(long lastCallbackProcessTimestamp) {
         this.lastCallbackProcessTimestamp.set(lastCallbackProcessTimestamp);
+    }
+
+    void setBreakpointInfo(@NonNull BreakpointInfo info) {
+        this.info = info;
     }
 
     /**
@@ -845,7 +862,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         return new MockTaskForCompare(id, this);
     }
 
-    public static class TaskCallbackWrapper {
+    public static class TaskHideWrapper {
         public static long getLastCallbackProcessTs(DownloadTask task) {
             return task.getLastCallbackProcessTs();
         }
@@ -853,6 +870,11 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         public static void setLastCallbackProcessTs(DownloadTask task,
                                                     long lastCallbackProcessTimestamp) {
             task.setLastCallbackProcessTs(lastCallbackProcessTimestamp);
+        }
+
+        public static void setBreakpointInfo(@NonNull DownloadTask task,
+                                             @NonNull BreakpointInfo info) {
+            task.setBreakpointInfo(info);
         }
     }
 

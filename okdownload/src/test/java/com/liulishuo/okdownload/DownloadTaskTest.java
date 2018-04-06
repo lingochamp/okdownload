@@ -21,6 +21,7 @@ import android.net.Uri;
 
 import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnCache;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.download.DownloadStrategy;
@@ -41,7 +42,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.liulishuo.okdownload.TestUtils.assertFile;
+import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -341,14 +344,35 @@ public class DownloadTaskTest {
     }
 
     @Test
-    public void taskCallbackWrapper() {
+    public void taskHideWrapper() {
         final DownloadTask task = mock(DownloadTask.class);
 
-        DownloadTask.TaskCallbackWrapper.setLastCallbackProcessTs(task, 10L);
+        DownloadTask.TaskHideWrapper.setLastCallbackProcessTs(task, 10L);
         verify(task).setLastCallbackProcessTs(eq(10L));
 
-        DownloadTask.TaskCallbackWrapper.getLastCallbackProcessTs(task);
+        DownloadTask.TaskHideWrapper.getLastCallbackProcessTs(task);
         verify(task).getLastCallbackProcessTs();
+
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        DownloadTask.TaskHideWrapper.setBreakpointInfo(task, info);
+        verify(task).setBreakpointInfo(eq(info));
+    }
+
+    @Test
+    public void getInfo() throws IOException {
+        mockOkDownload();
+
+        final BreakpointInfo info = mock(BreakpointInfo.class);
+        final BreakpointStore store = OkDownload.with().breakpointStore();
+
+        when(store.get(1)).thenReturn(info);
+        when(store.findOrCreateId(any(DownloadTask.class))).thenReturn(1);
+
+        final DownloadTask task = new DownloadTask
+                .Builder("https://jacksgong.com", new File(parentPath))
+                .build();
+
+        assertThat(task.getInfo()).isEqualTo(info);
     }
 
     @Test

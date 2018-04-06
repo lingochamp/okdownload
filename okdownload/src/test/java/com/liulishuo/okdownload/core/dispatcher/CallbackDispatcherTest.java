@@ -305,6 +305,6 @@ public class CallbackDispatcherTest {
         when(task.getListener()).thenReturn(listener);
 
         dispatcher.dispatch().fetchProgress(task, 1, 2);
-        assertThat(DownloadTask.TaskCallbackWrapper.getLastCallbackProcessTs(task)).isNotZero();
+        assertThat(DownloadTask.TaskHideWrapper.getLastCallbackProcessTs(task)).isNotZero();
     }
 }

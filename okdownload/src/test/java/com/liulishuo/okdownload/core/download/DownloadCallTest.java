@@ -120,6 +120,7 @@ public class DownloadCallTest {
         call.execute();
 
         verify(store).createAndInsert(task);
+        verify(call).setInfoToTask(eq(info));
     }
 
     @Test

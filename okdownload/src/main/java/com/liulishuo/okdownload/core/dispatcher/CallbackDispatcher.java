@@ -70,7 +70,7 @@ public class CallbackDispatcher {
         final long minInterval = task.getMinIntervalMillisCallbackProcess();
         final long now = SystemClock.uptimeMillis();
         return minInterval <= 0
-                || now - DownloadTask.TaskCallbackWrapper
+                || now - DownloadTask.TaskHideWrapper
                 .getLastCallbackProcessTs(task) >= minInterval;
     }
 
@@ -327,7 +327,7 @@ public class CallbackDispatcher {
         public void fetchProgress(@NonNull final DownloadTask task, final int blockIndex,
                                   final long increaseBytes) {
             if (task.getMinIntervalMillisCallbackProcess() > 0) {
-                DownloadTask.TaskCallbackWrapper
+                DownloadTask.TaskHideWrapper
                         .setLastCallbackProcessTs(task, SystemClock.uptimeMillis());
             }
 

@@ -149,6 +149,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 } else {
                     info = infoOnStore;
                 }
+                setInfoToTask(info);
             } catch (IOException e) {
                 this.cache = new DownloadCache.PreError(e);
                 break;
@@ -346,6 +347,11 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     // convenient for unit-test
     @NonNull BreakpointRemoteCheck createRemoteCheck(@NonNull BreakpointInfo info) {
         return new BreakpointRemoteCheck(task, info);
+    }
+
+    // convenient for unit-test
+    void setInfoToTask(@NonNull BreakpointInfo info) {
+        DownloadTask.TaskHideWrapper.setBreakpointInfo(task, info);
     }
 
     void assembleBlockAndCallbackFromBeginning(@NonNull BreakpointInfo info,
