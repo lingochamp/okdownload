@@ -17,6 +17,7 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 apply from: '../gradle/gradle-mavenlocal.gradle'
+apply from: '../gradle/bintray.gradle'
 
 version = VERSION_NAME
 group = GROUP

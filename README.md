@@ -5,6 +5,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 ![][okdownload_svg]
 [![][build_status_svg]][build_status_link]
 [![codecov](https://codecov.io/gh/lingochamp/okdownload/branch/master/graph/badge.svg)](https://codecov.io/gh/lingochamp/okdownload)
+[ ![Download](https://api.bintray.com/packages/jacksgong/maven/OkDownload/images/download.svg) ](https://bintray.com/jacksgong/maven/OkDownload/_latestVersion)
 
 > [中文文档](https://github.com/lingochamp/okdownload/blob/master/README-zh.md)
 
