@@ -376,14 +376,14 @@ public class CallbackDispatcher {
         void inspectDownloadFromBreakpoint(@NonNull DownloadTask task,
                                            @NonNull BreakpointInfo info) {
             final DownloadMonitor monitor = OkDownload.with().getMonitor();
-            if (monitor != null) monitor.trialConnectEnd(task, info, true, null);
+            if (monitor != null) monitor.taskDownloadFromBreakpoint(task, info);
         }
 
         void inspectDownloadFromBeginning(@NonNull DownloadTask task,
                                           @NonNull BreakpointInfo info,
                                           @NonNull ResumeFailedCause cause) {
             final DownloadMonitor monitor = OkDownload.with().getMonitor();
-            if (monitor != null) monitor.trialConnectEnd(task, info, false, cause);
+            if (monitor != null) monitor.taskDownloadFromBeginning(task, info, cause);
         }
 
         void inspectTaskStart(DownloadTask task) {

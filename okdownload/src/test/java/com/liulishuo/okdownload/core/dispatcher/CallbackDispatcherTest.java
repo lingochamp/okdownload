@@ -206,11 +206,10 @@ public class CallbackDispatcherTest {
         final ResumeFailedCause resumeFailedCause = mock(ResumeFailedCause.class);
 
         transmit.inspectDownloadFromBeginning(task, info, resumeFailedCause);
-        verify(monitor).trialConnectEnd(eq(task), eq(info), eq(false), eq(resumeFailedCause));
+        verify(monitor).taskDownloadFromBeginning(eq(task), eq(info), eq(resumeFailedCause));
 
         transmit.inspectDownloadFromBreakpoint(task, info);
-        verify(monitor)
-                .trialConnectEnd(eq(task), eq(info), eq(true), nullable(ResumeFailedCause.class));
+        verify(monitor).taskDownloadFromBreakpoint(eq(task), eq(info));
     }
 
     @Test

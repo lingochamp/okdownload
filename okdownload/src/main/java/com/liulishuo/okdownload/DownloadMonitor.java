@@ -35,20 +35,24 @@ public interface DownloadMonitor {
 
     /**
      * Call this monitor function when the {@code task} just end trial connection, and its
-     * {@code info} is ready and also know whether this task will resume from past breakpoint or
-     * download from the very beginning.
+     * {@code info} is ready and also certain this task will resume from the past breakpoint.
      *
-     * @param task                   the target task.
-     * @param info                   has certainly total-length and offset-length now.
-     * @param isResumeFromBreakpoint {@code true} if this task will resume from past breakpoint
-     *                               {@code false} if this task will download from the very
-     *                               beginning.
-     * @param cause                  {@code null} when {@code isResumeFromBreakpoint} is
-     *                               {@code true}, otherwise this is the cause of why download from
-     *                               the very beginning instead of from the past breakpoint.
+     * @param task the target task.
+     * @param info has certainly total-length and offset-length now.
      */
-    void trialConnectEnd(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
-                         boolean isResumeFromBreakpoint, @Nullable ResumeFailedCause cause);
+    void taskDownloadFromBreakpoint(@NonNull DownloadTask task, @NonNull BreakpointInfo info);
+
+    /**
+     * Call this monitor function when the {@code task} just end trial connection, and its
+     * {@code info} is ready and also certain this task will download from the very beginning.
+     *
+     * @param task  the target task.
+     * @param info  has certainly total-length and offset-length now.
+     * @param cause the cause of why download from the very beginning instead of from the past
+     *              breakpoint.
+     */
+    void taskDownloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                   @Nullable ResumeFailedCause cause);
 
     void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause);
 }
