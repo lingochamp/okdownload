@@ -177,6 +177,13 @@ public class BunchActivity extends BaseSampleActivity {
                     Log.d("BunchActivity", "before build bunch task consume "
                             + (SystemClock.uptimeMillis() - startTime) + "ms");
                     downloadContext = builder.setListener(new DownloadContextListener() {
+                        @Override public void taskEnd(@NonNull DownloadContext context,
+                                                      @NonNull DownloadTask task,
+                                                      @NonNull EndCause cause,
+                                                      @Nullable Exception realCause,
+                                                      int remainCount) {
+                        }
+
                         @Override public void queueEnd(@NonNull DownloadContext context) {
                             v.setTag(null);
                             radioGroup.setEnabled(true);

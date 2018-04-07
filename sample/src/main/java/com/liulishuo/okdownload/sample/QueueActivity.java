@@ -27,6 +27,8 @@ import android.widget.TextView;
 
 import com.liulishuo.okdownload.DownloadContext;
 import com.liulishuo.okdownload.DownloadContextListener;
+import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
 import com.liulishuo.okdownload.sample.util.queue.QueueController;
 import com.liulishuo.okdownload.sample.util.queue.QueueRecyclerAdapter;
@@ -81,6 +83,13 @@ public class QueueActivity extends BaseSampleActivity {
         final QueueController controller = new QueueController();
         this.controller = controller;
         controller.initTasks(this, new DownloadContextListener() {
+            @Override
+            public void taskEnd(@NonNull DownloadContext context, @NonNull DownloadTask task,
+                                @NonNull EndCause cause,
+                                @android.support.annotation.Nullable Exception realCause,
+                                int remainCount) {
+            }
+
             @Override public void queueEnd(@NonNull DownloadContext context) {
                 actionView.setTag(null);
                 actionTv.setText(R.string.start);
