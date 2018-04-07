@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.Handler;
 
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher;
 import com.liulishuo.okdownload.core.listener.DownloadListenerBunch;
 
@@ -250,6 +251,8 @@ public class DownloadContextTest {
         final DownloadListener taskListener = tasks[0].getListener();
         assertThat(taskListener).isExactlyInstanceOf(DownloadListenerBunch.class);
         assertThat(((DownloadListenerBunch) taskListener).contain(listener)).isTrue();
+        // provided listener must callback before queue-attached-listener.
+        assertThat(((DownloadListenerBunch) taskListener).indexOf(listener)).isZero();
     }
 
     @Test
@@ -400,5 +403,28 @@ public class DownloadContextTest {
         context.alter().replaceTask(oldTask, newTask);
 
         assertThat(tasks[0]).isEqualTo(newTask);
+    }
+
+    @Test
+    public void queueAttachListener() {
+        final DownloadContextListener contextListener = mock(DownloadContextListener.class);
+        final DownloadContext.QueueAttachListener attachListener =
+                new DownloadContext.QueueAttachListener(context, contextListener, 2);
+
+        final DownloadTask task1 = mock(DownloadTask.class);
+        final DownloadTask task2 = mock(DownloadTask.class);
+        attachListener.taskStart(task1);
+        attachListener.taskStart(task2);
+
+        final EndCause endCause = mock(EndCause.class);
+        final Exception realCause = mock(Exception.class);
+
+        attachListener.taskEnd(task1, endCause, realCause);
+        verify(contextListener).taskEnd(eq(context), eq(task1), eq(endCause), eq(realCause), eq(1));
+        verify(contextListener, never()).queueEnd(eq(context));
+
+        attachListener.taskEnd(task2, endCause, realCause);
+        verify(contextListener).taskEnd(eq(context), eq(task2), eq(endCause), eq(realCause), eq(0));
+        verify(contextListener).queueEnd(eq(context));
     }
 }

@@ -85,7 +85,14 @@ public class DownloadContext {
         start(listener, false);
     }
 
-    public void start(final DownloadListener listener, boolean isSerial) {
+    /**
+     * Start queue.
+     *
+     * @param listener the listener for each task, if you have already provided
+     *                 {@link #contextListener}, it's accept {@code null} for each task's listener.
+     * @param isSerial whether download queue serial or parallel.
+     */
+    public void start(@Nullable final DownloadListener listener, boolean isSerial) {
         final long startTime = SystemClock.uptimeMillis();
         Util.d(TAG, "start " + isSerial);
         isStarted = true;
@@ -389,15 +396,15 @@ public class DownloadContext {
         }
     }
 
-    private static class QueueAttachListener extends DownloadListener2 {
+    static class QueueAttachListener extends DownloadListener2 {
         private final AtomicInteger remainCount;
-        @NonNull private final DownloadContextListener queueListener;
+        @NonNull private final DownloadContextListener contextListener;
         @NonNull private final DownloadContext hostContext;
 
         QueueAttachListener(@NonNull DownloadContext context,
-                            @NonNull DownloadContextListener queueListener, int taskCount) {
+                            @NonNull DownloadContextListener contextListener, int taskCount) {
             remainCount = new AtomicInteger(taskCount);
-            this.queueListener = queueListener;
+            this.contextListener = contextListener;
             this.hostContext = context;
         }
 
@@ -407,8 +414,10 @@ public class DownloadContext {
         @Override
         public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                             @Nullable Exception realCause) {
-            if (remainCount.decrementAndGet() <= 0) {
-                queueListener.queueEnd(hostContext);
+            final int remainCount = this.remainCount.decrementAndGet();
+            contextListener.taskEnd(hostContext, task, cause, realCause, remainCount);
+            if (remainCount <= 0) {
+                contextListener.queueEnd(hostContext);
                 // only log the last one
                 Util.d(TAG, "taskEnd and remainCount " + remainCount);
             }

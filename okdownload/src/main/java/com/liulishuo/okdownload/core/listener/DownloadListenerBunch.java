@@ -124,6 +124,22 @@ public class DownloadListenerBunch implements DownloadListener {
         return false;
     }
 
+    /**
+     * Get the index of {@code targetListener}, smaller index, earlier to receive callback.
+     *
+     * @param targetListener used for compare and get it's index on the bunch.
+     * @return {@code -1} if can't find {@code targetListener} on the bunch, otherwise the index of
+     * the {@code targetListener} on the bunch.
+     */
+    public int indexOf(DownloadListener targetListener) {
+        for (int index = 0; index < listenerList.length; index++) {
+            final DownloadListener listener = listenerList[index];
+            if (listener == targetListener) return index;
+        }
+
+        return -1;
+    }
+
     public static class Builder {
 
         private List<DownloadListener> listenerList = new ArrayList<>();
@@ -133,7 +149,14 @@ public class DownloadListenerBunch implements DownloadListener {
                     listenerList.toArray(new DownloadListener[listenerList.size()]));
         }
 
-        public DownloadListenerBunch.Builder append(DownloadListener listener) {
+        /**
+         * Append {@code listener} to the end of bunch listener list. Then the {@code listener} will
+         * listener the callbacks of the host bunch listener attached.
+         *
+         * @param listener will be appended to the end of bunch listener list. if it's {@code null},
+         *                 it will not be appended.
+         */
+        public DownloadListenerBunch.Builder append(@Nullable DownloadListener listener) {
             if (listener != null && !listenerList.contains(listener)) {
                 listenerList.add(listener);
             }

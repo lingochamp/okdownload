@@ -158,4 +158,11 @@ public class DownloadListenerBunchTest {
         assertThat(listenerBunch.contain(listener2)).isTrue();
         assertThat(listenerBunch.contain(mock(DownloadListener.class))).isFalse();
     }
+
+    @Test
+    public void indexOf() {
+        assertThat(listenerBunch.indexOf(listener1)).isZero();
+        assertThat(listenerBunch.indexOf(listener2)).isOne();
+        assertThat(listenerBunch.indexOf(mock(DownloadListener.class))).isEqualTo(-1);
+    }
 }
