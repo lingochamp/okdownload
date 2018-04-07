@@ -86,6 +86,7 @@ public class BreakpointLocalCheck {
         if (info.getFile() == null) return false;
         final File fileOnTask = task.getFile();
         if (!info.getFile().equals(fileOnTask)) return false;
+        if (info.getFile().length() > info.getTotalLength()) return false;
 
         for (int i = 0; i < blockCount; i++) {
             BlockInfo blockInfo = info.getBlock(i);

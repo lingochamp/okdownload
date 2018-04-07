@@ -139,6 +139,13 @@ public class BreakpointLocalCheckTest {
     }
 
     @Test
+    public void isInfoRightToResume_fileLengthLargerThanTotalLength() {
+        when(fileOnInfo.length()).thenReturn(2L);
+        when(info.getTotalLength()).thenReturn(1L);
+        assertThat(check.isInfoRightToResume()).isFalse();
+    }
+
+    @Test
     public void isInfoRightToResume_blockRight() {
         when(blockInfo.getContentLength()).thenReturn(0L);
         assertThat(check.isInfoRightToResume()).isFalse();
