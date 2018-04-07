@@ -311,17 +311,17 @@ public class DownloadDispatcher {
         Util.d(TAG, "findSameTask: " + task.getId());
         for (DownloadCall call : readyAsyncCalls) {
             if (call.isCanceled()) continue;
-            if (call.task.equals(task)) return call.task;
+            if (call.equalsTask(task)) return call.task;
         }
 
         for (DownloadCall call : runningAsyncCalls) {
             if (call.isCanceled()) continue;
-            if (call.task.equals(task)) return call.task;
+            if (call.equalsTask(task)) return call.task;
         }
 
         for (DownloadCall call : runningSyncCalls) {
             if (call.isCanceled()) continue;
-            if (call.task.equals(task)) return call.task;
+            if (call.equalsTask(task)) return call.task;
         }
 
         return null;
@@ -331,14 +331,14 @@ public class DownloadDispatcher {
         Util.d(TAG, "isRunning: " + task.getId());
         for (DownloadCall call : runningSyncCalls) {
             if (call.isCanceled()) continue;
-            if (call.task.equals(task)) {
+            if (call.equalsTask(task)) {
                 return true;
             }
         }
 
         for (DownloadCall call : runningAsyncCalls) {
             if (call.isCanceled()) continue;
-            if (call.task.equals(task)) {
+            if (call.equalsTask(task)) {
                 return true;
             }
         }
@@ -350,7 +350,7 @@ public class DownloadDispatcher {
         Util.d(TAG, "isPending: " + task.getId());
         for (DownloadCall call : readyAsyncCalls) {
             if (call.isCanceled()) continue;
-            if (call.task.equals(task)) return true;
+            if (call.equalsTask(task)) return true;
         }
 
         return false;

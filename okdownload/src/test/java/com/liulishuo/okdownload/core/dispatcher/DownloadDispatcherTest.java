@@ -665,6 +665,67 @@ public class DownloadDispatcherTest {
         verify(listener, never()).taskEnd(eq(task), any(EndCause.class), nullable(Exception.class));
     }
 
+    @Test
+    public void findSameTask_readyAsyncCall() {
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadStore store = mock(DownloadStore.class);
+        final DownloadCall canceledCall = spy(DownloadCall
+                .create(mock(DownloadTask.class), true, store));
+        final DownloadCall nonCanceledCall = spy(DownloadCall
+                .create(mock(DownloadTask.class), true, store));
+        when(canceledCall.isCanceled()).thenReturn(true);
+        when(canceledCall.equalsTask(task)).thenReturn(true);
+        when(nonCanceledCall.equalsTask(task)).thenReturn(true);
+
+        readyAsyncCalls.add(canceledCall);
+        readyAsyncCalls.add(nonCanceledCall);
+
+        assertThat(dispatcher.findSameTask(task)).isEqualTo(nonCanceledCall.task);
+    }
+
+    @Test
+    public void findSameTask_runningAsyncCall() {
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadStore store = mock(DownloadStore.class);
+        final DownloadCall canceledCall = spy(DownloadCall
+                .create(mock(DownloadTask.class), true, store));
+        final DownloadCall nonCanceledCall = spy(DownloadCall
+                .create(mock(DownloadTask.class), true, store));
+
+        when(canceledCall.equalsTask(task)).thenReturn(true);
+        when(canceledCall.isCanceled()).thenReturn(true);
+        when(nonCanceledCall.equalsTask(task)).thenReturn(true);
+
+        runningAsyncCalls.add(canceledCall);
+        runningAsyncCalls.add(nonCanceledCall);
+
+        assertThat(dispatcher.findSameTask(task)).isEqualTo(nonCanceledCall.task);
+    }
+
+    @Test
+    public void findSameTask_runningSyncCall() {
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadStore store = mock(DownloadStore.class);
+        final DownloadCall canceledCall = spy(DownloadCall
+                .create(mock(DownloadTask.class), false, store));
+        final DownloadCall nonCanceledCall = spy(DownloadCall
+                .create(mock(DownloadTask.class), false, store));
+        when(canceledCall.isCanceled()).thenReturn(true);
+        when(canceledCall.equalsTask(task)).thenReturn(true);
+        when(nonCanceledCall.equalsTask(task)).thenReturn(true);
+
+        runningSyncCalls.add(canceledCall);
+        runningSyncCalls.add(nonCanceledCall);
+
+        assertThat(dispatcher.findSameTask(task)).isEqualTo(nonCanceledCall.task);
+    }
+
+    @Test
+    public void findSameTask_nonMatch() {
+        final DownloadTask task = mock(DownloadTask.class);
+        assertThat(dispatcher.findSameTask(task)).isNull();
+    }
+
     private static class MockDownloadDispatcher extends DownloadDispatcher {
     }
 }
