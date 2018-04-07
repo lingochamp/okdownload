@@ -68,9 +68,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         String range = "bytes=" + blockInfo.getRangeLeft() + "-";
-        if (blockIndex < info.getBlockCount() - 1) {
-            range += blockInfo.getRangeRight();
-        }
+        range += blockInfo.getRangeRight();
 
         connection.addHeader(RANGE, range);
 

@@ -111,7 +111,7 @@ public class HeaderInterceptorTest {
         verify(connection).addHeader(nameCaptor.capture(), valueCaptor.capture());
 
         assertThat(nameCaptor.getAllValues()).containsExactly("Range");
-        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=20-");
+        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=20-29");
     }
 
     @Test
@@ -148,7 +148,7 @@ public class HeaderInterceptorTest {
                 .containsExactlyInAnyOrder("header1", "header1", "header2", "Range", "If-Match");
         assertThat(valueCaptor.getAllValues())
                 .containsExactlyInAnyOrder("header1-value1", "header1-value2", "header2-value",
-                        "bytes=0-", "etag1");
+                        "bytes=0-9", "etag1");
 
         verify(OkDownload.with().downloadStrategy())
                 .resumeAvailableResponseCheck(eq(connected), eq(0), eq(info));
