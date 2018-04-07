@@ -16,7 +16,12 @@
 
 package com.liulishuo.okdownload.core;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
@@ -31,12 +36,14 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -83,28 +90,28 @@ public class UtilTest {
     }
 
     @Test
-    public void d() throws Exception {
+    public void d() {
         Util.setLogger(logger);
         Util.d(tag, msg);
         verify(logger).d(eq(tag), eq(msg));
     }
 
     @Test
-    public void i() throws Exception {
+    public void i() {
         Util.setLogger(logger);
         Util.i(tag, msg);
         verify(logger).i(eq(tag), eq(msg));
     }
 
     @Test
-    public void isEmpty() throws Exception {
+    public void isEmpty() {
         assertThat(Util.isEmpty(null)).isTrue();
         assertThat(Util.isEmpty("")).isTrue();
         assertThat(Util.isEmpty("1")).isFalse();
     }
 
     @Test
-    public void threadFactory() throws Exception {
+    public void threadFactory() {
         final String name = "name";
         final boolean daemon = true;
         final ThreadFactory factory = Util.threadFactory(name, daemon);
@@ -114,7 +121,7 @@ public class UtilTest {
     }
 
     @Test
-    public void md5() throws Exception {
+    public void md5() {
         assertThat(Util.md5("abc")).isEqualTo("900150983cd24fb0d6963f7d28e17f72");
         assertThat(Util.md5("")).isEqualTo("d41d8cd98f00b204e9800998ecf8427e");
     }
@@ -232,7 +239,7 @@ public class UtilTest {
     }
 
     @Test
-    public void parseContentLength() throws Exception {
+    public void parseContentLength() {
         assertThat(Util.parseContentLength(null)).isEqualTo(CHUNKED_CONTENT_LENGTH);
         assertThat(Util.parseContentLength("123")).isEqualTo(123L);
     }
@@ -246,5 +253,63 @@ public class UtilTest {
         assertThat(Util.parseContentLengthFromContentRange("")).isEqualTo(CHUNKED_CONTENT_LENGTH);
         assertThat(Util.parseContentLengthFromContentRange("invalid"))
                 .isEqualTo(CHUNKED_CONTENT_LENGTH);
+    }
+
+    @Test
+    public void isNetworkNotOnWifiType() {
+        assertThat(Util.isNetworkNotOnWifiType(null)).isTrue();
+
+        final ConnectivityManager manager = mock(ConnectivityManager.class);
+        when(manager.getActiveNetworkInfo()).thenReturn(null);
+        assertThat(Util.isNetworkNotOnWifiType(manager)).isTrue();
+
+        final NetworkInfo info = mock(NetworkInfo.class);
+        when(manager.getActiveNetworkInfo()).thenReturn(info);
+
+        when(info.getType()).thenReturn(ConnectivityManager.TYPE_MOBILE);
+        assertThat(Util.isNetworkNotOnWifiType(manager)).isTrue();
+
+        when(info.getType()).thenReturn(ConnectivityManager.TYPE_WIFI);
+        assertThat(Util.isNetworkNotOnWifiType(manager)).isFalse();
+    }
+
+    @Test
+    public void isNetworkAvailable() {
+        assertThat(Util.isNetworkNotOnWifiType(null)).isTrue();
+
+        final ConnectivityManager manager = mock(ConnectivityManager.class);
+        when(manager.getActiveNetworkInfo()).thenReturn(null);
+        assertThat(Util.isNetworkAvailable(manager)).isFalse();
+
+        final NetworkInfo info = mock(NetworkInfo.class);
+        when(manager.getActiveNetworkInfo()).thenReturn(info);
+
+        when(info.isConnected()).thenReturn(false);
+        assertThat(Util.isNetworkAvailable(manager)).isFalse();
+
+        when(info.isConnected()).thenReturn(true);
+        assertThat(Util.isNetworkAvailable(manager)).isTrue();
+    }
+
+    @Test
+    public void getFilenameFromContentUri() throws IOException {
+        mockOkDownload();
+
+        final Uri contentUri = mock(Uri.class);
+        final ContentResolver resolver = mock(ContentResolver.class);
+        final OkDownload okDownload = OkDownload.with();
+        final Context context = mock(Context.class);
+        when(okDownload.context()).thenReturn(context);
+        when(context.getContentResolver()).thenReturn(resolver);
+
+        // null cursor
+        when(resolver.query(contentUri, null, null, null, null)).thenReturn(null);
+        assertThat(Util.getFilenameFromContentUri(contentUri)).isNull();
+
+        // valid cursor
+        final Cursor cursor = mock(Cursor.class);
+        when(resolver.query(contentUri, null, null, null, null)).thenReturn(cursor);
+        when(cursor.getString(anyInt())).thenReturn("filename");
+        assertThat(Util.getFilenameFromContentUri(contentUri)).isEqualTo("filename");
     }
 }
