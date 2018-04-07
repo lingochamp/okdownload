@@ -58,7 +58,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-[okdownload_svg]: https://img.shields.io/badge/Android-Okdownload-green.svg
+[okdownload_svg]: https://img.shields.io/badge/Android-OkDownload-green.svg
 [sample_home_img]: https://github.com/lingochamp/okdownload/raw/master/art/sample-home.jpeg
 [single_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/single-download.gif
 [each_block_progress_img]: https://github.com/lingochamp/okdownload/raw/master/art/each-block-progress.gif
