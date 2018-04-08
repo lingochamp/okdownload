@@ -206,6 +206,8 @@ public class OkDownload {
 
             okDownload.setMonitor(monitor);
 
+            Util.d("OkDownload", "downloadStore[" + downloadStore + "] connectionFactory["
+                    + connectionFactory);
             return okDownload;
         }
     }

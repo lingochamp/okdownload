@@ -251,17 +251,19 @@ public class Util {
         return new BreakpointStoreOnCache();
     }
 
-    public static @NonNull DownloadStore createRemitDatabase(DownloadStore originStore) {
+    public static @NonNull DownloadStore createRemitDatabase(@NonNull DownloadStore originStore) {
+        DownloadStore finalStore = originStore;
         try {
             final Method createRemitSelf = originStore.getClass()
                     .getMethod("createRemitSelf");
-            return (DownloadStore) createRemitSelf.invoke(originStore);
+            finalStore = (DownloadStore) createRemitSelf.invoke(originStore);
         } catch (IllegalAccessException ignored) {
         } catch (NoSuchMethodException ignored) {
         } catch (InvocationTargetException ignored) {
         }
 
-        return originStore;
+        Util.d("Util", "Get final download store is " + finalStore);
+        return finalStore;
     }
 
     public static @NonNull DownloadConnection.Factory createDefaultConnectionFactory() {
