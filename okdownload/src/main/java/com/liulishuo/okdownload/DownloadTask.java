@@ -535,9 +535,15 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                 .setHeaderMapFields(headerMapFields)
                 .setPassIfAlreadyCompleted(passIfAlreadyCompleted);
 
-        final File anotherFile = new File(anotherUri.getPath());
-        if (!anotherFile.isFile()) {
-            builder.setFilename(getFilename());
+        // check whether the filename is special set from method.
+        if (Util.isUriFileScheme(anotherUri) // only if another uri is file-scheme
+                && !new File(anotherUri.getPath()).isFile() // another uri is not file already
+                && Util.isUriFileScheme(uri) // only if uri is file-scheme
+                // only if filename is provided and not provided through uri
+                && filenameHolder.get() != null
+                && !new File(uri.getPath()).getName().equals(filenameHolder.get())
+                ) {
+            builder.setFilename(filenameHolder.get());
         }
 
         return builder;

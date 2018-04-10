@@ -214,6 +214,7 @@ public class DownloadTaskTest {
 
     @Test
     public void toBuilder() {
+        // filename is provided specially => set filename
         final Uri uri = mock(Uri.class);
         when(uri.getPath()).thenReturn(parentPath);
         when(uri.getScheme()).thenReturn(ContentResolver.SCHEME_FILE);
@@ -223,19 +224,28 @@ public class DownloadTaskTest {
                 .setFilename("filename1")
                 .build();
 
-        final Uri anotherUri = mock(Uri.class);
-        when(anotherUri.getScheme()).thenReturn(ContentResolver.SCHEME_FILE);
-        when(anotherUri.getPath()).thenReturn(parentPath + filename);
-
         DownloadTask buildTask = task.toBuilder().build();
         assertThat(buildTask.getUrl()).isEqualTo("url");
         assertThat(buildTask.getUri()).isEqualTo(uri);
         assertThat(buildTask.getFilename()).isEqualTo("filename1");
 
+        // another uri is file, use new filename
+        final Uri anotherUri = mock(Uri.class);
+        when(anotherUri.getScheme()).thenReturn(ContentResolver.SCHEME_FILE);
+        when(anotherUri.getPath()).thenReturn(parentPath + filename);
+
         buildTask = task.toBuilder("anotherUrl", anotherUri).build();
         assertThat(buildTask.getUrl()).isEqualTo("anotherUrl");
         assertThat(buildTask.getUri()).isEqualTo(anotherUri);
         assertThat(buildTask.getFilename()).isEqualTo(filename);
+
+        // same uri provided filename => same file
+        when(uri.getPath()).thenReturn(parentPath + filename);
+        task = new DownloadTask
+                .Builder("url", uri)
+                .build();
+        buildTask = task.toBuilder("anotherUrl", uri).build();
+        assertFile(buildTask.getFile()).isEqualTo(task.getFile());
     }
 
     @Test
