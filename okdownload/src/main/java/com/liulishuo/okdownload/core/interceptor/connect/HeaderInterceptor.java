@@ -71,6 +71,9 @@ public class HeaderInterceptor implements Interceptor.Connect {
         range += blockInfo.getRangeRight();
 
         connection.addHeader(RANGE, range);
+        Util.d(TAG, "AssembleHeaderRange (" + task.getId() + ") block(" + blockIndex + ") "
+                + "downloadFrom(" + blockInfo.getRangeLeft() + ") currentOffset("
+                + blockInfo.getCurrentOffset() + ")");
 
         // add etag if exist
         final String etag = info.getEtag();

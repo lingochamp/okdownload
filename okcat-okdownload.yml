@@ -19,6 +19,9 @@ trans-msg-map:
         'finish cancel bunch task' : 'BUNCH TASK CANCELED'
         'breakpoint invalid' : 'CANNOT RESUME'
         'endTasks' : 'BUNCH END CALLBACKS'
+        'OutputStream sync success' : 'SAVED BREAKPOINT'
+        'Create output stream' : 'CREATE OUTPUT-STREAM'
+        'AssembleHeaderRange (' : 'REQUEST RANGE FROM'
 
 highlight-list:
         - 'connectStart'

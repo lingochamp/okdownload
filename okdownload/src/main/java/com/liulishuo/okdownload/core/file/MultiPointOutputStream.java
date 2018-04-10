@@ -139,8 +139,6 @@ public class MultiPointOutputStream {
                 syncRunnable.run();
             }
 
-            Util.d(TAG, "sync cache to disk certainly task("
-                    + task.getId() + ") block(" + blockIndex + ")");
         }
     }
 
@@ -220,6 +218,10 @@ public class MultiPointOutputStream {
                     store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
                     allIncreaseLength += noSyncLength;
                     noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
+                    Util.d(TAG, "OutputStream sync success (" + task.getId() + ") "
+                            + "block(" + blockIndex + ") " + " syncLength(" + noSyncLength + ")"
+                            + " currentOffset(" + info.getBlock(blockIndex).getCurrentOffset()
+                            + ")");
                 }
                 allNoSyncLength.addAndGet(-allIncreaseLength);
                 lastSyncTimestamp.set(SystemClock.uptimeMillis());
@@ -276,6 +278,8 @@ public class MultiPointOutputStream {
                 if (seekPoint > 0) {
                     // seek to target point
                     outputStream.seek(seekPoint);
+                    Util.d(TAG, "Create output stream write from (" + task.getId()
+                            + ") block(" + blockIndex + ") " + seekPoint);
                 }
             }
 
