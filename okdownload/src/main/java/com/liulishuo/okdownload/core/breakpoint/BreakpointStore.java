@@ -40,4 +40,11 @@ public interface BreakpointStore {
 
     @Nullable BreakpointInfo findAnotherInfoFromCompare(@NonNull DownloadTask task,
                                                         @NonNull BreakpointInfo ignored);
+
+    /**
+     * Whether only store breakpoint on memory cache.
+     *
+     * @return {@code true} if breakpoint on this store is only store on the memory cache.
+     */
+    boolean isOnlyMemoryCache();
 }

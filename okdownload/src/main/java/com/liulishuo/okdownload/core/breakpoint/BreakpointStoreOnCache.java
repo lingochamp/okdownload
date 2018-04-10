@@ -183,6 +183,10 @@ public class BreakpointStoreOnCache implements DownloadStore {
         return null;
     }
 
+    @Override public boolean isOnlyMemoryCache() {
+        return true;
+    }
+
     @Nullable @Override public String getResponseFilename(String url) {
         return responseFilenameMap.get(url);
     }

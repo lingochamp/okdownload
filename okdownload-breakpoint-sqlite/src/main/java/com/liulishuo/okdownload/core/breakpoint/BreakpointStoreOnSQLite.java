@@ -102,6 +102,10 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
         return onCache.findAnotherInfoFromCompare(task, ignored);
     }
 
+    @Override public boolean isOnlyMemoryCache() {
+        return false;
+    }
+
     @Nullable @Override public String getResponseFilename(String url) {
         return onCache.getResponseFilename(url);
     }

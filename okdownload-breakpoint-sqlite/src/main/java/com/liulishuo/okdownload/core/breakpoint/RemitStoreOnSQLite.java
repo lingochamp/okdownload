@@ -121,6 +121,10 @@ public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, Downloa
         return onSQLiteWrapper.findAnotherInfoFromCompare(task, ignored);
     }
 
+    @Override public boolean isOnlyMemoryCache() {
+        return false;
+    }
+
     @Nullable @Override public String getResponseFilename(String url) {
         return onSQLiteWrapper.getResponseFilename(url);
     }

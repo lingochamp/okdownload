@@ -75,6 +75,8 @@ public class StatusUtil {
                     && targetFile.exists()) {
                 return Status.IDLE;
             }
+        } else if (store.isOnlyMemoryCache()) {
+            return Status.UNKNOWN;
         } else if (targetFile != null && targetFile.exists()) {
             return Status.COMPLETED;
         } else {

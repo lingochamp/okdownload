@@ -134,6 +134,10 @@ public class StatusUtilTest {
         // file name not null and exist
         when(task.getFilename()).thenReturn(file.getName());
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.COMPLETED);
+
+        // info is only memory cache
+        when(store.isOnlyMemoryCache()).thenReturn(true);
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
     }
 
     @Test
