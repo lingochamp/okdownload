@@ -38,6 +38,9 @@ import com.liulishuo.okdownload.sample.util.DemoUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.Map;
 
@@ -184,7 +187,7 @@ public class SingleActivity extends BaseSampleActivity {
             }
 
             @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
-                                          @android.support.annotation.Nullable Exception realCause,
+                                          @Nullable Exception realCause,
                                           @NonNull SpeedCalculator taskSpeed) {
                 final String statusWithSpeed = cause.toString() + " " + taskSpeed.averageSpeed();
                 statusTv.setText(statusWithSpeed);
@@ -192,9 +195,52 @@ public class SingleActivity extends BaseSampleActivity {
                 actionTv.setText(R.string.start);
                 // mark
                 task.setTag(null);
+                if (cause == EndCause.COMPLETED) {
+                    final String realMd5 = fileToMD5(task.getFile().getAbsolutePath());
+                    if (!realMd5.equalsIgnoreCase("f836a37a5eee5dec0611ce15a76e8fd5")) {
+                        Log.e(TAG, "file is wrong because of md5 is wrong " + realMd5);
+                    }
+                }
             }
         });
     }
+
+    public static String fileToMD5(String filePath) {
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(filePath);
+            byte[] buffer = new byte[1024];
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            int numRead = 0;
+            while (numRead != -1) {
+                numRead = inputStream.read(buffer);
+                if (numRead > 0) {
+                    digest.update(buffer, 0, numRead);
+                }
+            }
+            byte[] md5Bytes = digest.digest();
+            return convertHashToString(md5Bytes);
+        } catch (Exception e) {
+            return null;
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static String convertHashToString(byte[] md5Bytes) {
+        String returnVal = "";
+        for (int i = 0; i < md5Bytes.length; i++) {
+            returnVal += Integer.toString((md5Bytes[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return returnVal.toUpperCase();
+    }
+
 
     private boolean isTaskRunning() {
         final StatusUtil.Status status = StatusUtil.getStatus(task);
