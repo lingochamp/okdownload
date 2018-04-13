@@ -311,4 +311,9 @@ public class BreakpointStoreOnCacheTest {
         assertThat(cache.findOrCreateId(task)).isEqualTo(2);
         verify(keyToIdMap, never()).add(eq(task), eq(2));
     }
+
+    @Test
+    public void getAfterCompleted() {
+        assertThat(storeOnCache.getAfterCompleted(1)).isNull();
+    }
 }

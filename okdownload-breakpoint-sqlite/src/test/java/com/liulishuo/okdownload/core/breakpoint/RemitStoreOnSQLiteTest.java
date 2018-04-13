@@ -249,4 +249,9 @@ public class RemitStoreOnSQLiteTest {
         store.removeInfo(1);
         verify(helper).removeInfo(eq(1));
     }
+
+    @Test
+    public void getAfterCompleted() {
+        assertThat(store.getAfterCompleted(1)).isNull();
+    }
 }

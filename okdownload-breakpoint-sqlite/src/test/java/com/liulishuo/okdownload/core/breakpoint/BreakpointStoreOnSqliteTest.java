@@ -134,4 +134,9 @@ public class BreakpointStoreOnSqliteTest {
         verify(onCache).remove(id);
         verify(helper).removeInfo(id);
     }
+
+    @Test
+    public void getAfterCompleted() {
+        assertThat(store.getAfterCompleted(1)).isNull();
+    }
 }
