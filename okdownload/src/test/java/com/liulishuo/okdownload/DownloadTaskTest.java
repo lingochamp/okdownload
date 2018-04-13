@@ -535,8 +535,8 @@ public class DownloadTaskTest {
         DownloadTask task = new DownloadTask.Builder("https://jacksgong.com",
                 new File(parentPath, filename)).build();
         assertThat(task.toString())
-                .endsWith("@0@https://jacksgong.com@" + new File(parentPath, filename)
-                        .getAbsolutePath());
+                .endsWith("@" + task.getId() + "@https://jacksgong.com@"
+                        + new File(parentPath, filename).getAbsolutePath());
     }
 
     @Rule public ExpectedException thrown = ExpectedException.none();
