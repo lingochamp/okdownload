@@ -6,6 +6,7 @@ A Reliable, Flexible, Fast and Powerful download engine.
 [![][build_status_svg]][build_status_link]
 [![codecov](https://codecov.io/gh/lingochamp/okdownload/branch/master/graph/badge.svg)](https://codecov.io/gh/lingochamp/okdownload)
 [ ![Download](https://api.bintray.com/packages/jacksgong/maven/OkDownload/images/download.svg) ](https://bintray.com/jacksgong/maven/OkDownload/_latestVersion)
+[![][okdownload_snapshot_svg]](https://oss.sonatype.org/content/repositories/snapshots/com/liulishuo/okdownload/)
 
 > [中文文档](https://github.com/lingochamp/okdownload/blob/master/README-zh.md)
 
@@ -59,6 +60,7 @@ limitations under the License.
 ```
 
 [okdownload_svg]: https://img.shields.io/badge/Android-OkDownload-green.svg
+[okdownload_snapshot_svg]: https://img.shields.io/badge/SnapShot-1.0.1-yellow.svg
 [sample_home_img]: https://github.com/lingochamp/okdownload/raw/master/art/sample-home.jpeg
 [single_download_img]: https://github.com/lingochamp/okdownload/raw/master/art/single-download.gif
 [each_block_progress_img]: https://github.com/lingochamp/okdownload/raw/master/art/each-block-progress.gif
