@@ -312,4 +312,27 @@ public class UtilTest {
         when(cursor.getString(anyInt())).thenReturn("filename");
         assertThat(Util.getFilenameFromContentUri(contentUri)).isEqualTo("filename");
     }
+
+    @Test
+    public void getSizeFromContentUri() throws IOException {
+        mockOkDownload();
+
+        final Uri contentUri = mock(Uri.class);
+        final ContentResolver resolver = mock(ContentResolver.class);
+        final OkDownload okDownload = OkDownload.with();
+        final Context context = mock(Context.class);
+        when(okDownload.context()).thenReturn(context);
+        when(context.getContentResolver()).thenReturn(resolver);
+
+        // null cursor
+        when(resolver.query(contentUri, null, null, null, null)).thenReturn(null);
+        assertThat(Util.getSizeFromContentUri(contentUri)).isZero();
+
+        // valid cursor
+        final Cursor cursor = mock(Cursor.class);
+        when(resolver.query(contentUri, null, null, null, null)).thenReturn(cursor);
+        when(cursor.getLong(anyInt())).thenReturn(1L);
+        assertThat(Util.getSizeFromContentUri(contentUri)).isOne();
+        verify(cursor).close();
+    }
 }
