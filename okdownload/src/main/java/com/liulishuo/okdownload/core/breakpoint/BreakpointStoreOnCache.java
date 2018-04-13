@@ -130,6 +130,10 @@ public class BreakpointStoreOnCache implements DownloadStore {
     @Override public void bunchTaskCanceled(int[] ids) {
     }
 
+    @Nullable @Override public BreakpointInfo getAfterCompleted(int id) {
+        return null;
+    }
+
     @Override public synchronized void remove(int id) {
         storedInfos.remove(id);
         if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));

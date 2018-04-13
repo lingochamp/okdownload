@@ -28,12 +28,14 @@ import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
 import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.UnknownHostException;
@@ -198,6 +200,32 @@ public class DownloadStrategy {
 
         task.getFilenameHolder().set(filename);
         return true;
+    }
+
+    /**
+     * Valid info for {@code task} on completed state.
+     */
+    public void validInfoOnCompleted(@NonNull DownloadTask task, @NonNull DownloadStore store) {
+        BreakpointInfo info = store.getAfterCompleted(task.getId());
+        if (info == null) {
+            info = new BreakpointInfo(task.getId(), task.getUrl(), task.getParentFile(),
+                    task.getFilename());
+            final long size;
+            if (Util.isUriContentScheme(task.getUri())) {
+                size = Util.getSizeFromContentUri(task.getUri());
+            } else {
+                final File file = task.getFile();
+                if (file == null) {
+                    size = 0;
+                    Util.w(TAG, "file is not ready on valid info for task on complete state "
+                            + task);
+                } else {
+                    size = file.length();
+                }
+            }
+            info.addBlock(new BlockInfo(0, size, size));
+        }
+        DownloadTask.TaskHideWrapper.setBreakpointInfo(task, info);
     }
 
     public static class FilenameHolder {

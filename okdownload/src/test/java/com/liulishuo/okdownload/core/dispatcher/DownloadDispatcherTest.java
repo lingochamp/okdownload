@@ -585,16 +585,18 @@ public class DownloadDispatcherTest {
         final BreakpointStore store = OkDownload.with().breakpointStore();
         doReturn(existFile.getName()).when(store).getResponseFilename("url");
 
+        // valid filename failed.
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
         doReturn(false).when(downloadStrategy).validFilenameFromStore(task);
-
         assertThat(dispatcher.inspectCompleted(task)).isFalse();
         verify(callbackDispatcher, never()).dispatch();
 
+        //  valid filename success.
         doReturn(true).when(downloadStrategy).validFilenameFromStore(task);
         assertThat(dispatcher.inspectCompleted(task)).isTrue();
         final DownloadListener listener = callbackDispatcher.dispatch();
         verify(listener).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class));
+        verify(downloadStrategy).validInfoOnCompleted(eq(task), eq(this.store));
     }
 
     @Test

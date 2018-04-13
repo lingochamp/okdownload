@@ -87,6 +87,10 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
     @Override public void bunchTaskCanceled(int[] ids) {
     }
 
+    @Nullable @Override public BreakpointInfo getAfterCompleted(int id) {
+        return null;
+    }
+
     @Override public void remove(int id) {
         onCache.remove(id);
         helper.removeInfo(id);

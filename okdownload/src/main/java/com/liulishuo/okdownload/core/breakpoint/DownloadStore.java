@@ -31,4 +31,11 @@ public interface DownloadStore extends BreakpointStore {
     void onTaskEnd(int id, @NonNull EndCause cause, @Nullable Exception exception);
 
     void bunchTaskCanceled(int[] ids);
+
+    /**
+     * Get the breakpoint info after the {@code id} task has been completed, this function is just
+     * for ignore real operation and just return {@code null} directly since on some logic model we
+     * already delete info from store after task has been completed to enhance performance.
+     */
+    @Nullable BreakpointInfo getAfterCompleted(int id);
 }

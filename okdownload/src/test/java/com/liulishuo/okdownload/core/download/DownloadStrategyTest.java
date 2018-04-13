@@ -16,16 +16,20 @@
 
 package com.liulishuo.okdownload.core.download;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
+import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
@@ -33,7 +37,6 @@ import com.liulishuo.okdownload.core.exception.ResumeFailedException;
 import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,6 +45,7 @@ import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.UnknownHostException;
@@ -52,6 +56,7 @@ import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_ETA
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_PRECONDITION_FAILED;
 import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.RESPONSE_RESET_RANGE_NOT_FROM_0;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -74,12 +79,6 @@ public class DownloadStrategyTest {
 
     @Rule public ExpectedException thrown = ExpectedException.none();
 
-    @BeforeClass
-    public static void setupClass() throws IOException {
-        mockOkDownload();
-        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
-    }
-
     @Before
     public void setup() {
         initMocks(this);
@@ -89,6 +88,9 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_PreconditionFailed() throws IOException {
+        mockOkDownload();
+        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
+
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
 
@@ -113,6 +115,9 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_EtagChanged() throws IOException {
+        mockOkDownload();
+        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
+
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
 
@@ -128,6 +133,9 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_CreatedWithoutFrom0() throws IOException {
+        mockOkDownload();
+        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
+
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
 
@@ -142,6 +150,9 @@ public class DownloadStrategyTest {
 
     @Test
     public void resumeAvailableResponseCheck_ResetWithoutFrom0() throws IOException {
+        mockOkDownload();
+        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
+
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
 
@@ -154,9 +165,11 @@ public class DownloadStrategyTest {
         responseCheck.inspect();
     }
 
-
     @Test
     public void resumeAvailableResponseCheck_notPartialAndOk() throws IOException {
+        mockOkDownload();
+        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
+
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
         when(connected.getResponseCode()).thenReturn(501);
@@ -166,9 +179,11 @@ public class DownloadStrategyTest {
         responseCheck.inspect();
     }
 
-
     @Test
     public void resumeAvailableResponseCheck_okNotFrom0() throws IOException {
+        mockOkDownload();
+        doReturn(spy(DownloadStrategy.class)).when(OkDownload.with()).downloadStrategy();
+
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 resumeAvailableResponseCheck();
 
@@ -274,6 +289,70 @@ public class DownloadStrategyTest {
         doReturn("filename").when(store).getResponseFilename("url");
         assertThat(strategy.validFilenameFromStore(task)).isTrue();
         assertThat(holder.get()).isEqualTo("filename");
+    }
+
+    @Test
+    public void validInfoOnCompleted_storeValid() {
+        final DownloadStore store = mock(DownloadStore.class);
+        final DownloadTask task = new DownloadTask.Builder("https://jacksgong.com", "path", "name")
+                .build();
+        when(store.getAfterCompleted(task.getId())).thenReturn(info);
+
+        strategy.validInfoOnCompleted(task, store);
+
+        assertThat(task.getInfo()).isEqualTo(info);
+    }
+
+    @Test
+    public void validInfoOnCompleted_InfoNotOnStore_UriScheme() {
+        final Uri contentUri = mock(Uri.class);
+        when(contentUri.getScheme()).thenReturn(ContentResolver.SCHEME_CONTENT);
+        when(contentUri.getPath()).thenReturn("content://1");
+        final ContentResolver resolver = mock(ContentResolver.class);
+        final OkDownload okDownload = OkDownload.with();
+        final Context context = mock(Context.class);
+        when(okDownload.context()).thenReturn(context);
+        when(context.getContentResolver()).thenReturn(resolver);
+        final Cursor cursor = mock(Cursor.class);
+        when(resolver.query(contentUri, null, null, null, null)).thenReturn(cursor);
+        when(cursor.getLong(anyInt())).thenReturn(1L);
+
+        final DownloadTask task = new DownloadTask.Builder("https://jacksgong.com", contentUri)
+                .build();
+
+        strategy.validInfoOnCompleted(task, mock(DownloadStore.class));
+
+        final BreakpointInfo info = task.getInfo();
+        assertThat(info.getId()).isEqualTo(task.getId());
+        assertThat(info.getTotalLength()).isEqualTo(1L);
+        assertThat(info.getTotalOffset()).isEqualTo(1L);
+    }
+
+    @Test
+    public void validInfoOnCompleted_InfoNotOnStore_FileScheme() throws IOException {
+        mockOkDownload();
+
+        final DownloadTask task = spy(
+                new DownloadTask.Builder("https://jacksgong.com", "path", "name")
+                        .build());
+
+        // null file
+        doReturn(null).when(task).getFile();
+        strategy.validInfoOnCompleted(task, mock(DownloadStore.class));
+        BreakpointInfo info = task.getInfo();
+        assertThat(info.getId()).isEqualTo(task.getId());
+        assertThat(info.getTotalLength()).isEqualTo(0);
+        assertThat(info.getTotalOffset()).isEqualTo(0);
+
+        // valid file
+        final File file = mock(File.class);
+        doReturn(file).when(task).getFile();
+        doReturn(1L).when(file).length();
+        strategy.validInfoOnCompleted(task, mock(DownloadStore.class));
+        info = task.getInfo();
+        assertThat(info.getId()).isEqualTo(task.getId());
+        assertThat(info.getTotalLength()).isEqualTo(1L);
+        assertThat(info.getTotalOffset()).isEqualTo(1L);
     }
 
     @Test

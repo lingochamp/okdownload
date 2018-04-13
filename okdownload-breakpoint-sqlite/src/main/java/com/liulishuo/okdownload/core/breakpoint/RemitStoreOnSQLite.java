@@ -105,6 +105,10 @@ public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, Downloa
         }
     }
 
+    @Nullable @Override public BreakpointInfo getAfterCompleted(int id) {
+        return null;
+    }
+
     @Override public void remove(int id) {
         sqliteCache.remove(id);
 

@@ -421,10 +421,12 @@ public class DownloadDispatcher {
     boolean inspectCompleted(@NonNull DownloadTask task,
                              @Nullable Collection<DownloadTask> completedCollection) {
         if (task.isPassIfAlreadyCompleted() && StatusUtil.isCompleted(task)) {
-            if (task.getFile() == null && !OkDownload.with().downloadStrategy()
+            if (task.getFilename() == null && !OkDownload.with().downloadStrategy()
                     .validFilenameFromStore(task)) {
                 return false;
             }
+
+            OkDownload.with().downloadStrategy().validInfoOnCompleted(task, store);
 
             if (completedCollection != null) {
                 completedCollection.add(task);
