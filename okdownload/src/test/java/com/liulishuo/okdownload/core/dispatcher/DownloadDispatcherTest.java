@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.core.dispatcher;
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
@@ -410,6 +411,15 @@ public class DownloadDispatcherTest {
         dispatcher.cancel(sameIdTask);
 
         verify(listener).taskEnd(eq(readyAsyncTask), eq(CANCELED), nullable(Exception.class));
+    }
+
+    @Test
+    public void cancel_withId() {
+        doReturn(true).when(dispatcher).cancelLocked(any(IdentifiedTask.class));
+        dispatcher.cancel(1);
+        final ArgumentCaptor<IdentifiedTask> captor = ArgumentCaptor.forClass(IdentifiedTask.class);
+        verify(dispatcher).cancelLocked(captor.capture());
+        assertThat(captor.getValue().getId()).isEqualTo(1);
     }
 
     @Test

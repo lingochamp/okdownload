@@ -864,6 +864,15 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                 + "/" + filenameHolder.get();
     }
 
+    /**
+     * Create a Identified task only for compare with their id, and only the id is the same.
+     *
+     * @param id the id is set for this mock task.
+     */
+    public static MockTaskForCompare mockTaskForCompare(int id) {
+        return new MockTaskForCompare(id);
+    }
+
     @NonNull public MockTaskForCompare mock(int id) {
         return new MockTaskForCompare(id, this);
     }
@@ -890,6 +899,14 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         @NonNull final File providedPathFile;
         @Nullable final String filename;
         @NonNull final File parentFile;
+
+        public MockTaskForCompare(int id) {
+            this.id = id;
+            this.url = EMPTY_URL;
+            this.providedPathFile = EMPTY_FILE;
+            this.filename = null;
+            this.parentFile = EMPTY_FILE;
+        }
 
         public MockTaskForCompare(int id, @NonNull DownloadTask task) {
             this.id = id;

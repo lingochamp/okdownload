@@ -23,6 +23,9 @@ import java.io.File;
 
 public abstract class IdentifiedTask {
 
+    public static final String EMPTY_URL = "";
+    public static final File EMPTY_FILE = new File("");
+
     public abstract int getId();
 
     @NonNull public abstract String getUrl();
@@ -35,6 +38,8 @@ public abstract class IdentifiedTask {
 
     public boolean compareIgnoreId(IdentifiedTask another) {
         if (!getUrl().equals(another.getUrl())) return false;
+
+        if (getUrl().equals(EMPTY_URL) || getParentFile().equals(EMPTY_FILE)) return false;
 
         if (getProvidedPathFile().equals(another.getProvidedPathFile())) return true;
 

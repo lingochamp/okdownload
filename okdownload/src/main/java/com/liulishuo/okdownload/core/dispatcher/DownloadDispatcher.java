@@ -24,6 +24,7 @@ import android.support.annotation.Nullable;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.StatusUtil;
+import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.cause.EndCause;
@@ -188,14 +189,14 @@ public class DownloadDispatcher {
         skipProceedCallCount.decrementAndGet();
     }
 
-    public void cancel(DownloadTask[] tasks) {
+    public void cancel(IdentifiedTask[] tasks) {
         skipProceedCallCount.incrementAndGet();
         cancelLocked(tasks);
         skipProceedCallCount.decrementAndGet();
         processCalls();
     }
 
-    public boolean cancel(DownloadTask task) {
+    public boolean cancel(IdentifiedTask task) {
         skipProceedCallCount.incrementAndGet();
         final boolean result = cancelLocked(task);
         skipProceedCallCount.decrementAndGet();
@@ -203,14 +204,22 @@ public class DownloadDispatcher {
         return result;
     }
 
-    private synchronized void cancelLocked(DownloadTask[] tasks) {
+    public boolean cancel(int id) {
+        skipProceedCallCount.incrementAndGet();
+        final boolean result = cancelLocked(DownloadTask.mockTaskForCompare(id));
+        skipProceedCallCount.decrementAndGet();
+        processCalls();
+        return result;
+    }
+
+    private synchronized void cancelLocked(IdentifiedTask[] tasks) {
         final long startCancelTime = SystemClock.uptimeMillis();
         Util.d(TAG, "start cancel bunch task manually: " + tasks.length);
 
         final List<DownloadCall> needCallbackCalls = new ArrayList<>();
         final List<DownloadCall> needCancelCalls = new ArrayList<>();
         try {
-            for (DownloadTask task : tasks) {
+            for (IdentifiedTask task : tasks) {
                 filterCanceledCalls(task, needCallbackCalls, needCancelCalls);
             }
         } finally {
@@ -221,7 +230,7 @@ public class DownloadDispatcher {
         }
     }
 
-    private synchronized boolean cancelLocked(DownloadTask task) {
+    synchronized boolean cancelLocked(IdentifiedTask task) {
         Util.d(TAG, "cancel manually: " + task.getId());
         final List<DownloadCall> needCallbackCalls = new ArrayList<>();
         final List<DownloadCall> needCancelCalls = new ArrayList<>();
@@ -235,7 +244,7 @@ public class DownloadDispatcher {
         return needCallbackCalls.size() > 0 || needCancelCalls.size() > 0;
     }
 
-    private synchronized void filterCanceledCalls(@NonNull DownloadTask task,
+    private synchronized void filterCanceledCalls(@NonNull IdentifiedTask task,
                                                   @NonNull List<DownloadCall> needCallbackCalls,
                                                   @NonNull List<DownloadCall> needCancelCalls) {
         for (Iterator<DownloadCall> i = readyAsyncCalls.iterator(); i.hasNext(); ) {

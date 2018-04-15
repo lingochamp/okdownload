@@ -539,5 +539,14 @@ public class DownloadTaskTest {
                         + new File(parentPath, filename).getAbsolutePath());
     }
 
+    @Test
+    public void mockTaskForCompare_justId() {
+        final IdentifiedTask task = DownloadTask.mockTaskForCompare(1);
+        assertThat(task.getId()).isEqualTo(1);
+        assertThat(task.getUrl()).isEqualTo(IdentifiedTask.EMPTY_URL);
+        assertThat(task.getFilename()).isNull();
+        assertThat(task.getParentFile()).isEqualTo(IdentifiedTask.EMPTY_FILE);
+    }
+
     @Rule public ExpectedException thrown = ExpectedException.none();
 }

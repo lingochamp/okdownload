@@ -19,6 +19,8 @@ package com.liulishuo.okdownload.core;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.liulishuo.okdownload.DownloadTask;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -125,5 +127,14 @@ public class IdentifiedTaskTest {
 
         when(another.getFilename()).thenReturn(filename);
         assertThat(task.compareIgnoreId(another)).isTrue();
+    }
+
+    @Test
+    public void compareIgnoreId_falseEmpty() {
+        final IdentifiedTask task = DownloadTask.mockTaskForCompare(1);
+        final IdentifiedTask anotherTask = DownloadTask.mockTaskForCompare(2);
+
+        assertThat(task.compareIgnoreId(task)).isFalse();
+        assertThat(task.compareIgnoreId(anotherTask)).isFalse();
     }
 }
