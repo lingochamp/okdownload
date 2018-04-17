@@ -72,7 +72,7 @@ public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, Downloa
     }
 
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
-                                                    long increaseLength) {
+                                                    long increaseLength) throws IOException {
         if (remitHelper.isNotFreeToDatabase(info.getId())) {
             sqliteCache.onSyncToFilesystemSuccess(info, blockIndex, increaseLength);
             return;

@@ -146,7 +146,7 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void ensureSyncComplete() {
+    public void ensureSyncComplete() throws IOException {
         multiPointOutputStream.syncRunning = true;
         doNothing().when(multiPointOutputStream).parkThread(anyLong());
         doNothing().when(multiPointOutputStream).runSync();
@@ -156,11 +156,17 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.ensureSyncComplete(1, false);
 
         verify(multiPointOutputStream).parkThread(eq(50L));
-        verify(syncRunnable).run();
+        verify(multiPointOutputStream).runSync();
+    }
+
+    @Test(expected = IOException.class)
+    public void ensureSyncComplete_syncException() throws IOException {
+        multiPointOutputStream.syncException = new IOException();
+        multiPointOutputStream.ensureSyncComplete(1, false);
     }
 
     @Test
-    public void ensureSyncComplete_async() {
+    public void ensureSyncComplete_async() throws IOException {
         multiPointOutputStream.syncRunning = false;
         multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
 
@@ -176,7 +182,7 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void inspectAndPersist() {
+    public void inspectAndPersist() throws IOException {
         multiPointOutputStream.syncRunning = true;
         multiPointOutputStream.inspectAndPersist();
 
@@ -204,6 +210,12 @@ public class MultiPointOutputStreamTest {
         when(blockInfo.getCurrentOffset()).thenReturn(10L);
 
         multiPointOutputStream.inspectComplete(1);
+    }
+
+    @Test(expected = IOException.class)
+    public void inspectComplete_syncException() throws IOException {
+        multiPointOutputStream.syncException = new IOException();
+        multiPointOutputStream.inspectAndPersist();
     }
 
     @Test

@@ -101,7 +101,7 @@ public class RemitStoreOnSQLiteTest {
     }
 
     @Test
-    public void onSyncToFilesystemSuccess_notFreeToDatabase() {
+    public void onSyncToFilesystemSuccess_notFreeToDatabase() throws IOException {
         final BreakpointInfo info = mock(BreakpointInfo.class);
         when(info.getId()).thenReturn(1);
         when(info.getBlock(0)).thenReturn(mock(BlockInfo.class));
@@ -115,7 +115,7 @@ public class RemitStoreOnSQLiteTest {
     }
 
     @Test
-    public void onSyncToFilesystemSuccess_freeToDatabase() {
+    public void onSyncToFilesystemSuccess_freeToDatabase() throws IOException {
         final BreakpointInfo info = mock(BreakpointInfo.class);
         when(info.getId()).thenReturn(1);
         when(info.getBlock(0)).thenReturn(mock(BlockInfo.class));

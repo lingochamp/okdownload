@@ -66,7 +66,9 @@ public class MultiPointOutputStream {
     @NonNull private final Runnable syncRunnable;
     private String path;
 
-    MultiPointOutputStream(@NonNull DownloadTask task,
+    IOException syncException;
+
+    MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
                            @NonNull DownloadStore store,
                            @Nullable Runnable syncRunnable) {
@@ -83,7 +85,13 @@ public class MultiPointOutputStream {
             this.syncRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    runSync();
+                    try {
+                        runSync();
+                    } catch (IOException e) {
+                        syncException = e;
+                        Util.w(TAG, "Sync to breakpoint-store for task[" + task.getId() + "] "
+                                + "failed with cause: " + e);
+                    }
                 }
             };
         } else {
@@ -114,7 +122,9 @@ public class MultiPointOutputStream {
 
     @Nullable volatile Thread parkForWaitingSyncThread;
 
-    public void ensureSyncComplete(int blockIndex, boolean isAsync) {
+    public void ensureSyncComplete(int blockIndex, boolean isAsync) throws IOException {
+        if (syncException != null) throw syncException;
+
         final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
         if (noSyncLength != null && noSyncLength.get() > 0) {
 
@@ -136,7 +146,9 @@ public class MultiPointOutputStream {
                 }
 
                 syncRunning = true;
-                syncRunnable.run();
+                // using runSync method instead of syncRunnable.run(), because we need syncException
+                // straightforward.
+                runSync();
             }
 
         }
@@ -151,7 +163,9 @@ public class MultiPointOutputStream {
         }
     }
 
-    void inspectAndPersist() {
+    void inspectAndPersist() throws IOException {
+        if (syncException != null) throw syncException;
+
         if (!syncRunning && isNeedPersist()) {
             syncRunning = true;
             executeSyncRunnableAsync();
@@ -179,7 +193,7 @@ public class MultiPointOutputStream {
     }
 
     // convenient for test
-    void runSync() {
+    void runSync() throws IOException {
         try {
             syncRunning = true;
             boolean success;

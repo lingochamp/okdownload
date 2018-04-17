@@ -59,7 +59,7 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
     }
 
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
-                                                    long increaseLength) {
+                                                    long increaseLength) throws IOException {
         onCache.onSyncToFilesystemSuccess(info, blockIndex, increaseLength);
         final long newCurrentOffset = info.getBlock(blockIndex).getCurrentOffset();
         helper.updateBlockIncrease(info, blockIndex, newCurrentOffset);

@@ -21,10 +21,12 @@ import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.core.cause.EndCause;
 
+import java.io.IOException;
+
 public interface DownloadStore extends BreakpointStore {
 
     void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
-                                   long increaseLength);
+                                   long increaseLength) throws IOException;
 
     void onTaskStart(int id);
 

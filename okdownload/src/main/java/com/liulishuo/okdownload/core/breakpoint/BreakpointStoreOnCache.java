@@ -24,6 +24,7 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -92,9 +93,9 @@ public class BreakpointStoreOnCache implements DownloadStore {
     }
 
     @Override public void onSyncToFilesystemSuccess(@NonNull BreakpointInfo info, int blockIndex,
-                                                    long increaseLength) {
+                                                    long increaseLength) throws IOException {
         final BreakpointInfo onCacheOne = this.storedInfos.get(info.id);
-        if (info != onCacheOne) throw new IllegalArgumentException("Info not on store!");
+        if (info != onCacheOne) throw new IOException("Info not on store!");
 
         onCacheOne.getBlock(blockIndex).increaseCurrentOffset(increaseLength);
     }

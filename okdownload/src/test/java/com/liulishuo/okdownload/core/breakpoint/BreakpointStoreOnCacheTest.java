@@ -23,13 +23,16 @@ import com.liulishuo.okdownload.core.IdentifiedTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -88,7 +91,7 @@ public class BreakpointStoreOnCacheTest {
     }
 
     @Test
-    public void onSyncToFilesystemSuccess() {
+    public void onSyncToFilesystemSuccess() throws IOException {
         createAndInsert();
 
         final BreakpointInfo info = storeOnCache.get(insertedId);
@@ -98,6 +101,20 @@ public class BreakpointStoreOnCacheTest {
         storeOnCache.onSyncToFilesystemSuccess(info, 0, 1);
 
         assertThat(blockInfo.getCurrentOffset()).isEqualTo(1);
+    }
+
+    @Rule public ExpectedException thrown = ExpectedException.none();
+    @Test
+    public void onSyncToFilesystemSuccess_infoNotEqual() throws IOException {
+        createAndInsert();
+
+        final BreakpointInfo info = storeOnCache.get(insertedId);
+        final BlockInfo blockInfo = spy(new BlockInfo(0, 0, 0));
+        info.addBlock(blockInfo);
+
+        thrown.expect(IOException.class);
+        thrown.expectMessage("Info not on store!");
+        storeOnCache.onSyncToFilesystemSuccess(mock(BreakpointInfo.class), 0, 1);
     }
 
     @Test
