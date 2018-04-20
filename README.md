@@ -12,6 +12,8 @@ A Reliable, Flexible, Fast and Powerful download engine.
 
 ---
 
+> P.S. If you ask me, which version is the most stability, I will tell you it's not the version of 1.0.0 or 2.0.0, the most stability version must be the latest version because it is developed with github-flow, not production-flow. So please follow the latest release version and show me your PR. Here is [the changelog for each version](https://github.com/lingochamp/okdownload/blob/master/CHANGELOG.md), it may help you.
+
 ## I. WHY CHOOSE
 
 In fact OkDownload is FileDownloader2, which extends all benefits from FileDownloader and beyond. More detail please move to [here](https://github.com/lingochamp/okdownload/wiki/Why-Choose-OkDownload)

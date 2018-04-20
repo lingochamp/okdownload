@@ -12,6 +12,8 @@
 
 ---
 
+> P.S. 如果你问我，哪个版本是最稳定的版本，我会告诉你不是1.0.0或是2.0.0版本，而是最新的版本，因为我们采用的是github开发流，而非产品的开发流。因此请使用最新的Release版本，欢迎PR。这是[每个版本的变更集](https://github.com/lingochamp/okdownload/blob/master/CHANGELOG.md)应该可以帮助到你。
+
 ## I. 为什么选择
 
 实际上，OkDownload是FileDownloader2，它继承了所有FileDownloader的优点，甚至做了更多的优化以及更多的特性，相关更详细的描述请移步到[这里](https://github.com/lingochamp/okdownload/wiki/Why-Choose-OkDownload)
