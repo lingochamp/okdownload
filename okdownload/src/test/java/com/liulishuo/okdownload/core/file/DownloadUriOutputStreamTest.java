@@ -29,6 +29,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.BufferedOutputStream;
 import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.SyncFailedException;
 import java.nio.channels.FileChannel;
 
@@ -46,6 +47,7 @@ public class DownloadUriOutputStreamTest {
     @Mock private FileChannel channel;
     @Mock private ParcelFileDescriptor pdf;
     @Mock private BufferedOutputStream out;
+    @Mock private FileOutputStream fos;
     @Mock private FileDescriptor fd;
 
     private DownloadUriOutputStream outputStream;
@@ -54,7 +56,7 @@ public class DownloadUriOutputStreamTest {
     public void setup() {
         initMocks(this);
 
-        outputStream = new DownloadUriOutputStream(channel, pdf, out);
+        outputStream = new DownloadUriOutputStream(channel, pdf, fos, out);
     }
 
     @Test
@@ -68,6 +70,7 @@ public class DownloadUriOutputStreamTest {
     public void close() throws Exception {
         outputStream.close();
         verify(out).close();
+        verify(fos).close();
     }
 
     @Rule

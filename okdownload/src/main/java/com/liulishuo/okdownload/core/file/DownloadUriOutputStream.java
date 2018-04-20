@@ -37,6 +37,7 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     @NonNull private final FileChannel channel;
     @NonNull private final ParcelFileDescriptor pdf;
     @NonNull private final BufferedOutputStream out;
+    @NonNull private final FileOutputStream fos;
 
     public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws
             FileNotFoundException {
@@ -44,15 +45,17 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
         if (pdf == null) throw new FileNotFoundException("result of " + uri + " is null!");
         this.pdf = pdf;
 
-        final FileOutputStream fos = new FileOutputStream(pdf.getFileDescriptor());
-        channel = fos.getChannel();
-        out = new BufferedOutputStream(fos, bufferSize);
+        this.fos = new FileOutputStream(pdf.getFileDescriptor());
+        this.channel = fos.getChannel();
+        this.out = new BufferedOutputStream(fos, bufferSize);
     }
 
     DownloadUriOutputStream(@NonNull FileChannel channel, @NonNull ParcelFileDescriptor pdf,
+                            @NonNull FileOutputStream fos,
                             @NonNull BufferedOutputStream out) {
         this.channel = channel;
         this.pdf = pdf;
+        this.fos = fos;
         this.out = out;
     }
 
@@ -64,6 +67,7 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     @Override
     public void close() throws IOException {
         out.close();
+        fos.close();
     }
 
     @Override
