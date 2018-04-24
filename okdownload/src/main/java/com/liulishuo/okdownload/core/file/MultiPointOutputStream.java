@@ -219,7 +219,8 @@ public class MultiPointOutputStream {
                     }
                 }
                 success = true;
-            } catch (IOException ignored) {
+            } catch (IOException ex) {
+                Util.w(TAG, "OutputStream flush and sync data to filesystem failed " + ex);
                 success = false;
             }
 
