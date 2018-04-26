@@ -396,6 +396,17 @@ public class DownloadCallTest {
         assertThat(call.cancel()).isFalse();
     }
 
+    @Test
+    public void cancel_cache() {
+        final DownloadCache cache = mock(DownloadCache.class);
+        final MultiPointOutputStream outputStream = mock(MultiPointOutputStream.class);
+        call.cache = cache;
+        when(cache.getOutputStream()).thenReturn(outputStream);
+        call.cancel();
+
+        verify(call.cache).setUserCanceled();
+        verify(outputStream).cancelAsync();
+    }
 
     @Test
     public void cancel_finishing() {

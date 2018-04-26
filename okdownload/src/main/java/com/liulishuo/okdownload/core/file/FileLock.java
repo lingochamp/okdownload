@@ -28,7 +28,7 @@ import java.util.concurrent.locks.LockSupport;
 
 /**
  * Because of we cancel call asynchronous like
- * {@link MultiPointOutputStream#ensureSyncComplete(int, boolean)} so we have to know whether the
+ * {@link MultiPointOutputStream#cancel()} so we have to know whether the
  * same store file is locked or not before the following call with the same store file.
  */
 public class FileLock {
@@ -48,42 +48,42 @@ public class FileLock {
         this(new HashMap<String, AtomicInteger>(), new HashMap<String, Thread>());
     }
 
-    public void increaseLock(@NonNull String filePath) {
+    public void increaseLock(@NonNull String path) {
         AtomicInteger lockCount;
         synchronized (fileLockCountMap) {
-            lockCount = fileLockCountMap.get(filePath);
+            lockCount = fileLockCountMap.get(path);
         }
         if (lockCount == null) {
             lockCount = new AtomicInteger(0);
             synchronized (fileLockCountMap) {
-                fileLockCountMap.put(filePath, lockCount);
+                fileLockCountMap.put(path, lockCount);
             }
         }
-        lockCount.incrementAndGet();
+        Util.d(TAG, "increaseLock increase lock-count to " + lockCount.incrementAndGet() + path);
     }
 
-    public void decreaseLock(@NonNull String filePath) {
+    public void decreaseLock(@NonNull String path) {
         AtomicInteger lockCount;
         synchronized (fileLockCountMap) {
-            lockCount = fileLockCountMap.get(filePath);
+            lockCount = fileLockCountMap.get(path);
         }
 
         if (lockCount != null && lockCount.decrementAndGet() == 0) {
-            Util.d(TAG, "decreaseLock decrease lock-count to 0 " + filePath);
+            Util.d(TAG, "decreaseLock decrease lock-count to 0 " + path);
             final Thread lockedThread;
             synchronized (waitThreadForFileLockMap) {
-                lockedThread = waitThreadForFileLockMap.get(filePath);
+                lockedThread = waitThreadForFileLockMap.get(path);
                 if (lockedThread != null) {
-                    waitThreadForFileLockMap.remove(filePath);
+                    waitThreadForFileLockMap.remove(path);
                 }
             }
 
             if (lockedThread != null) {
-                Util.d(TAG, "decreaseLock " + filePath + " unpark locked thread " + lockCount);
+                Util.d(TAG, "decreaseLock " + path + " unpark locked thread " + lockCount);
                 unpark(lockedThread);
             }
             synchronized (fileLockCountMap) {
-                fileLockCountMap.remove(filePath);
+                fileLockCountMap.remove(path);
             }
         }
     }

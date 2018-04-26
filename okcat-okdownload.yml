@@ -20,8 +20,10 @@ trans-msg-map:
         'breakpoint invalid' : 'CANNOT RESUME'
         'endTasks' : 'BUNCH END CALLBACKS'
         'OutputStream sync success' : 'SAVED BREAKPOINT'
+        'OutputStream close' : 'CLOSE FILE STREAM'
         'Create output stream' : 'CREATE OUTPUT-STREAM'
         'AssembleHeaderRange (' : 'REQUEST RANGE FROM'
+        'OutputStream start flush looper' : 'FLUSH STREAM LOOPER'
 
 highlight-list:
         - 'connectStart'
@@ -29,3 +31,5 @@ highlight-list:
         - 'task'
         - 'block'
         - 'waiting for sync cache to disk'
+        - 'isNoMoreStream'
+        - 'newNoMoreStreamBlockList'

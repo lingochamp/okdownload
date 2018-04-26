@@ -32,7 +32,6 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -113,8 +112,6 @@ public class RetryInterceptorTest {
         thrown.expect(IOException.class);
         interceptor.interceptFetch(chain);
 
-        final int blockIndex = chain.getBlockIndex();
         verify(cache).catchException(any(IOException.class));
-        verify(outputStream).close(eq(blockIndex));
     }
 }

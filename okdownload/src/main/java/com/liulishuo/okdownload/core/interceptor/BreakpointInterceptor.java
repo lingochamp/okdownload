@@ -62,19 +62,22 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         long fetchLength = 0;
         long processFetchLength;
 
-        while (true) {
-            processFetchLength = chain.loopFetch();
-            if (processFetchLength == -1) {
-                break;
-            }
-
-            fetchLength += processFetchLength;
-        }
-
-        // finish
-        chain.flushNoCallbackIncreaseBytes();
         final MultiPointOutputStream outputStream = chain.getOutputStream();
-        outputStream.ensureSyncComplete(blockIndex, false);
+
+        try {
+            while (true) {
+                processFetchLength = chain.loopFetch();
+                if (processFetchLength == -1) {
+                    break;
+                }
+
+                fetchLength += processFetchLength;
+            }
+        } finally {
+            // finish
+            chain.flushNoCallbackIncreaseBytes();
+            if (!chain.getCache().isUserCanceled()) outputStream.done(blockIndex);
+        }
 
         if (isNotChunked) {
             // local persist data check.

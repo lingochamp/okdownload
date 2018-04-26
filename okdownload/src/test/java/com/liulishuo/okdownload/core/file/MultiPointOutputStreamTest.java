@@ -38,6 +38,8 @@ import org.robolectric.annotation.Config;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
@@ -47,11 +49,13 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -71,6 +75,14 @@ public class MultiPointOutputStreamTest {
     @Mock private DownloadStore store;
     @Mock private Runnable syncRunnable;
 
+    @Mock private DownloadOutputStream stream0;
+    @Mock private DownloadOutputStream stream1;
+    @Mock private DownloadOutputStream stream2;
+    @Mock private Future syncFuture;
+    @Mock private Thread runSyncThread;
+
+    final byte[] bytes = new byte[6];
+
     @BeforeClass
     public static void setupClass() throws IOException {
         mockOkDownload();
@@ -83,7 +95,9 @@ public class MultiPointOutputStreamTest {
         when(task.getFile()).thenReturn(existFile);
         when(task.getParentFile()).thenReturn(new File(parentPath));
         multiPointOutputStream = spy(new MultiPointOutputStream(task, info, store, syncRunnable));
-        doNothing().when(multiPointOutputStream).executeSyncRunnableAsync();
+        doReturn(syncFuture).when(multiPointOutputStream).executeSyncRunnableAsync();
+        multiPointOutputStream.syncFuture = syncFuture;
+        multiPointOutputStream.runSyncThread = runSyncThread;
     }
 
     @After
@@ -99,33 +113,185 @@ public class MultiPointOutputStreamTest {
 
     @Test
     public void write() throws IOException {
-        final DownloadOutputStream outputStream = mock(DownloadOutputStream.class);
-        doReturn(outputStream).when(multiPointOutputStream).outputStream(anyInt());
-        multiPointOutputStream.syncRunning = true;
+        doReturn(stream0).when(multiPointOutputStream).outputStream(anyInt());
+        doNothing().when(multiPointOutputStream).inspectAndPersist();
 
-        final byte[] bytes = new byte[6];
         multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong());
-        multiPointOutputStream.write(1, bytes, 6);
-
-        verify(multiPointOutputStream).write(1, bytes, 6);
-
         multiPointOutputStream.noSyncLengthMap.put(2, new AtomicLong());
-        multiPointOutputStream.write(2, bytes, 16);
-        verify(multiPointOutputStream).write(2, bytes, 16);
 
-        assertThat(multiPointOutputStream.allNoSyncLength.get()).isEqualTo(22);
-        assertThat(multiPointOutputStream.noSyncLengthMap.get(1).get()).isEqualTo(6);
+        multiPointOutputStream.write(2, bytes, 16);
+
+        verify(stream0).write(eq(bytes), eq(0), eq(16));
+
+        assertThat(multiPointOutputStream.allNoSyncLength.get()).isEqualTo(16);
+        assertThat(multiPointOutputStream.noSyncLengthMap.get(1).get()).isEqualTo(0);
         assertThat(multiPointOutputStream.noSyncLengthMap.get(2).get()).isEqualTo(16);
+
+        verify(multiPointOutputStream).inspectAndPersist();
+    }
+
+    @Test
+    public void cancel_noSyncLengthIsZero()
+            throws IOException, ExecutionException, InterruptedException {
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream1);
+        multiPointOutputStream.allNoSyncLength.set(0);
+        doNothing().when(multiPointOutputStream).close(anyInt());
+
+        multiPointOutputStream.cancel();
+
+        verify(multiPointOutputStream, never()).unparkThread(any(Thread.class));
+        verify(syncFuture, never()).get();
+        verify(multiPointOutputStream).close(eq(0));
+        verify(multiPointOutputStream).close(eq(1));
+    }
+
+    @Test
+    public void cancel_syncNotRun() throws IOException, ExecutionException, InterruptedException {
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream1);
+        multiPointOutputStream.allNoSyncLength.set(1);
+        doNothing().when(multiPointOutputStream).close(anyInt());
+        multiPointOutputStream.runSyncThread = null;
+
+        final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
+        final FileLock fileLock = mock(FileLock.class);
+        when(strategy.getFileLock()).thenReturn(fileLock);
+
+        multiPointOutputStream.cancel();
+
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(0, 1);
+        verify(multiPointOutputStream, never()).unparkThread(any(Thread.class));
+        verify(syncFuture, never()).get();
+        verify(multiPointOutputStream).close(eq(0));
+        verify(multiPointOutputStream).close(eq(1));
+        verify(fileLock, never()).increaseLock(eq(existFile.getAbsolutePath()));
+    }
+
+    @Test
+    public void cancel() throws IOException, ExecutionException, InterruptedException {
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream1);
+        multiPointOutputStream.noSyncLengthMap.put(0, new AtomicLong());
+        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong());
+        multiPointOutputStream.allNoSyncLength.set(1);
+
+        final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
+        final FileLock fileLock = mock(FileLock.class);
+        when(strategy.getFileLock()).thenReturn(fileLock);
+
+        doNothing().when(multiPointOutputStream).unparkThread(nullable(Thread.class));
+        doNothing().when(multiPointOutputStream).close(anyInt());
+
+        multiPointOutputStream.cancel();
+
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(0, 1);
+        verify(multiPointOutputStream).unparkThread(any(Thread.class));
+        verify(syncFuture).get();
+        verify(multiPointOutputStream).close(eq(0));
+        verify(multiPointOutputStream).close(eq(1));
+        verify(fileLock).increaseLock(eq(existFile.getAbsolutePath()));
+    }
+
+    @Test
+    public void done() throws IOException {
+        doNothing().when(multiPointOutputStream).unparkThread(nullable(Thread.class));
+        doNothing().when(multiPointOutputStream).close(1);
+        doNothing().when(multiPointOutputStream).parkThread();
+        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
+
+        multiPointOutputStream.done(1);
+
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(1);
+        assertThat(multiPointOutputStream.parkedRunBlockThreadMap.get(1))
+                .isEqualTo(Thread.currentThread());
+        verify(multiPointOutputStream).unparkThread(eq(runSyncThread));
+        verify(multiPointOutputStream).parkThread();
+        verify(multiPointOutputStream).close(eq(1));
+    }
+
+    @Test(expected = IOException.class)
+    public void done_syncException() throws IOException {
+        multiPointOutputStream.syncException = new IOException();
+        multiPointOutputStream.done(1);
+    }
+
+    @Test
+    public void done_syncNotRun() throws IOException {
+        doNothing().when(multiPointOutputStream).unparkThread(nullable(Thread.class));
+        doNothing().when(multiPointOutputStream).close(1);
+        doNothing().when(multiPointOutputStream).parkThread();
+        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
+        multiPointOutputStream.runSyncThread = null;
+
+        multiPointOutputStream.done(1);
+
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(1);
+        assertThat(multiPointOutputStream.parkedRunBlockThreadMap.get(1))
+                .isNull();
+        verify(multiPointOutputStream, never()).unparkThread(eq(runSyncThread));
+        verify(multiPointOutputStream, never()).parkThread();
+        verify(multiPointOutputStream).close(eq(1));
+
     }
 
     @Test
     public void runSync() throws IOException {
+        final MultiPointOutputStream.StreamsState state =
+                spy(new MultiPointOutputStream.StreamsState());
+        multiPointOutputStream.state = state;
+
+        when(state.isStreamsEndOrChanged()).thenReturn(false, false, false, true);
+        doNothing().when(multiPointOutputStream).parkThread(anyLong());
+        doNothing().when(multiPointOutputStream).unparkThread(any(Thread.class));
+        doNothing().when(multiPointOutputStream).flushProcess();
+        doNothing().when(multiPointOutputStream).inspectStreamState(state);
+
+        final Thread thread0 = mock(Thread.class);
+        final Thread thread1 = mock(Thread.class);
+        multiPointOutputStream.parkedRunBlockThreadMap.put(0, thread0);
+        multiPointOutputStream.parkedRunBlockThreadMap.put(1, thread1);
+        multiPointOutputStream.allNoSyncLength.set(1);
+        state.newNoMoreStreamBlockList.add(0);
+        state.newNoMoreStreamBlockList.add(1);
+        state.isNoMoreStream = true;
+
+        when(multiPointOutputStream.isNoNeedFlushForLength()).thenReturn(true, false);
+        when(multiPointOutputStream.getNextParkMillisecond()).thenReturn(1L, -1L);
+
+        multiPointOutputStream.runSync();
+
+        // first default + scheduler one + last one.
+        verify(multiPointOutputStream, times(3)).flushProcess();
+        assertThat(multiPointOutputStream.parkedRunBlockThreadMap.size()).isZero();
+        verify(multiPointOutputStream).unparkThread(eq(thread0));
+        verify(multiPointOutputStream).unparkThread(eq(thread1));
+    }
+
+    @Test
+    public void isNoNeedFlushForLength() {
+        multiPointOutputStream.allNoSyncLength.set(0);
+        // syncBufferSize is 0.
+        assertThat(multiPointOutputStream.isNoNeedFlushForLength()).isFalse();
+        multiPointOutputStream.allNoSyncLength.set(-1);
+        assertThat(multiPointOutputStream.isNoNeedFlushForLength()).isTrue();
+    }
+
+    @Test
+    public void getNextParkMillisecond() {
+        // syncBufferIntervalMills is 0.
+        when(multiPointOutputStream.now()).thenReturn(2L);
+        multiPointOutputStream.lastSyncTimestamp.set(1L);
+
+        assertThat(multiPointOutputStream.getNextParkMillisecond()).isEqualTo(-1L);
+    }
+
+    @Test
+    public void flushProcess() throws IOException {
         final DownloadOutputStream outputStream = mock(DownloadOutputStream.class);
         doReturn(outputStream).when(multiPointOutputStream).outputStream(1);
         when(info.getBlock(1)).thenReturn(mock(BlockInfo.class));
-        multiPointOutputStream.syncRunning = true;
         final Thread thread = mock(Thread.class);
-        multiPointOutputStream.parkForWaitingSyncThread = thread;
 
         multiPointOutputStream.allNoSyncLength.addAndGet(10);
         multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
@@ -135,70 +301,34 @@ public class MultiPointOutputStreamTest {
         final FileLock fileLock = mock(FileLock.class);
         when(fileStrategy.getFileLock()).thenReturn(fileLock);
 
-        multiPointOutputStream.runSync();
+        multiPointOutputStream.flushProcess();
 
         verify(store).onSyncToFilesystemSuccess(info, 1, 10);
         verify(fileLock).decreaseLock(eq(existFile.getAbsolutePath()));
-        verify(multiPointOutputStream).unparkThread(eq(thread));
         assertThat(multiPointOutputStream.allNoSyncLength.get()).isZero();
         assertThat(multiPointOutputStream.noSyncLengthMap.get(1).get()).isZero();
-        assertThat(multiPointOutputStream.syncRunning).isFalse();
-    }
-
-    @Test
-    public void ensureSyncComplete() throws IOException {
-        multiPointOutputStream.syncRunning = true;
-        doNothing().when(multiPointOutputStream).parkThread(anyLong());
-        doNothing().when(multiPointOutputStream).runSync();
-        when(multiPointOutputStream.isSyncRunning()).thenReturn(true, false);
-        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
-
-        multiPointOutputStream.ensureSyncComplete(1, false);
-
-        verify(multiPointOutputStream).parkThread(eq(50L));
-        verify(multiPointOutputStream).runSync();
-    }
-
-    @Test(expected = IOException.class)
-    public void ensureSyncComplete_syncException() throws IOException {
-        multiPointOutputStream.syncException = new IOException();
-        multiPointOutputStream.ensureSyncComplete(1, false);
-    }
-
-    @Test
-    public void ensureSyncComplete_async() throws IOException {
-        multiPointOutputStream.syncRunning = false;
-        multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong(10));
-
-        final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
-        final FileLock fileLock = mock(FileLock.class);
-        when(strategy.getFileLock()).thenReturn(fileLock);
-
-        multiPointOutputStream.ensureSyncComplete(1, true);
-
-        verify(multiPointOutputStream).executeSyncRunnableAsync();
-        verify(fileLock).increaseLock(eq(existFile.getAbsolutePath()));
-        assertThat(multiPointOutputStream.syncRunning).isTrue();
     }
 
     @Test
     public void inspectAndPersist() throws IOException {
-        multiPointOutputStream.syncRunning = true;
+        final Future newFuture = mock(Future.class);
+        doReturn(newFuture).when(multiPointOutputStream).executeSyncRunnableAsync();
+
+        multiPointOutputStream.syncFuture = syncFuture;
         multiPointOutputStream.inspectAndPersist();
+        // not change
+        assertThat(multiPointOutputStream.syncFuture).isEqualTo(syncFuture);
 
-        verify(multiPointOutputStream, never()).executeSyncRunnableAsync();
-
-        multiPointOutputStream.syncRunning = false;
-        when(multiPointOutputStream.isNeedPersist()).thenReturn(false);
+        multiPointOutputStream.syncFuture = null;
         multiPointOutputStream.inspectAndPersist();
+        // changed
+        assertThat(multiPointOutputStream.syncFuture).isEqualTo(newFuture);
+    }
 
-        verify(multiPointOutputStream, never()).executeSyncRunnableAsync();
-
-        when(multiPointOutputStream.isNeedPersist()).thenReturn(true);
+    @Test(expected = IOException.class)
+    public void inspectAndPersist_syncException() throws IOException {
+        multiPointOutputStream.syncException = new IOException();
         multiPointOutputStream.inspectAndPersist();
-
-        verify(multiPointOutputStream).executeSyncRunnableAsync();
-        assertThat(multiPointOutputStream.syncRunning).isTrue();
     }
 
     @Test(expected = IOException.class)
@@ -235,6 +365,76 @@ public class MultiPointOutputStreamTest {
         assertThat(multiPointOutputStream.outputStreamMap.get(0)).isEqualTo(outputStream);
         verify(outputStream).seek(eq(10L));
         verify(outputStream).setLength(eq(20L));
+    }
+
+
+    @Test
+    public void close_noExist() throws IOException {
+        final DownloadOutputStream stream0 = mock(DownloadOutputStream.class);
+        final DownloadOutputStream stream1 = mock(DownloadOutputStream.class);
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream1);
+
+        multiPointOutputStream.close(2);
+
+        verify(stream0, never()).close();
+        verify(stream1, never()).close();
+        assertThat(multiPointOutputStream.outputStreamMap.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void close() throws IOException {
+        final DownloadOutputStream stream0 = mock(DownloadOutputStream.class);
+        final DownloadOutputStream stream1 = mock(DownloadOutputStream.class);
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream1);
+
+        multiPointOutputStream.close(1);
+
+        verify(stream0, never()).close();
+        verify(stream1).close();
+        assertThat(multiPointOutputStream.outputStreamMap.size()).isEqualTo(1);
+        assertThat(multiPointOutputStream.outputStreamMap.get(0)).isEqualTo(stream0);
+    }
+
+    @Test
+    public void inspectStreamState() {
+        final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream0);
+
+        // no noMoreStreamList
+        multiPointOutputStream.inspectStreamState(state);
+        assertThat(state.isNoMoreStream).isFalse();
+        assertThat(state.noMoreStreamBlockList).isEmpty();
+        assertThat(state.newNoMoreStreamBlockList).isEmpty();
+
+        // 1 noMoreStreamList
+        multiPointOutputStream.noMoreStreamList.add(1);
+        multiPointOutputStream.inspectStreamState(state);
+        assertThat(state.isNoMoreStream).isFalse();
+        assertThat(state.noMoreStreamBlockList).containsExactly(1);
+        assertThat(state.newNoMoreStreamBlockList).containsExactly(1);
+
+        // 1,0 noMoreStreamList
+        multiPointOutputStream.noMoreStreamList.add(0);
+        multiPointOutputStream.inspectStreamState(state);
+        assertThat(state.isNoMoreStream).isTrue();
+        assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
+        assertThat(state.newNoMoreStreamBlockList).containsExactly(0);
+
+        // 1,0 noMoreStreamList again
+        multiPointOutputStream.inspectStreamState(state);
+        assertThat(state.isNoMoreStream).isTrue();
+        assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
+        assertThat(state.newNoMoreStreamBlockList).isEmpty();
+    }
+
+    @Test
+    public void outputStream_contain_returnDirectly() throws IOException {
+        final DownloadOutputStream outputStream = mock(DownloadOutputStream.class);
+        multiPointOutputStream.outputStreamMap.put(1, outputStream);
+        assertThat(multiPointOutputStream.outputStream(1)).isEqualTo(outputStream);
     }
 
     @Test

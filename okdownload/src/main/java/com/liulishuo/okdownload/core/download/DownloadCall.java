@@ -56,7 +56,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     public final boolean asyncExecuted;
     @NonNull private final ArrayList<DownloadChain> blockChainList;
 
-    @Nullable private volatile DownloadCache cache;
+    @Nullable volatile DownloadCache cache;
     volatile boolean canceled;
     volatile boolean finishing;
 
@@ -107,6 +107,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                             + task.getId());
             currentThread.interrupt();
         }
+
+        if (cache != null) cache.getOutputStream().cancelAsync();
 
         Util.d(TAG, "cancel task " + task.getId() + " consume: " + (SystemClock
                 .uptimeMillis() - startCancelTime) + "ms");

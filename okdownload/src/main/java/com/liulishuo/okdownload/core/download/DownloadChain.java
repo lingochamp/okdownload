@@ -100,15 +100,6 @@ public class DownloadChain implements Runnable {
     public void cancel() {
         if (finished.get() || this.currentThread == null) return;
 
-        if (fetchIndex >= fetchInterceptorList.size() - 1) {
-            // on the fetch looper.
-            try {
-                getOutputStream().ensureSyncComplete(blockIndex, true);
-            } catch (IOException e) {
-                Util.w("DownloadChain", "ensure sync complete failed with " + e);
-            }
-        }
-
         currentThread.interrupt();
     }
 

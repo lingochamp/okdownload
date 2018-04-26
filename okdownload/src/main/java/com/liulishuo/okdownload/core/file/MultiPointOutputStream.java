@@ -33,7 +33,11 @@ import com.liulishuo.okdownload.core.exception.PreAllocateException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +55,7 @@ public class MultiPointOutputStream {
 
     final SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
     final AtomicLong allNoSyncLength = new AtomicLong();
-    private final AtomicLong lastSyncTimestamp = new AtomicLong();
+    final AtomicLong lastSyncTimestamp = new AtomicLong();
 
     private final int flushBufferSize;
     private final int syncBufferSize;
@@ -62,11 +66,15 @@ public class MultiPointOutputStream {
     private final boolean supportSeek;
     private final boolean isPreAllocateLength;
 
-    volatile boolean syncRunning;
+    volatile Future syncFuture;
+    volatile Thread runSyncThread;
+    final SparseArray<Thread> parkedRunBlockThreadMap = new SparseArray<>();
+
     @NonNull private final Runnable syncRunnable;
     private String path;
 
     IOException syncException;
+    @NonNull List<Integer> noMoreStreamList;
 
     MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
@@ -81,6 +89,8 @@ public class MultiPointOutputStream {
         this.store = store;
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
         this.isPreAllocateLength = OkDownload.with().processFileStrategy().isPreAllocateLength();
+        this.noMoreStreamList = new ArrayList<>();
+
         if (syncRunnable == null) {
             this.syncRunnable = new Runnable() {
                 @Override
@@ -109,7 +119,6 @@ public class MultiPointOutputStream {
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
-
         outputStream(blockIndex).write(bytes, 0, length);
 
         // because we add the length value after flush and sync,
@@ -120,37 +129,72 @@ public class MultiPointOutputStream {
         inspectAndPersist();
     }
 
-    @Nullable volatile Thread parkForWaitingSyncThread;
+    public void cancelAsync() {
+        FILE_IO_EXECUTOR.execute(new Runnable() {
+            @Override public void run() {
+                cancel();
+            }
+        });
+    }
 
-    public void ensureSyncComplete(int blockIndex, boolean isAsync) throws IOException {
-        if (syncException != null) throw syncException;
-
-        final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
-        if (noSyncLength != null && noSyncLength.get() > 0) {
-
-            if (isAsync) {
-                // if async sync-data we just make sure sync one time on the current.
-                if (!syncRunning) {
-                    syncRunning = true;
-                    inspectValidPath();
-                    OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
-                    executeSyncRunnableAsync();
-                }
-            } else {
-                // if sync sync-data we need make sure all data sync to disk.
-                if (syncRunning) {
-                    parkForWaitingSyncThread = Thread.currentThread();
-                    while (isSyncRunning()) {
-                        parkThread(50);
-                    }
-                }
-
-                syncRunning = true;
-                // using runSync method instead of syncRunnable.run(), because we need syncException
-                // straightforward.
-                runSync();
+    public void cancel() {
+        try {
+            if (allNoSyncLength.get() <= 0) return;
+            final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
+            final int size = streamMap.size();
+            for (int i = 0; i < size; i++) {
+                noMoreStreamList.add(streamMap.keyAt(i));
             }
 
+            if (syncFuture != null && !syncFuture.isDone() && runSyncThread != null) {
+                inspectValidPath();
+                OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
+
+                unparkThread(runSyncThread);
+
+                try {
+                    syncFuture.get();
+                } catch (InterruptedException ignored) {
+                } catch (ExecutionException ignored) {
+                }
+            }
+        } finally {
+            // close all output stream.
+            final SparseArray<DownloadOutputStream> outputStreams;
+            synchronized (this) {
+                outputStreams = outputStreamMap.clone();
+            }
+            int outputStreamCount = outputStreams.size();
+            for (int i = 0; i < outputStreamCount; i++) {
+                try {
+                    close(outputStreams.keyAt(i));
+                } catch (IOException e) {
+                    // just ignored and print log.
+                    Util.d(TAG, "OutputStream close failed task[" + task.getId()
+                            + "] block[" + i + "]" + e);
+                }
+            }
+        }
+    }
+
+    public void done(int blockIndex) throws IOException {
+        noMoreStreamList.add(blockIndex);
+
+        try {
+            if (syncException != null) throw syncException;
+
+            if (syncFuture != null && !syncFuture.isDone() && runSyncThread != null) {
+                final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
+                if (noSyncLength != null && noSyncLength.get() > 0) {
+                    // ensure this block is synced.
+                    parkedRunBlockThreadMap.put(blockIndex, Thread.currentThread());
+                    unparkThread(runSyncThread);
+                    parkThread();
+                }
+            }
+
+        } finally {
+            close(blockIndex);
         }
     }
 
@@ -165,21 +209,31 @@ public class MultiPointOutputStream {
 
     void inspectAndPersist() throws IOException {
         if (syncException != null) throw syncException;
+        if (syncFuture == null) {
+            synchronized (syncRunnable) {
+                if (syncFuture == null) {
+                    syncFuture = executeSyncRunnableAsync();
+                }
+            }
+        }
+    }
 
-        if (!syncRunning && isNeedPersist()) {
-            syncRunning = true;
-            executeSyncRunnableAsync();
+    synchronized void close(int blockIndex) throws IOException {
+        final DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
+        if (outputStream != null) {
+            outputStream.close();
+            outputStreamMap.remove(blockIndex);
+            Util.d(TAG, "OutputStream close task[" + task.getId() + "] block[" + blockIndex + "]");
         }
     }
 
     // convenient for test
-    boolean isSyncRunning() {
-        return syncRunning;
+    void parkThread(long milliseconds) {
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(milliseconds));
     }
 
-    // convenient for test
-    void parkThread(long milliseconds) {
-        LockSupport.park(TimeUnit.MILLISECONDS.toNanos(milliseconds));
+    void parkThread() {
+        LockSupport.park();
     }
 
     // convenient for test
@@ -188,14 +242,125 @@ public class MultiPointOutputStream {
     }
 
     // convenient for test
-    void executeSyncRunnableAsync() {
-        FILE_IO_EXECUTOR.execute(syncRunnable);
+    Future executeSyncRunnableAsync() {
+        return FILE_IO_EXECUTOR.submit(syncRunnable);
     }
 
-    // convenient for test
+    void inspectStreamState(StreamsState state) {
+        boolean isNoMoreStream = true;
+        state.newNoMoreStreamBlockList.clear();
+
+        final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
+        final int size = streamMap.size();
+        for (int i = 0; i < size; i++) {
+            final int blockIndex = streamMap.keyAt(i);
+            if (noMoreStreamList.contains(blockIndex)) {
+                // blockIndex indicate this block is no more stream.
+                if (!state.noMoreStreamBlockList.contains(blockIndex)) {
+                    // this is new one
+                    state.noMoreStreamBlockList.add(blockIndex);
+                    state.newNoMoreStreamBlockList.add(blockIndex);
+                }
+            } else {
+                isNoMoreStream = false;
+            }
+        }
+
+        state.isNoMoreStream = isNoMoreStream;
+    }
+
+    static class StreamsState {
+        boolean isNoMoreStream;
+
+        List<Integer> noMoreStreamBlockList = new ArrayList<>();
+
+        // the new no more stream block list to last inspect.
+        List<Integer> newNoMoreStreamBlockList = new ArrayList<>();
+
+        boolean isStreamsEndOrChanged() {
+            return isNoMoreStream || newNoMoreStreamBlockList.size() > 0;
+        }
+    }
+
+    StreamsState state = new StreamsState();
+
     void runSync() throws IOException {
+        Util.d(TAG, "OutputStream start flush looper task[" + task.getId() + "] with "
+                + "syncBufferIntervalMills[" + syncBufferIntervalMills + "] " + "syncBufferSize["
+                + syncBufferSize + "]");
+        runSyncThread = Thread.currentThread();
+
+        long nextParkMills = syncBufferIntervalMills;
+
+        flushProcess();
+
+        while (true) {
+            parkThread(nextParkMills);
+
+            inspectStreamState(state);
+
+            // if is no more stream, we will flush all data and quit.
+            if (state.isStreamsEndOrChanged()) {
+                Util.d(TAG, "runSync state change isNoMoreStream[" + state.isNoMoreStream + "]"
+                        + " newNoMoreStreamBlockList[" + state.newNoMoreStreamBlockList + "]");
+                if (allNoSyncLength.get() > 0) {
+                    flushProcess();
+                }
+
+                for (Integer blockIndex : state.newNoMoreStreamBlockList) {
+                    final Thread parkedThread = parkedRunBlockThreadMap.get(blockIndex);
+                    parkedRunBlockThreadMap.remove(blockIndex);
+                    if (parkedThread != null) unparkThread(parkedThread);
+                }
+
+                if (state.isNoMoreStream) {
+                    final int size = parkedRunBlockThreadMap.size();
+                    for (int i = 0; i < size; i++) {
+                        final Thread parkedThread = parkedRunBlockThreadMap.valueAt(i);
+                        if (parkedThread != null) unparkThread(parkedThread);
+                    }
+                    parkedRunBlockThreadMap.clear();
+                    break;
+                } else {
+                    continue;
+                }
+            }
+
+            if (isNoNeedFlushForLength()) {
+                nextParkMills = syncBufferIntervalMills;
+                continue;
+            }
+
+            nextParkMills = getNextParkMillisecond();
+            if (nextParkMills > 0) {
+                continue;
+            }
+
+            flushProcess();
+            nextParkMills = syncBufferIntervalMills;
+        }
+
+        runSyncThread = null;
+    }
+
+    // convenient for test.
+    boolean isNoNeedFlushForLength() {
+        return allNoSyncLength.get() < syncBufferSize;
+    }
+
+    // convenient for test.
+    long getNextParkMillisecond() {
+        long farToLastSyncMills = now() - lastSyncTimestamp.get();
+        return syncBufferIntervalMills - farToLastSyncMills;
+    }
+
+    // convenient for test.
+    long now() {
+        return SystemClock.uptimeMillis();
+    }
+
+    void flushProcess() throws IOException {
         try {
-            syncRunning = true;
             boolean success;
             final int size;
             synchronized (noSyncLengthMap) {
@@ -214,7 +379,8 @@ public class MultiPointOutputStream {
                     final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
                     if (noSyncLength > 0) {
                         increaseLengthMap.put(blockIndex, noSyncLength);
-                        final DownloadOutputStream outputStream = outputStreamMap.valueAt(i);
+                        final DownloadOutputStream outputStream = outputStreamMap
+                                .get(blockIndex);
                         outputStream.flushAndSync();
                     }
                 }
@@ -242,48 +408,37 @@ public class MultiPointOutputStream {
                 lastSyncTimestamp.set(SystemClock.uptimeMillis());
             }
         } finally {
-            syncRunning = false;
             inspectValidPath();
             OkDownload.with().processFileStrategy().getFileLock().decreaseLock(path);
-            if (parkForWaitingSyncThread != null) unparkThread(parkForWaitingSyncThread);
         }
-    }
-
-    boolean isNeedPersist() {
-        return allNoSyncLength.get() >= syncBufferSize
-                && SystemClock.uptimeMillis() - lastSyncTimestamp.get() >= syncBufferIntervalMills;
-    }
-
-    public void close(int blockIndex) throws IOException {
-        outputStream(blockIndex).close();
     }
 
     private volatile boolean firstOutputStream = true;
 
     synchronized DownloadOutputStream outputStream(int blockIndex) throws IOException {
-
-        @NonNull final Uri uri;
-        final boolean isFileScheme = Util.isUriFileScheme(task.getUri());
-        if (isFileScheme) {
-            final File file = task.getFile();
-            if (file == null) throw new FileNotFoundException("Filename is not ready!");
-
-            final File parentFile = task.getParentFile();
-            if (!parentFile.exists() && !parentFile.mkdirs()) {
-                throw new IOException("Create parent folder failed!");
-            }
-
-            if (file.createNewFile()) {
-                Util.d(TAG, "Create new file: " + file.getName());
-            }
-
-            uri = Uri.fromFile(file);
-        } else {
-            uri = task.getUri();
-        }
-
         DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
+
         if (outputStream == null) {
+            @NonNull final Uri uri;
+            final boolean isFileScheme = Util.isUriFileScheme(task.getUri());
+            if (isFileScheme) {
+                final File file = task.getFile();
+                if (file == null) throw new FileNotFoundException("Filename is not ready!");
+
+                final File parentFile = task.getParentFile();
+                if (!parentFile.exists() && !parentFile.mkdirs()) {
+                    throw new IOException("Create parent folder failed!");
+                }
+
+                if (file.createNewFile()) {
+                    Util.d(TAG, "Create new file: " + file.getName());
+                }
+
+                uri = Uri.fromFile(file);
+            } else {
+                uri = task.getUri();
+            }
+
             outputStream = OkDownload.with().outputStreamFactory().create(
                     OkDownload.with().context(),
                     uri,
