@@ -20,6 +20,8 @@ import android.support.annotation.IntRange;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
+
 public class BlockInfo {
     @IntRange(from = 0)
     private final long startOffset;
@@ -32,7 +34,8 @@ public class BlockInfo {
     }
 
     public BlockInfo(long startOffset, long contentLength, @IntRange(from = 0) long currentOffset) {
-        if (startOffset < 0 || contentLength < 0 || currentOffset < 0) {
+        if (startOffset < 0 || (contentLength < 0 && contentLength != CHUNKED_CONTENT_LENGTH)
+                || currentOffset < 0) {
             throw new IllegalArgumentException();
         }
 

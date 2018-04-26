@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.core.breakpoint;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class BlockInfoTest {
@@ -53,5 +54,11 @@ public class BlockInfoTest {
 
         info = new BlockInfo(12, 6, 2);
         assertThat(info.getRangeRight()).isEqualTo(17);
+    }
+
+    @Test
+    public void chunked() {
+        BlockInfo info = new BlockInfo(0, CHUNKED_CONTENT_LENGTH);
+        assertThat(info.getContentLength()).isEqualTo(CHUNKED_CONTENT_LENGTH);
     }
 }
