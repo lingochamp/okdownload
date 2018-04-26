@@ -28,6 +28,7 @@ import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
+import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
 import java.io.File;
@@ -174,6 +175,8 @@ public class MultiPointOutputStream {
                             + "] block[" + i + "]" + e);
                 }
             }
+
+            store.onTaskEnd(task.getId(), EndCause.CANCELED, null);
         }
     }
 

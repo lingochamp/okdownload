@@ -279,23 +279,10 @@ public class DownloadDispatcher {
                                                   @NonNull List<DownloadCall> needCancelCalls) {
         Util.d(TAG, "handle cancel calls, cancel calls: " + needCancelCalls.size());
         if (!needCancelCalls.isEmpty()) {
-            ArrayList<Integer> idList = new ArrayList<>(needCancelCalls.size());
-
             for (DownloadCall call : needCancelCalls) {
-                if (call.cancel()) {
-                    idList.add(call.task.getId());
-                } else {
+                if (!call.cancel()) {
                     needCallbackCalls.remove(call);
                 }
-            }
-
-            // bunch ids of task which need to be canceled
-            if (idList.size() == 1) {
-                store.onTaskEnd(idList.get(0), EndCause.CANCELED, null);
-            } else {
-                int[] ids = new int[idList.size()];
-                for (int i = 0; i < idList.size(); i++) ids[i] = idList.get(i);
-                if (ids.length > 0) store.bunchTaskCanceled(ids);
             }
         }
 

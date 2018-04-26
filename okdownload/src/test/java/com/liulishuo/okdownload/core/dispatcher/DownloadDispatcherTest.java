@@ -325,7 +325,6 @@ public class DownloadDispatcherTest {
         dispatcher.cancel(task);
         verify(call).cancel();
         verify(listener).taskEnd(eq(task), eq(CANCELED), nullable(Exception.class));
-        verify(store).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
     }
 
     @Test
@@ -339,7 +338,6 @@ public class DownloadDispatcherTest {
         dispatcher.cancel(task);
         verify(call).cancel();
         verify(listener).taskEnd(eq(task), eq(CANCELED), nullable(Exception.class));
-        verify(store).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
     }
 
     @Test
@@ -364,7 +362,6 @@ public class DownloadDispatcherTest {
 
         verify(runningSyncCall).cancel();
         verify(listener).taskEnd(eq(runningSyncTask), eq(CANCELED), nullable(Exception.class));
-        verify(store).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
     }
 
     @Test
@@ -389,7 +386,6 @@ public class DownloadDispatcherTest {
 
         verify(runningAsyncCall).cancel();
         verify(listener).taskEnd(eq(runningAsyncTask), eq(CANCELED), nullable(Exception.class));
-        verify(store).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
     }
 
     @Test
@@ -460,13 +456,6 @@ public class DownloadDispatcherTest {
                 .containsExactly(readyASyncCallTask, runningAsyncCallTask, runningSyncCallTask);
 
         verify(store, never()).onTaskEnd(eq(1), eq(CANCELED), nullable(Exception.class));
-
-        ArgumentCaptor<int[]> callCaptor = ArgumentCaptor.forClass(int[].class);
-
-        verify(store).bunchTaskCanceled(callCaptor.capture());
-        final int[] bunchTaskCanceledIds = callCaptor.getValue();
-        assertThat(bunchTaskCanceledIds[0]).isEqualTo(2);
-        assertThat(bunchTaskCanceledIds[1]).isEqualTo(3);
 
         verify(readyAsyncCall, never()).cancel();
         verify(runningAsyncCall).cancel();
