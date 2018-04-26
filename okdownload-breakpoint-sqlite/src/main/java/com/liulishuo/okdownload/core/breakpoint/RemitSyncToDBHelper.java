@@ -51,14 +51,16 @@ class RemitSyncToDBHelper {
     void endAndEnsureToDB(int id) {
         executor.removePostWithId(id);
 
-        // already synced
-        if (executor.isFreeToDatabase(id)) return;
+        try {
+            // already synced
+            if (executor.isFreeToDatabase(id)) return;
 
-        // force sync for ids
-        executor.postSync(id);
-
-        // remove free state
-        executor.postRemoveFreeId(id);
+            // force sync for ids
+            executor.postSync(id);
+        } finally {
+            // remove free state
+            executor.postRemoveFreeId(id);
+        }
     }
 
     void discard(int id) {

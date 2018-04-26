@@ -71,18 +71,18 @@ public class RemitSyncToDBHelperTest {
     }
 
     @Test
-    public void endAndEnsureToDB_id() {
+    public void endAndEnsureToDB() {
         when(executor.isFreeToDatabase(1)).thenReturn(true);
         helper.endAndEnsureToDB(1);
 
         verify(executor).removePostWithId(eq(1));
-        verify(executor, never()).postSync(eq(1));
-        verify(executor, never()).postRemoveFreeId(eq(1));
-
-        when(executor.isFreeToDatabase(1)).thenReturn(false);
-        helper.endAndEnsureToDB(1);
-        verify(executor).postSync(eq(1));
         verify(executor).postRemoveFreeId(eq(1));
+        verify(executor, never()).postSync(eq(1));
+
+        when(executor.isFreeToDatabase(2)).thenReturn(false);
+        helper.endAndEnsureToDB(2);
+        verify(executor).postSync(eq(2));
+        verify(executor).postRemoveFreeId(eq(2));
     }
 
     @Test
