@@ -84,9 +84,6 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
         }
     }
 
-    @Override public void bunchTaskCanceled(int[] ids) {
-    }
-
     @Nullable @Override public BreakpointInfo getAfterCompleted(int id) {
         return null;
     }

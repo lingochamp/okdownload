@@ -18,9 +18,6 @@ package com.liulishuo.okdownload.core.breakpoint;
 
 import android.support.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-
 class RemitSyncToDBHelper {
 
     private final RemitSyncExecutor executor;
@@ -62,25 +59,6 @@ class RemitSyncToDBHelper {
 
         // remove free state
         executor.postRemoveFreeId(id);
-    }
-
-    void endAndEnsureToDB(int[] ids) {
-        // discard pending sync if we can
-        executor.removePostWithIds(ids);
-
-        // already finished delayed message
-        final List<Integer> willSyncIdList = new ArrayList<>();
-        for (int id : ids) {
-            if (!executor.isFreeToDatabase(id)) willSyncIdList.add(id);
-        }
-
-        if (willSyncIdList.isEmpty()) return;
-
-        // force sync for ids
-        executor.postSync(willSyncIdList);
-
-        // remove free state
-        executor.postRemoveFreeIds(willSyncIdList);
     }
 
     void discard(int id) {

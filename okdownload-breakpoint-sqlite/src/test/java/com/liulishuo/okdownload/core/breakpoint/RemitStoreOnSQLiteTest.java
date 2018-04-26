@@ -216,17 +216,6 @@ public class RemitStoreOnSQLiteTest {
     }
 
     @Test
-    public void bunchTaskCanceled() {
-        final int[] ids = new int[2];
-        ids[0] = 1;
-        ids[1] = 2;
-
-        store.bunchTaskCanceled(ids);
-
-        verify(remitHelper).endAndEnsureToDB(eq(ids));
-    }
-
-    @Test
     public void syncCacheToDB_list() throws IOException {
         final List<Integer> ids = new ArrayList<>(2);
         ids.add(1);

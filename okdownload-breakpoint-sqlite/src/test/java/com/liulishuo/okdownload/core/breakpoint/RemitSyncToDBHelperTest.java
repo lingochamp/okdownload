@@ -19,13 +19,9 @@ package com.liulishuo.okdownload.core.breakpoint;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.util.List;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -87,37 +83,6 @@ public class RemitSyncToDBHelperTest {
         helper.endAndEnsureToDB(1);
         verify(executor).postSync(eq(1));
         verify(executor).postRemoveFreeId(eq(1));
-    }
-
-    @Test
-    public void endAndEnsureToDB_ids() {
-        // all synced
-        when(executor.isFreeToDatabase(1)).thenReturn(true);
-        when(executor.isFreeToDatabase(2)).thenReturn(true);
-        when(executor.isFreeToDatabase(3)).thenReturn(true);
-
-        int ids[] = new int[]{1, 2, 3};
-
-        helper.endAndEnsureToDB(ids);
-        verify(executor).removePostWithIds(eq(ids));
-
-        verify(executor, never()).postSync(ArgumentMatchers.<Integer>anyList());
-        verify(executor, never()).postRemoveFreeIds(ArgumentMatchers.<Integer>anyList());
-
-        // 1 and 3 not synced
-        when(executor.isFreeToDatabase(1)).thenReturn(false);
-        when(executor.isFreeToDatabase(2)).thenReturn(true);
-        when(executor.isFreeToDatabase(3)).thenReturn(false);
-
-        helper.endAndEnsureToDB(ids);
-
-        ArgumentCaptor<List<Integer>> captor = ArgumentCaptor.forClass(List.class);
-        verify(executor).postSync(captor.capture());
-        assertThat(captor.getValue()).containsExactly(1, 3);
-
-        captor = ArgumentCaptor.forClass(List.class);
-        verify(executor).postRemoveFreeIds(captor.capture());
-        assertThat(captor.getValue()).containsExactly(1, 3);
     }
 
     @Test

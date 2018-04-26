@@ -98,13 +98,6 @@ public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, Downloa
         }
     }
 
-    @Override public void bunchTaskCanceled(int[] ids) {
-        sqliteCache.bunchTaskCanceled(ids);
-        if (ids.length > 0) {
-            remitHelper.endAndEnsureToDB(ids);
-        }
-    }
-
     @Nullable @Override public BreakpointInfo getAfterCompleted(int id) {
         return null;
     }
