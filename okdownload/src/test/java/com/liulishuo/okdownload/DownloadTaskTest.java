@@ -38,6 +38,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +91,19 @@ public class DownloadTaskTest {
 
         final List<String> key2Values = headerMap.get(mockKey2);
         assertThat(key2Values).containsOnly(mockValue2);
+    }
+
+    @Test
+    public void setHeaderMapFields() {
+        final String url = "mock url";
+        final Uri mockFileUri = mock(Uri.class);
+        when(mockFileUri.getScheme()).thenReturn(ContentResolver.SCHEME_FILE);
+        when(mockFileUri.getPath()).thenReturn("mock path");
+        DownloadTask.Builder builder = new DownloadTask.Builder(url, mockFileUri);
+
+        final Map<String, List<String>> headerMap = new HashMap<>();
+        builder.setHeaderMapFields(headerMap);
+        assertThat(builder.build().getHeaderMapFields()).isEqualTo(headerMap);
     }
 
     private final String parentPath = "./p-path/";
