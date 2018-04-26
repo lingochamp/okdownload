@@ -629,7 +629,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
          */
         public static final int DEFAULT_SYNC_BUFFER_SIZE = 65536/* byte **/;
         private int syncBufferSize = DEFAULT_SYNC_BUFFER_SIZE;
-        public static final int DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS = 3000/* millis **/;
+        public static final int DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS = 2000/* millis **/;
         private int syncBufferIntervalMillis = DEFAULT_SYNC_BUFFER_INTERVAL_MILLIS;
 
         public static final boolean DEFAULT_AUTO_CALLBACK_TO_UI_THREAD = true;
