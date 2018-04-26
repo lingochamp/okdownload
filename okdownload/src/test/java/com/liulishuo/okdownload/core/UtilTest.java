@@ -27,9 +27,12 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
+import com.liulishuo.okdownload.core.connection.DownloadConnection;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -37,11 +40,16 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
+import static com.liulishuo.okdownload.core.Util.IF_MATCH;
+import static com.liulishuo.okdownload.core.Util.RANGE;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -334,5 +342,54 @@ public class UtilTest {
         when(cursor.getLong(anyInt())).thenReturn(1L);
         assertThat(Util.getSizeFromContentUri(contentUri)).isOne();
         verify(cursor).close();
+    }
+
+    @Test
+    public void addUserRequestHeaderField() throws IOException {
+        Map<String, List<String>> userHeaderMap = new HashMap<>();
+        List<String> values = new ArrayList<>();
+        values.add("header1-value1");
+        values.add("header1-value2");
+        userHeaderMap.put("header1", values);
+        values = new ArrayList<>();
+        values.add("header2-value");
+        userHeaderMap.put("header2", values);
+
+        final DownloadConnection connection = mock(DownloadConnection.class);
+
+        Util.addUserRequestHeaderField(userHeaderMap, connection);
+
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(connection, times(3))
+                .addHeader(nameCaptor.capture(), valueCaptor.capture());
+
+        assertThat(nameCaptor.getAllValues())
+                .containsExactlyInAnyOrder("header1", "header1", "header2");
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("header1-value1", "header1-value2", "header2-value");
+    }
+
+    @Rule public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void inspectUserHeader() throws IOException {
+        Map<String, List<String>> userHeaderMap = new HashMap<>();
+        userHeaderMap.put("header1", new ArrayList<String>());
+        userHeaderMap.put("header2", new ArrayList<String>());
+
+        Util.inspectUserHeader(userHeaderMap);
+
+        userHeaderMap.put(RANGE, new ArrayList<String>());
+        thrown.expect(IOException.class);
+        thrown.expectMessage(IF_MATCH + " and " + RANGE + " only can be handle by internal!");
+        Util.inspectUserHeader(userHeaderMap);
+        userHeaderMap.remove(RANGE);
+
+        userHeaderMap.put(IF_MATCH, new ArrayList<String>());
+        thrown.expect(IOException.class);
+        thrown.expectMessage(IF_MATCH + " and " + RANGE + " only can be handle by internal!");
+        Util.inspectUserHeader(userHeaderMap);
     }
 }

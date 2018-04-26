@@ -49,16 +49,8 @@ public class HeaderInterceptor implements Interceptor.Connect {
         final DownloadTask task = chain.getTask();
 
         // add user customize header
-        final Map<String, List<String>> userRequestHeaderField = task.getHeaderMapFields();
-        if (userRequestHeaderField != null) {
-            for (Map.Entry<String, List<String>> entry : userRequestHeaderField.entrySet()) {
-                String key = entry.getKey();
-                List<String> values = entry.getValue();
-                for (String value : values) {
-                    connection.addHeader(key, value);
-                }
-            }
-        }
+        final Map<String, List<String>> userHeader = task.getHeaderMapFields();
+        if (userHeader != null)  Util.addUserRequestHeaderField(userHeader, connection);
 
         // add range header
         final int blockIndex = chain.getBlockIndex();

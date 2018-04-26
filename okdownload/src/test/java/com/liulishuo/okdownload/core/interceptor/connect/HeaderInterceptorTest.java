@@ -82,7 +82,6 @@ public class HeaderInterceptorTest {
         assertThat(nameCaptor.getAllValues()).containsExactly("Range");
         assertThat(valueCaptor.getAllValues()).containsExactly("bytes=0-9");
 
-
         when(chain.getBlockIndex()).thenReturn(1);
         when(info.getBlock(1)).thenReturn(new BlockInfo(10, 10));
         // new one.

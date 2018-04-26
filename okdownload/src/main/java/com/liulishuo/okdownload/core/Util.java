@@ -41,13 +41,16 @@ import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.connection.DownloadUrlConnection;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -406,5 +409,26 @@ public class Util {
         //noinspection MissingPermission, because we check permission accessable when invoked
         @SuppressLint("MissingPermission") final NetworkInfo info = manager.getActiveNetworkInfo();
         return info != null && info.isConnected();
+    }
+
+    public static void inspectUserHeader(@NonNull Map<String, List<String>> headerField)
+            throws IOException {
+        if (headerField.containsKey(IF_MATCH) || headerField.containsKey(RANGE)) {
+            throw new IOException(IF_MATCH + " and " + RANGE + " only can be handle by internal!");
+        }
+    }
+
+    public static void addUserRequestHeaderField(@NonNull Map<String, List<String>> userHeaderField,
+                                                 @NonNull DownloadConnection connection)
+            throws IOException {
+        inspectUserHeader(userHeaderField);
+
+        for (Map.Entry<String, List<String>> entry : userHeaderField.entrySet()) {
+            String key = entry.getKey();
+            List<String> values = entry.getValue();
+            for (String value : values) {
+                connection.addHeader(key, value);
+            }
+        }
     }
 }
