@@ -19,18 +19,19 @@ package com.liulishuo.okdownload.core.download;
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
@@ -68,12 +69,7 @@ public class ConnectTrialTest {
     @Mock private DownloadConnection.Connected connected;
 
     private final String etag = "etag";
-
-    @BeforeClass
-    public static void setupClass() throws IOException {
-        mockOkDownload();
-        Util.setLogger(mock(Util.Logger.class));
-    }
+    private final String url = "https://jacksgong.com";
 
     @Before
     public void setUp() throws Exception {
@@ -81,13 +77,17 @@ public class ConnectTrialTest {
 
         connectTrial = spy(new ConnectTrial(task, info));
 
-        final DownloadConnection.Factory factory = OkDownload.with().connectionFactory();
-        final String url = "https://jacksgong.com";
-        when(factory.create(url)).thenReturn(connection);
+        setupConnection();
         when(connection.execute()).thenReturn(connected);
         when(task.getUrl()).thenReturn(url);
         when(info.getUrl()).thenReturn(url);
         when(info.getEtag()).thenReturn(etag);
+    }
+
+    private void setupConnection() throws IOException {
+        mockOkDownload();
+        final DownloadConnection.Factory factory = OkDownload.with().connectionFactory();
+        when(factory.create(url)).thenReturn(connection);
     }
 
     @Test
@@ -102,6 +102,25 @@ public class ConnectTrialTest {
 
         verify(connection).execute();
         verify(connection).release();
+    }
+
+    @Test
+    public void executeTrial_userHeader() throws Exception {
+        Map<String, List<String>> userHeader = new HashMap<>();
+        List<String> values = new ArrayList<>();
+        values.add("header1-value1");
+        values.add("header1-value2");
+        userHeader.put("header1", values);
+        values = new ArrayList<>();
+        values.add("header2-value");
+        userHeader.put("header2", values);
+        when(task.getHeaderMapFields()).thenReturn(userHeader);
+
+        connectTrial.executeTrial();
+
+        verify(connection).addHeader(eq("header1"), eq("header1-value1"));
+        verify(connection).addHeader(eq("header1"), eq("header1-value2"));
+        verify(connection).addHeader(eq("header2"), eq("header2-value"));
     }
 
     @Test
@@ -264,5 +283,24 @@ public class ConnectTrialTest {
         verify(listener).connectTrialStart(eq(task), nullable(Map.class));
         verify(listener).connectTrialEnd(eq(task), anyInt(), nullable(Map.class));
         assertThat(connectTrial.getInstanceLength()).isEqualTo(10L);
+    }
+
+    @Test
+    public void trialHeadMethodForInstanceLength_userHeader() throws Exception {
+        Map<String, List<String>> userHeader = new HashMap<>();
+        List<String> values = new ArrayList<>();
+        values.add("header1-value1");
+        values.add("header1-value2");
+        userHeader.put("header1", values);
+        values = new ArrayList<>();
+        values.add("header2-value");
+        userHeader.put("header2", values);
+        when(task.getHeaderMapFields()).thenReturn(userHeader);
+
+        connectTrial.trialHeadMethodForInstanceLength();
+
+        verify(connection).addHeader(eq("header1"), eq("header1-value1"));
+        verify(connection).addHeader(eq("header1"), eq("header1-value2"));
+        verify(connection).addHeader(eq("header2"), eq("header2-value"));
     }
 }

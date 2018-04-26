@@ -77,6 +77,8 @@ public class ConnectTrial {
                 connection.addHeader(IF_MATCH, info.getEtag());
             }
             connection.addHeader(RANGE, "bytes=0-0");
+            final Map<String, List<String>> userHeader = task.getHeaderMapFields();
+            if (userHeader != null)  Util.addUserRequestHeaderField(userHeader, connection);
 
             final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
             final Map<String, List<String>> requestProperties = connection.getRequestProperties();
@@ -277,6 +279,8 @@ public class ConnectTrial {
         final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
         try {
             connection.setRequestMethod(METHOD_HEAD);
+            final Map<String, List<String>> userHeader = task.getHeaderMapFields();
+            if (userHeader != null)  Util.addUserRequestHeaderField(userHeader, connection);
 
             listener.connectTrialStart(task, connection.getRequestProperties());
             final DownloadConnection.Connected connectedForContentLength = connection.execute();
