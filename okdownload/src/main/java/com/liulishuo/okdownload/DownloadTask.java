@@ -94,101 +94,99 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                         Map<String, List<String>> headerMapFields, @Nullable String filename,
                         boolean passIfAlreadyCompleted, boolean isWifiRequired,
                         Boolean isFilenameFromResponse) {
-        try {
-            this.url = url;
-            this.uri = uri;
-            this.priority = priority;
-            this.readBufferSize = readBufferSize;
-            this.flushBufferSize = flushBufferSize;
-            this.syncBufferSize = syncBufferSize;
-            this.syncBufferIntervalMills = syncBufferIntervalMills;
-            this.autoCallbackToUIThread = autoCallbackToUIThread;
-            this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
-            this.headerMapFields = headerMapFields;
-            this.lastCallbackProcessTimestamp = new AtomicLong();
-            this.passIfAlreadyCompleted = passIfAlreadyCompleted;
-            this.isWifiRequired = isWifiRequired;
+        this.url = url;
+        this.uri = uri;
+        this.priority = priority;
+        this.readBufferSize = readBufferSize;
+        this.flushBufferSize = flushBufferSize;
+        this.syncBufferSize = syncBufferSize;
+        this.syncBufferIntervalMills = syncBufferIntervalMills;
+        this.autoCallbackToUIThread = autoCallbackToUIThread;
+        this.minIntervalMillisCallbackProcess = minIntervalMillisCallbackProcess;
+        this.headerMapFields = headerMapFields;
+        this.lastCallbackProcessTimestamp = new AtomicLong();
+        this.passIfAlreadyCompleted = passIfAlreadyCompleted;
+        this.isWifiRequired = isWifiRequired;
 
-            if (Util.isUriFileScheme(uri)) {
-                final File file = new File(uri.getPath());
-                if (isFilenameFromResponse != null) {
-                    if (isFilenameFromResponse) {
-                        // filename must from response.
-                        if (file.exists() && file.isFile()) {
-                            // it have already provided file for it.
-                            throw new IllegalArgumentException("If you want filename from "
-                                    + "response please make sure you provide path is directory "
-                                    + file.getPath());
-                        }
-
-                        if (!Util.isEmpty(filename)) {
-                            Util.w("DownloadTask", "Discard filename[" + filename
-                                    + "] because you set isFilenameFromResponse=true");
-                            filename = null;
-                        }
-
-                        directoryFile = file;
-                    } else {
-                        // filename must not from response.
-                        if (file.exists() && file.isDirectory() && Util.isEmpty(filename)) {
-                            // is directory but filename isn't provided.
-                            // not valid filename found.
-                            throw new IllegalArgumentException("If you don't want filename from"
-                                    + " response please make sure you have already provided valid "
-                                    + "filename or not directory path " + file.getPath());
-                        }
-
-                        if (Util.isEmpty(filename)) {
-                            filename = file.getName();
-                            directoryFile = Util.getParentFile(file);
-                        } else {
-                            directoryFile = file;
-                        }
+        if (Util.isUriFileScheme(uri)) {
+            final File file = new File(uri.getPath());
+            if (isFilenameFromResponse != null) {
+                if (isFilenameFromResponse) {
+                    // filename must from response.
+                    if (file.exists() && file.isFile()) {
+                        // it have already provided file for it.
+                        throw new IllegalArgumentException("If you want filename from "
+                                + "response please make sure you provide path is directory "
+                                + file.getPath());
                     }
-                } else if (file.exists() && file.isDirectory()) {
-                    isFilenameFromResponse = true;
+
+                    if (!Util.isEmpty(filename)) {
+                        Util.w("DownloadTask", "Discard filename[" + filename
+                                + "] because you set isFilenameFromResponse=true");
+                        filename = null;
+                    }
+
                     directoryFile = file;
                 } else {
-                    // not exist or is file.
-                    isFilenameFromResponse = false;
+                    // filename must not from response.
+                    if (file.exists() && file.isDirectory() && Util.isEmpty(filename)) {
+                        // is directory but filename isn't provided.
+                        // not valid filename found.
+                        throw new IllegalArgumentException("If you don't want filename from"
+                                + " response please make sure you have already provided valid "
+                                + "filename or not directory path " + file.getPath());
+                    }
 
-                    if (file.exists()) {
-                        // is file
-                        if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
-                            throw new IllegalArgumentException("Uri already provided filename!");
-                        }
+                    if (Util.isEmpty(filename)) {
                         filename = file.getName();
                         directoryFile = Util.getParentFile(file);
                     } else {
-                        // not exist
-                        if (Util.isEmpty(filename)) {
-                            // filename is not provided, so we use the filename on path
-                            filename = file.getName();
-                            directoryFile = Util.getParentFile(file);
-                        } else {
-                            // filename is provided, so the path on file is directory
-                            directoryFile = file;
-                        }
+                        directoryFile = file;
                     }
                 }
-
-                this.isFilenameFromResponse = isFilenameFromResponse;
+            } else if (file.exists() && file.isDirectory()) {
+                isFilenameFromResponse = true;
+                directoryFile = file;
             } else {
-                this.isFilenameFromResponse = false;
-                directoryFile = new File(uri.getPath());
+                // not exist or is file.
+                isFilenameFromResponse = false;
+
+                if (file.exists()) {
+                    // is file
+                    if (!Util.isEmpty(filename) && !file.getName().equals(filename)) {
+                        throw new IllegalArgumentException("Uri already provided filename!");
+                    }
+                    filename = file.getName();
+                    directoryFile = Util.getParentFile(file);
+                } else {
+                    // not exist
+                    if (Util.isEmpty(filename)) {
+                        // filename is not provided, so we use the filename on path
+                        filename = file.getName();
+                        directoryFile = Util.getParentFile(file);
+                    } else {
+                        // filename is provided, so the path on file is directory
+                        directoryFile = file;
+                    }
+                }
             }
 
-            if (Util.isEmpty(filename)) {
-                filenameHolder = new DownloadStrategy.FilenameHolder();
-                providedPathFile = directoryFile;
-            } else {
-                filenameHolder = new DownloadStrategy.FilenameHolder(filename);
-                targetFile = new File(directoryFile, filename);
-                providedPathFile = targetFile;
-            }
-        } finally {
-            this.id = OkDownload.with().breakpointStore().findOrCreateId(this);
+            this.isFilenameFromResponse = isFilenameFromResponse;
+        } else {
+            this.isFilenameFromResponse = false;
+            directoryFile = new File(uri.getPath());
         }
+
+        if (Util.isEmpty(filename)) {
+            filenameHolder = new DownloadStrategy.FilenameHolder();
+            providedPathFile = directoryFile;
+        } else {
+            filenameHolder = new DownloadStrategy.FilenameHolder(filename);
+            targetFile = new File(directoryFile, filename);
+            providedPathFile = targetFile;
+        }
+
+        this.id = OkDownload.with().breakpointStore().findOrCreateId(this);
     }
 
     /**
