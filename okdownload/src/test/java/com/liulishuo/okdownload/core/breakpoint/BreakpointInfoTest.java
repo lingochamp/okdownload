@@ -23,7 +23,9 @@ import org.junit.Test;
 import java.io.File;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 public class BreakpointInfoTest {
@@ -54,10 +56,18 @@ public class BreakpointInfoTest {
     @Test
     public void getTotalOffset() {
         BreakpointInfo info = new BreakpointInfo(0, "", new File(""), null);
-        info.addBlock(new BlockInfo(0, 10, 12));
+        info.addBlock(new BlockInfo(0, 10, 10));
         info.addBlock(new BlockInfo(10, 18, 18));
         info.addBlock(new BlockInfo(28, 66, 66));
         assertThat(info.getTotalOffset()).isEqualTo(94);
+    }
+
+    @Test
+    public void getTotalLength_chunked() {
+        BreakpointInfo info = spy(new BreakpointInfo(0, "", new File(""), null));
+        when(info.isChunked()).thenReturn(true);
+        doReturn(1L).when(info).getTotalOffset();
+        assertThat(info.getTotalLength()).isEqualTo(1L);
     }
 
     @Test
