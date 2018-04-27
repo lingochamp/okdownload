@@ -69,6 +69,8 @@ public class DownloadStrategy {
     }
 
     public int determineBlockCount(@NonNull DownloadTask task, long totalLength) {
+        if (task.getSetConnectionCount() != null) return task.getSetConnectionCount();
+
         if (totalLength < ONE_CONNECTION_UPPER_LIMIT) {
             return 1;
         }

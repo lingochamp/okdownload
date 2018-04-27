@@ -542,6 +542,13 @@ public class DownloadTaskTest {
                 .Builder("https://jacksgong.com", new File(parentPath))
                 .setFilenameFromResponse(false)
                 .build();
+
+        // connection count.
+        task = new DownloadTask
+                .Builder("https://jacksgong.com", "not-exist", null)
+                .setConnectionCount(2)
+                .build();
+        assertThat(task.getSetConnectionCount()).isEqualTo(2);
     }
 
     @Test

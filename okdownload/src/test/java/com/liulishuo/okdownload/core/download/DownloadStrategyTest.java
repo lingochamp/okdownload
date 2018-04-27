@@ -214,6 +214,8 @@ public class DownloadStrategyTest {
 
     @Test
     public void determineBlockCount() {
+        when(task.getSetConnectionCount()).thenReturn(null);
+
         // less than 1M
         assertThat(strategy.determineBlockCount(task, 500)).isEqualTo(1);
         assertThat(strategy.determineBlockCount(task, 900 * 1024))
@@ -242,6 +244,10 @@ public class DownloadStrategyTest {
                 .isEqualTo(5);
         assertThat(strategy.determineBlockCount(task, 5323L * 1024 * 1024))
                 .isEqualTo(5);
+
+        // task has connection count
+        when(task.getSetConnectionCount()).thenReturn(100);
+        assertThat(strategy.determineBlockCount(task, 500)).isEqualTo(100);
     }
 
     @Test

@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload;
 
 import android.net.Uri;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -65,6 +66,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     private final int syncBufferSize;
     private final int syncBufferIntervalMills;
 
+    private final Integer connectionCount;
+
     /**
      * if this task has already completed with
      */
@@ -93,7 +96,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
                         Map<String, List<String>> headerMapFields, @Nullable String filename,
                         boolean passIfAlreadyCompleted, boolean isWifiRequired,
-                        Boolean isFilenameFromResponse) {
+                        Boolean isFilenameFromResponse, Integer connectionCount) {
         this.url = url;
         this.uri = uri;
         this.priority = priority;
@@ -107,6 +110,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         this.lastCallbackProcessTimestamp = new AtomicLong();
         this.passIfAlreadyCompleted = passIfAlreadyCompleted;
         this.isWifiRequired = isWifiRequired;
+        this.connectionCount = connectionCount;
 
         if (Util.isUriFileScheme(uri)) {
             final File file = new File(uri.getPath());
@@ -353,6 +357,25 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      */
     public int getMinIntervalMillisCallbackProcess() {
         return minIntervalMillisCallbackProcess;
+    }
+
+    /**
+     * Get the connection count you have been set through {@link Builder#setConnectionCount(int)}
+     *
+     * @return the connection count you set.
+     */
+    public Integer getSetConnectionCount() {
+        return connectionCount;
+    }
+
+    /**
+     * Get the connection count is effect on this task.
+     *
+     * @return the connection count.
+     */
+    public int getConnectionCount() {
+        if (info == null) return 0;
+        return info.getBlockCount();
     }
 
     /**
@@ -651,6 +674,18 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         private boolean isWifiRequired = DEFAULT_IS_WIFI_REQUIRED;
 
         private Boolean isFilenameFromResponse;
+        private Integer connectionCount;
+
+        /**
+         * Set the count of connection establish for this task, if this task has already split block
+         * on the past and waiting for resuming, this set connection count will not effect really.
+         *
+         * @param connectionCount the count of connection establish for this task.
+         */
+        public Builder setConnectionCount(@IntRange(from = 1) int connectionCount) {
+            this.connectionCount = connectionCount;
+            return this;
+        }
 
         /**
          * Set whether the provided Uri or path is just directory, and filename must be from
@@ -837,7 +872,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                     syncBufferSize, syncBufferIntervalMillis,
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
                     headerMapFields, filename, passIfAlreadyCompleted, isWifiRequired,
-                    isFilenameFromResponse);
+                    isFilenameFromResponse, connectionCount);
         }
     }
 
