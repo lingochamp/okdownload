@@ -89,7 +89,8 @@ public class MultiPointOutputStream {
 
         this.store = store;
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
-        this.isPreAllocateLength = OkDownload.with().processFileStrategy().isPreAllocateLength();
+        this.isPreAllocateLength = OkDownload.with().processFileStrategy()
+                .isPreAllocateLength(task);
         this.noMoreStreamList = new ArrayList<>();
 
         if (syncRunnable == null) {

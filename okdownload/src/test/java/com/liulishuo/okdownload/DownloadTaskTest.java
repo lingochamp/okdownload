@@ -544,11 +544,20 @@ public class DownloadTaskTest {
                 .build();
 
         // connection count.
+        assertThat(task.getSetConnectionCount()).isNull();
         task = new DownloadTask
                 .Builder("https://jacksgong.com", "not-exist", null)
                 .setConnectionCount(2)
                 .build();
         assertThat(task.getSetConnectionCount()).isEqualTo(2);
+
+        // pre-allocate-length
+        assertThat(task.getSetPreAllocateLength()).isNull();
+        task = new DownloadTask
+                .Builder("https://jacksgong.com", "not-exist", null)
+                .setPreAllocateLength(true)
+                .build();
+        assertThat(task.getSetPreAllocateLength()).isTrue();
     }
 
     @Test

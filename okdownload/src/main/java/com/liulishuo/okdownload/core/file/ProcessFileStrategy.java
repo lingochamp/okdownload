@@ -56,8 +56,12 @@ public class ProcessFileStrategy {
         return fileLock;
     }
 
-    public boolean isPreAllocateLength() {
+    public boolean isPreAllocateLength(@NonNull DownloadTask task) {
         // if support seek, enable pre-allocate length.
-        return OkDownload.with().outputStreamFactory().supportSeek();
+        boolean supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
+        if (!supportSeek) return false;
+
+        if (task.getSetPreAllocateLength() != null) return task.getSetPreAllocateLength();
+        return true;
     }
 }

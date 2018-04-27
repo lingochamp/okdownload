@@ -178,7 +178,7 @@ public class BreakpointLocalCheckTest {
         when(info.getBlockCount()).thenReturn(1);
         // not pre allocate length
         final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
-        when(strategy.isPreAllocateLength()).thenReturn(false);
+        when(strategy.isPreAllocateLength(task)).thenReturn(false);
         assertThat(check.isOutputStreamSupportResume()).isTrue();
     }
 
@@ -195,7 +195,7 @@ public class BreakpointLocalCheckTest {
         when(info.getBlockCount()).thenReturn(1);
         // pre allocate length but not support seek
         final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
-        doReturn(true).when(strategy).isPreAllocateLength();
+        doReturn(true).when(strategy).isPreAllocateLength(task);
         assertThat(check.isOutputStreamSupportResume()).isFalse();
     }
 

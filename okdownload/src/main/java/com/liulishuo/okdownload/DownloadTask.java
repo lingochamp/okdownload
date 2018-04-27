@@ -66,7 +66,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     private final int syncBufferSize;
     private final int syncBufferIntervalMills;
 
-    private final Integer connectionCount;
+    @Nullable private final Integer connectionCount;
+    @Nullable private final Boolean isPreAllocateLength;
 
     /**
      * if this task has already completed with
@@ -96,7 +97,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
                         Map<String, List<String>> headerMapFields, @Nullable String filename,
                         boolean passIfAlreadyCompleted, boolean isWifiRequired,
-                        Boolean isFilenameFromResponse, Integer connectionCount) {
+                        Boolean isFilenameFromResponse, @Nullable Integer connectionCount,
+                        @Nullable Boolean isPreAllocateLength) {
         this.url = url;
         this.uri = uri;
         this.priority = priority;
@@ -111,6 +113,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         this.passIfAlreadyCompleted = passIfAlreadyCompleted;
         this.isWifiRequired = isWifiRequired;
         this.connectionCount = connectionCount;
+        this.isPreAllocateLength = isPreAllocateLength;
 
         if (Util.isUriFileScheme(uri)) {
             final File file = new File(uri.getPath());
@@ -364,8 +367,18 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      *
      * @return the connection count you set.
      */
-    public Integer getSetConnectionCount() {
+    @Nullable public Integer getSetConnectionCount() {
         return connectionCount;
+    }
+
+    /**
+     * Get whether need to pre-allocate length for the file to it's instant-length from trial
+     * connection you set through {@link Builder#setPreAllocateLength(boolean)}.
+     *
+     * @return whether need to pre-allocate length you set.
+     */
+    @Nullable public Boolean getSetPreAllocateLength() {
+        return isPreAllocateLength;
     }
 
     /**
@@ -675,6 +688,19 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
 
         private Boolean isFilenameFromResponse;
         private Integer connectionCount;
+        private Boolean isPreAllocateLength;
+
+        /**
+         * Set whether need to pre allocate length for the file after get the resource-length from
+         * trial-connection.
+         *
+         * @param preAllocateLength whether need to pre allocate length for the file before
+         *                          download.
+         */
+        public Builder setPreAllocateLength(boolean preAllocateLength) {
+            isPreAllocateLength = preAllocateLength;
+            return this;
+        }
 
         /**
          * Set the count of connection establish for this task, if this task has already split block
@@ -872,7 +898,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                     syncBufferSize, syncBufferIntervalMillis,
                     autoCallbackToUIThread, minIntervalMillisCallbackProcess,
                     headerMapFields, filename, passIfAlreadyCompleted, isWifiRequired,
-                    isFilenameFromResponse, connectionCount);
+                    isFilenameFromResponse, connectionCount, isPreAllocateLength);
         }
     }
 

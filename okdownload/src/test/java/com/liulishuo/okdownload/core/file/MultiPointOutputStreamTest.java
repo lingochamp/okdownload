@@ -487,7 +487,7 @@ public class MultiPointOutputStreamTest {
 
     private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {
         when(OkDownload.with().outputStreamFactory().supportSeek()).thenReturn(true);
-        when(OkDownload.with().processFileStrategy().isPreAllocateLength()).thenReturn(true);
+        when(OkDownload.with().processFileStrategy().isPreAllocateLength(task)).thenReturn(true);
         when(OkDownload.with().outputStreamFactory().create(any(Context.class), any(Uri.class),
                 anyInt())).thenReturn(mock(DownloadOutputStream.class));
         // recreate for new values of support-seek and pre-allocate-length.
