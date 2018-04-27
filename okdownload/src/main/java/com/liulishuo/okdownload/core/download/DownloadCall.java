@@ -178,26 +178,33 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             OkDownload.with().downloadStrategy()
                     .inspectAnotherSameInfo(task, info, remoteCheck.getInstanceLength());
 
-            if (remoteCheck.isResumable()) {
-                // 5. local check
-                final BreakpointLocalCheck localCheck = createLocalCheck(info);
-                localCheck.check();
-                if (localCheck.isDirty()) {
-                    Util.d(TAG, "breakpoint invalid: download from beginning because of "
-                            + "local check is dirty " + task.getId() + " " + localCheck);
-                    // 6. assemble block data
-                    assembleBlockAndCallbackFromBeginning(info, remoteCheck,
-                            localCheck.getCauseOrThrow());
+            try {
+                if (remoteCheck.isResumable()) {
+                    // 5. local check
+                    final BreakpointLocalCheck localCheck = createLocalCheck(info);
+                    localCheck.check();
+                    if (localCheck.isDirty()) {
+                        Util.d(TAG, "breakpoint invalid: download from beginning because of "
+                                + "local check is dirty " + task.getId() + " " + localCheck);
+                        // 6. assemble block data
+                        fileStrategy.discardProcess(task);
+                        assembleBlockAndCallbackFromBeginning(info, remoteCheck,
+                                localCheck.getCauseOrThrow());
+                    } else {
+                        okDownload.callbackDispatcher().dispatch()
+                                .downloadFromBreakpoint(task, info);
+                    }
                 } else {
-                    okDownload.callbackDispatcher().dispatch()
-                            .downloadFromBreakpoint(task, info);
+                    Util.d(TAG, "breakpoint invalid: download from beginning because of "
+                            + "remote check not resumable " + task.getId() + " " + remoteCheck);
+                    // 6. assemble block data
+                    fileStrategy.discardProcess(task);
+                    assembleBlockAndCallbackFromBeginning(info, remoteCheck,
+                            remoteCheck.getCauseOrThrow());
                 }
-            } else {
-                Util.d(TAG, "breakpoint invalid: download from beginning because of "
-                        + "remote check not resumable " + task.getId() + " " + remoteCheck);
-                // 6. assemble block data
-                assembleBlockAndCallbackFromBeginning(info, remoteCheck,
-                        remoteCheck.getCauseOrThrow());
+            } catch (IOException e) {
+                cache.setUnknownError(e);
+                break;
             }
 
             // 7. start with cache and info.
@@ -209,12 +216,6 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.remove(task.getId());
-                try {
-                    fileStrategy.discardProcess(task);
-                } catch (IOException e) {
-                    cache.setUnknownError(e);
-                    break;
-                }
                 retry = true;
             } else {
                 retry = false;

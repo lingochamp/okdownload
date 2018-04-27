@@ -105,6 +105,11 @@ public class DownloadCallTest {
         when(store.get(anyInt())).thenReturn(info);
         when(task.getUrl()).thenReturn("https://jacksgong.com");
 
+    }
+
+    private void setupFileStrategy() throws IOException {
+        mockOkDownload();
+
         final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
         when(fileStrategy.getFileLock()).thenReturn(fileLock);
     }
@@ -136,7 +141,9 @@ public class DownloadCallTest {
     }
 
     @Test
-    public void execute_waitForRelease() throws InterruptedException {
+    public void execute_waitForRelease() throws InterruptedException, IOException {
+        setupFileStrategy();
+
         final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
         doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
@@ -178,7 +185,10 @@ public class DownloadCallTest {
     }
 
     @Test
-    public void execute_assembleBlockData() throws InterruptedException {
+    public void execute_assembleBlockData() throws InterruptedException, IOException {
+        setupFileStrategy();
+
+        final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
         final BreakpointLocalCheck localCheck = mock(BreakpointLocalCheck.class);
         final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
         final ResumeFailedCause failedCauseByRemote = mock(ResumeFailedCause.class);
@@ -195,6 +205,7 @@ public class DownloadCallTest {
         call.execute();
         verify(call).assembleBlockAndCallbackFromBeginning(eq(info), eq(remoteCheck),
                 eq(failedCauseByRemote));
+        verify(fileStrategy).discardProcess(eq(task));
 
         when(remoteCheck.isResumable()).thenReturn(true);
         when(localCheck.isDirty()).thenReturn(false);
@@ -209,6 +220,7 @@ public class DownloadCallTest {
         call.execute();
         verify(call).assembleBlockAndCallbackFromBeginning(eq(info), eq(remoteCheck),
                 eq(failedCauseByLocal));
+        verify(fileStrategy, times(2)).discardProcess(eq(task));
     }
 
     @Test
@@ -223,6 +235,8 @@ public class DownloadCallTest {
 
     @Test
     public void execute_preconditionFailed() throws InterruptedException, IOException {
+        setupFileStrategy();
+
         final DownloadCache cache = mock(DownloadCache.class);
         doReturn(cache).when(call).createCache(eq(info));
         when(cache.isPreconditionFailed()).thenReturn(true, false);
@@ -238,7 +252,7 @@ public class DownloadCallTest {
         final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
         final int id = task.getId();
         verify(store).remove(eq(id));
-        verify(fileStrategy).discardProcess(eq(task));
+        verify(fileStrategy, times(2)).discardProcess(eq(task));
     }
 
     @Test
@@ -281,13 +295,15 @@ public class DownloadCallTest {
 
     @Test
     public void execute_finish() throws InterruptedException, IOException {
+        setupFileStrategy();
+
         assertThat(call.finishing).isFalse();
 
         final OkDownload okDownload = OkDownload.with();
         final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         final DownloadCache cache = mock(DownloadCache.class);
         final DownloadListener listener = mock(DownloadListener.class);
-        final ProcessFileStrategy fileStrategy = OkDownload.with().processFileStrategy();
+        final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
         final IOException iOException = mock(IOException.class);
         final MultiPointOutputStream multiPointOutputStream = mock(MultiPointOutputStream.class);
 
