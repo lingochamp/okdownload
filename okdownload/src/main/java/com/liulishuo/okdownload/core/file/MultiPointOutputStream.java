@@ -148,16 +148,13 @@ public class MultiPointOutputStream {
                 noMoreStreamList.add(streamMap.keyAt(i));
             }
 
-            if (syncFuture != null && !syncFuture.isDone() && runSyncThread != null) {
+            if (syncFuture != null && !syncFuture.isDone()) {
                 inspectValidPath();
                 OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
-
-                unparkThread(runSyncThread);
-
                 try {
-                    syncFuture.get();
-                } catch (InterruptedException ignored) {
-                } catch (ExecutionException ignored) {
+                    ensureSync(true, -1);
+                } finally {
+                    OkDownload.with().processFileStrategy().getFileLock().decreaseLock(path);
                 }
             }
         } finally {
@@ -181,25 +178,79 @@ public class MultiPointOutputStream {
         }
     }
 
+    final StreamsState doneState = new StreamsState();
+
     public void done(int blockIndex) throws IOException {
         noMoreStreamList.add(blockIndex);
 
         try {
             if (syncException != null) throw syncException;
 
-            if (syncFuture != null && !syncFuture.isDone() && runSyncThread != null) {
+            if (syncFuture != null && !syncFuture.isDone()) {
                 final AtomicLong noSyncLength = noSyncLengthMap.get(blockIndex);
                 if (noSyncLength != null && noSyncLength.get() > 0) {
+                    inspectStreamState(doneState);
+                    final boolean isNoMoreStream = doneState.isNoMoreStream;
+
                     // ensure this block is synced.
-                    parkedRunBlockThreadMap.put(blockIndex, Thread.currentThread());
-                    unparkThread(runSyncThread);
-                    parkThread();
+                    ensureSync(isNoMoreStream, blockIndex);
+
+                }
+            } else {
+                if (syncFuture == null) {
+                    Util.d(TAG, "OutputStream done but no need to ensure sync, because the "
+                            + "sync job not run yet. task[" + task.getId()
+                            + "] block[" + blockIndex + "]");
+                } else {
+                    Util.d(TAG, "OutputStream done but no need to ensure sync, because the "
+                            + "syncFuture.isDone[" + syncFuture.isDone() + "] task[" + task.getId()
+                            + "] block[" + blockIndex + "]");
+
                 }
             }
 
         } finally {
             close(blockIndex);
         }
+    }
+
+    void ensureSync(boolean isNoMoreStream, int blockIndex) {
+        // sync job not run yet.
+        if (syncFuture == null || syncFuture.isDone()) return;
+
+        if (!isNoMoreStream) {
+            parkedRunBlockThreadMap.put(blockIndex, Thread.currentThread());
+        }
+
+        if (runSyncThread != null) {
+            unparkThread(runSyncThread);
+        } else {
+            // wait for runSyncThread is valid.
+            while (true) {
+                if (isRunSyncThreadValid()) {
+                    unparkThread(runSyncThread);
+                    break;
+                } else {
+                    parkThread(25);
+                }
+            }
+        }
+
+        if (isNoMoreStream) {
+            unparkThread(runSyncThread);
+            try {
+                syncFuture.get();
+            } catch (InterruptedException ignored) {
+            } catch (ExecutionException ignored) {
+            }
+        } else {
+            parkThread();
+        }
+    }
+
+    // convenient for test
+    boolean isRunSyncThreadValid() {
+        return runSyncThread != null;
     }
 
     public void inspectComplete(int blockIndex) throws IOException {
@@ -343,8 +394,6 @@ public class MultiPointOutputStream {
             flushProcess();
             nextParkMills = syncBufferIntervalMills;
         }
-
-        runSyncThread = null;
     }
 
     // convenient for test.
@@ -364,56 +413,51 @@ public class MultiPointOutputStream {
     }
 
     void flushProcess() throws IOException {
+        boolean success;
+        final int size;
+        synchronized (noSyncLengthMap) {
+            // make sure the length of noSyncLengthMap is equal to outputStreamMap
+            size = noSyncLengthMap.size();
+        }
+
+        final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+
         try {
-            boolean success;
-            final int size;
-            synchronized (noSyncLengthMap) {
-                // make sure the length of noSyncLengthMap is equal to outputStreamMap
-                size = noSyncLengthMap.size();
-            }
-
-            final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
-
-            try {
-                for (int i = 0; i < size; i++) {
-                    final int blockIndex = outputStreamMap.keyAt(i);
-                    // because we get no sync length value before flush and sync,
-                    // so the length only possible less than or equal to the real persist
-                    // length.
-                    final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
-                    if (noSyncLength > 0) {
-                        increaseLengthMap.put(blockIndex, noSyncLength);
-                        final DownloadOutputStream outputStream = outputStreamMap
-                                .get(blockIndex);
-                        outputStream.flushAndSync();
-                    }
+            for (int i = 0; i < size; i++) {
+                final int blockIndex = outputStreamMap.keyAt(i);
+                // because we get no sync length value before flush and sync,
+                // so the length only possible less than or equal to the real persist
+                // length.
+                final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
+                if (noSyncLength > 0) {
+                    increaseLengthMap.put(blockIndex, noSyncLength);
+                    final DownloadOutputStream outputStream = outputStreamMap
+                            .get(blockIndex);
+                    outputStream.flushAndSync();
                 }
-                success = true;
-            } catch (IOException ex) {
-                Util.w(TAG, "OutputStream flush and sync data to filesystem failed " + ex);
-                success = false;
             }
+            success = true;
+        } catch (IOException ex) {
+            Util.w(TAG, "OutputStream flush and sync data to filesystem failed " + ex);
+            success = false;
+        }
 
-            if (success) {
-                final int increaseLengthSize = increaseLengthMap.size();
-                long allIncreaseLength = 0;
-                for (int i = 0; i < increaseLengthSize; i++) {
-                    final int blockIndex = increaseLengthMap.keyAt(i);
-                    final long noSyncLength = increaseLengthMap.valueAt(i);
-                    store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
-                    allIncreaseLength += noSyncLength;
-                    noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
-                    Util.d(TAG, "OutputStream sync success (" + task.getId() + ") "
-                            + "block(" + blockIndex + ") " + " syncLength(" + noSyncLength + ")"
-                            + " currentOffset(" + info.getBlock(blockIndex).getCurrentOffset()
-                            + ")");
-                }
-                allNoSyncLength.addAndGet(-allIncreaseLength);
-                lastSyncTimestamp.set(SystemClock.uptimeMillis());
+        if (success) {
+            final int increaseLengthSize = increaseLengthMap.size();
+            long allIncreaseLength = 0;
+            for (int i = 0; i < increaseLengthSize; i++) {
+                final int blockIndex = increaseLengthMap.keyAt(i);
+                final long noSyncLength = increaseLengthMap.valueAt(i);
+                store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
+                allIncreaseLength += noSyncLength;
+                noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
+                Util.d(TAG, "OutputStream sync success (" + task.getId() + ") "
+                        + "block(" + blockIndex + ") " + " syncLength(" + noSyncLength + ")"
+                        + " currentOffset(" + info.getBlock(blockIndex).getCurrentOffset()
+                        + ")");
             }
-        } finally {
-            inspectValidPath();
-            OkDownload.with().processFileStrategy().getFileLock().decreaseLock(path);
+            allNoSyncLength.addAndGet(-allIncreaseLength);
+            lastSyncTimestamp.set(SystemClock.uptimeMillis());
         }
     }
 
