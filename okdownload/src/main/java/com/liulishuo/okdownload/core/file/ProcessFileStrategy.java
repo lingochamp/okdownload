@@ -17,23 +17,14 @@
 package com.liulishuo.okdownload.core.file;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
-import com.liulishuo.okdownload.core.download.DownloadStrategy;
 
 import java.io.File;
 import java.io.IOException;
-
-import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.FILE_NOT_EXIST;
-import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.INFO_DIRTY;
-import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.OUTPUT_STREAM_NOT_SUPPORT;
 
 public class ProcessFileStrategy {
     private final FileLock fileLock = new FileLock();
@@ -65,111 +56,8 @@ public class ProcessFileStrategy {
         return fileLock;
     }
 
-    public void discardOldFile(@NonNull File oldFile) {
-        oldFile.delete();
-    }
-
-    /**
-     * @see DownloadStrategy#resumeAvailableResponseCheck
-     */
-    public ResumeAvailableLocalCheck resumeAvailableLocalCheck(DownloadTask task,
-                                                               BreakpointInfo info) {
-        return new ResumeAvailableLocalCheck(task, info);
-    }
-
     public boolean isPreAllocateLength() {
         // if support seek, enable pre-allocate length.
         return OkDownload.with().outputStreamFactory().supportSeek();
-    }
-
-    public static class ResumeAvailableLocalCheck {
-        Boolean isAvailable;
-        boolean fileExist;
-        boolean infoRight;
-        boolean outputStreamSupport;
-        private final DownloadTask task;
-        private final BreakpointInfo info;
-
-        protected ResumeAvailableLocalCheck(DownloadTask task, BreakpointInfo info) {
-            this.task = task;
-            this.info = info;
-        }
-
-        public boolean isInfoRightToResume() {
-            final int blockCount = info.getBlockCount();
-
-            if (blockCount <= 0) return false;
-            if (info.isChunked()) return false;
-            if (info.getFile() == null) return false;
-            final File fileOnTask = task.getFile();
-            if (!info.getFile().equals(fileOnTask)) return false;
-
-            for (int i = 0; i < blockCount; i++) {
-                BlockInfo blockInfo = info.getBlock(i);
-                if (blockInfo.getContentLength() <= 0) return false;
-            }
-
-            return true;
-        }
-
-        public boolean isOutputStreamSupportResume() {
-            final boolean supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
-            if (supportSeek) return true;
-
-            if (info.getBlockCount() != 1) return false;
-            if (OkDownload.with().processFileStrategy().isPreAllocateLength()) return false;
-
-            return true;
-        }
-
-        public boolean isFileExistToResume() {
-            final File file = task.getFile();
-            return file != null && file.exists();
-        }
-
-        public boolean isAvailable() {
-            checkIfNeed();
-            return this.isAvailable;
-        }
-
-        private void checkIfNeed() {
-            if (isAvailable == null) {
-                fileExist = isFileExistToResume();
-                infoRight = isInfoRightToResume();
-                outputStreamSupport = isOutputStreamSupportResume();
-                isAvailable = infoRight && fileExist && outputStreamSupport;
-            }
-        }
-
-        @Nullable public ResumeFailedCause getCause() {
-            checkIfNeed();
-
-            if (!infoRight) {
-                return INFO_DIRTY;
-            } else if (!fileExist) {
-                return FILE_NOT_EXIST;
-            } else if (!outputStreamSupport) {
-                return OUTPUT_STREAM_NOT_SUPPORT;
-            }
-
-            return null;
-        }
-
-        public void callbackCause() {
-            checkIfNeed();
-
-            final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
-            if (isAvailable) {
-                dispatcher.dispatch().downloadFromBreakpoint(task, info);
-            } else {
-                final ResumeFailedCause failedCause = getCause();
-                if (failedCause == null) {
-                    throw new IllegalStateException();
-                } else {
-                    dispatcher.dispatch().downloadFromBeginning(task, info, failedCause);
-                }
-
-            }
-        }
     }
 }
