@@ -25,6 +25,7 @@ trans-msg-map:
         'Create output stream' : 'CREATE OUTPUT-STREAM'
         'AssembleHeaderRange (' : 'REQUEST RANGE FROM'
         'OutputStream start flush looper' : 'FLUSH STREAM LOOPER'
+        'SingleBlock special check' : 'SPECIAL CASE'
 
 highlight-list:
         - 'connectStart'
