@@ -69,7 +69,7 @@ public class BreakpointLocalCheckTest {
     public void setup() {
         initMocks(this);
 
-        check = spy(new BreakpointLocalCheck(task, info));
+        check = spy(new BreakpointLocalCheck(task, info, -1));
 
         when(info.getBlockCount()).thenReturn(1);
         when(info.isChunked()).thenReturn(false);
@@ -141,6 +141,23 @@ public class BreakpointLocalCheckTest {
     @Test
     public void isInfoRightToResume_fileLengthLargerThanTotalLength() {
         when(fileOnInfo.length()).thenReturn(2L);
+        when(info.getTotalLength()).thenReturn(1L);
+        assertThat(check.isInfoRightToResume()).isFalse();
+    }
+
+    @Test
+    public void isInfoRightToResume_instanceLengthEqual() {
+        check = spy(new BreakpointLocalCheck(task, info, 2));
+
+        when(info.getBlockCount()).thenReturn(1);
+        when(info.isChunked()).thenReturn(false);
+        when(info.getFile()).thenReturn(fileOnInfo);
+        when(task.getFile()).thenReturn(fileOnInfo);
+        when(info.getBlock(0)).thenReturn(blockInfo);
+        when(blockInfo.getContentLength()).thenReturn(1L);
+        when(contentUri.getScheme()).thenReturn(ContentResolver.SCHEME_CONTENT);
+        when(fileUri.getScheme()).thenReturn(ContentResolver.SCHEME_FILE);
+
         when(info.getTotalLength()).thenReturn(1L);
         assertThat(check.isInfoRightToResume()).isFalse();
     }

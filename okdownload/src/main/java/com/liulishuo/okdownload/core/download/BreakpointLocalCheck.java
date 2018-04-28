@@ -44,10 +44,17 @@ public class BreakpointLocalCheck {
 
     private final DownloadTask task;
     private final BreakpointInfo info;
+    private final long responseInstanceLength;
 
-    public BreakpointLocalCheck(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
+    /**
+     * @param responseInstanceLength if the value is larger than {@code 0}, this value will used to
+     *                               compare with the old instance-length save on the {@code info}.
+     */
+    public BreakpointLocalCheck(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
+                                long responseInstanceLength) {
         this.task = task;
         this.info = info;
+        this.responseInstanceLength = responseInstanceLength;
     }
 
     /**
@@ -87,6 +94,10 @@ public class BreakpointLocalCheck {
         final File fileOnTask = task.getFile();
         if (!info.getFile().equals(fileOnTask)) return false;
         if (info.getFile().length() > info.getTotalLength()) return false;
+
+        if (responseInstanceLength > 0 && info.getTotalLength() != responseInstanceLength) {
+            return false;
+        }
 
         for (int i = 0; i < blockCount; i++) {
             BlockInfo blockInfo = info.getBlock(i);

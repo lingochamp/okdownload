@@ -181,7 +181,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             try {
                 if (remoteCheck.isResumable()) {
                     // 5. local check
-                    final BreakpointLocalCheck localCheck = createLocalCheck(info);
+                    final BreakpointLocalCheck localCheck = createLocalCheck(info,
+                            remoteCheck.getInstanceLength());
                     localCheck.check();
                     if (localCheck.isDirty()) {
                         Util.d(TAG, "breakpoint invalid: download from beginning because of "
@@ -343,8 +344,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     // convenient for unit-test
-    @NonNull BreakpointLocalCheck createLocalCheck(@NonNull BreakpointInfo info) {
-        return new BreakpointLocalCheck(task, info);
+    @NonNull BreakpointLocalCheck createLocalCheck(@NonNull BreakpointInfo info,
+                                                   long responseInstanceLength) {
+        return new BreakpointLocalCheck(task, info, responseInstanceLength);
     }
 
     // convenient for unit-test

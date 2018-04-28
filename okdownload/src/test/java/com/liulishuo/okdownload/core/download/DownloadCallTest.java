@@ -52,6 +52,7 @@ import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
@@ -119,7 +120,7 @@ public class DownloadCallTest {
         when(store.get(anyInt())).thenReturn(null);
         when(store.createAndInsert(task)).thenReturn(info);
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
 
         call.execute();
@@ -132,7 +133,7 @@ public class DownloadCallTest {
     public void execute_remoteCheck() throws IOException, InterruptedException {
         final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
 
         call.execute();
@@ -146,7 +147,7 @@ public class DownloadCallTest {
 
         final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
         when(task.getFile()).thenReturn(new File("certain-path"));
 
@@ -158,7 +159,7 @@ public class DownloadCallTest {
     @Test
     public void execute_reuseAnotherInfo() throws IOException, InterruptedException {
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
 
         call.execute();
@@ -172,7 +173,7 @@ public class DownloadCallTest {
         final BreakpointLocalCheck localCheck = mock(BreakpointLocalCheck.class);
         final BreakpointRemoteCheck remoteCheck = mock(BreakpointRemoteCheck.class);
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
-        doReturn(localCheck).when(call).createLocalCheck(eq(info));
+        doReturn(localCheck).when(call).createLocalCheck(eq(info), anyLong());
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
 
         when(remoteCheck.isResumable()).thenReturn(false);
@@ -194,7 +195,7 @@ public class DownloadCallTest {
         final ResumeFailedCause failedCauseByRemote = mock(ResumeFailedCause.class);
         final ResumeFailedCause failedCauseByLocal = mock(ResumeFailedCause.class);
         doReturn(remoteCheck).when(call).createRemoteCheck(eq(info));
-        doReturn(localCheck).when(call).createLocalCheck(eq(info));
+        doReturn(localCheck).when(call).createLocalCheck(eq(info), anyLong());
         doReturn(failedCauseByRemote).when(remoteCheck).getCauseOrThrow();
         doReturn(failedCauseByLocal).when(localCheck).getCauseOrThrow();
         doNothing().when(call).assembleBlockAndCallbackFromBeginning(eq(info), eq(remoteCheck),
@@ -226,7 +227,7 @@ public class DownloadCallTest {
     @Test
     public void execute_start() throws InterruptedException {
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
         doNothing().when(call).start(any(DownloadCache.class), eq(info));
 
         call.execute();
@@ -244,7 +245,7 @@ public class DownloadCallTest {
         doReturn(resumeFailedCause).when(cache).getResumeFailedCause();
         doNothing().when(call).start(eq(cache), eq(info));
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
 
         call.execute();
 
@@ -263,7 +264,7 @@ public class DownloadCallTest {
 
         doNothing().when(call).start(eq(cache), eq(info));
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
         doReturn(mock(DownloadListener.class)).when(dispatcher).dispatch();
 
         when(cache.isPreconditionFailed()).thenReturn(true);
@@ -309,7 +310,7 @@ public class DownloadCallTest {
 
         doNothing().when(call).start(eq(cache), eq(info));
         doReturn(mock(BreakpointRemoteCheck.class)).when(call).createRemoteCheck(eq(info));
-        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info));
+        doReturn(mock(BreakpointLocalCheck.class)).when(call).createLocalCheck(eq(info), anyLong());
 
         doReturn(info).when(store).createAndInsert(eq(task));
         doReturn(listener).when(dispatcher).dispatch();
