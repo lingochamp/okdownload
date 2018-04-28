@@ -8,7 +8,7 @@ I occur some problem, I also search on [issues][issues-url] and [wiki][wiki-url]
 
 ### Log
 
-There is whole log from logcat when I occur the problem(I know we can use [this tool][okcat-wiki-url] to let log more readable):
+There is the whole log from LogCat when I occur the problem(I know we can use [this tool][okcat-wiki-url] to let log more readable):
 
 ```
 ```
