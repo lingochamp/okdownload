@@ -16,6 +16,9 @@
 
 package com.liulishuo.okdownload.core.file;
 
+import android.content.ContentResolver;
+import android.content.Context;
+import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 
 import org.junit.Before;
@@ -28,13 +31,19 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.SyncFailedException;
 import java.nio.channels.FileChannel;
 
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
+import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -59,6 +68,36 @@ public class DownloadUriOutputStreamTest {
         outputStream = new DownloadUriOutputStream(channel, pdf, fos, out);
     }
 
+    @Test(expected = FileNotFoundException.class)
+    public void constructor_nullParcelFileDescriptor() throws FileNotFoundException {
+        final Context context = mock(Context.class);
+        final ContentResolver resolver = mock(ContentResolver.class);
+        final Uri uri = mock(Uri.class);
+
+        when(context.getContentResolver()).thenReturn(resolver);
+        when(resolver.openFileDescriptor(uri, "rw")).thenReturn(null);
+
+        new DownloadUriOutputStream(context, uri, 1);
+    }
+
+    @Test
+    public void constructor() throws IOException {
+        final Context context = mock(Context.class);
+        final ContentResolver resolver = mock(ContentResolver.class);
+        final ParcelFileDescriptor pdf = mock(ParcelFileDescriptor.class);
+        final Uri uri = mock(Uri.class);
+        final FileDescriptor fd = mock(FileDescriptor.class);
+
+        when(context.getContentResolver()).thenReturn(resolver);
+        when(resolver.openFileDescriptor(uri, "rw")).thenReturn(pdf);
+        when(pdf.getFileDescriptor()).thenReturn(fd);
+
+        final DownloadUriOutputStream outputStream = new DownloadUriOutputStream(context, uri, 1);
+        assertThat(outputStream.pdf).isEqualTo(pdf);
+        assertThat(outputStream.out).isNotNull();
+        assertThat(outputStream.fos.getFD()).isEqualTo(fd);
+    }
+
     @Test
     public void write() throws Exception {
         byte[] bytes = new byte[2];
@@ -75,6 +114,7 @@ public class DownloadUriOutputStreamTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
     // because of we invoke the native method, so this expected is means to invoked fd.sync
     @Test
     public void flushAndSync() throws Exception {
@@ -92,9 +132,36 @@ public class DownloadUriOutputStreamTest {
     }
 
     @Test
-    public void setLength() throws Exception {
+    public void setLength() {
         outputStream.setLength(1);
         verify(pdf).getFileDescriptor();
     }
 
+    @Test
+    public void factory() throws IOException {
+        assertThat(new DownloadUriOutputStream.Factory().supportSeek()).isTrue();
+
+        final Context context = mock(Context.class);
+        final ContentResolver resolver = mock(ContentResolver.class);
+        final ParcelFileDescriptor pdf = mock(ParcelFileDescriptor.class);
+        final FileDescriptor fd = mock(FileDescriptor.class);
+        final Uri uri = mock(Uri.class);
+
+        when(context.getContentResolver()).thenReturn(resolver);
+        when(resolver.openFileDescriptor(any(Uri.class), eq("rw"))).thenReturn(pdf);
+        when(pdf.getFileDescriptor()).thenReturn(fd);
+
+        final File file = new File("/test");
+        DownloadUriOutputStream outputStream = (DownloadUriOutputStream) new DownloadUriOutputStream.Factory()
+                .create(context, file, 1);
+        assertThat(outputStream.pdf).isEqualTo(pdf);
+        assertThat(outputStream.out).isNotNull();
+        assertThat(outputStream.fos.getFD()).isEqualTo(fd);
+
+        outputStream = (DownloadUriOutputStream) new DownloadUriOutputStream.Factory()
+                .create(context, uri, 1);
+        assertThat(outputStream.pdf).isEqualTo(pdf);
+        assertThat(outputStream.out).isNotNull();
+        assertThat(outputStream.fos.getFD()).isEqualTo(fd);
+    }
 }

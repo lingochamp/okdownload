@@ -35,9 +35,9 @@ import java.nio.channels.FileChannel;
 public class DownloadUriOutputStream implements DownloadOutputStream {
 
     @NonNull private final FileChannel channel;
-    @NonNull private final ParcelFileDescriptor pdf;
-    @NonNull private final BufferedOutputStream out;
-    @NonNull private final FileOutputStream fos;
+    @NonNull final ParcelFileDescriptor pdf;
+    @NonNull final BufferedOutputStream out;
+    @NonNull final FileOutputStream fos;
 
     public DownloadUriOutputStream(Context context, Uri uri, int bufferSize) throws
             FileNotFoundException {
@@ -82,7 +82,7 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     }
 
     @Override
-    public void setLength(long newLength) throws IOException {
+    public void setLength(long newLength) {
         final String tag = "DownloadUriOutputStream";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
