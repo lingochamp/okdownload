@@ -189,7 +189,6 @@ public class MultiPointOutputStream {
 
                     // ensure this block is synced.
                     ensureSync(isNoMoreStream, blockIndex);
-
                 }
             } else {
                 if (syncFuture == null) {
