@@ -283,7 +283,7 @@ public class UtilTest {
 
     @Test
     public void isNetworkAvailable() {
-        assertThat(Util.isNetworkNotOnWifiType(null)).isTrue();
+        assertThat(Util.isNetworkAvailable(null)).isTrue();
 
         final ConnectivityManager manager = mock(ConnectivityManager.class);
         when(manager.getActiveNetworkInfo()).thenReturn(null);
