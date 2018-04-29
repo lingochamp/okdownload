@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -52,6 +53,16 @@ public class ProcessFileStrategyTest {
         strategy.discardProcess(task);
 
         assertThat(existFile.exists()).isFalse();
+    }
+
+    @Test(expected = IOException.class)
+    public void discardProcess_deleteFailed() throws IOException {
+        final File file = mock(File.class);
+        when(task.getFile()).thenReturn(file);
+        when(file.exists()).thenReturn(true);
+        when(file.delete()).thenReturn(false);
+
+        strategy.discardProcess(task);
     }
 
     @Test
