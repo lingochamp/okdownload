@@ -152,8 +152,8 @@ public class DownloadUriOutputStreamTest {
         when(pdf.getFileDescriptor()).thenReturn(fd);
 
         final File file = new File("/test");
-        DownloadUriOutputStream outputStream = (DownloadUriOutputStream) new DownloadUriOutputStream.Factory()
-                .create(context, file, 1);
+        DownloadUriOutputStream outputStream = (DownloadUriOutputStream) new DownloadUriOutputStream
+                .Factory().create(context, file, 1);
         assertThat(outputStream.pdf).isEqualTo(pdf);
         assertThat(outputStream.out).isNotNull();
         assertThat(outputStream.fos.getFD()).isEqualTo(fd);
