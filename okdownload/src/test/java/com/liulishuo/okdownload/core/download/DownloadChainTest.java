@@ -21,6 +21,7 @@ import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.breakpoint.DownloadStore;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.exception.InterruptException;
 import com.liulishuo.okdownload.core.interceptor.BreakpointInterceptor;
 import com.liulishuo.okdownload.core.interceptor.FetchDataInterceptor;
 import com.liulishuo.okdownload.core.interceptor.Interceptor;
@@ -43,6 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,7 +55,9 @@ public class DownloadChainTest {
 
     private DownloadChain chain;
 
-    @Mock DownloadStore store;
+    @Mock private DownloadStore store;
+    @Mock private BreakpointInfo info;
+    @Mock private DownloadCache cache;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -64,8 +68,8 @@ public class DownloadChainTest {
     public void setup() {
         initMocks(this);
         this.chain = spy(DownloadChain.createChain(0,
-                mock(DownloadTask.class), mock(BreakpointInfo.class),
-                mock(DownloadCache.class),
+                mock(DownloadTask.class), info,
+                cache,
                 store));
     }
 
@@ -99,6 +103,14 @@ public class DownloadChainTest {
         // using redirect location instead of info url.
         chain.getConnectionOrCreate();
         verify(connectionFactory).create(redirectLocation);
+    }
+
+    @Test(expected = InterruptException.class)
+    public void start_interrupt() throws IOException {
+        when(cache.isInterrupt()).thenReturn(true);
+        doReturn(mock(DownloadConnection.Connected.class)).when(chain).processConnect();
+
+        chain.start();
     }
 
     @Test
@@ -178,10 +190,12 @@ public class DownloadChainTest {
     }
 
     @Test(expected = IllegalAccessError.class)
-    public void run() throws IOException {
+    public void run_twiceTime() throws IOException {
         doNothing().when(chain).start();
 
         chain.run();
+        verify(chain).releaseConnectionAsync();
+
         chain.run();
     }
 
@@ -195,5 +209,71 @@ public class DownloadChainTest {
         verify(OkDownload.with().callbackDispatcher().dispatch())
                 .fetchProgress(eq(chain.getTask()), eq(0), eq(16L));
         assertThat(chain.noCallbackIncreaseBytes).isZero();
+    }
+
+    @Test
+    public void setResponseContentLength() {
+        chain.setResponseContentLength(10);
+        assertThat(chain.getResponseContentLength()).isEqualTo(10);
+    }
+
+    @Test
+    public void cancel() {
+        chain.currentThread = mock(Thread.class);
+        chain.finished.set(true);
+        chain.cancel();
+        verify(chain.currentThread, never()).interrupt();
+
+        chain.finished.set(false);
+        chain.currentThread = null;
+        chain.cancel();
+
+        chain.currentThread = mock(Thread.class);
+        chain.cancel();
+        verify(chain.currentThread).interrupt();
+    }
+
+    @Test
+    public void getInfo() {
+        assertThat(chain.getInfo()).isEqualTo(info);
+    }
+
+    @Test
+    public void connection() {
+        final DownloadConnection connection = mock(DownloadConnection.class);
+        chain.setConnection(connection);
+        assertThat(chain.getConnection()).isEqualTo(connection);
+    }
+
+    @Test
+    public void getCache() {
+        assertThat(chain.getCache()).isEqualTo(cache);
+    }
+
+    @Test
+    public void releaseConnection() {
+        final DownloadConnection connection = mock(DownloadConnection.class);
+        chain.setConnection(connection);
+
+        chain.releaseConnection();
+
+        verify(connection).release();
+        assertThat(chain.getConnection()).isNull();
+    }
+
+    @Test
+    public void resetConnectForRetry() {
+        chain.connectIndex = 2;
+        doNothing().when(chain).releaseConnection();
+
+        chain.resetConnectForRetry();
+
+        assertThat(chain.connectIndex).isEqualTo(1);
+        verify(chain).releaseConnection();
+    }
+
+    @Test
+    public void getDownloadStore() {
+        assertThat(chain.getDownloadStore()).isEqualTo(store);
     }
 }

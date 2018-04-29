@@ -16,6 +16,9 @@
 
 package com.liulishuo.okdownload.core.interceptor.connect;
 
+import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.download.DownloadChain;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,9 +27,6 @@ import org.mockito.Mock;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
-
-import com.liulishuo.okdownload.core.connection.DownloadConnection;
-import com.liulishuo.okdownload.core.download.DownloadChain;
 
 import static com.liulishuo.okdownload.TestUtils.mockDownloadChain;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
@@ -92,6 +92,8 @@ public class RedirectInterceptorTest {
         }
 
         verify(mockChain, times(MAX_REDIRECT_TIMES)).processConnect();
+        verify(mockChain, times(MAX_REDIRECT_TIMES - 1))
+                .releaseConnection();
         verify(mockChain, times(MAX_REDIRECT_TIMES - 1))
                 .setRedirectLocation(mockLocation);
         verify(mockChain, times(MAX_REDIRECT_TIMES - 1))

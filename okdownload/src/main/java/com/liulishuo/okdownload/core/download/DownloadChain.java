@@ -51,6 +51,8 @@ public class DownloadChain implements Runnable {
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload Cancel Block", false));
 
+    private static final String TAG = "DownloadChain";
+
     private final int blockIndex;
 
     @NonNull private final DownloadTask task;
@@ -66,7 +68,7 @@ public class DownloadChain implements Runnable {
     private DownloadConnection connection;
 
     long noCallbackIncreaseBytes;
-    private volatile Thread currentThread;
+    volatile Thread currentThread;
 
     private final CallbackDispatcher callbackDispatcher;
 
@@ -115,7 +117,7 @@ public class DownloadChain implements Runnable {
         return blockIndex;
     }
 
-    public void setConnection(@NonNull DownloadConnection connection) {
+    public synchronized void setConnection(@NonNull DownloadConnection connection) {
         this.connection = connection;
     }
 
@@ -196,7 +198,15 @@ public class DownloadChain implements Runnable {
 
     public void resetConnectForRetry() {
         connectIndex = 1;
-        if (connection != null) connection.release();
+        releaseConnection();
+    }
+
+    public synchronized void releaseConnection() {
+        if (connection != null) {
+            connection.release();
+            Util.d(TAG, "release connection " + connection + " task[" + task.getId()
+                    + "] block[" + blockIndex + "]");
+        }
         connection = null;
     }
 
@@ -218,7 +228,7 @@ public class DownloadChain implements Runnable {
         return processFetch();
     }
 
-    private AtomicBoolean finished = new AtomicBoolean(false);
+    final AtomicBoolean finished = new AtomicBoolean(false);
 
     boolean isFinished() { return finished.get(); }
 
@@ -239,18 +249,17 @@ public class DownloadChain implements Runnable {
             // interrupt.
         } finally {
             finished.set(true);
-            if (cache.isUserCanceled()) EXECUTOR.execute(cancelRunnable);
+            releaseConnectionAsync();
         }
     }
 
-    private final Runnable cancelRunnable = new Runnable() {
-        @Override public void run() {
-            if (finished.get() || currentThread == null) return;
+    void releaseConnectionAsync() {
+        EXECUTOR.execute(releaseConnectionRunnable);
+    }
 
-            final DownloadConnection connection = getConnection();
-            if (connection != null) {
-                connection.release();
-            }
+    private final Runnable releaseConnectionRunnable = new Runnable() {
+        @Override public void run() {
+            releaseConnection();
         }
     };
 }

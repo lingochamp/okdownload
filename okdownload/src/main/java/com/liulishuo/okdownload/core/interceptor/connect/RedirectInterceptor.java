@@ -18,15 +18,15 @@ package com.liulishuo.okdownload.core.interceptor.connect;
 
 import android.support.annotation.NonNull;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.ProtocolException;
-
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.download.DownloadChain;
 import com.liulishuo.okdownload.core.exception.InterruptException;
 import com.liulishuo.okdownload.core.interceptor.Interceptor;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 
 public class RedirectInterceptor implements Interceptor.Connect {
 
@@ -52,7 +52,7 @@ public class RedirectInterceptor implements Interceptor.Connect {
         int redirectCount = 0;
 
         String url;
-        DownloadConnection connection = chain.getConnectionOrCreate();
+        DownloadConnection connection;
         while (true) {
 
             if (chain.getCache().isInterrupt()) {
@@ -76,7 +76,7 @@ public class RedirectInterceptor implements Interceptor.Connect {
                         "Response code is " + code + " but can't find Location field");
             }
 
-            connection.release();
+            chain.releaseConnection();
 
             connection = OkDownload.with().connectionFactory().create(url);
             chain.setConnection(connection);

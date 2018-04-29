@@ -100,7 +100,6 @@ public class RetryInterceptorTest {
         interceptor.interceptConnect(chain);
 
         verify(cache).catchException(any(IOException.class));
-        verify(connection).release();
     }
 
     @Test

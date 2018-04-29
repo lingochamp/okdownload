@@ -45,11 +45,6 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
                 }
 
                 chain.getCache().catchException(e);
-                final DownloadConnection connection = chain.getConnection();
-                if (connection != null) {
-                    connection.release();
-                }
-
                 throw e;
             }
         }
