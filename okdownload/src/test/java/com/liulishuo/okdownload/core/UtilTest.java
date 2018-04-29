@@ -78,20 +78,30 @@ public class UtilTest {
     }
 
     @Test
-    public void setLogger() throws Exception {
+    public void setLogger() {
         Util.setLogger(logger);
         assertThat(Util.getLogger()).isEqualTo(logger);
     }
 
     @Test
-    public void e() throws Exception {
+    public void e() {
+        Util.setLogger(logger);
+        Util.enableConsoleLog();
+        Util.e(tag, msg, e);
+        verify(logger, never()).e(eq(tag), eq(msg), eq(e));
+
         Util.setLogger(logger);
         Util.e(tag, msg, e);
         verify(logger).e(eq(tag), eq(msg), eq(e));
     }
 
     @Test
-    public void w() throws Exception {
+    public void w() {
+        Util.setLogger(logger);
+        Util.enableConsoleLog();
+        Util.w(tag, msg);
+        verify(logger, never()).w(eq(tag), eq(msg));
+
         Util.setLogger(logger);
         Util.w(tag, msg);
         verify(logger).w(eq(tag), eq(msg));
@@ -100,12 +110,22 @@ public class UtilTest {
     @Test
     public void d() {
         Util.setLogger(logger);
+        Util.enableConsoleLog();
+        Util.d(tag, msg);
+        verify(logger, never()).d(eq(tag), eq(msg));
+
+        Util.setLogger(logger);
         Util.d(tag, msg);
         verify(logger).d(eq(tag), eq(msg));
     }
 
     @Test
     public void i() {
+        Util.setLogger(logger);
+        Util.enableConsoleLog();
+        Util.i(tag, msg);
+        verify(logger, never()).i(eq(tag), eq(msg));
+
         Util.setLogger(logger);
         Util.i(tag, msg);
         verify(logger).i(eq(tag), eq(msg));
