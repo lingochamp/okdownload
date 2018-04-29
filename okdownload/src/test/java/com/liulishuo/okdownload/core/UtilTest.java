@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.StatFs;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
@@ -193,8 +194,11 @@ public class UtilTest {
     }
 
     @Test
-    public void getFreeSpaceBytes() throws Exception {
-        Util.getFreeSpaceBytes("~/path");
+    public void getFreeSpaceBytes() {
+        final StatFs statFs = mock(StatFs.class);
+        when(statFs.getAvailableBlocks()).thenReturn(1);
+        when(statFs.getBlockSize()).thenReturn(2);
+        assertThat(Util.getFreeSpaceBytes(statFs)).isEqualTo(2L);
     }
 
     @Test

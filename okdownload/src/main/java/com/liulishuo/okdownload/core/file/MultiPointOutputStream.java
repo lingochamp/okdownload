@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload.core.file;
 
 import android.net.Uri;
+import android.os.StatFs;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -97,13 +98,7 @@ public class MultiPointOutputStream {
             this.syncRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        runSync();
-                    } catch (IOException e) {
-                        syncException = e;
-                        Util.w(TAG, "Sync to breakpoint-store for task[" + task.getId() + "] "
-                                + "failed with cause: " + e);
-                    }
+                    runSyncDelayException();
                 }
             };
         } else {
@@ -339,6 +334,16 @@ public class MultiPointOutputStream {
 
     StreamsState state = new StreamsState();
 
+    void runSyncDelayException() {
+        try {
+            runSync();
+        } catch (IOException e) {
+            syncException = e;
+            Util.w(TAG, "Sync to breakpoint-store for task[" + task.getId() + "] "
+                    + "failed with cause: " + e);
+        }
+    }
+
     void runSync() throws IOException {
         Util.d(TAG, "OutputStream start flush looper task[" + task.getId() + "] with "
                 + "syncBufferIntervalMills[" + syncBufferIntervalMills + "] " + "syncBufferSize["
@@ -508,7 +513,7 @@ public class MultiPointOutputStream {
                     final File file = task.getFile();
                     final long requireSpace = totalLength - file.length();
                     if (requireSpace > 0) {
-                        inspectFreeSpace(file.getAbsolutePath(), requireSpace);
+                        inspectFreeSpace(new StatFs(file.getAbsolutePath()), requireSpace);
                         outputStream.setLength(totalLength);
                     }
                 } else {
@@ -528,8 +533,8 @@ public class MultiPointOutputStream {
         return outputStream;
     }
 
-    void inspectFreeSpace(String path, long requireSpace) throws PreAllocateException {
-        final long freeSpace = Util.getFreeSpaceBytes(path);
+    void inspectFreeSpace(StatFs statFs, long requireSpace) throws PreAllocateException {
+        final long freeSpace = Util.getFreeSpaceBytes(statFs);
         if (freeSpace < requireSpace) {
             throw new PreAllocateException(requireSpace, freeSpace);
         }

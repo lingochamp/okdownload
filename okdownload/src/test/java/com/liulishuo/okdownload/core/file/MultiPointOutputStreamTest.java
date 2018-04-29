@@ -18,6 +18,7 @@ package com.liulishuo.okdownload.core.file;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.StatFs;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
@@ -30,7 +31,9 @@ import com.liulishuo.okdownload.core.exception.PreAllocateException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
@@ -48,11 +51,11 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -288,6 +291,15 @@ public class MultiPointOutputStreamTest {
         assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(1);
         verify(multiPointOutputStream, never()).ensureSync(eq(false), eq(1));
         verify(multiPointOutputStream).close(eq(1));
+    }
+
+    @Test
+    public void runSyncDelayException() throws IOException {
+        final IOException exception = mock(IOException.class);
+        doThrow(exception).when(multiPointOutputStream).runSync();
+
+        multiPointOutputStream.runSyncDelayException();
+        assertThat(multiPointOutputStream.syncException).isEqualTo(exception);
     }
 
     @Test
@@ -532,7 +544,29 @@ public class MultiPointOutputStreamTest {
         final DownloadOutputStream outputStream = multiPointOutputStream.outputStream(0);
         verify(outputStream, never()).seek(anyLong());
         verify(outputStream).setLength(eq(20L));
-        verify(multiPointOutputStream, never()).inspectFreeSpace(anyString(), anyLong());
+        verify(multiPointOutputStream, never()).inspectFreeSpace(any(StatFs.class), anyLong());
+    }
+
+    @Rule public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void inspectFreeSpace_freeSpaceNotEnough() throws PreAllocateException {
+        final StatFs statFs = mock(StatFs.class);
+        when(statFs.getAvailableBlocks()).thenReturn(1);
+        when(statFs.getBlockSize()).thenReturn(2);
+
+        thrown.expectMessage("There is Free space less than Require space: 2 < 3");
+        thrown.expect(PreAllocateException.class);
+        multiPointOutputStream.inspectFreeSpace(statFs, 3);
+    }
+
+    @Test
+    public void inspectFreeSpace() throws PreAllocateException {
+        final StatFs statFs = mock(StatFs.class);
+        when(statFs.getAvailableBlocks()).thenReturn(1);
+        when(statFs.getBlockSize()).thenReturn(2);
+
+        multiPointOutputStream.inspectFreeSpace(statFs, 2);
     }
 
     private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {
@@ -542,7 +576,7 @@ public class MultiPointOutputStreamTest {
                 anyInt())).thenReturn(mock(DownloadOutputStream.class));
         // recreate for new values of support-seek and pre-allocate-length.
         multiPointOutputStream = spy(new MultiPointOutputStream(task, info, store));
-        doNothing().when(multiPointOutputStream).inspectFreeSpace(anyString(), anyLong());
+        doNothing().when(multiPointOutputStream).inspectFreeSpace(any(StatFs.class), anyLong());
 
         final Uri uri = mock(Uri.class);
         when(task.getUri()).thenReturn(uri);

@@ -210,10 +210,9 @@ public class Util {
         }
     }
 
-    public static long getFreeSpaceBytes(final String path) {
+    public static long getFreeSpaceBytes(@NonNull StatFs statFs) {
         // NEED CHECK PERMISSION?
         long freeSpaceBytes;
-        final StatFs statFs = new StatFs(path);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             freeSpaceBytes = statFs.getAvailableBytes();
         } else {
