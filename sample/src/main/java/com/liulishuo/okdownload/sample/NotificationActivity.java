@@ -32,7 +32,6 @@ import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.UnifiedListenerManager;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
-import com.liulishuo.okdownload.sample.comprehensive.single.SingleTaskUtil;
 import com.liulishuo.okdownload.sample.util.DemoUtil;
 import com.liulishuo.okdownload.sample.util.NotificationSampleListener;
 
@@ -101,7 +100,7 @@ public class NotificationActivity extends BaseSampleActivity {
 
     private void initTask() {
         task = new DownloadTask
-                .Builder(SingleTaskUtil.URL, DemoUtil.getParentFile(this))
+                .Builder(DemoUtil.URL, DemoUtil.getParentFile(this))
                 .setFilename("notification-file.apk")
                 // if there is the same task has been completed download, just delete it and
                 // re-download automatically.

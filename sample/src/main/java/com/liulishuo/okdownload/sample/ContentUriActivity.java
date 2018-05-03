@@ -32,7 +32,7 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.DownloadListener2;
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
-import com.liulishuo.okdownload.sample.comprehensive.single.SingleTaskUtil;
+import com.liulishuo.okdownload.sample.util.DemoUtil;
 import com.liulishuo.okdownload.sample.util.ProgressUtil;
 
 import org.jetbrains.annotations.Nullable;
@@ -114,7 +114,7 @@ public class ContentUriActivity extends BaseSampleActivity {
     }
 
     private void handleUri(Uri uri) {
-        DownloadTask task = new DownloadTask.Builder(SingleTaskUtil.URL, uri)
+        DownloadTask task = new DownloadTask.Builder(DemoUtil.URL, uri)
                 .setMinIntervalMillisCallbackProcess(300)
                 .build();
         this.task = task;
