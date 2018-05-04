@@ -38,6 +38,7 @@ import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
 import static com.liulishuo.okdownload.core.Util.RANGE;
+import static com.liulishuo.okdownload.core.Util.USER_AGENT;
 
 public class HeaderInterceptor implements Interceptor.Connect {
     private static final String TAG = "HeaderInterceptor";
@@ -50,7 +51,10 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         // add user customize header
         final Map<String, List<String>> userHeader = task.getHeaderMapFields();
-        if (userHeader != null)  Util.addUserRequestHeaderField(userHeader, connection);
+        if (userHeader != null) Util.addUserRequestHeaderField(userHeader, connection);
+        if (userHeader == null || !userHeader.containsKey(USER_AGENT)) {
+            Util.addDefaultUserAgent(connection);
+        }
 
         // add range header
         final int blockIndex = chain.getBlockIndex();

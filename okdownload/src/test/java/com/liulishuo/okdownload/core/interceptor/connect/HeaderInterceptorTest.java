@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.core.interceptor.connect;
 
+import com.liulishuo.okdownload.BuildConfig;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
@@ -40,6 +41,9 @@ import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.CONTENT_RANGE;
+import static com.liulishuo.okdownload.core.Util.IF_MATCH;
+import static com.liulishuo.okdownload.core.Util.RANGE;
+import static com.liulishuo.okdownload.core.Util.USER_AGENT;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -77,10 +81,11 @@ public class HeaderInterceptorTest {
         ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(connection).addHeader(nameCaptor.capture(), valueCaptor.capture());
+        verify(connection, times(2)).addHeader(nameCaptor.capture(), valueCaptor.capture());
 
-        assertThat(nameCaptor.getAllValues()).containsExactly("Range");
-        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=0-9");
+        assertThat(nameCaptor.getAllValues()).containsExactlyInAnyOrder(RANGE, USER_AGENT);
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("bytes=0-9", "OkDownload/" + BuildConfig.VERSION_NAME);
 
         when(chain.getBlockIndex()).thenReturn(1);
         when(info.getBlock(1)).thenReturn(new BlockInfo(10, 10));
@@ -92,10 +97,11 @@ public class HeaderInterceptorTest {
 
         nameCaptor = ArgumentCaptor.forClass(String.class);
         valueCaptor = ArgumentCaptor.forClass(String.class);
-        verify(connection).addHeader(nameCaptor.capture(), valueCaptor.capture());
+        verify(connection, times(2)).addHeader(nameCaptor.capture(), valueCaptor.capture());
 
-        assertThat(nameCaptor.getAllValues()).containsExactly("Range");
-        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=10-19");
+        assertThat(nameCaptor.getAllValues()).containsExactlyInAnyOrder(RANGE, USER_AGENT);
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("bytes=10-19", "OkDownload/" + BuildConfig.VERSION_NAME);
 
         when(chain.getBlockIndex()).thenReturn(2);
         when(info.getBlock(2)).thenReturn(new BlockInfo(20, 10));
@@ -107,10 +113,11 @@ public class HeaderInterceptorTest {
 
         nameCaptor = ArgumentCaptor.forClass(String.class);
         valueCaptor = ArgumentCaptor.forClass(String.class);
-        verify(connection).addHeader(nameCaptor.capture(), valueCaptor.capture());
+        verify(connection, times(2)).addHeader(nameCaptor.capture(), valueCaptor.capture());
 
-        assertThat(nameCaptor.getAllValues()).containsExactly("Range");
-        assertThat(valueCaptor.getAllValues()).containsExactly("bytes=20-29");
+        assertThat(nameCaptor.getAllValues()).containsExactlyInAnyOrder(RANGE, USER_AGENT);
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("bytes=20-29", "OkDownload/" + BuildConfig.VERSION_NAME);
     }
 
     @Test
@@ -140,14 +147,15 @@ public class HeaderInterceptorTest {
         ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(connection, times(5))
+        verify(connection, times(6))
                 .addHeader(nameCaptor.capture(), valueCaptor.capture());
 
         assertThat(nameCaptor.getAllValues())
-                .containsExactlyInAnyOrder("header1", "header1", "header2", "Range", "If-Match");
+                .containsExactlyInAnyOrder("header1", "header1", "header2", RANGE, IF_MATCH,
+                        USER_AGENT);
         assertThat(valueCaptor.getAllValues())
                 .containsExactlyInAnyOrder("header1-value1", "header1-value2", "header2-value",
-                        "bytes=0-9", "etag1");
+                        "bytes=0-9", "etag1", "OkDownload/" + BuildConfig.VERSION_NAME);
 
         verify(OkDownload.with().downloadStrategy())
                 .resumeAvailableResponseCheck(eq(connected), eq(0), eq(info));
@@ -168,5 +176,42 @@ public class HeaderInterceptorTest {
         interceptor.interceptConnect(chain);
         verify(chain, times(3)).setResponseContentLength(contentLengthCaptor.capture());
         assertThat(contentLengthCaptor.getAllValues()).containsOnly(-1L, 10L, 4L);
+    }
+
+    @Test
+    public void interceptConnect_userProvideUserAgent() throws IOException {
+        Map<String, List<String>> customHeader = new HashMap<>();
+        List<String> values = new ArrayList<>();
+        values.add("header1-value1");
+        values.add("header1-value2");
+        customHeader.put(USER_AGENT, values);
+        values = new ArrayList<>();
+        values.add("header2-value");
+        customHeader.put("header2", values);
+
+        final DownloadChain chain = mockDownloadChain();
+        when(chain.getInfo().getBlock(0))
+                .thenReturn(new BlockInfo(0, 10));
+        final DownloadConnection connection = chain.getConnectionOrCreate();
+        final DownloadConnection.Connected connected = chain.processConnect();
+        final BreakpointInfo info = chain.getInfo();
+
+        final DownloadTask task = chain.getTask();
+        when(task.getHeaderMapFields()).thenReturn(customHeader);
+
+
+        interceptor.interceptConnect(chain);
+
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(connection, times(4))
+                .addHeader(nameCaptor.capture(), valueCaptor.capture());
+
+        assertThat(nameCaptor.getAllValues())
+                .containsExactlyInAnyOrder(USER_AGENT, USER_AGENT, RANGE, "header2");
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("header1-value1", "header1-value2", "header2-value",
+                        "bytes=0-9");
     }
 }

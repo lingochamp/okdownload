@@ -24,6 +24,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.StatFs;
 
+import com.liulishuo.okdownload.BuildConfig;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
@@ -51,6 +52,7 @@ import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static com.liulishuo.okdownload.core.Util.CHUNKED_CONTENT_LENGTH;
 import static com.liulishuo.okdownload.core.Util.IF_MATCH;
 import static com.liulishuo.okdownload.core.Util.RANGE;
+import static com.liulishuo.okdownload.core.Util.USER_AGENT;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -415,5 +417,20 @@ public class UtilTest {
         thrown.expect(IOException.class);
         thrown.expectMessage(IF_MATCH + " and " + RANGE + " only can be handle by internal!");
         Util.inspectUserHeader(userHeaderMap);
+    }
+
+    @Test
+    public void addDefaultUserAgent() {
+        final DownloadConnection connection = mock(DownloadConnection.class);
+
+        Util.addDefaultUserAgent(connection);
+
+        final ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+        final ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(connection).addHeader(keyCaptor.capture(), valueCaptor.capture());
+
+        assertThat(keyCaptor.getValue()).isEqualTo(USER_AGENT);
+        assertThat(valueCaptor.getValue()).isEqualTo("OkDownload/" + BuildConfig.VERSION_NAME);
     }
 }

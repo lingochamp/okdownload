@@ -31,6 +31,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.liulishuo.okdownload.BuildConfig;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
@@ -63,6 +64,7 @@ public class Util {
     // request header fields.
     public static final String RANGE = "Range";
     public static final String IF_MATCH = "If-Match";
+    public static final String USER_AGENT = "User-Agent";
 
     // response header fields.
     public static final String CONTENT_LENGTH = "Content-Length";
@@ -429,5 +431,10 @@ public class Util {
                 connection.addHeader(key, value);
             }
         }
+    }
+
+    public static void addDefaultUserAgent(@NonNull final DownloadConnection connection) {
+        final String userAgent = "OkDownload/" + BuildConfig.VERSION_NAME;
+        connection.addHeader(USER_AGENT, userAgent);
     }
 }
