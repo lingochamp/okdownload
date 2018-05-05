@@ -16,8 +16,6 @@
 
 package com.liulishuo.okdownload.core.listener.assist;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
@@ -39,7 +37,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -49,201 +46,203 @@ import static org.robolectric.annotation.Config.NONE;
 @Config(manifest = NONE)
 public class Listener4AssistTest {
 
-    @Mock private BreakpointInfo info1;
-    @Mock private BreakpointInfo info2;
-    @Mock private DownloadTask task1;
-    @Mock private DownloadTask task2;
+    @Mock private BreakpointInfo info;
+    @Mock private DownloadTask task;
     @Mock private Listener4Assist.Listener4Callback callback;
+    @Mock private Listener4Assist.AssistExtend assistExtend;
+    @Mock private ListenerModelHandler<Listener4Assist.Listener4Model> handler;
+    private Listener4Assist.Listener4Model model;
 
     private Listener4Assist assist;
-    private Listener4Assist.AssistExtend assistExtend;
 
     @Before
     public void setup() {
         initMocks(this);
 
-        when(task1.getId()).thenReturn(1);
-        when(info1.getId()).thenReturn(1);
-        when(info1.getBlockCount()).thenReturn(3);
+        when(task.getId()).thenReturn(1);
+        when(task.getInfo()).thenReturn(info);
+        when(info.getId()).thenReturn(1);
+        when(info.getBlockCount()).thenReturn(3);
         for (int i = 0; i < 3; i++) {
-            when(info1.getBlock(i)).thenReturn(mock(BlockInfo.class));
+            when(info.getBlock(i)).thenReturn(mock(BlockInfo.class));
         }
+        model = new Listener4Assist.Listener4Model(1);
+        model.onInfoValid(info);
 
-        when(task2.getId()).thenReturn(2);
-        when(info2.getId()).thenReturn(2);
-        when(info2.getBlockCount()).thenReturn(2);
-        for (int i = 0; i < 2; i++) {
-            when(info2.getBlock(i)).thenReturn(mock(BlockInfo.class));
-        }
-
-        assist = new Listener4Assist();
-        assist.setCallback(callback);
-
-        assistExtend = spy(new Listener4Assist.AssistExtend() {
-            @Override
-            public Listener4Assist.Listener4Model inspectAddModel(
-                    Listener4Assist.Listener4Model origin) {
-                return origin;
-            }
-
-            @Override
-            public boolean dispatchInfoReady(DownloadTask task, @NonNull BreakpointInfo info,
-                                             boolean fromBreakpoint,
-                                             @NonNull Listener4Assist.Listener4Model model) {
-                return false;
-            }
-
-            @Override
-            public boolean dispatchFetchProgress(@NonNull DownloadTask task, int blockIndex,
-                                                 long increaseBytes,
-                                                 @NonNull Listener4Assist.Listener4Model model) {
-                return false;
-            }
-
-            @Override public boolean dispatchBlockEnd(DownloadTask task, int blockIndex,
-                                                      Listener4Assist.Listener4Model model) {
-                return false;
-            }
-
-            @Override
-            public boolean dispatchTaskEnd(DownloadTask task, EndCause cause,
-                                           @Nullable Exception realCause,
-                                           @NonNull Listener4Assist.Listener4Model model) {
-                return false;
-            }
-        });
+        assist = new Listener4Assist<>(handler);
         assist.setAssistExtend(assistExtend);
+        assist.setCallback(callback);
+    }
+
+    @Test
+    public void setCallback() {
+        assist.setCallback(callback);
+        assertThat(assist.callback).isEqualTo(callback);
+    }
+
+    @Test
+    public void setAssistExtend() {
+        assist.setAssistExtend(assistExtend);
+        assertThat(assist.getAssistExtend()).isEqualTo(assistExtend);
     }
 
     @Test
     public void infoReady_dispatch() {
         // dispatch
-        when(assistExtend.dispatchInfoReady(eq(task1), eq(info1), eq(true),
+        when(assistExtend.dispatchInfoReady(eq(task), eq(info), eq(true),
                 any(Listener4Assist.Listener4Model.class)))
                 .thenReturn(true);
-        assist.infoReady(task1, info1, true);
-        verify(assist.callback, never()).infoReady(eq(task1), eq(info1), eq(true),
+        assist.infoReady(task, info, true);
+        verify(assist.callback, never()).infoReady(eq(task), eq(info), eq(true),
                 any(Listener4Assist.Listener4Model.class));
+        verify(handler).addAndGetModel(eq(task), eq(info));
     }
 
     @Test
-    public void infoReady_Inspect() {
-        // newModel
-        final Listener4Assist.Listener4Model newModel = new Listener4Assist.Listener4Model(info1, 0,
-                new SparseArray<Long>());
-        when(assistExtend.inspectAddModel(any(Listener4Assist.Listener4Model.class)))
-                .thenReturn(newModel);
-        assist.infoReady(task1, info1, true);
-        assertThat(assist.findModel(info1.getId())).isEqualTo(newModel);
+    public void infoReady_noDispatch() {
+        when(handler.addAndGetModel(task, info)).thenReturn(model);
+        when(assistExtend.dispatchInfoReady(eq(task), eq(info), eq(true),
+                any(Listener4Assist.Listener4Model.class)))
+                .thenReturn(false);
+        assist.infoReady(task, info, true);
+        verify(assist.callback).infoReady(eq(task), eq(info), eq(true),
+                eq(model));
+        verify(handler).addAndGetModel(eq(task), eq(info));
     }
 
     @Test
-    public void initData_findModel_oneModel_remove() {
-        assist.infoReady(task1, info1, true);
-        assertThat(assist.getSingleTaskModel().info).isEqualTo(info1);
-        assertThat(assist.findModel(info1.getId()).info).isEqualTo(info1);
-        assertThat(assist.getSingleTaskModel().getBlockCurrentOffsetMap().size()).isEqualTo(3);
-        verify(callback).infoReady(eq(task1), eq(info1), eq(true),
+    public void fetchProgress_noModel() {
+        when(handler.getOrRecoverModel(task, info)).thenReturn(null);
+        assist.fetchProgress(task, 0, 0);
+        verify(callback, never()).progress(eq(task), eq(0L));
+        verify(assistExtend, never()).dispatchFetchProgress(eq(task), eq(0), eq(0L),
                 any(Listener4Assist.Listener4Model.class));
-
-        assist.infoReady(task2, info2, false);
-        assertThat(assist.getSingleTaskModel().info).isEqualTo(info1);
-        assertThat(assist.findModel(info2.getId()).info).isEqualTo(info2);
-        assertThat(assist.findModel(info2.getId()).getBlockCurrentOffsetMap().size()).isEqualTo(2);
-        verify(callback).infoReady(eq(task2), eq(info2), eq(false),
-                any(Listener4Assist.Listener4Model.class));
-
-        assist.taskEnd(task2, EndCause.COMPLETED, null);
-        assertThat(assist.findModel(info2.getId())).isNull();
-        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETED), nullable(Exception.class),
-                any(Listener4Assist.Listener4Model.class));
-
-        assist.taskEnd(task1, EndCause.COMPLETED, null);
-        assertThat(assist.getSingleTaskModel()).isNull();
-        assertThat(assist.findModel(info1.getId())).isNull();
-        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
-                any(Listener4Assist.Listener4Model.class));
+        verify(handler).getOrRecoverModel(eq(task), eq(info));
     }
 
     @Test
     public void fetchProgress_dispatch() {
-        mockSingleModelWith0Block();
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
 
         final int blockIndex = 0;
         final long increaseBytes = 2L;
-        when(assistExtend.dispatchFetchProgress(eq(task1), eq(blockIndex), eq(increaseBytes),
+        when(assistExtend.dispatchFetchProgress(eq(task), eq(blockIndex), eq(increaseBytes),
                 any(Listener4Assist.Listener4Model.class)))
                 .thenReturn(true);
-        assist.fetchProgress(task1, blockIndex, increaseBytes);
-        verify(callback, never()).progress(eq(task1), anyLong());
-        verify(callback, never()).progressBlock(eq(task1), eq(0), anyLong());
+        assist.fetchProgress(task, blockIndex, increaseBytes);
+        verify(callback, never()).progress(eq(task), anyLong());
+        verify(callback, never()).progressBlock(eq(task), eq(0), anyLong());
+        verify(handler).getOrRecoverModel(eq(task), eq(info));
     }
 
     @Test
     public void fetchProgress() {
-        assist.infoReady(task1, info1, false);
-        assist.fetchProgress(task1, 0, 3);
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
 
-        final Listener4Assist.Listener4Model model = assist.getSingleTaskModel();
+        assist.fetchProgress(task, 0, 3);
+
         assertThat(model.getCurrentOffset()).isEqualTo(3);
         assertThat(model.getBlockCurrentOffsetMap().get(0)).isEqualTo(3);
         assertThat(model.getBlockCurrentOffsetMap().get(1)).isEqualTo(0);
         assertThat(model.getBlockCurrentOffsetMap().get(2)).isEqualTo(0);
-        verify(callback).progressBlock(eq(task1), eq(0), eq(3L));
-        verify(callback).progress(eq(task1), eq(3L));
+        verify(callback).progressBlock(eq(task), eq(0), eq(3L));
+        verify(callback).progress(eq(task), eq(3L));
+        verify(handler).getOrRecoverModel(eq(task), eq(info));
 
-        assist.fetchProgress(task1, 1, 2);
+        assist.fetchProgress(task, 1, 2);
         // not effect to single-task-model
         assertThat(model.getCurrentOffset()).isEqualTo(5);
         assertThat(model.getBlockCurrentOffsetMap().get(1)).isEqualTo(2);
-        verify(callback).progressBlock(eq(task1), eq(1), eq(2L));
-        verify(callback).progress(eq(task1), eq(5L));
+        verify(callback).progressBlock(eq(task), eq(1), eq(2L));
+        verify(callback).progress(eq(task), eq(5L));
     }
 
     @Test
     public void fetchEnd_dispatch() {
-        mockSingleModelWith0Block();
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
 
         final int blockIndex = 0;
 
-        when(assistExtend.dispatchBlockEnd(eq(task1), eq(blockIndex), any(
+        when(assistExtend.dispatchBlockEnd(eq(task), eq(blockIndex), any(
                 Listener4Assist.Listener4Model.class))).thenReturn(true);
-        assist.fetchEnd(task1, blockIndex);
-        verify(callback, never()).blockEnd(eq(task1), eq(blockIndex), any(BlockInfo.class));
+        assist.fetchEnd(task, blockIndex);
+        verify(callback, never()).blockEnd(eq(task), eq(blockIndex), any(BlockInfo.class));
+        verify(handler).getOrRecoverModel(eq(task), eq(info));
     }
 
     @Test
     public void fetchEnd() {
-        assist.infoReady(task1, info1, false);
-        assist.fetchEnd(task1, 1);
-        final BlockInfo blockInfo1 = info1.getBlock(1);
-        verify(callback).blockEnd(eq(task1), eq(1), eq(blockInfo1));
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.fetchEnd(task, 1);
+        final BlockInfo blockInfo1 = info.getBlock(1);
+        verify(callback).blockEnd(eq(task), eq(1), eq(blockInfo1));
+        verify(handler).getOrRecoverModel(eq(task), eq(info));
     }
 
     @Test
     public void taskEnd_dispatch() {
-        mockSingleModelWith0Block();
+        when(handler.removeOrCreate(task, info)).thenReturn(model);
 
-        when(assistExtend.dispatchTaskEnd(eq(task1), any(EndCause.class), nullable(Exception.class),
+        when(assistExtend.dispatchTaskEnd(eq(task), any(EndCause.class), nullable(Exception.class),
                 any(Listener4Assist.Listener4Model.class)))
                 .thenReturn(true);
-        assist.taskEnd(task1, EndCause.COMPLETED, null);
+        assist.taskEnd(task, EndCause.COMPLETED, null);
         verify(callback, never())
-                .taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
+                .taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class),
                         any(Listener4Assist.Listener4Model.class));
     }
 
     @Test
     public void taskEnd_noModel() {
-        assist.taskEnd(task1, EndCause.COMPLETED, null);
-        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
+        when(handler.removeOrCreate(task, info)).thenReturn(model);
+        assist.taskEnd(task, EndCause.COMPLETED, null);
+        verify(callback).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class),
                 any(Listener4Assist.Listener4Model.class));
-
     }
 
-    private void mockSingleModelWith0Block() {
-        final SparseArray<Long> blockOffsetMap = new SparseArray<>();
-        blockOffsetMap.put(0, 1L);
-        assist.singleTaskModel = new Listener4Assist.Listener4Model(info1, 0, blockOffsetMap);
+    @Test
+    public void isAlwaysRecoverAssistModel() {
+        when(handler.isAlwaysRecoverAssistModel()).thenReturn(true);
+        assertThat(assist.isAlwaysRecoverAssistModel()).isTrue();
+        when(handler.isAlwaysRecoverAssistModel()).thenReturn(false);
+        assertThat(assist.isAlwaysRecoverAssistModel()).isFalse();
+    }
+
+    @Test
+    public void setAlwaysRecoverAssistModel() {
+        assist.setAlwaysRecoverAssistModel(true);
+        verify(handler).setAlwaysRecoverAssistModel(eq(true));
+        assist.setAlwaysRecoverAssistModel(false);
+        verify(handler).setAlwaysRecoverAssistModel(eq(false));
+    }
+
+    @Test
+    public void setAlwaysRecoverAssistModelIfNotSet() {
+        assist.setAlwaysRecoverAssistModelIfNotSet(true);
+        verify(handler).setAlwaysRecoverAssistModelIfNotSet(eq(true));
+        assist.setAlwaysRecoverAssistModelIfNotSet(false);
+        verify(handler).setAlwaysRecoverAssistModelIfNotSet(eq(false));
+    }
+
+    @Test
+    public void getBlockCurrentOffsetMap() {
+        model.blockCurrentOffsetMap = mock(SparseArray.class);
+        assertThat(model.getBlockCurrentOffsetMap()).isEqualTo(model.blockCurrentOffsetMap);
+    }
+
+    @Test
+    public void getBlockCurrentOffset() {
+        model.blockCurrentOffsetMap.put(1, 2L);
+        assertThat(model.getBlockCurrentOffset(1)).isEqualTo(2L);
+    }
+
+    @Test
+    public void cloneBlockCurrentOffsetMap() {
+        final SparseArray map = mock(SparseArray.class);
+        final SparseArray cloned = mock(SparseArray.class);
+        model.blockCurrentOffsetMap = map;
+        when(map.clone()).thenReturn(cloned);
+
+        assertThat(model.cloneBlockCurrentOffsetMap()).isEqualTo(cloned);
     }
 }

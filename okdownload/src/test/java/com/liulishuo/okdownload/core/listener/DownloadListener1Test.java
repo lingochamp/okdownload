@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -51,14 +52,16 @@ public class DownloadListener1Test {
 
     @Mock private DownloadTask task;
     @Mock private BreakpointInfo info;
+    @Mock private Listener1Assist assist;
 
     private Map<String, List<String>> tmpFields;
+
 
     @Before
     public void setup() {
         initMocks(this);
 
-        listener1 = spy(new DownloadListener1(mock(Listener1Assist.class)) {
+        listener1 = spy(new DownloadListener1(assist) {
             @Override
             public void taskStart(@NonNull DownloadTask task,
                                   @NonNull Listener1Assist.Listener1Model model) { }
@@ -101,7 +104,7 @@ public class DownloadListener1Test {
     @Test
     public void downloadFromBreakpoint() {
         listener1.downloadFromBreakpoint(task, info);
-        verify(listener1.assist).downloadFromBreakpoint(eq(task.getId()), eq(info));
+        verify(listener1.assist).downloadFromBreakpoint(eq(task), eq(info));
     }
 
     @Test
@@ -114,5 +117,29 @@ public class DownloadListener1Test {
     public void fetchProgress() {
         listener1.fetchProgress(task, 1, 2);
         verify(listener1.assist).fetchProgress(eq(task), eq(2L));
+    }
+
+    @Test
+    public void isAlwaysRecoverAssistModel() {
+        when(assist.isAlwaysRecoverAssistModel()).thenReturn(true);
+        assertThat(listener1.isAlwaysRecoverAssistModel()).isTrue();
+        when(assist.isAlwaysRecoverAssistModel()).thenReturn(false);
+        assertThat(listener1.isAlwaysRecoverAssistModel()).isFalse();
+    }
+
+    @Test
+    public void setAlwaysRecoverAssistModel() {
+        listener1.setAlwaysRecoverAssistModel(true);
+        verify(assist).setAlwaysRecoverAssistModel(eq(true));
+        listener1.setAlwaysRecoverAssistModel(false);
+        verify(assist).setAlwaysRecoverAssistModel(eq(false));
+    }
+
+    @Test
+    public void setAlwaysRecoverAssistModelIfNotSet() {
+        listener1.setAlwaysRecoverAssistModelIfNotSet(true);
+        verify(assist).setAlwaysRecoverAssistModelIfNotSet(eq(true));
+        listener1.setAlwaysRecoverAssistModelIfNotSet(false);
+        verify(assist).setAlwaysRecoverAssistModelIfNotSet(eq(false));
     }
 }

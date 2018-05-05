@@ -145,7 +145,7 @@ public class DownloadListenerBunchTest {
     }
 
     @Test
-    public void taskEnd() throws Exception {
+    public void taskEnd() {
         listenerBunch.taskEnd(task, endCause, realCause);
 
         verify(listener1).taskEnd(eq(task), eq(endCause), eq(realCause));

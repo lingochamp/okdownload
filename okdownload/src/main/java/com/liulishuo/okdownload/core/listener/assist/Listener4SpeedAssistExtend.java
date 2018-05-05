@@ -26,17 +26,13 @@ import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
-public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend {
+public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
+        ListenerModelHandler.ModelCreator<Listener4SpeedAssistExtend.Listener4SpeedModel> {
 
     private Listener4SpeedCallback callback;
 
     public void setCallback(Listener4SpeedCallback callback) {
         this.callback = callback;
-    }
-
-    @Override public Listener4Assist.Listener4Model inspectAddModel(
-            Listener4Assist.Listener4Model origin) {
-        return new Listener4SpeedModel(origin);
     }
 
     @Override public boolean dispatchInfoReady(DownloadTask task, @NonNull BreakpointInfo info,
@@ -92,9 +88,13 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend 
         return true;
     }
 
+    @Override public Listener4SpeedModel create(int id) {
+        return new Listener4SpeedModel(id);
+    }
+
     public static class Listener4SpeedModel extends Listener4Assist.Listener4Model {
-        final SpeedCalculator taskSpeed;
-        final SparseArray<SpeedCalculator> blockSpeeds;
+        SpeedCalculator taskSpeed;
+        SparseArray<SpeedCalculator> blockSpeeds;
 
         public SpeedCalculator getTaskSpeed() {
             return taskSpeed;
@@ -104,16 +104,12 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend 
             return blockSpeeds.get(blockIndex);
         }
 
-        Listener4SpeedModel(Listener4Assist.Listener4Model model, SpeedCalculator taskSpeed,
-                            SparseArray<SpeedCalculator> blockSpeeds) {
-            super(model.info, model.currentOffset, model.blockCurrentOffsetMap);
-            this.taskSpeed = taskSpeed;
-            this.blockSpeeds = blockSpeeds;
+        public Listener4SpeedModel(int id) {
+            super(id);
         }
 
-        public Listener4SpeedModel(Listener4Assist.Listener4Model model) {
-            super(model.info, model.currentOffset, model.blockCurrentOffsetMap);
-
+        @Override public void onInfoValid(@NonNull BreakpointInfo info) {
+            super.onInfoValid(info);
             this.taskSpeed = new SpeedCalculator();
             this.blockSpeeds = new SparseArray<>();
 

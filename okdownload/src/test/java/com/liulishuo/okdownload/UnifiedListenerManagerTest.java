@@ -19,6 +19,7 @@ package com.liulishuo.okdownload;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.listener.DownloadListener1;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -83,6 +84,10 @@ public class UnifiedListenerManagerTest {
 
         assertThat(listenerManager.realListenerMap.size()).isEqualTo(1);
         assertThat(listenerManager.realListenerMap.get(2)).containsExactly(listener);
+
+        final DownloadListener1 listener1 = mock(DownloadListener1.class);
+        listenerManager.attachListener(task, listener1);
+        verify(listener1).setAlwaysRecoverAssistModelIfNotSet(eq(true));
     }
 
     @Test

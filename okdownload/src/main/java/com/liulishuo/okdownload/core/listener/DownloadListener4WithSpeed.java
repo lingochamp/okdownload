@@ -25,11 +25,14 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.listener.assist.Listener4Assist;
 import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend;
+import com.liulishuo.okdownload.core.listener.assist.ListenerModelHandler;
 
 public abstract class DownloadListener4WithSpeed extends DownloadListener4
         implements Listener4SpeedAssistExtend.Listener4SpeedCallback {
 
-    DownloadListener4WithSpeed(Listener4SpeedAssistExtend assistExtend) {
+    private DownloadListener4WithSpeed(Listener4SpeedAssistExtend assistExtend) {
+        super(new Listener4Assist<>(new Listener4WithSpeedModelCreator()));
+
         assistExtend.setCallback(this);
         setAssistExtend(assistExtend);
     }
@@ -53,4 +56,12 @@ public abstract class DownloadListener4WithSpeed extends DownloadListener4
     @Override
     public final void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
                               @NonNull Listener4Assist.Listener4Model model) { }
+
+    private static class Listener4WithSpeedModelCreator implements
+            ListenerModelHandler.ModelCreator<Listener4SpeedAssistExtend.Listener4SpeedModel> {
+        @Override public Listener4SpeedAssistExtend.Listener4SpeedModel create(int id) {
+            return new Listener4SpeedAssistExtend.Listener4SpeedModel(id);
+        }
+    }
+
 }

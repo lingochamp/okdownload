@@ -19,7 +19,6 @@ package com.liulishuo.okdownload.core.listener.assist;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.SparseArray;
 
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
@@ -28,66 +27,39 @@ import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Listener1Assist {
-    private Listener1Model singleTaskModel;
-    private final SparseArray<Listener1Model> modelList = new SparseArray<>();
-
+public class Listener1Assist implements ListenerAssist,
+        ListenerModelHandler.ModelCreator<Listener1Assist.Listener1Model> {
+    private final ListenerModelHandler<Listener1Model> modelHandler;
     private Listener1Callback callback;
+
+    public Listener1Assist() {
+        this.modelHandler = new ListenerModelHandler<>(this);
+    }
+
+    Listener1Assist(ListenerModelHandler<Listener1Model> handler) {
+        this.modelHandler = handler;
+    }
 
     public void setCallback(@NonNull Listener1Callback callback) {
         this.callback = callback;
     }
 
     public void taskStart(DownloadTask task) {
-        final int id = task.getId();
-        final Listener1Model model = new Listener1Model(id);
-        synchronized (this) {
-            if (singleTaskModel == null) {
-                singleTaskModel = model;
-            } else {
-                modelList.put(id, model);
-            }
-        }
-
+        final Listener1Model model = modelHandler.addAndGetModel(task, null);
         if (callback != null) callback.taskStart(task, model);
     }
 
     public void taskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause) {
-        final int id = task.getId();
-        Listener1Model model;
-
-        synchronized (this) {
-            if (singleTaskModel != null && singleTaskModel.id == id) {
-                model = singleTaskModel;
-                singleTaskModel = null;
-            } else {
-                model = modelList.get(id);
-                modelList.remove(id);
-            }
-        }
-
-        if (model == null) {
-            model = new Listener1Model(task.getId());
-        }
-
+        Listener1Model model = modelHandler.removeOrCreate(task, task.getInfo());
         if (callback != null) callback.taskEnd(task, cause, realCause, model);
-    }
-
-    @Nullable public Listener1Model getSingleTaskModel() {
-        return singleTaskModel;
-    }
-
-    public Listener1Model findModel(int id) {
-        if (singleTaskModel != null && singleTaskModel.id == id) return singleTaskModel;
-
-        return modelList.get(id);
     }
 
     public void downloadFromBeginning(DownloadTask task,
                                       @NonNull BreakpointInfo info,
                                       ResumeFailedCause cause) {
-        final Listener1Model model = assignModelIfNeed(task.getId(), info);
+        final Listener1Model model = modelHandler.getOrRecoverModel(task, info);
         if (model == null) return;
+        model.onInfoValid(info);
 
         if (model.isStarted && callback != null) {
             callback.retry(task, cause);
@@ -98,28 +70,19 @@ public class Listener1Assist {
         model.isFirstConnect = true;
     }
 
-    public void downloadFromBreakpoint(int id, @NonNull BreakpointInfo info) {
-        final Listener1Model model = assignModelIfNeed(id, info);
+    public void downloadFromBreakpoint(DownloadTask task, @NonNull BreakpointInfo info) {
+        final Listener1Model model = modelHandler.getOrRecoverModel(task, info);
         if (model == null) return;
+        model.onInfoValid(info);
 
         model.isStarted = true;
         model.isFromResumed = true;
         model.isFirstConnect = true;
     }
 
-    @Nullable private Listener1Model assignModelIfNeed(int id, @NonNull BreakpointInfo info) {
-        final Listener1Model model = findModel(id);
-        if (model == null) return null;
-
-        model.blockCount = info.getBlockCount();
-        model.totalLength = info.getTotalLength();
-        model.currentOffset.set(info.getTotalOffset());
-
-        return model;
-    }
 
     public void connectEnd(DownloadTask task) {
-        final Listener1Model model = findModel(task.getId());
+        final Listener1Model model = modelHandler.getOrRecoverModel(task, task.getInfo());
         if (model == null) return;
 
         if (model.isFromResumed && model.isFirstConnect) {
@@ -133,20 +96,35 @@ public class Listener1Assist {
     }
 
     public void fetchProgress(DownloadTask task, long increaseBytes) {
-        final Listener1Model model = findModel(task.getId());
+        final Listener1Model model = modelHandler.getOrRecoverModel(task, task.getInfo());
         if (model == null) return;
 
         model.currentOffset.addAndGet(increaseBytes);
         if (callback != null) callback.progress(task, model.currentOffset.get(), model.totalLength);
     }
 
+    @Override public boolean isAlwaysRecoverAssistModel() {
+        return modelHandler.isAlwaysRecoverAssistModel();
+    }
 
-    public static class Listener1Model {
+    @Override public void setAlwaysRecoverAssistModel(boolean isAlwaysRecoverAssistModel) {
+        modelHandler.setAlwaysRecoverAssistModel(isAlwaysRecoverAssistModel);
+    }
+
+    @Override public void setAlwaysRecoverAssistModelIfNotSet(boolean isAlwaysRecoverAssistModel) {
+        modelHandler.setAlwaysRecoverAssistModelIfNotSet(isAlwaysRecoverAssistModel);
+    }
+
+    @Override public Listener1Model create(int id) {
+        return new Listener1Model(id);
+    }
+
+    public static class Listener1Model implements ListenerModelHandler.ListenerModel {
         final int id;
-        boolean isStarted;
-        boolean isFromResumed;
+        Boolean isStarted;
+        Boolean isFromResumed;
 
-        volatile boolean isFirstConnect;
+        volatile Boolean isFirstConnect;
 
         int blockCount;
         long totalLength;
@@ -160,8 +138,18 @@ public class Listener1Assist {
             return totalLength;
         }
 
-        public int getId() {
+        @Override public int getId() {
             return id;
+        }
+
+        @Override public void onInfoValid(@NonNull BreakpointInfo info) {
+            blockCount = info.getBlockCount();
+            totalLength = info.getTotalLength();
+            currentOffset.set(info.getTotalOffset());
+
+            if (isStarted == null) isStarted = false;
+            if (isFromResumed == null) isFromResumed = currentOffset.get() > 0;
+            if (isFirstConnect == null) isFirstConnect = true;
         }
     }
 

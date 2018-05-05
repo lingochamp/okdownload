@@ -29,11 +29,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -45,136 +46,152 @@ public class Listener1AssistTest {
 
     private Listener1Assist assist;
     @Mock private Listener1Assist.Listener1Callback callback;
-    @Mock private DownloadTask task1;
-    @Mock private DownloadTask task2;
+    @Mock private DownloadTask task;
     @Mock private BreakpointInfo info;
     @Mock private ResumeFailedCause cause;
+    @Mock private ListenerModelHandler<Listener1Assist.Listener1Model> handler;
+    @Mock private Listener1Assist.Listener1Model model;
 
-    private final int task1Id = 1;
-    private final int task2Id = 2;
+    private final int taskId = 1;
 
     @Before
     public void setup() {
         initMocks(this);
 
-        assist = new Listener1Assist();
+        assist = new Listener1Assist(handler);
         assist.setCallback(callback);
 
-        when(task1.getId()).thenReturn(task1Id);
-        when(task2.getId()).thenReturn(task2Id);
+        when(task.getId()).thenReturn(taskId);
+        when(task.getInfo()).thenReturn(info);
     }
 
     @Test
     public void taskStart() {
-        assist.taskStart(task1);
-        assertThat(assist.findModel(1)).isEqualTo(assist.getSingleTaskModel());
-        verify(callback).taskStart(eq(task1), eq(assist.findModel(1)));
+        when(handler.addAndGetModel(task, null)).thenReturn(model);
+        assist.taskStart(task);
 
-        assist.taskStart(task2);
-        assertThat(assist.findModel(2).id).isEqualTo(2);
-        assertThat(assist.findModel(2)).isNotNull();
-        assertThat(assist.findModel(2)).isNotEqualTo(assist.getSingleTaskModel());
-        verify(callback).taskStart(eq(task2), eq(assist.findModel(2)));
+        verify(callback).taskStart(eq(task), eq(model));
     }
 
     @Test
     public void taskEnd() {
-        assist.taskStart(task1);
-        assist.taskStart(task2);
+        when(handler.removeOrCreate(task, info)).thenReturn(model);
 
-        final Listener1Assist.Listener1Model model1 = assist.findModel(1);
+        assist.taskEnd(task, EndCause.COMPLETED, null);
+        verify(handler).removeOrCreate(eq(task), nullable(BreakpointInfo.class));
 
-        assist.taskEnd(task1, EndCause.COMPLETED, null);
-        assertThat(assist.getSingleTaskModel()).isNull();
-        assertThat(assist.findModel(2)).isNotNull();
-        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
-                eq(model1));
-
-        final Listener1Assist.Listener1Model model2 = assist.findModel(2);
-        assist.taskEnd(task2, EndCause.COMPLETED, null);
-        assertThat(assist.findModel(2)).isNull();
-        verify(callback).taskEnd(eq(task2), eq(EndCause.COMPLETED), nullable(Exception.class),
-                eq(model2));
-    }
-
-    @Test
-    public void taskEnd_noModel() {
-        assist.taskEnd(task1, EndCause.COMPLETED, null);
-        verify(callback).taskEnd(eq(task1), eq(EndCause.COMPLETED), nullable(Exception.class),
-                any(Listener1Assist.Listener1Model.class));
+        verify(callback).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class),
+                eq(model));
     }
 
     @Test
     public void downloadFromBeginning() {
-        assist.taskStart(task1);
+        // no model
+        when(handler.getOrRecoverModel(task, info)).thenReturn(null);
+        assist.downloadFromBeginning(task, info, cause);
+        verify(model, never()).onInfoValid(eq(info));
 
-        when(info.getBlockCount()).thenReturn(2);
-        when(info.getTotalLength()).thenReturn(3L);
-        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        Listener1Assist.Listener1Model model = spy(new Listener1Assist.Listener1Model(1));
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.downloadFromBeginning(task, info, cause);
+        verify(model).onInfoValid(eq(info));
 
-        assist.downloadFromBeginning(task1, info, cause);
-
+        model = new Listener1Assist.Listener1Model(1);
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.downloadFromBeginning(task, info, cause);
         assertThat(model.isStarted).isTrue();
         assertThat(model.isFromResumed).isFalse();
         assertThat(model.isFirstConnect).isTrue();
+        verify(callback, never()).retry(eq(task), eq(cause));
 
-        assertThat(model.blockCount).isEqualTo(2);
-        assertThat(model.totalLength).isEqualTo(3L);
-        assertThat(model.currentOffset.get()).isZero();
-
-        verify(callback, never()).retry(eq(task1), eq(cause));
-
-        assist.downloadFromBeginning(task1, info, cause);
-        verify(callback).retry(eq(task1), eq(cause));
+        // retry
+        model.isStarted = true;
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.downloadFromBeginning(task, info, cause);
+        verify(callback).retry(eq(task), eq(cause));
     }
 
     @Test
     public void downloadFromBreakpoint() {
-        assist.taskStart(task1);
-        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        // no model
+        when(handler.getOrRecoverModel(task, info)).thenReturn(null);
+        assist.downloadFromBreakpoint(task, info);
+        verify(model, never()).onInfoValid(eq(info));
 
-        when(info.getBlockCount()).thenReturn(2);
-        when(info.getTotalLength()).thenReturn(3L);
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.downloadFromBreakpoint(task, info);
+        verify(model).onInfoValid(eq(info));
 
-        assist.downloadFromBreakpoint(task1Id, info);
-
+        // assign
+        final Listener1Assist.Listener1Model model = new Listener1Assist.Listener1Model(1);
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.downloadFromBreakpoint(task, info);
         assertThat(model.isStarted).isTrue();
         assertThat(model.isFromResumed).isTrue();
         assertThat(model.isFirstConnect).isTrue();
-
-        assertThat(model.blockCount).isEqualTo(2);
-        assertThat(model.totalLength).isEqualTo(3L);
-        assertThat(model.currentOffset.get()).isZero();
     }
 
     @Test
     public void connectEnd() {
-        assist.taskStart(task1);
-        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
+        // no model
+        when(handler.getOrRecoverModel(task, info)).thenReturn(null);
+        assist.connectEnd(task);
+        verify(callback, never()).connected(eq(task), anyInt(), anyLong(), anyLong());
 
-        when(info.getTotalOffset()).thenReturn(2L);
-        when(info.getTotalLength()).thenReturn(3L);
-        assist.downloadFromBreakpoint(task1Id, info);
-        assertThat(model.isFirstConnect).isTrue();
+        // callback
+        final Listener1Assist.Listener1Model model = new Listener1Assist.Listener1Model(1);
+        model.onInfoValid(info);
+        model.blockCount = 1;
+        model.currentOffset.set(2);
+        model.totalLength = 3;
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.connectEnd(task);
+        verify(callback).connected(eq(task), eq(1), eq(2L), eq(3L));
 
-        assist.connectEnd(task1);
+        // assign
+        model.isFromResumed = true;
+        model.isFirstConnect = true;
+        assist.connectEnd(task);
         assertThat(model.isFirstConnect).isFalse();
-        verify(callback).connected(eq(task1), eq(0), eq(2L), eq(3L));
     }
 
     @Test
     public void fetchProgress() {
-        assist.taskStart(task1);
-        final Listener1Assist.Listener1Model model = assist.getSingleTaskModel();
-        assertThat(model.currentOffset.get()).isZero();
+        // no model
+        when(handler.getOrRecoverModel(task, info)).thenReturn(null);
+        assist.fetchProgress(task, 1);
+        verify(callback, never()).progress(eq(task), anyLong(), anyLong());
 
-        assist.fetchProgress(task1, 1);
-        assertThat(model.currentOffset.get()).isEqualTo(1);
-        assist.fetchProgress(task1, 2);
-        assertThat(model.currentOffset.get()).isEqualTo(3);
+        // callback
+        final Listener1Assist.Listener1Model model = new Listener1Assist.Listener1Model(1);
+        model.currentOffset.set(2);
+        model.totalLength = 3;
+        when(handler.getOrRecoverModel(task, info)).thenReturn(model);
+        assist.fetchProgress(task, 1);
+        verify(callback).progress(eq(task), eq(2L + 1L), eq(3L));
+    }
 
-        verify(callback).progress(eq(task1), eq(1L), anyLong());
-        verify(callback).progress(eq(task1), eq(3L), anyLong());
+    @Test
+    public void isAlwaysRecoverAssistModel() {
+        when(handler.isAlwaysRecoverAssistModel()).thenReturn(true);
+        assertThat(assist.isAlwaysRecoverAssistModel()).isTrue();
+        when(handler.isAlwaysRecoverAssistModel()).thenReturn(false);
+        assertThat(assist.isAlwaysRecoverAssistModel()).isFalse();
+    }
 
+    @Test
+    public void setAlwaysRecoverAssistModel() {
+        assist.setAlwaysRecoverAssistModel(true);
+        verify(handler).setAlwaysRecoverAssistModel(eq(true));
+        assist.setAlwaysRecoverAssistModel(false);
+        verify(handler).setAlwaysRecoverAssistModel(eq(false));
+    }
+
+    @Test
+    public void setAlwaysRecoverAssistModelIfNotSet() {
+        assist.setAlwaysRecoverAssistModelIfNotSet(true);
+        verify(handler).setAlwaysRecoverAssistModelIfNotSet(eq(true));
+        assist.setAlwaysRecoverAssistModelIfNotSet(false);
+        verify(handler).setAlwaysRecoverAssistModelIfNotSet(eq(false));
     }
 }

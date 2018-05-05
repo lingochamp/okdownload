@@ -25,6 +25,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
+import com.liulishuo.okdownload.core.listener.assist.ListenerAssist;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ import java.util.Map;
  * taskStart->(retry)->connect->progress<-->progress(currentOffset)->taskEnd
  */
 public abstract class DownloadListener1 implements DownloadListener,
-        Listener1Assist.Listener1Callback {
+        Listener1Assist.Listener1Callback, ListenerAssist {
     final Listener1Assist assist;
 
     DownloadListener1(Listener1Assist assist) {
@@ -43,6 +44,18 @@ public abstract class DownloadListener1 implements DownloadListener,
 
     public DownloadListener1() {
         this(new Listener1Assist());
+    }
+
+    @Override public boolean isAlwaysRecoverAssistModel() {
+        return assist.isAlwaysRecoverAssistModel();
+    }
+
+    @Override public void setAlwaysRecoverAssistModel(boolean isAlwaysRecoverAssistModel) {
+        assist.setAlwaysRecoverAssistModel(isAlwaysRecoverAssistModel);
+    }
+
+    @Override public void setAlwaysRecoverAssistModelIfNotSet(boolean isAlwaysRecoverAssistModel) {
+        assist.setAlwaysRecoverAssistModelIfNotSet(isAlwaysRecoverAssistModel);
     }
 
     @Override public final void taskStart(@NonNull DownloadTask task) {
@@ -66,7 +79,7 @@ public abstract class DownloadListener1 implements DownloadListener,
 
     @Override
     public void downloadFromBreakpoint(@NonNull DownloadTask task, @NonNull BreakpointInfo info) {
-        assist.downloadFromBreakpoint(task.getId(), info);
+        assist.downloadFromBreakpoint(task, info);
     }
 
     @Override public void connectStart(@NonNull DownloadTask task, int blockIndex,
@@ -95,6 +108,5 @@ public abstract class DownloadListener1 implements DownloadListener,
                               @Nullable Exception realCause) {
         assist.taskEnd(task, cause, realCause);
     }
-
 }
 

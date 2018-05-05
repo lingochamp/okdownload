@@ -25,6 +25,8 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
 import com.liulishuo.okdownload.core.listener.assist.Listener4Assist;
+import com.liulishuo.okdownload.core.listener.assist.ListenerAssist;
+import com.liulishuo.okdownload.core.listener.assist.ListenerModelHandler;
 
 import java.util.List;
 import java.util.Map;
@@ -45,7 +47,7 @@ import java.util.Map;
  * ->blockEnd->taskEnd
  */
 public abstract class DownloadListener4 implements DownloadListener,
-        Listener4Assist.Listener4Callback {
+        Listener4Assist.Listener4Callback, ListenerAssist {
 
     final Listener4Assist assist;
 
@@ -55,11 +57,23 @@ public abstract class DownloadListener4 implements DownloadListener,
     }
 
     public DownloadListener4() {
-        this(new Listener4Assist());
+        this(new Listener4Assist<>(new Listener4ModelCreator()));
     }
 
     public void setAssistExtend(@NonNull Listener4Assist.AssistExtend assistExtend) {
         this.assist.setAssistExtend(assistExtend);
+    }
+
+    @Override public boolean isAlwaysRecoverAssistModel() {
+        return assist.isAlwaysRecoverAssistModel();
+    }
+
+    @Override public void setAlwaysRecoverAssistModel(boolean isAlwaysRecoverAssistModel) {
+        assist.setAlwaysRecoverAssistModel(isAlwaysRecoverAssistModel);
+    }
+
+    @Override public void setAlwaysRecoverAssistModelIfNotSet(boolean isAlwaysRecoverAssistModel) {
+        assist.setAlwaysRecoverAssistModelIfNotSet(isAlwaysRecoverAssistModel);
     }
 
     @Override
@@ -74,12 +88,12 @@ public abstract class DownloadListener4 implements DownloadListener,
     @Override public final void downloadFromBeginning(@NonNull DownloadTask task,
                                                       @NonNull BreakpointInfo info,
                                                       @NonNull ResumeFailedCause cause) {
-        initData(task, info, false);
+        assist.infoReady(task, info, false);
     }
 
     @Override public final void downloadFromBreakpoint(@NonNull DownloadTask task,
                                                        @NonNull BreakpointInfo info) {
-        initData(task, info, true);
+        assist.infoReady(task, info, true);
     }
 
     @Override
@@ -102,8 +116,10 @@ public abstract class DownloadListener4 implements DownloadListener,
         assist.taskEnd(task, cause, realCause);
     }
 
-    private void initData(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
-                          boolean fromBreakpoint) {
-        assist.infoReady(task, info, fromBreakpoint);
+    static class Listener4ModelCreator implements
+            ListenerModelHandler.ModelCreator<Listener4Assist.Listener4Model> {
+        @Override public Listener4Assist.Listener4Model create(int id) {
+            return new Listener4Assist.Listener4Model(id);
+        }
     }
 }

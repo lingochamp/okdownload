@@ -71,11 +71,11 @@ public class Listener4SpeedAssistExtendTest {
             blockSpeeds.put(i, mock(SpeedCalculator.class));
         }
 
-        final Listener4Assist.Listener4Model originModel = new Listener4Assist.Listener4Model(info,
-                0, blockOffsetMap);
-        model = new Listener4SpeedAssistExtend.Listener4SpeedModel(originModel,
-                mock(SpeedCalculator.class), blockSpeeds);
-
+        model = new Listener4SpeedAssistExtend.Listener4SpeedModel(1);
+        model.info = info;
+        model.blockSpeeds = blockSpeeds;
+        model.blockCurrentOffsetMap = blockOffsetMap;
+        model.taskSpeed = mock(SpeedCalculator.class);
         assistExtend = new Listener4SpeedAssistExtend();
         assistExtend.setCallback(callback);
     }

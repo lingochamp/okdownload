@@ -23,6 +23,7 @@ import android.util.SparseArray;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
+import com.liulishuo.okdownload.core.listener.assist.ListenerAssist;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,6 +92,9 @@ public class UnifiedListenerManager {
 
         if (!listenerList.contains(listener)) {
             listenerList.add(listener);
+            if (listener instanceof ListenerAssist) {
+                ((ListenerAssist) listener).setAlwaysRecoverAssistModelIfNotSet(true);
+            }
         }
     }
 

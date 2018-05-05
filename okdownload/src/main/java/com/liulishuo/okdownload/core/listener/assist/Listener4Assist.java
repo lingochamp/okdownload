@@ -25,12 +25,19 @@ import com.liulishuo.okdownload.core.breakpoint.BlockInfo;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
 
-public class Listener4Assist {
-    @Nullable Listener4Model singleTaskModel;
-    private final SparseArray<Listener4Model> modelList = new SparseArray<>();
+public class Listener4Assist<T extends Listener4Assist.Listener4Model> implements ListenerAssist {
 
     Listener4Callback callback;
     private AssistExtend assistExtend;
+    private final ListenerModelHandler<T> modelHandler;
+
+    Listener4Assist(ListenerModelHandler<T> handler) {
+        this.modelHandler = handler;
+    }
+
+    public Listener4Assist(ListenerModelHandler.ModelCreator<T> creator) {
+        modelHandler = new ListenerModelHandler<>(creator);
+    }
 
     public void setCallback(@NonNull Listener4Callback callback) {
         this.callback = callback;
@@ -40,42 +47,12 @@ public class Listener4Assist {
         this.assistExtend = assistExtend;
     }
 
-    private synchronized Listener4Model addAndGetModel(BreakpointInfo info) {
-        SparseArray<Long> blockCurrentOffsetMap = new SparseArray<>();
-        final int blockCount = info.getBlockCount();
-        for (int i = 0; i < blockCount; i++) {
-            final BlockInfo blockInfo = info.getBlock(i);
-            blockCurrentOffsetMap.put(i, blockInfo.getCurrentOffset());
-        }
-
-        Listener4Model model = new Listener4Model(info, info.getTotalOffset(),
-                blockCurrentOffsetMap);
-
-        if (assistExtend != null) model = assistExtend.inspectAddModel(model);
-
-        if (singleTaskModel == null || singleTaskModel.info.getId() == info.getId()) {
-            singleTaskModel = model;
-        } else {
-            modelList.put(info.getId(), model);
-        }
-
-        return model;
-    }
-
-    @Nullable public Listener4Model getSingleTaskModel() {
-        return singleTaskModel;
-    }
-
-    public Listener4Model findModel(int id) {
-        if (singleTaskModel != null && singleTaskModel.info.getId() == id) {
-            return singleTaskModel;
-        } else {
-            return modelList.get(id);
-        }
+    public AssistExtend getAssistExtend() {
+        return assistExtend;
     }
 
     public void infoReady(DownloadTask task, BreakpointInfo info, boolean fromBreakpoint) {
-        final Listener4Model model = addAndGetModel(info);
+        final Listener4Model model = modelHandler.addAndGetModel(task, info);
 
         if (assistExtend != null && assistExtend
                 .dispatchInfoReady(task, info, fromBreakpoint, model)) {
@@ -87,7 +64,7 @@ public class Listener4Assist {
 
 
     public void fetchProgress(DownloadTask task, int blockIndex, long increaseBytes) {
-        final Listener4Model model = findModel(task.getId());
+        final Listener4Model model = modelHandler.getOrRecoverModel(task, task.getInfo());
         if (model == null) return;
 
         final long blockCurrentOffset = model.blockCurrentOffsetMap
@@ -107,7 +84,7 @@ public class Listener4Assist {
     }
 
     public void fetchEnd(DownloadTask task, int blockIndex) {
-        final Listener4Model model = findModel(task.getId());
+        final Listener4Model model = modelHandler.getOrRecoverModel(task, task.getInfo());
         if (model == null) return;
 
         if (assistExtend != null
@@ -122,26 +99,7 @@ public class Listener4Assist {
 
     public synchronized void taskEnd(DownloadTask task, EndCause cause,
                                      @Nullable Exception realCause) {
-        final int id = task.getId();
-        Listener4Model model;
-        if (singleTaskModel != null && singleTaskModel.info.getId() == id) {
-            model = singleTaskModel;
-            singleTaskModel = null;
-        } else {
-            model = modelList.get(id);
-            modelList.remove(id);
-        }
-
-        if (model == null) {
-            model = new Listener4Model(
-                    new BreakpointInfo(task.getId(), task.getUrl(), task.getParentFile(),
-                            task.getFilename()), 0, new SparseArray<Long>());
-
-            if (assistExtend != null) {
-                model = assistExtend.inspectAddModel(model);
-            }
-        }
-
+        Listener4Model model = modelHandler.removeOrCreate(task, task.getInfo());
         if (assistExtend != null
                 && assistExtend.dispatchTaskEnd(task, cause, realCause, model)) {
             return;
@@ -150,16 +108,26 @@ public class Listener4Assist {
         if (callback != null) callback.taskEnd(task, cause, realCause, model);
     }
 
-    public static class Listener4Model {
+    @Override public boolean isAlwaysRecoverAssistModel() {
+        return modelHandler.isAlwaysRecoverAssistModel();
+    }
+
+    @Override public void setAlwaysRecoverAssistModel(boolean isAlwaysRecoverAssistModel) {
+        modelHandler.setAlwaysRecoverAssistModel(isAlwaysRecoverAssistModel);
+    }
+
+    @Override public void setAlwaysRecoverAssistModelIfNotSet(boolean isAlwaysRecoverAssistModel) {
+        modelHandler.setAlwaysRecoverAssistModelIfNotSet(isAlwaysRecoverAssistModel);
+    }
+
+    public static class Listener4Model implements ListenerModelHandler.ListenerModel {
+        private final int id;
         BreakpointInfo info;
         long currentOffset;
         SparseArray<Long> blockCurrentOffsetMap;
 
-        Listener4Model(@NonNull BreakpointInfo info, long currentOffset,
-                       @NonNull SparseArray<Long> blockCurrentOffsetMap) {
-            this.info = info;
-            this.currentOffset = currentOffset;
-            this.blockCurrentOffsetMap = blockCurrentOffsetMap;
+        public Listener4Model(int id) {
+            this.id = id;
         }
 
         SparseArray<Long> getBlockCurrentOffsetMap() {
@@ -181,11 +149,26 @@ public class Listener4Assist {
         public BreakpointInfo getInfo() {
             return info;
         }
+
+        @Override public int getId() {
+            return id;
+        }
+
+        @Override public void onInfoValid(@NonNull BreakpointInfo info) {
+            this.info = info;
+            this.currentOffset = info.getTotalOffset();
+
+            SparseArray<Long> blockCurrentOffsetMap = new SparseArray<>();
+            final int blockCount = info.getBlockCount();
+            for (int i = 0; i < blockCount; i++) {
+                final BlockInfo blockInfo = info.getBlock(i);
+                blockCurrentOffsetMap.put(i, blockInfo.getCurrentOffset());
+            }
+            this.blockCurrentOffsetMap = blockCurrentOffsetMap;
+        }
     }
 
     public interface AssistExtend {
-        Listener4Model inspectAddModel(Listener4Model origin);
-
         boolean dispatchInfoReady(DownloadTask task, @NonNull BreakpointInfo info,
                                   boolean fromBreakpoint,
                                   @NonNull Listener4Model model);
