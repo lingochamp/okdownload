@@ -78,6 +78,9 @@ public class Util {
     public static final String VALUE_CHUNKED = "chunked";
     public static final int CHUNKED_CONTENT_LENGTH = -1;
 
+    // response special code.
+    public static final int RANGE_NOT_SATISFIABLE = 416;
+
     public interface Logger {
         void e(String tag, String msg, Exception e);
 

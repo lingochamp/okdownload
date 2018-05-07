@@ -28,6 +28,8 @@ import com.liulishuo.okdownload.core.exception.ServerCanceledException;
 
 import java.io.IOException;
 
+import static com.liulishuo.okdownload.core.Util.RANGE_NOT_SATISFIABLE;
+
 /**
  * Check whether the breakpoint is valid to reuse through the backend response.
  */
@@ -126,9 +128,21 @@ public class BreakpointRemoteCheck {
         this.isAcceptRange = isAcceptRange;
 
         //3. check whether server cancelled.
-        if (downloadStrategy.isServerCanceled(responseCode, info.getTotalOffset() != 0)) {
+        if (!isTrialSpecialPass(responseCode, instanceLength, isResumable)
+                && downloadStrategy.isServerCanceled(responseCode, info.getTotalOffset() != 0)) {
             throw new ServerCanceledException(responseCode, info.getTotalOffset());
         }
+    }
+
+
+    boolean isTrialSpecialPass(int responseCode, long instanceLength, boolean isResumable) {
+        if (responseCode == RANGE_NOT_SATISFIABLE && instanceLength >= 0 && isResumable) {
+            // provide valid instance-length & resumable but backend response wrong code 416
+            // for the range:0-0, because of values on response header is valid we pass it.
+            return true;
+        }
+
+        return false;
     }
 
     // convenient for unit-test.
