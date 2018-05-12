@@ -52,5 +52,5 @@ android {
 }
 
 afterEvaluate {
-    tasks.findByName('check').dependsOn('jacocoTestReport')
+    tasks.findByName('okcheckDebug').dependsOn('jacocoTestReport')
 }
