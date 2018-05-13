@@ -31,7 +31,7 @@ public class SpeedCalculator {
     long endTimestamp;
     long allIncreaseBytes;
 
-    public void reset() {
+    public synchronized void reset() {
         timestamp = 0;
         increaseBytes = 0;
         bytesPerSecond = 0;
@@ -80,7 +80,7 @@ public class SpeedCalculator {
      * Get bytes per-second and only if duration is greater than or equal to 1 second will flush and
      * re-calculate speed.
      */
-    public long getBytesPerSecondAndFlush() {
+    public synchronized long getBytesPerSecondAndFlush() {
         final long interval = nowMillis() - timestamp;
         if (interval < 1000 && bytesPerSecond != 0) return bytesPerSecond;
 
@@ -99,7 +99,7 @@ public class SpeedCalculator {
         return (long) ((float) sinceNowIncreaseBytes / durationMillis * 1000f);
     }
 
-    public void endTask() {
+    public synchronized void endTask() {
         endTimestamp = nowMillis();
     }
 
@@ -124,7 +124,7 @@ public class SpeedCalculator {
         return humanReadableSpeed(bytesPerSecond, true);
     }
 
-    public long getInstantSpeedDurationMillis() {
+    public synchronized long getInstantSpeedDurationMillis() {
         return nowMillis() - timestamp;
     }
 

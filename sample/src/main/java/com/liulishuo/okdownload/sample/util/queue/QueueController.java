@@ -103,11 +103,15 @@ public class QueueController {
             String[] children = queueDir.list();
             if (children != null) {
                 for (String child : children) {
-                    new File(queueDir, child).delete();
+                    if (!new File(queueDir, child).delete()) {
+                        Log.w("QueueController", "delete " + child + " failed!");
+                    }
                 }
             }
 
-            queueDir.delete();
+            if (!queueDir.delete()) {
+                Log.w("QueueController", "delete " + queueDir + " failed!");
+            }
         }
 
         for (DownloadTask task : taskList) {

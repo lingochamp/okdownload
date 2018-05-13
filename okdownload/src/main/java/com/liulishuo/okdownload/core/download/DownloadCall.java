@@ -44,6 +44,8 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class DownloadCall extends NamedRunnable implements Comparable<DownloadCall> {
     private static final ExecutorService EXECUTOR = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
             60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
@@ -289,7 +291,6 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     void start(final DownloadCache cache, BreakpointInfo info) throws InterruptedException {
         final int blockCount = info.getBlockCount();
         final List<DownloadChain> blockChainList = new ArrayList<>(info.getBlockCount());
-        final long totalLength = info.getTotalLength();
         for (int i = 0; i < blockCount; i++) {
             final BlockInfo blockInfo = info.getBlock(i);
             if (Util.isCorrectFull(blockInfo.getCurrentOffset(), blockInfo.getContentLength())) {
@@ -308,7 +309,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     @Override
-    protected void canceled(InterruptedException e) {
+    protected void interrupted(InterruptedException e) {
     }
 
     @Override
@@ -380,6 +381,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         return this.task.getFile();
     }
 
+    @SuppressFBWarnings(value = "Eq", justification = "This special case is just for task priority")
     @Override
     public int compareTo(@NonNull DownloadCall o) {
         return o.getPriority() - getPriority();

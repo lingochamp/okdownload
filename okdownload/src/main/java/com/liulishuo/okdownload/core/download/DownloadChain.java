@@ -65,7 +65,7 @@ public class DownloadChain implements Runnable {
     int fetchIndex = 0;
 
     private long responseContentLength;
-    private DownloadConnection connection;
+    private volatile DownloadConnection connection;
 
     long noCallbackIncreaseBytes;
     volatile Thread currentThread;
@@ -133,11 +133,11 @@ public class DownloadChain implements Runnable {
         return this.cache.getOutputStream();
     }
 
-    @Nullable public DownloadConnection getConnection() {
+    @Nullable public synchronized DownloadConnection getConnection() {
         return this.connection;
     }
 
-    @NonNull public DownloadConnection getConnectionOrCreate() throws IOException {
+    @NonNull public synchronized DownloadConnection getConnectionOrCreate() throws IOException {
         if (cache.isInterrupt()) throw InterruptException.SIGNAL;
 
         if (connection == null) {

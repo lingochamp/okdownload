@@ -37,7 +37,7 @@ public class NamedRunnableTest {
             @Override protected void execute() {
             }
 
-            @Override protected void canceled(InterruptedException e) {
+            @Override protected void interrupted(InterruptedException e) {
             }
 
             @Override protected void finished() {
@@ -51,7 +51,7 @@ public class NamedRunnableTest {
         runnable.run();
 
         verify(runnable).execute();
-        verify(runnable, never()).canceled(any(InterruptedException.class));
+        verify(runnable, never()).interrupted(any(InterruptedException.class));
         verify(runnable).finished();
         assertThat(Thread.currentThread().getName()).isEqualTo("oldName");
     }
@@ -62,7 +62,7 @@ public class NamedRunnableTest {
 
         runnable.run();
         verify(runnable).execute();
-        verify(runnable).canceled(any(InterruptedException.class));
+        verify(runnable).interrupted(any(InterruptedException.class));
         verify(runnable).finished();
     }
 }

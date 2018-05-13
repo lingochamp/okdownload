@@ -149,6 +149,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
     /**
      * The sample configuration for the {@link DownloadUrlConnection}
      */
+    @SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
     public static class Configuration {
         private Proxy proxy;
         private Integer readTimeout;

@@ -56,6 +56,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class Util {
 
     // request method
@@ -101,6 +103,7 @@ public class Util {
         @Override public void i(String tag, String msg) { }
     }
 
+    @SuppressWarnings("PMD.LoggerIsNotStaticFinal")
     private static Logger logger = new EmptyLogger();
 
     /**
@@ -187,7 +190,7 @@ public class Util {
         if (hash != null) {
             StringBuilder hex = new StringBuilder(hash.length * 2);
             for (byte b : hash) {
-                if ((b & 0xFF) < 0x10) hex.append("0");
+                if ((b & 0xFF) < 0x10) hex.append('0');
                 hex.append(Integer.toHexString(b & 0xFF));
             }
             return hex.toString();
@@ -384,6 +387,7 @@ public class Util {
         return null;
     }
 
+    @SuppressFBWarnings(value = "DMI")
     @NonNull public static File getParentFile(final File file) {
         final File candidate = file.getParentFile();
         return candidate == null ? new File("/") : candidate;

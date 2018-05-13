@@ -40,6 +40,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class DownloadContext {
 
     private static final String TAG = "DownloadContext";
@@ -48,7 +50,7 @@ public class DownloadContext {
             Util.threadFactory("OkDownload Serial", false));
 
     private final DownloadTask[] tasks;
-    volatile boolean isStarted = false;
+    volatile boolean started = false;
     @Nullable final DownloadContextListener contextListener;
     private final QueueSet set;
     private Handler uiHandler;
@@ -70,9 +72,11 @@ public class DownloadContext {
     }
 
     public boolean isStarted() {
-        return isStarted;
+        return started;
     }
 
+    @SuppressFBWarnings(value = "EI",
+            justification = "user must know change this array will effect internal job")
     public DownloadTask[] getTasks() {
         return tasks;
     }
@@ -95,7 +99,7 @@ public class DownloadContext {
     public void start(@Nullable final DownloadListener listener, boolean isSerial) {
         final long startTime = SystemClock.uptimeMillis();
         Util.d(TAG, "start " + isSerial);
-        isStarted = true;
+        started = true;
         final DownloadListener targetListener;
         if (contextListener != null) {
             targetListener = new DownloadListenerBunch.Builder()
@@ -133,8 +137,8 @@ public class DownloadContext {
     }
 
     public void stop() {
-        if (isStarted) OkDownload.with().downloadDispatcher().cancel(tasks);
-        isStarted = false;
+        if (started) OkDownload.with().downloadDispatcher().cancel(tasks);
+        started = false;
     }
 
     private void callbackQueueEndOnSerialLoop(boolean isAutoCallbackToUIThread) {
@@ -312,7 +316,7 @@ public class DownloadContext {
             return this;
         }
 
-        public Boolean isWifiRequired() {
+        public boolean isWifiRequired() {
             return wifiRequired == null
                     ? DownloadTask.Builder.DEFAULT_IS_WIFI_REQUIRED : wifiRequired;
         }
@@ -348,7 +352,7 @@ public class DownloadContext {
             return this;
         }
 
-        public boolean getAutoCallbackToUIThread() {
+        public boolean isAutoCallbackToUIThread() {
             return autoCallbackToUIThread == null
                     ? DownloadTask.Builder.DEFAULT_AUTO_CALLBACK_TO_UI_THREAD
                     : autoCallbackToUIThread;

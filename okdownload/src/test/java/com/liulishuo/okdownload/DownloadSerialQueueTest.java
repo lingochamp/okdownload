@@ -183,7 +183,7 @@ public class DownloadSerialQueueTest {
         final DownloadTask[] tasks = serialQueue.shutdown();
 
         verify(task2).cancel();
-        assertThat(serialQueue.shutdown).isTrue();
+        assertThat(serialQueue.shutedDown).isTrue();
         assertThat(tasks).containsExactly(task1);
     }
 

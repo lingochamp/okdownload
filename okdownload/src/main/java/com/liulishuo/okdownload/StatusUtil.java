@@ -81,10 +81,8 @@ public class StatusUtil {
             return Status.COMPLETED;
         } else {
             filename = store.getResponseFilename(task.getUrl());
-            if (filename != null) {
-                if (new File(parentFile, filename).exists()) {
-                    return Status.COMPLETED;
-                }
+            if (filename != null && new File(parentFile, filename).exists()) {
+                return Status.COMPLETED;
             }
         }
 

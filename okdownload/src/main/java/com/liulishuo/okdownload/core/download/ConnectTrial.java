@@ -47,7 +47,7 @@ import static com.liulishuo.okdownload.core.Util.TRANSFER_ENCODING;
 import static com.liulishuo.okdownload.core.Util.VALUE_CHUNKED;
 
 /**
- * The trial connect which is just used for checking the {@code isAcceptRange},
+ * The trial connect which is just used for checking the {@code acceptRange},
  * {@code instanceLength}, {@code responseEtag}.
  */
 public class ConnectTrial {
@@ -55,7 +55,7 @@ public class ConnectTrial {
     @NonNull private final DownloadTask task;
     @NonNull private final BreakpointInfo info;
 
-    private boolean isAcceptRange;
+    private boolean acceptRange;
     @IntRange(from = CHUNKED_CONTENT_LENGTH) private long instanceLength;
     @Nullable private String responseEtag;
     @Nullable private String responseFilename;
@@ -86,7 +86,7 @@ public class ConnectTrial {
 
             final DownloadConnection.Connected connected = connection.execute();
             this.responseCode = connected.getResponseCode();
-            this.isAcceptRange = isAcceptRange(connected);
+            this.acceptRange = isAcceptRange(connected);
             this.instanceLength = findInstanceLength(connected);
             this.responseEtag = findEtag(connected);
             this.responseFilename = findFilename(connected);
@@ -119,7 +119,7 @@ public class ConnectTrial {
      * @return whether the task is accept range request.
      */
     public boolean isAcceptRange() {
-        return this.isAcceptRange;
+        return this.acceptRange;
     }
 
     /**

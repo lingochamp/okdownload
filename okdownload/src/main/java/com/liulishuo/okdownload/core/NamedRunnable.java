@@ -31,7 +31,7 @@ public abstract class NamedRunnable implements Runnable {
         try {
             execute();
         } catch (InterruptedException e) {
-            canceled(e);
+            interrupted(e);
         } finally {
             Thread.currentThread().setName(oldName);
             finished();
@@ -40,7 +40,7 @@ public abstract class NamedRunnable implements Runnable {
 
     protected abstract void execute() throws InterruptedException;
 
-    protected abstract void canceled(InterruptedException e);
+    protected abstract void interrupted(InterruptedException e);
 
     protected abstract void finished();
 }

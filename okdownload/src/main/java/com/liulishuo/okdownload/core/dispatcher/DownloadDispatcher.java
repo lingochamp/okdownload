@@ -43,11 +43,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class DownloadDispatcher {
 
     private static final String TAG = "DownloadDispatcher";
 
+    @SuppressFBWarnings(value = "IS", justification = "Not so urgency")
     int maxParallelRunningCount = 5;
+
     // for sort performance(not need to copy one array), using ArrayList instead of deque(for add
     // on top, remove on bottom).
     private final List<DownloadCall> readyAsyncCalls;
@@ -56,14 +60,14 @@ public class DownloadDispatcher {
     private final List<DownloadCall> runningSyncCalls;
 
     // for the case of tasks has been cancelled but didn't remove from runningAsyncCalls list yet.
-    private volatile int flyingCanceledAsyncCallCount;
+    private final AtomicInteger flyingCanceledAsyncCallCount = new AtomicInteger();
     private @Nullable
     volatile ExecutorService executorService;
 
     // for avoiding processCalls when doing enqueue/cancel operation
     private final AtomicInteger skipProceedCallCount = new AtomicInteger();
 
-    private DownloadStore store;
+    @SuppressFBWarnings(value = "IS", justification = "Not so urgency") private DownloadStore store;
 
     public DownloadDispatcher() {
         this(new ArrayList<DownloadCall>(), new ArrayList<DownloadCall>(),
@@ -82,7 +86,7 @@ public class DownloadDispatcher {
         this.store = store;
     }
 
-    synchronized ExecutorService executorService() {
+    synchronized ExecutorService getExecutorService() {
         if (executorService == null) {
             executorService = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                     60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
@@ -151,7 +155,7 @@ public class DownloadDispatcher {
         final DownloadCall call = DownloadCall.create(task, true, store);
         if (runningAsyncSize() < maxParallelRunningCount) {
             runningAsyncCalls.add(call);
-            executorService().execute(call);
+            getExecutorService().execute(call);
         } else {
             // priority
             readyAsyncCalls.add(call);
@@ -173,6 +177,7 @@ public class DownloadDispatcher {
         syncRunCall(call);
     }
 
+    @SuppressWarnings("PMD.ForLoopsMustUseBraces")
     public void cancelAll() {
         skipProceedCallCount.incrementAndGet();
         // assemble tasks
@@ -359,14 +364,14 @@ public class DownloadDispatcher {
 
     public synchronized void flyingCanceled(DownloadCall call) {
         Util.d(TAG, "flying canceled: " + call.task.getId());
-        if (call.asyncExecuted) flyingCanceledAsyncCallCount++;
+        if (call.asyncExecuted) flyingCanceledAsyncCallCount.incrementAndGet();
     }
 
     public synchronized void finish(DownloadCall call) {
         final boolean asyncExecuted = call.asyncExecuted;
         final Collection<DownloadCall> calls = asyncExecuted ? runningAsyncCalls : runningSyncCalls;
         if (!calls.remove(call)) throw new AssertionError("Call wasn't in-flight!");
-        if (asyncExecuted && call.isCanceled()) flyingCanceledAsyncCallCount--;
+        if (asyncExecuted && call.isCanceled()) flyingCanceledAsyncCallCount.decrementAndGet();
 
         if (asyncExecuted) processCalls();
     }
@@ -488,14 +493,14 @@ public class DownloadDispatcher {
             }
 
             runningAsyncCalls.add(call);
-            executorService().execute(call);
+            getExecutorService().execute(call);
 
             if (runningAsyncSize() >= maxParallelRunningCount) return;
         }
     }
 
     private int runningAsyncSize() {
-        return runningAsyncCalls.size() - flyingCanceledAsyncCallCount;
+        return runningAsyncCalls.size() - flyingCanceledAsyncCallCount.get();
     }
 
     public static void setMaxParallelRunningCount(int maxParallelRunningCount) {

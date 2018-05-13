@@ -257,7 +257,7 @@ public class DownloadContextTest {
 
     @Test
     public void stop() {
-        context.isStarted = true;
+        context.started = true;
         context.stop();
         assertThat(context.isStarted()).isFalse();
 
@@ -332,7 +332,7 @@ public class DownloadContextTest {
 
         final boolean autoCallbackToUIThread = false;
         queueSet.setAutoCallbackToUIThread(autoCallbackToUIThread);
-        assertThat(queueSet.getAutoCallbackToUIThread()).isEqualTo(autoCallbackToUIThread);
+        assertThat(queueSet.isAutoCallbackToUIThread()).isEqualTo(autoCallbackToUIThread);
         builder.bind(taskBuilder);
         verify(taskBuilder).setAutoCallbackToUIThread(eq(autoCallbackToUIThread));
 

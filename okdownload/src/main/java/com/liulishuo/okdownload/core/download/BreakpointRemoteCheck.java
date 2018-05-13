@@ -35,8 +35,8 @@ import static com.liulishuo.okdownload.core.Util.RANGE_NOT_SATISFIABLE;
  */
 public class BreakpointRemoteCheck {
 
-    private boolean isAcceptRange;
-    private boolean isResumable;
+    private boolean acceptRange;
+    private boolean resumable;
     ResumeFailedCause failedCause;
     private long instanceLength;
 
@@ -50,8 +50,8 @@ public class BreakpointRemoteCheck {
     }
 
     @Override public String toString() {
-        return "isAcceptRange[" + isAcceptRange + "] "
-                + "isResumable[" + isResumable + "] "
+        return "acceptRange[" + acceptRange + "] "
+                + "resumable[" + resumable + "] "
                 + "failedCause[" + failedCause + "] "
                 + "instanceLength[" + instanceLength + "] "
                 + super.toString();
@@ -74,17 +74,17 @@ public class BreakpointRemoteCheck {
      */
     @NonNull public ResumeFailedCause getCauseOrThrow() {
         if (failedCause == null) {
-            throw new IllegalStateException("No cause find with isResumable: " + isResumable);
+            throw new IllegalStateException("No cause find with resumable: " + resumable);
         }
         return this.failedCause;
     }
 
     public boolean isResumable() {
-        return isResumable;
+        return resumable;
     }
 
     public boolean isAcceptRange() {
-        return isAcceptRange;
+        return acceptRange;
     }
 
     public long getInstanceLength() {
@@ -122,13 +122,13 @@ public class BreakpointRemoteCheck {
                 .getPreconditionFailedCause(responseCode, info.getTotalOffset() != 0, info,
                         responseEtag);
 
-        this.isResumable = resumeFailedCause == null;
+        this.resumable = resumeFailedCause == null;
         this.failedCause = resumeFailedCause;
         this.instanceLength = instanceLength;
-        this.isAcceptRange = isAcceptRange;
+        this.acceptRange = isAcceptRange;
 
         //3. check whether server cancelled.
-        if (!isTrialSpecialPass(responseCode, instanceLength, isResumable)
+        if (!isTrialSpecialPass(responseCode, instanceLength, resumable)
                 && downloadStrategy.isServerCanceled(responseCode, info.getTotalOffset() != 0)) {
             throw new ServerCanceledException(responseCode, info.getTotalOffset());
         }

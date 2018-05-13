@@ -214,11 +214,15 @@ public class BunchActivity extends BaseSampleActivity {
                 String[] children = bunchDir.list();
                 if (children != null) {
                     for (String child : children) {
-                        new File(bunchDir, child).delete();
+                        if (!new File(bunchDir, child).delete()) {
+                            Log.w("BunchActivity", "delete " + child + " failed!");
+                        }
                     }
                 }
 
-                bunchDir.delete();
+                if (!bunchDir.delete()) {
+                    Log.w("BunchActivity", "delete " + bunchDir + " failed!");
+                }
             }
         });
     }

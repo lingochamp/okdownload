@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@link StatusUtil} to help you more convenient to get its status stored on database with task's
  * {@link #getId()}.
  */
-public class DownloadTask extends IdentifiedTask implements Cloneable, Comparable<DownloadTask> {
+public class DownloadTask extends IdentifiedTask implements Comparable<DownloadTask> {
     private final int id;
     @NonNull private final String url;
     private final Uri uri;
@@ -81,10 +81,10 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
     private DownloadListener listener;
     private volatile SparseArray<Object> keyTagMap;
     private Object tag;
-    private final boolean isWifiRequired;
+    private final boolean wifiRequired;
 
     private final AtomicLong lastCallbackProcessTimestamp;
-    private final boolean isFilenameFromResponse;
+    private final boolean filenameFromResponse;
 
     @NonNull private final DownloadStrategy.FilenameHolder filenameHolder;
     @NonNull private final File providedPathFile;
@@ -96,8 +96,8 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                         int syncBufferSize, int syncBufferIntervalMills,
                         boolean autoCallbackToUIThread, int minIntervalMillisCallbackProcess,
                         Map<String, List<String>> headerMapFields, @Nullable String filename,
-                        boolean passIfAlreadyCompleted, boolean isWifiRequired,
-                        Boolean isFilenameFromResponse, @Nullable Integer connectionCount,
+                        boolean passIfAlreadyCompleted, boolean wifiRequired,
+                        Boolean filenameFromResponse, @Nullable Integer connectionCount,
                         @Nullable Boolean isPreAllocateLength) {
         this.url = url;
         this.uri = uri;
@@ -111,14 +111,14 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
         this.headerMapFields = headerMapFields;
         this.lastCallbackProcessTimestamp = new AtomicLong();
         this.passIfAlreadyCompleted = passIfAlreadyCompleted;
-        this.isWifiRequired = isWifiRequired;
+        this.wifiRequired = wifiRequired;
         this.connectionCount = connectionCount;
         this.isPreAllocateLength = isPreAllocateLength;
 
         if (Util.isUriFileScheme(uri)) {
             final File file = new File(uri.getPath());
-            if (isFilenameFromResponse != null) {
-                if (isFilenameFromResponse) {
+            if (filenameFromResponse != null) {
+                if (filenameFromResponse) {
                     // filename must from response.
                     if (file.exists() && file.isFile()) {
                         // it have already provided file for it.
@@ -129,7 +129,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
 
                     if (!Util.isEmpty(filename)) {
                         Util.w("DownloadTask", "Discard filename[" + filename
-                                + "] because you set isFilenameFromResponse=true");
+                                + "] because you set filenameFromResponse=true");
                         filename = null;
                     }
 
@@ -152,11 +152,11 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                     }
                 }
             } else if (file.exists() && file.isDirectory()) {
-                isFilenameFromResponse = true;
+                filenameFromResponse = true;
                 directoryFile = file;
             } else {
                 // not exist or is file.
-                isFilenameFromResponse = false;
+                filenameFromResponse = false;
 
                 if (file.exists()) {
                     // is file
@@ -178,9 +178,9 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
                 }
             }
 
-            this.isFilenameFromResponse = isFilenameFromResponse;
+            this.filenameFromResponse = filenameFromResponse;
         } else {
-            this.isFilenameFromResponse = false;
+            this.filenameFromResponse = false;
             directoryFile = new File(uri.getPath());
         }
 
@@ -202,7 +202,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      * @return {@code true} is the filename will assigned from response header.
      */
     public boolean isFilenameFromResponse() {
-        return isFilenameFromResponse;
+        return filenameFromResponse;
     }
 
     /**
@@ -251,7 +251,7 @@ public class DownloadTask extends IdentifiedTask implements Cloneable, Comparabl
      * @return {@code true} if this task only can download on the Wifi network type.
      */
     public boolean isWifiRequired() {
-        return isWifiRequired;
+        return wifiRequired;
     }
 
     public DownloadStrategy.FilenameHolder getFilenameHolder() {

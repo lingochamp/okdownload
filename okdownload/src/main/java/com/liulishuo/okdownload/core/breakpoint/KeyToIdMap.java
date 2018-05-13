@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 public class KeyToIdMap {
 
+    @SuppressWarnings("PMD.AvoidFieldNameMatchingTypeName")
     @NonNull private final HashMap<String, Integer> keyToIdMap;
     @NonNull private final SparseArray<String> idToKeyMap;
 

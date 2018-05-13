@@ -45,10 +45,8 @@ public class ProcessFileStrategy {
         // Do nothing, because the filename hasn't found yet.
         if (file == null) return;
 
-        if (file.exists()) {
-            if (!file.delete()) {
-                throw new IOException("Delete file failed!");
-            }
+        if (file.exists() && !file.delete()) {
+            throw new IOException("Delete file failed!");
         }
     }
 

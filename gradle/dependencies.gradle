@@ -47,7 +47,10 @@ ext {
             supportConstraintLayout     : "com.android.support.constraint:constraint-layout:1.0.2",
 
             // for okdownload-connection-okhttp
-            okhttp3                     : "com.squareup.okhttp3:okhttp:3.9.1"
+            okhttp3                     : "com.squareup.okhttp3:okhttp:3.9.1",
+
+            findbugsAnnotations         : "com.google.code.findbugs:annotations:3.0.1",
+            findbugsjsr305              : "com.google.code.findbugs:jsr305:3.0.1"
 
     ]
 

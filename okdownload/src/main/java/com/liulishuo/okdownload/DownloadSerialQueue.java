@@ -41,7 +41,7 @@ public class DownloadSerialQueue extends DownloadListener2 implements Runnable {
             Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
             Util.threadFactory("OkDownload DynamicSerial", false));
 
-    volatile boolean shutdown = false;
+    volatile boolean shutedDown = false;
     volatile boolean looping = false;
     volatile boolean paused = false;
 
@@ -153,7 +153,7 @@ public class DownloadSerialQueue extends DownloadListener2 implements Runnable {
      * queue upon return from this method.
      */
     public synchronized DownloadTask[] shutdown() {
-        shutdown = true;
+        shutedDown = true;
 
         if (runningTask != null) runningTask.cancel();
 
@@ -165,7 +165,7 @@ public class DownloadSerialQueue extends DownloadListener2 implements Runnable {
     }
 
     @Override public void run() {
-        while (!shutdown) {
+        while (!shutedDown) {
             final DownloadTask nextTask;
             synchronized (this) {
                 if (taskList.isEmpty() || paused) {

@@ -97,7 +97,7 @@ public class DownloadDispatcherTest {
                 new DownloadDispatcher(readyAsyncCalls, runningAsyncCalls, runningSyncCalls));
         dispatcher.setDownloadStore(store);
 
-        doReturn(mock(ExecutorService.class)).when(dispatcher).executorService();
+        doReturn(mock(ExecutorService.class)).when(dispatcher).getExecutorService();
         doNothing().when(dispatcher).syncRunCall(any(DownloadCall.class));
 
         existFile.getParentFile().mkdirs();
@@ -271,7 +271,7 @@ public class DownloadDispatcherTest {
         verify(callbackDispatcher, never())
                 .endTasks(any(Collection.class), any(Collection.class), any(Collection.class));
         assertThat(readyAsyncCalls).isEmpty();
-        verify(dispatcher, never()).executorService();
+        verify(dispatcher, never()).getExecutorService();
 
         final ArgumentCaptor<Exception> causeCaptor = ArgumentCaptor.forClass(Exception.class);
         verify(callbackDispatcher).endTasksWithError(listCaptor.capture(), causeCaptor.capture());
@@ -519,7 +519,7 @@ public class DownloadDispatcherTest {
         assertThat(runningAsyncCalls).containsExactly(mockReadyCall);
         assertThat(readyAsyncCalls).isEmpty();
 
-        final ExecutorService executorService = dispatcher.executorService();
+        final ExecutorService executorService = dispatcher.getExecutorService();
         verify(executorService).execute(mockReadyCall);
     }
 

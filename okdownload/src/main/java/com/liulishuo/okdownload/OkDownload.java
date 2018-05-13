@@ -32,6 +32,7 @@ import com.liulishuo.okdownload.core.file.DownloadOutputStream;
 import com.liulishuo.okdownload.core.file.DownloadUriOutputStream;
 import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 
+@SuppressWarnings("PMD.AvoidFieldNameMatchingMethodName")
 public class OkDownload {
 
     @SuppressLint("StaticFieldLeak") static volatile OkDownload singleton;

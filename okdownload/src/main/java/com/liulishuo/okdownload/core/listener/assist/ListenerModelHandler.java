@@ -26,7 +26,7 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 public class ListenerModelHandler<T extends ListenerModelHandler.ListenerModel> implements
         ListenerAssist {
 
-    T singleTaskModel;
+    volatile T singleTaskModel;
     final SparseArray<T> modelList = new SparseArray<>();
 
     private Boolean alwaysRecoverModel;
@@ -69,7 +69,9 @@ public class ListenerModelHandler<T extends ListenerModelHandler.ListenerModel> 
         final int id = task.getId();
 
         T model = null;
-        if (singleTaskModel != null && singleTaskModel.getId() == id) model = singleTaskModel;
+        synchronized (this) {
+            if (singleTaskModel != null && singleTaskModel.getId() == id) model = singleTaskModel;
+        }
         if (model == null) model = modelList.get(id);
 
         if (model != null || !isAlwaysRecoverAssistModel()) return model;

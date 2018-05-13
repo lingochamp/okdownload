@@ -25,7 +25,10 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class OkDownloadProvider extends ContentProvider {
+    @SuppressFBWarnings(value = "ST")
     @SuppressLint("StaticFieldLeak") static Context context;
 
     @Override

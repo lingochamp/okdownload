@@ -37,7 +37,7 @@ import static com.liulishuo.okdownload.core.cause.ResumeFailedCause.OUTPUT_STREA
  */
 public class BreakpointLocalCheck {
 
-    private boolean isDirty;
+    private boolean dirty;
     boolean fileExist;
     boolean infoRight;
     boolean outputStreamSupport;
@@ -65,7 +65,7 @@ public class BreakpointLocalCheck {
      * @return whether the local data is dirty.
      */
     public boolean isDirty() {
-        return isDirty;
+        return dirty;
     }
 
     /**
@@ -82,7 +82,7 @@ public class BreakpointLocalCheck {
             return OUTPUT_STREAM_NOT_SUPPORT;
         }
 
-        throw new IllegalStateException("No cause find with isDirty: " + isDirty);
+        throw new IllegalStateException("No cause find with dirty: " + dirty);
     }
 
     public boolean isInfoRightToResume() {
@@ -131,7 +131,7 @@ public class BreakpointLocalCheck {
         fileExist = isFileExistToResume();
         infoRight = isInfoRightToResume();
         outputStreamSupport = isOutputStreamSupportResume();
-        isDirty = !infoRight || !fileExist || !outputStreamSupport;
+        dirty = !infoRight || !fileExist || !outputStreamSupport;
     }
 
     @Override public String toString() {

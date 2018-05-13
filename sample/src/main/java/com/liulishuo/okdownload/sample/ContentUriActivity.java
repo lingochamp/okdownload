@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -173,7 +174,9 @@ public class ContentUriActivity extends BaseSampleActivity {
         @Override
         public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                             @Nullable Exception realCause) {
-            if (realCause != null) realCause.printStackTrace();
+            if (realCause != null) {
+                Log.e("ContentUriActivity", "taskEnd with realCause", realCause);
+            }
 
             final String status = "taskEnd " + cause + " " + speedCalculator.averageSpeed();
             statusTv.setText(status);

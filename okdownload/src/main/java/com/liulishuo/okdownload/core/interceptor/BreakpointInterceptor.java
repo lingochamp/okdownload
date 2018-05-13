@@ -152,7 +152,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
             // content-length
             final String contentLengthField = connected.getResponseHeaderField(CONTENT_LENGTH);
             if (!Util.isEmpty(contentLengthField)) {
-                contentLength = Long.valueOf(contentLengthField);
+                contentLength = Long.parseLong(contentLengthField);
             }
         }
 
@@ -163,7 +163,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
     static long getRangeRightFromContentRange(@NonNull String contentRange) {
         Matcher m = CONTENT_RANGE_RIGHT_VALUE.matcher(contentRange);
         if (m.find()) {
-            return Long.valueOf(m.group(1));
+            return Long.parseLong(m.group(1));
         }
 
         return -1;

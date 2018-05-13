@@ -35,6 +35,8 @@ dependencies {
     testImplementation dep.robolectric
 
     implementation dep.supportAnnotations
+
+    compileOnly dep.findbugsAnnotations
 }
 
 okcheck {

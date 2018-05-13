@@ -44,6 +44,8 @@ import java.security.MessageDigest;
 import java.util.List;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * On this demo you can see the simplest way to download a task.
  */
@@ -205,6 +207,7 @@ public class SingleActivity extends BaseSampleActivity {
         });
     }
 
+    @SuppressFBWarnings(value = "REC")
     public static String fileToMD5(String filePath) {
         InputStream inputStream = null;
         try {
@@ -220,25 +223,25 @@ public class SingleActivity extends BaseSampleActivity {
             }
             byte[] md5Bytes = digest.digest();
             return convertHashToString(md5Bytes);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
             return null;
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "file to md5 failed", e);
                 }
             }
         }
     }
 
     private static String convertHashToString(byte[] md5Bytes) {
-        String returnVal = "";
+        StringBuffer buf = new StringBuffer();
         for (int i = 0; i < md5Bytes.length; i++) {
-            returnVal += Integer.toString((md5Bytes[i] & 0xff) + 0x100, 16).substring(1);
+            buf.append(Integer.toString((md5Bytes[i] & 0xff) + 0x100, 16).substring(1));
         }
-        return returnVal.toUpperCase();
+        return buf.toString().toUpperCase();
     }
 
 

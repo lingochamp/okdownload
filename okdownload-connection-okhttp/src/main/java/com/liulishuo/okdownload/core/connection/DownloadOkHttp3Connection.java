@@ -63,13 +63,19 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
     }
 
     @Override public Map<String, List<String>> getRequestProperties() {
-        if (request != null) return request.headers().toMultimap();
-        else return requestBuilder.build().headers().toMultimap();
+        if (request != null) {
+            return request.headers().toMultimap();
+        } else {
+            return requestBuilder.build().headers().toMultimap();
+        }
     }
 
     @Override public String getRequestProperty(String key) {
-        if (request != null) return request.header(key);
-        else return requestBuilder.build().header(key);
+        if (request != null) {
+            return request.header(key);
+        } else {
+            return requestBuilder.build().header(key);
+        }
     }
 
     @Override public int getResponseCode() throws IOException {
@@ -99,25 +105,25 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
 
     public static class Factory implements DownloadConnection.Factory {
 
-        private OkHttpClient.Builder builder;
+        private OkHttpClient.Builder clientBuilder;
         private volatile OkHttpClient client;
 
         public Factory setBuilder(@NonNull OkHttpClient.Builder builder) {
-            this.builder = builder;
+            this.clientBuilder = builder;
             return this;
         }
 
         @NonNull public OkHttpClient.Builder builder() {
-            if (builder == null) builder = new OkHttpClient.Builder();
-            return builder;
+            if (clientBuilder == null) clientBuilder = new OkHttpClient.Builder();
+            return clientBuilder;
         }
 
         @Override public DownloadConnection create(String url) throws IOException {
             if (client == null) {
                 synchronized (Factory.class) {
                     if (client == null) {
-                        client = builder != null ? builder.build() : new OkHttpClient();
-                        builder = null;
+                        client = clientBuilder != null ? clientBuilder.build() : new OkHttpClient();
+                        clientBuilder = null;
                     }
                 }
             }

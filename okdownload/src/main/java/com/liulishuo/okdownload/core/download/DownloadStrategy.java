@@ -257,8 +257,11 @@ public class DownloadStrategy {
             if (super.equals(obj)) return true;
 
             if (obj instanceof FilenameHolder) {
-                if (filename == null) return ((FilenameHolder) obj).filename == null;
-                else return filename.equals(((FilenameHolder) obj).filename);
+                if (filename == null) {
+                    return ((FilenameHolder) obj).filename == null;
+                } else {
+                    return filename.equals(((FilenameHolder) obj).filename);
+                }
             }
 
             return false;
