@@ -11,7 +11,7 @@ android:
     - extra
 
 script:
-  - ./gradlew clean check
+  - ./gradlew clean okcheckDebug
 
 sudo: false
 
