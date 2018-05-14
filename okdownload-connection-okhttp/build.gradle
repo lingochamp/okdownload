@@ -35,7 +35,6 @@ dependencies {
 okcheck {
     coverageReport {
         xml.enabled = true
-        html.enabled = true
     }
 }
 
