@@ -20,6 +20,8 @@ before_cache:
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 
 after_script:
+  - ls ./okdownload/build/jacoco
+  - du -sh ./okdownload/build/jacoco/testDebugUnitTest.exec
   - bash <(curl -s https://codecov.io/bash)
 
 cache:
