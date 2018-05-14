@@ -34,10 +34,6 @@ allprojects {
         jcenter()
         google()
     }
-
-    okcheck {
-        destination = buildDir
-    }
 }
 
 task clean(type: Delete) {
