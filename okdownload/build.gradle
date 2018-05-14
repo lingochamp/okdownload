@@ -13,12 +13,6 @@ android {
         targetCompatibility rootProject.ext.targetCompatibilityVersion
     }
 
-    lintOptions {
-        textOutput 'stdout'
-        textReport true
-        lintConfig file('lint.xml')
-    }
-
     dexOptions {
         preDexLibraries = !rootProject.ext.isCi
     }

@@ -11,12 +11,6 @@ android {
         targetCompatibility rootProject.ext.targetCompatibilityVersion
     }
 
-    lintOptions {
-        lintConfig file('lint.xml')
-        textOutput 'stdout'
-        textReport true
-    }
-
     defaultConfig {
         applicationId "com.liulishuo.okdownload.sample"
         // using 19, because we demo for content-uri(CATEGORY_OPENABLE)
