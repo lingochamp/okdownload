@@ -1,3 +1,19 @@
+### 1.0.3
+
+_2018-05-16_
+
+#### Feature
+
+- Discard the breakpoint when the response instance-length is changed. refs #31
+- Cover the case of resource content-length is changed between block-connection and trial-connection for single-block task. refs #31
+- Add default user-agent when there isn't any user-agent provide
+- Cover the special case of backend response 416 on trial-connect because of range:0-0 but values is valid on response header. refs #55
+
+#### Bug Fix
+
+- Release connection for all cases of download-chain finish
+- Fix progress callbacks is missing for DownloadListener1, DownloadListener4, DownloadListener4WithSpeed when you re-attach one of them to UnifiedListenerManager manually. refs #52
+
 ### 1.0.2
 
 _2018-04-28_
