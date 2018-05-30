@@ -33,10 +33,5 @@ dependencies {
     compileOnly dep.findbugsAnnotations
 }
 
-okcheck {
-    coverageReport {
-        xml.enabled = true
-    }
-}
-
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+apply from: rootProject.file('gradle/codecov.gradle')
