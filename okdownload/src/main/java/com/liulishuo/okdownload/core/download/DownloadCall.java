@@ -269,6 +269,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
         store.onTaskEnd(task.getId(), cause, realCause);
         if (cause == EndCause.COMPLETED) {
+            store.markFileClear(task.getId());
             OkDownload.with().processFileStrategy()
                     .completeProcessStream(cache.getOutputStream(), task);
         }

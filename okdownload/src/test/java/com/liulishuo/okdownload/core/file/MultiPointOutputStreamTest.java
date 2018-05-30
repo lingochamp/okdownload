@@ -427,6 +427,8 @@ public class MultiPointOutputStreamTest {
         assertThat(multiPointOutputStream.outputStreamMap.get(0)).isEqualTo(outputStream);
         verify(outputStream).seek(eq(10L));
         verify(outputStream).setLength(eq(20L));
+        final int id = task.getId();
+        verify(store).markFileDirty(id);
     }
 
 

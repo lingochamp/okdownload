@@ -505,6 +505,10 @@ public class MultiPointOutputStream {
                 }
             }
 
+            if (firstOutputStream) {
+                store.markFileDirty(task.getId());
+            }
+
             if (!info.isChunked() && firstOutputStream && isPreAllocateLength) {
                 // pre allocate length
                 final long totalLength = info.getTotalLength();

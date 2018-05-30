@@ -118,8 +118,19 @@ public class StatusUtilTest {
         file.getParentFile().mkdirs();
         file.createNewFile();
 
-        // filename is null and can't find ---> unknown
         final BreakpointStore store = OkDownload.with().breakpointStore();
+        // on memory cache ---> unknown
+        doReturn(true).when(store).isOnlyMemoryCache();
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
+        doReturn(false).when(store).isOnlyMemoryCache();
+
+        // file dirty ---> unknown
+        doReturn(true).when(store).isFileDirty(1);
+        when(task.getId()).thenReturn(1);
+        assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
+        doReturn(false).when(store).isFileDirty(1);
+
+        // filename is null and can't find ---> unknown
         doReturn(null).when(store).getResponseFilename(anyString());
         assertThat(StatusUtil.isCompletedOrUnknown(task)).isEqualTo(StatusUtil.Status.UNKNOWN);
 

@@ -331,6 +331,8 @@ public class DownloadCallTest {
         verify(listener).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(IOException.class));
         verify(store)
                 .onTaskEnd(eq(task.getId()), eq(EndCause.COMPLETED), nullable(Exception.class));
+        final int id = task.getId();
+        verify(store).markFileClear(eq(id));
         verify(fileStrategy).completeProcessStream(eq(multiPointOutputStream), eq(task));
 
         when(cache.isPreAllocateFailed()).thenReturn(true);
