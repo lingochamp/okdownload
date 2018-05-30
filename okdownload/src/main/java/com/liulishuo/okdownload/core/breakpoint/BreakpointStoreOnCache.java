@@ -38,17 +38,20 @@ public class BreakpointStoreOnCache implements DownloadStore {
 
     private final SparseArray<IdentifiedTask> unStoredTasks;
     private final List<Integer> sortedOccupiedIds;
+    private final List<Integer> fileDirtyList;
 
     public BreakpointStoreOnCache() {
-        this(new SparseArray<BreakpointInfo>(), new HashMap<String, String>());
+        this(new SparseArray<BreakpointInfo>(), new ArrayList<Integer>(), new HashMap<String, String>());
     }
 
     BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos,
+                           List<Integer> fileDirtyList,
                            HashMap<String, String> responseFilenameMap,
                            SparseArray<IdentifiedTask> unStoredTasks,
                            List<Integer> sortedOccupiedIds,
                            KeyToIdMap keyToIdMap) {
         this.unStoredTasks = unStoredTasks;
+        this.fileDirtyList = fileDirtyList;
         this.storedInfos = storedInfos;
         this.responseFilenameMap = responseFilenameMap;
         this.sortedOccupiedIds = sortedOccupiedIds;
@@ -56,9 +59,11 @@ public class BreakpointStoreOnCache implements DownloadStore {
     }
 
     public BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos,
+                                  List<Integer> fileDirtyList,
                                   HashMap<String, String> responseFilenameMap) {
         this.unStoredTasks = new SparseArray<>();
         this.storedInfos = storedInfos;
+        this.fileDirtyList = fileDirtyList;
         this.responseFilenameMap = responseFilenameMap;
         this.keyToIdMap = new KeyToIdMap();
 
@@ -132,6 +137,19 @@ public class BreakpointStoreOnCache implements DownloadStore {
         return null;
     }
 
+    @Override
+    public boolean markFileDirty(int id) {
+        if (!fileDirtyList.contains(id)) {
+            fileDirtyList.add(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Override public boolean markFileClear(int id) {
+        return fileDirtyList.remove((Integer) id);
+    }
+
     @Override public synchronized void remove(int id) {
         storedInfos.remove(id);
         if (unStoredTasks.get(id) == null) sortedOccupiedIds.remove(Integer.valueOf(id));
@@ -187,6 +205,10 @@ public class BreakpointStoreOnCache implements DownloadStore {
 
     @Override public boolean isOnlyMemoryCache() {
         return true;
+    }
+
+    @Override public boolean isFileDirty(int id) {
+        return fileDirtyList.contains(id);
     }
 
     @Nullable @Override public String getResponseFilename(String url) {

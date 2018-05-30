@@ -139,4 +139,35 @@ public class BreakpointStoreOnSqliteTest {
     public void getAfterCompleted() {
         assertThat(store.getAfterCompleted(1)).isNull();
     }
+
+    @Test
+    public void markFileDirty() {
+        doReturn(false).when(onCache).markFileDirty(1);
+        assertThat(store.markFileDirty(1)).isFalse();
+        verify(helper, never()).markFileDirty(eq(1));
+
+        doReturn(true).when(onCache).markFileDirty(1);
+        assertThat(store.markFileDirty(1)).isTrue();
+        verify(helper).markFileDirty(eq(1));
+    }
+
+    @Test
+    public void markFileClear() {
+        doReturn(false).when(onCache).markFileClear(1);
+        assertThat(store.markFileClear(1)).isFalse();
+        verify(helper, never()).markFileClear(eq(1));
+
+        doReturn(true).when(onCache).markFileClear(1);
+        assertThat(store.markFileClear(1)).isTrue();
+        verify(helper).markFileClear(eq(1));
+    }
+
+    @Test
+    public void isFileDirty() {
+        doReturn(true).when(onCache).isFileDirty(1);
+        assertThat(store.isFileDirty(1)).isTrue();
+
+        doReturn(false).when(onCache).isFileDirty(1);
+        assertThat(store.isFileDirty(1)).isFalse();
+    }
 }

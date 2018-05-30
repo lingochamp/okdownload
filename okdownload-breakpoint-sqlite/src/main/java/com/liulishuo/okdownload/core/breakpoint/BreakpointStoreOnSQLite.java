@@ -40,6 +40,7 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
     public BreakpointStoreOnSQLite(Context context) {
         this.helper = new BreakpointSQLiteHelper(context.getApplicationContext());
         this.onCache = new BreakpointStoreOnCache(helper.loadToCache(),
+                helper.loadDirtyFileList(),
                 helper.loadResponseFilenameToMap());
     }
 
@@ -88,6 +89,24 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
         return null;
     }
 
+    @Override public boolean markFileDirty(int id) {
+        if (onCache.markFileDirty(id)) {
+            helper.markFileDirty(id);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override public boolean markFileClear(int id) {
+        if (onCache.markFileClear(id)) {
+            helper.markFileClear(id);
+            return true;
+        }
+
+        return false;
+    }
+
     @Override public void remove(int id) {
         onCache.remove(id);
         helper.removeInfo(id);
@@ -105,6 +124,10 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
 
     @Override public boolean isOnlyMemoryCache() {
         return false;
+    }
+
+    @Override public boolean isFileDirty(int id) {
+        return onCache.isFileDirty(id);
     }
 
     @Nullable @Override public String getResponseFilename(String url) {

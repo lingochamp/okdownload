@@ -102,6 +102,14 @@ public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, Downloa
         return null;
     }
 
+    @Override public boolean markFileDirty(int id) {
+        return onSQLiteWrapper.markFileDirty(id);
+    }
+
+    @Override public boolean markFileClear(int id) {
+        return onSQLiteWrapper.markFileClear(id);
+    }
+
     @Override public void remove(int id) {
         sqliteCache.remove(id);
 
@@ -120,6 +128,10 @@ public class RemitStoreOnSQLite implements RemitSyncExecutor.RemitAgent, Downloa
 
     @Override public boolean isOnlyMemoryCache() {
         return false;
+    }
+
+    @Override public boolean isFileDirty(int id) {
+        return onSQLiteWrapper.isFileDirty(id);
     }
 
     @Nullable @Override public String getResponseFilename(String url) {

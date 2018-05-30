@@ -37,5 +37,22 @@ public interface DownloadStore extends BreakpointStore {
      * for ignore real operation and just return {@code null} directly since on some logic model we
      * already delete info from store after task has been completed to enhance performance.
      */
-    @Nullable BreakpointInfo getAfterCompleted(int id);
+    @Nullable
+    BreakpointInfo getAfterCompleted(int id);
+
+    /**
+     * Mark the file relate to the {@code id} is dirty state.
+     *
+     * @param id the task id
+     */
+    boolean markFileDirty(int id);
+
+    /**
+     * Mark the file relate to the {@code id} is clear state.
+     * <p>
+     * Normally, which means the task is completed download.
+     *
+     * @param id the task id
+     */
+    boolean markFileClear(int id);
 }

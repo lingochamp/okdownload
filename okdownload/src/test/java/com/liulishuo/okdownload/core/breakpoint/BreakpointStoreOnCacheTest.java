@@ -56,9 +56,12 @@ public class BreakpointStoreOnCacheTest {
     private BreakpointStoreOnCache storeOnCache;
     private final int insertedId = 6;
 
-    @Mock private KeyToIdMap keyToIdMap;
-    @Mock private BreakpointInfo info;
-    @Mock private DownloadTask task;
+    @Mock
+    private KeyToIdMap keyToIdMap;
+    @Mock
+    private BreakpointInfo info;
+    @Mock
+    private DownloadTask task;
 
     private SparseArray<BreakpointInfo> storedInfos;
     private SparseArray<IdentifiedTask> unStoredTasks;
@@ -103,7 +106,9 @@ public class BreakpointStoreOnCacheTest {
         assertThat(blockInfo.getCurrentOffset()).isEqualTo(1);
     }
 
-    @Rule public ExpectedException thrown = ExpectedException.none();
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void onSyncToFilesystemSuccess_infoNotEqual() throws IOException {
         createAndInsert();
@@ -143,6 +148,7 @@ public class BreakpointStoreOnCacheTest {
         final SparseArray<IdentifiedTask> unStoredTasks = new SparseArray<>();
         final SparseArray<BreakpointInfo> storedInfos = new SparseArray<>();
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 unStoredTasks,
                 new ArrayList<Integer>(),
@@ -165,6 +171,7 @@ public class BreakpointStoreOnCacheTest {
         final SparseArray<IdentifiedTask> unStoredTasks = new SparseArray<>();
         final SparseArray<BreakpointInfo> storedInfos = new SparseArray<>();
         storeOnCache = new BreakpointStoreOnCache(storedInfos,
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 unStoredTasks,
                 new ArrayList<Integer>(),
@@ -189,6 +196,7 @@ public class BreakpointStoreOnCacheTest {
     public void allocateId() {
         final List<Integer> sortedOccupiedIds = new ArrayList<>();
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 new SparseArray<IdentifiedTask>(),
                 sortedOccupiedIds,
@@ -230,6 +238,7 @@ public class BreakpointStoreOnCacheTest {
         // init
         urlFilenameMap.put(url1, filename1);
         storeOnCache = new BreakpointStoreOnCache(new SparseArray<BreakpointInfo>(),
+                new ArrayList<Integer>(),
                 urlFilenameMap,
                 new SparseArray<IdentifiedTask>(),
                 new ArrayList<Integer>(),
@@ -255,6 +264,7 @@ public class BreakpointStoreOnCacheTest {
     public void onTaskEnd_completed() {
         final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
                 new SparseArray<BreakpointInfo>(),
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 new SparseArray<IdentifiedTask>(),
                 new ArrayList<Integer>(),
@@ -271,6 +281,7 @@ public class BreakpointStoreOnCacheTest {
     public void onTaskEnd_nonCompleted() {
         final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
                 new SparseArray<BreakpointInfo>(),
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 new SparseArray<IdentifiedTask>(),
                 new ArrayList<Integer>(),
@@ -293,6 +304,7 @@ public class BreakpointStoreOnCacheTest {
     public void remove() {
         final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
                 storedInfos,
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 unStoredTasks,
                 sortedOccupiedIds,
@@ -313,6 +325,7 @@ public class BreakpointStoreOnCacheTest {
     public void findOrCreateId() {
         final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
                 storedInfos,
+                new ArrayList<Integer>(),
                 new HashMap<String, String>(),
                 unStoredTasks,
                 sortedOccupiedIds,
@@ -332,5 +345,59 @@ public class BreakpointStoreOnCacheTest {
     @Test
     public void getAfterCompleted() {
         assertThat(storeOnCache.getAfterCompleted(1)).isNull();
+    }
+
+    @Test
+    public void markFileDirty() {
+        List<Integer> fileDirtyList = new ArrayList<>();
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                new SparseArray<BreakpointInfo>(),
+                fileDirtyList,
+                new HashMap<String, String>(),
+                new SparseArray<IdentifiedTask>(),
+                new ArrayList<Integer>(),
+                keyToIdMap));
+
+        assertThat(cache.markFileDirty(1)).isTrue();
+        assertThat(fileDirtyList).containsExactly(1);
+
+        assertThat(cache.markFileDirty(1)).isFalse();
+
+        assertThat(cache.markFileDirty(2)).isTrue();
+        assertThat(fileDirtyList).containsExactly(1, 2);
+    }
+
+    @Test
+    public void markFileClear() {
+        List<Integer> fileDirtyList = new ArrayList<>();
+        fileDirtyList.add(1);
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                new SparseArray<BreakpointInfo>(),
+                fileDirtyList,
+                new HashMap<String, String>(),
+                new SparseArray<IdentifiedTask>(),
+                new ArrayList<Integer>(),
+                keyToIdMap));
+
+        assertThat(cache.markFileClear(1)).isTrue();
+        assertThat(fileDirtyList).isEmpty();
+
+        assertThat(cache.markFileClear(2)).isFalse();
+    }
+
+    @Test
+    public void isFileDirty() {
+        List<Integer> fileDirtyList = new ArrayList<>();
+        fileDirtyList.add(1);
+        final BreakpointStoreOnCache cache = spy(new BreakpointStoreOnCache(
+                new SparseArray<BreakpointInfo>(),
+                fileDirtyList,
+                new HashMap<String, String>(),
+                new SparseArray<IdentifiedTask>(),
+                new ArrayList<Integer>(),
+                keyToIdMap));
+
+        assertThat(cache.isFileDirty(1)).isTrue();
+        assertThat(cache.isFileDirty(2)).isFalse();
     }
 }

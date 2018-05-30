@@ -243,4 +243,31 @@ public class RemitStoreOnSQLiteTest {
     public void getAfterCompleted() {
         assertThat(store.getAfterCompleted(1)).isNull();
     }
+
+    @Test
+    public void markFileDirty() {
+        doReturn(true).when(storeOnSQLite).markFileDirty(1);
+        assertThat(store.markFileDirty(1)).isTrue();
+
+        doReturn(false).when(storeOnSQLite).markFileDirty(1);
+        assertThat(store.markFileDirty(1)).isFalse();
+    }
+
+    @Test
+    public void markFileClear() {
+        doReturn(true).when(storeOnSQLite).markFileClear(1);
+        assertThat(store.markFileClear(1)).isTrue();
+
+        doReturn(false).when(storeOnSQLite).markFileClear(1);
+        assertThat(store.markFileClear(1)).isFalse();
+    }
+
+    @Test
+    public void isFileDirty() {
+        doReturn(true).when(storeOnSQLite).isFileDirty(1);
+        assertThat(store.isFileDirty(1)).isTrue();
+
+        doReturn(false).when(storeOnSQLite).isFileDirty(1);
+        assertThat(store.isFileDirty(1)).isFalse();
+    }
 }
