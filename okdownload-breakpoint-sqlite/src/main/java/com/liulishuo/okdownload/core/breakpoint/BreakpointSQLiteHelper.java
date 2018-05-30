@@ -49,11 +49,12 @@ import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.URL;
 public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
 
     private static final String NAME = "okdownload-breakpoint.db";
-    private static final int VERSION = 1;
+    private static final int VERSION = 3;
 
     private static final String RESPONSE_FILENAME_TABLE_NAME = "okdownloadResponseFilename";
     private static final String BREAKPOINT_TABLE_NAME = "breakpoint";
     private static final String BLOCK_TABLE_NAME = "block";
+    static final String TASK_FILE_DIRTY_TABLE_NAME = "taskFileDirty";
 
     public BreakpointSQLiteHelper(Context context) {
         super(context, NAME, null, VERSION);
@@ -96,6 +97,10 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
                 + URL + " VARCHAR NOT NULL PRIMARY KEY, "
                 + FILENAME + " VARCHAR NOT NULL)"
         );
+
+        db.execSQL("CREATE TABLE IF NOT EXISTS "
+                + TASK_FILE_DIRTY_TABLE_NAME + "( "
+                + ID + " INTEGER PRIMARY KEY)");
     }
 
     @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -106,9 +111,42 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
                     + FILENAME + " VARCHAR NOT NULL)"
             );
         }
+
+        if (oldVersion <= 2) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS "
+                    + TASK_FILE_DIRTY_TABLE_NAME + "( "
+                    + ID + " INTEGER PRIMARY KEY)");
+        }
     }
 
     @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    }
+
+    public void markFileDirty(int id) {
+        final SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues(1);
+        values.put(ID, id);
+        db.insert(TASK_FILE_DIRTY_TABLE_NAME, null, values);
+    }
+
+    public void markFileClear(int id) {
+        getWritableDatabase().delete(TASK_FILE_DIRTY_TABLE_NAME, ID + " = ?",
+                new String[]{String.valueOf(id)});
+    }
+
+    public List<Integer> loadDirtyFileList() {
+        final List<Integer> dirtyFileList = new ArrayList<>();
+        Cursor cursor = null;
+        try {
+            cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TASK_FILE_DIRTY_TABLE_NAME, null);
+            while (cursor.moveToNext()) {
+                dirtyFileList.add(cursor.getInt(cursor.getColumnIndex(ID)));
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+
+        return dirtyFileList;
     }
 
     public SparseArray<BreakpointInfo> loadToCache() {

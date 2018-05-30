@@ -16,22 +16,37 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.SparseArray;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
+import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteHelper.TASK_FILE_DIRTY_TABLE_NAME;
+import static com.liulishuo.okdownload.core.breakpoint.BreakpointSQLiteKey.ID;
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.MockitoAnnotations.initMocks;
 import static org.robolectric.RuntimeEnvironment.application;
 import static org.robolectric.annotation.Config.NONE;
 
@@ -39,13 +54,17 @@ import static org.robolectric.annotation.Config.NONE;
 @Config(manifest = NONE)
 public class BreakpointSQLiteHelperTest {
     private BreakpointSQLiteHelper helper;
+    @Mock
+    private SQLiteDatabase db;
 
     private BreakpointInfo insertedInfo1;
     private BreakpointInfo insertedInfo2;
 
     @Before
     public void setup() throws IOException {
-        helper = new BreakpointSQLiteHelper(application);
+        initMocks(this);
+
+        helper = spy(new BreakpointSQLiteHelper(application));
         final BreakpointInfo info1 = new BreakpointInfo(1, "url1", new File("p-path1"), null);
         info1.addBlock(new BlockInfo(0, 10));
         helper.insert(info1);
@@ -62,6 +81,59 @@ public class BreakpointSQLiteHelperTest {
     @After
     public void tearDown() {
         helper.close();
+    }
+
+    @Test
+    public void onCreate() {
+        helper.onCreate(db);
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(db, times(4)).execSQL(captor.capture());
+
+        List<String> values = captor.getAllValues();
+        assertThat(values.size()).isEqualTo(4);
+        assertThat(values.get(3)).isEqualTo("CREATE TABLE IF NOT EXISTS "
+                + TASK_FILE_DIRTY_TABLE_NAME + "( "
+                + ID + " INTEGER PRIMARY KEY)");
+    }
+
+    @Test
+    public void onUpgrade() {
+        helper.onUpgrade(db, 2, 3);
+        verify(db).execSQL("CREATE TABLE IF NOT EXISTS "
+                + TASK_FILE_DIRTY_TABLE_NAME + "( "
+                + ID + " INTEGER PRIMARY KEY)");
+    }
+
+    @Test
+    public void markFileDirty() {
+        doReturn(db).when(helper).getWritableDatabase();
+        helper.markFileDirty(1);
+
+        ArgumentCaptor<ContentValues> captor = ArgumentCaptor.forClass(ContentValues.class);
+        verify(db).insert(eq(TASK_FILE_DIRTY_TABLE_NAME), nullable(String.class), captor.capture());
+        assertThat(captor.getValue().get(ID)).isEqualTo(1);
+    }
+
+    @Test
+    public void markFileClear() {
+        doReturn(db).when(helper).getWritableDatabase();
+        helper.markFileClear(1);
+        ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
+        verify(db).delete(eq(TASK_FILE_DIRTY_TABLE_NAME), eq(ID + " = ?"), captor.capture());
+
+        assertThat(captor.getValue()[0]).isEqualTo("1");
+    }
+
+    @Test
+    public void loadDirtyFileList() {
+        doReturn(db).when(helper).getWritableDatabase();
+        Cursor cursor = mock(Cursor.class);
+        doReturn(cursor).when(db).rawQuery("SELECT * FROM " + TASK_FILE_DIRTY_TABLE_NAME, null);
+        doReturn(true, true, false).when(cursor).moveToNext();
+        doReturn(1, 2).when(cursor).getInt(anyInt());
+
+        assertThat(helper.loadDirtyFileList()).containsExactly(1, 2);
     }
 
     @Test
