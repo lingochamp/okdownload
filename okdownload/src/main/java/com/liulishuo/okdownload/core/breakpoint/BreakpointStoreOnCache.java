@@ -41,7 +41,8 @@ public class BreakpointStoreOnCache implements DownloadStore {
     private final List<Integer> fileDirtyList;
 
     public BreakpointStoreOnCache() {
-        this(new SparseArray<BreakpointInfo>(), new ArrayList<Integer>(), new HashMap<String, String>());
+        this(new SparseArray<BreakpointInfo>(), new ArrayList<Integer>(),
+                new HashMap<String, String>());
     }
 
     BreakpointStoreOnCache(SparseArray<BreakpointInfo> storedInfos,

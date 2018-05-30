@@ -53,8 +53,8 @@ public interface BreakpointStore {
     boolean isOnlyMemoryCache();
 
     /**
-     * Whether the file relate to the task id {@code id} is dirty, which means the file isn't complete download
-     * yet.
+     * Whether the file relate to the task id {@code id} is dirty, which means the file isn't
+     * complete download yet.
      *
      * @param id the task id.
      * @return {@code true} the file relate to {@code id} is dirty
