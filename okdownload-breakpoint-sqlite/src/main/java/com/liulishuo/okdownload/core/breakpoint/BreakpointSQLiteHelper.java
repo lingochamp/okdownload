@@ -138,7 +138,8 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         final List<Integer> dirtyFileList = new ArrayList<>();
         Cursor cursor = null;
         try {
-            cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TASK_FILE_DIRTY_TABLE_NAME, null);
+            cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TASK_FILE_DIRTY_TABLE_NAME,
+                    null);
             while (cursor.moveToNext()) {
                 dirtyFileList.add(cursor.getInt(cursor.getColumnIndex(ID)));
             }
