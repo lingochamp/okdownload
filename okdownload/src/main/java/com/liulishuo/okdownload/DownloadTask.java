@@ -78,7 +78,7 @@ public class DownloadTask extends IdentifiedTask implements Comparable<DownloadT
     private final int minIntervalMillisCallbackProcess;
     // end optimize ------------------
 
-    private DownloadListener listener;
+    private volatile DownloadListener listener;
     private volatile SparseArray<Object> keyTagMap;
     private Object tag;
     private final boolean wifiRequired;
@@ -473,6 +473,15 @@ public class DownloadTask extends IdentifiedTask implements Comparable<DownloadT
      */
     public void setTag(Object tag) {
         this.tag = tag;
+    }
+
+    /**
+     * Replace the origin listener on this task reference.
+     *
+     * @param listener the new listener for this task reference.
+     */
+    public void replaceListener(@NonNull DownloadListener listener) {
+        this.listener = listener;
     }
 
     /**

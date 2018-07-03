@@ -570,6 +570,20 @@ public class DownloadTaskTest {
     }
 
     @Test
+    public void replaceListener() {
+        DownloadTask task = new DownloadTask.Builder("https://jacksgong.com",
+                new File(parentPath, filename)).build();
+
+        final DownloadListener listener = mock(DownloadListener.class);
+        task.enqueue(listener);
+        assertThat(task.getListener()).isEqualTo(listener);
+
+        final DownloadListener another = mock(DownloadListener.class);
+        task.replaceListener(another);
+        assertThat(task.getListener()).isEqualTo(another);
+    }
+
+    @Test
     public void mockTaskForCompare_justId() {
         final IdentifiedTask task = DownloadTask.mockTaskForCompare(1);
         assertThat(task.getId()).isEqualTo(1);
