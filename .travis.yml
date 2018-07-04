@@ -11,7 +11,7 @@ android:
     - extra
 
 script:
-  - ./gradlew -PignoreOkcheckDiff clean okcheckDebug
+  - ./gradlew -PignoreOkcheckDiff -PisCI clean okcheckDebug
 
 sudo: false
 

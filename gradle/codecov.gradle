@@ -16,6 +16,8 @@
 
 apply plugin: 'jacoco'
 
+println "apply code-coverage"
+
 task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
 
     reports {
