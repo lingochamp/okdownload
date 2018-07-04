@@ -276,6 +276,8 @@ public class UtilTest {
     public void parseContentLength() {
         assertThat(Util.parseContentLength(null)).isEqualTo(CHUNKED_CONTENT_LENGTH);
         assertThat(Util.parseContentLength("123")).isEqualTo(123L);
+
+        assertThat(Util.parseContentLength("-")).isEqualTo(CHUNKED_CONTENT_LENGTH);
     }
 
     @Test

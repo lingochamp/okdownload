@@ -326,7 +326,13 @@ public class Util {
     public static long parseContentLength(@Nullable String contentLength) {
         if (contentLength == null) return CHUNKED_CONTENT_LENGTH;
 
-        return Long.parseLong(contentLength);
+        try {
+            return Long.parseLong(contentLength);
+        } catch (NumberFormatException ignored) {
+            Util.d("Util", "parseContentLength failed parse for '" + contentLength + "'");
+        }
+
+        return CHUNKED_CONTENT_LENGTH;
     }
 
     public static boolean isNetworkNotOnWifiType(ConnectivityManager manager) {
