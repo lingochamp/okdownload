@@ -51,6 +51,8 @@ android {
     }
 }
 
-afterEvaluate {
-    tasks.findByName('okcheckDebug').dependsOn('jacocoTestReport')
+project.tasks.whenTaskAdded { task ->
+    if (task.name == "okcheckDebug" || task.name == 'okcheck') {
+        task.dependsOn('jacocoTestReport')
+    }
 }
