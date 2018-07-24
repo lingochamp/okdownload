@@ -895,6 +895,84 @@ public class DownloadDispatcherTest {
         assertThat(pendingCalls.isEmpty()).isEqualTo(true);
     }
 
+    @Test
+    public void isRunning_async_true() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(), true, store));
+        runningAsyncCalls.add(mockRunningCall);
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        final boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(true);
+    }
+
+    @Test
+    public void isRunning_async_false() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(1), true, store));
+        runningAsyncCalls.add(mockRunningCall);
+
+        // because of cancelled
+        when(mockRunningCall.isCanceled()).thenReturn(true);
+
+        boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of no running task
+        runningAsyncCalls.clear();
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of the task is not in the running list
+        runningAsyncCalls.add(mockRunningCall);
+
+        result = dispatcher.isRunning(mockTask(2));
+
+        assertThat(result).isEqualTo(false);
+    }
+
+    @Test
+    public void isRunning_sync_true() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(), false, store));
+        runningSyncCalls.add(mockRunningCall);
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        final boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(true);
+    }
+
+    @Test
+    public void isRunning_sync_false() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(1), false, store));
+        runningSyncCalls.add(mockRunningCall);
+
+        // because of cancelled
+        when(mockRunningCall.isCanceled()).thenReturn(true);
+
+        boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of no running task
+        runningSyncCalls.clear();
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of the task is not in the running list
+        runningSyncCalls.add(mockRunningCall);
+
+        result = dispatcher.isRunning(mockTask(2));
+
+        assertThat(result).isEqualTo(false);
+    }
+
     private static class MockDownloadDispatcher extends DownloadDispatcher {
     }
 }
