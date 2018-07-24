@@ -58,7 +58,9 @@ public class DownloadDispatcher {
 
     private final List<DownloadCall> runningAsyncCalls;
     private final List<DownloadCall> runningSyncCalls;
-    private final List<DownloadCall> pendingCalls;
+
+    // for enqueueing task during task is finishing
+    private final List<DownloadCall> finishingCalls;
 
     // for the case of tasks has been cancelled but didn't remove from runningAsyncCalls list yet.
     private final AtomicInteger flyingCanceledAsyncCallCount = new AtomicInteger();
@@ -79,11 +81,11 @@ public class DownloadDispatcher {
     DownloadDispatcher(List<DownloadCall> readyAsyncCalls,
                        List<DownloadCall> runningAsyncCalls,
                        List<DownloadCall> runningSyncCalls,
-                       List<DownloadCall> pendingCalls) {
+                       List<DownloadCall> finishingCalls) {
         this.readyAsyncCalls = readyAsyncCalls;
         this.runningAsyncCalls = runningAsyncCalls;
         this.runningSyncCalls = runningSyncCalls;
-        this.pendingCalls = pendingCalls;
+        this.finishingCalls = finishingCalls;
     }
 
     public void setDownloadStore(@NonNull DownloadStore store) {
@@ -128,7 +130,6 @@ public class DownloadDispatcher {
             final Collection<DownloadTask> fileBusyList = new ArrayList<>();
             for (DownloadTask task : taskList) {
                 if (inspectCompleted(task, completedTaskList)) continue;
-                if (inspectFinishing(task, sameTaskConflictList)) continue;
                 if (inspectForConflict(task, sameTaskConflictList, fileBusyList)) continue;
 
                 enqueueIgnorePriority(task);
@@ -149,56 +150,12 @@ public class DownloadDispatcher {
     private synchronized void enqueueLocked(DownloadTask task) {
         Util.d(TAG, "enqueueLocked for single task: " + task);
         if (inspectCompleted(task)) return;
-        if (inspectFinishing(task)) return;
         if (inspectForConflict(task)) return;
 
         final int originReadyAsyncCallSize = readyAsyncCalls.size();
         enqueueIgnorePriority(task);
         if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
     }
-
-    boolean inspectFinishing(DownloadTask task) {
-        return inspectFinishing(task, null);
-    }
-
-    boolean inspectFinishing(DownloadTask task, Collection<DownloadTask> sameTaskList) {
-        for (DownloadCall pendingCall : pendingCalls) {
-            if (pendingCall.equalsTask(task)) {
-                if (sameTaskList != null) {
-                    Util.d(TAG, "task: " + task + " has been in pending list, "
-                            + "add to same task list");
-                    sameTaskList.add(task);
-                } else {
-                    Util.d(TAG, "task: " + task + " has been in pending list, "
-                            + "just callback end");
-                    OkDownload.with().callbackDispatcher().dispatch()
-                            .taskEnd(task, EndCause.SAME_TASK_BUSY, null);
-                }
-                return true;
-            }
-        }
-
-        final int preInspectSize = pendingCalls.size();
-        for (DownloadCall runningAsyncCall : runningAsyncCalls) {
-            if (runningAsyncCall.task.getId() == task.getId() && runningAsyncCall.isFinishing()) {
-                final DownloadCall call = DownloadCall.create(task, true, store);
-                Util.d(TAG, "add async task: " + task + " to pending list");
-                pendingCalls.add(call);
-                break;
-            }
-        }
-        for (DownloadCall runningSyncCall : runningSyncCalls) {
-            if (runningSyncCall.task.getId() == task.getId() && runningSyncCall.isFinishing()) {
-                final DownloadCall call = DownloadCall.create(task, false, store);
-                Util.d(TAG, "add sync task: " + task + " to pending list");
-                pendingCalls.add(call);
-                break;
-            }
-        }
-        final int afterInspectSize = pendingCalls.size();
-        return preInspectSize != afterInspectSize;
-    }
-
 
     private synchronized void enqueueIgnorePriority(DownloadTask task) {
         final DownloadCall call = DownloadCall.create(task, true, store);
@@ -217,7 +174,6 @@ public class DownloadDispatcher {
 
         synchronized (this) {
             if (inspectCompleted(task)) return;
-            if (inspectFinishing(task)) return;
             if (inspectForConflict(task)) return;
 
             call = DownloadCall.create(task, false, store);
@@ -233,7 +189,6 @@ public class DownloadDispatcher {
         // assemble tasks
         List<DownloadTask> taskList = new ArrayList<>();
         for (DownloadCall call : readyAsyncCalls) taskList.add(call.task);
-        for (DownloadCall call : pendingCalls) taskList.add(call.task);
         for (DownloadCall call : runningAsyncCalls) taskList.add(call.task);
         for (DownloadCall call : runningSyncCalls) taskList.add(call.task);
 
@@ -307,17 +262,6 @@ public class DownloadDispatcher {
             DownloadCall call = i.next();
             if (call.task == task || call.task.getId() == task.getId()) {
                 if (call.isCanceled() || call.isFinishing()) return;
-
-                i.remove();
-                needCallbackCalls.add(call);
-                return;
-            }
-        }
-
-        for (Iterator<DownloadCall> i = pendingCalls.iterator(); i.hasNext(); ) {
-            DownloadCall call = i.next();
-            if (call.task == task || call.task.getId() == task.getId()) {
-                if (call.isCanceled()) return;
 
                 i.remove();
                 needCallbackCalls.add(call);
@@ -432,33 +376,17 @@ public class DownloadDispatcher {
 
     public synchronized void finish(DownloadCall call) {
         final boolean asyncExecuted = call.asyncExecuted;
-        final Collection<DownloadCall> calls = asyncExecuted ? runningAsyncCalls : runningSyncCalls;
-        if (!calls.remove(call)) throw new AssertionError("Call wasn't in-flight!");
-        if (asyncExecuted) {
-            if (call.isCanceled()) {
-                flyingCanceledAsyncCallCount.decrementAndGet();
-            }
-            for (Iterator<DownloadCall> iterator = pendingCalls.iterator(); iterator.hasNext(); ) {
-                final DownloadCall downloadCall = iterator.next();
-                if (downloadCall.asyncExecuted && downloadCall.task.getId() == call.task.getId()) {
-                    Util.d(TAG, "add pending async task: " + downloadCall.task + " to ready list");
-                    readyAsyncCalls.add(downloadCall);
-                    iterator.remove();
-                    break;
-                }
-            }
-            processCalls();
+        final Collection<DownloadCall> calls;
+        if (finishingCalls.contains(call)) {
+            calls = finishingCalls;
+        } else if (asyncExecuted) {
+            calls = runningAsyncCalls;
         } else {
-            for (Iterator<DownloadCall> iterator = pendingCalls.iterator(); iterator.hasNext(); ) {
-                final DownloadCall downloadCall = iterator.next();
-                if (!downloadCall.asyncExecuted && downloadCall.task.getId() == call.task.getId()) {
-                    Util.d(TAG, "execute pending sync task: " + downloadCall.task);
-                    iterator.remove();
-                    execute(downloadCall.task);
-                    break;
-                }
-            }
+            calls = runningSyncCalls;
         }
+        if (!calls.remove(call)) throw new AssertionError("Call wasn't in-flight!");
+        if (asyncExecuted && call.isCanceled()) flyingCanceledAsyncCallCount.decrementAndGet();
+        if (asyncExecuted) processCalls();
     }
 
     public synchronized boolean isFileConflictAfterRun(@NonNull DownloadTask task) {
@@ -532,10 +460,20 @@ public class DownloadDispatcher {
                                @Nullable Collection<DownloadTask> sameTaskList,
                                @Nullable Collection<DownloadTask> fileBusyList) {
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
-        for (DownloadCall call : calls) {
+        final Iterator<DownloadCall> iterator = calls.iterator();
+        while (iterator.hasNext()) {
+            DownloadCall call = iterator.next();
             if (call.isCanceled()) continue;
 
             if (call.equalsTask(task)) {
+                if (call.isFinishing()) {
+                    Util.d(TAG, "task: " + task.getId()
+                            + " is finishing, move it to finishing list");
+                    finishingCalls.add(call);
+                    iterator.remove();
+                    return false;
+                }
+
                 if (sameTaskList != null) {
                     sameTaskList.add(task);
                 } else {
