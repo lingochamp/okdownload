@@ -75,8 +75,10 @@ public class DownloadDispatcherTest {
 
     private List<DownloadCall> runningAsyncCalls;
     private List<DownloadCall> runningSyncCalls;
+    private List<DownloadCall> finishingCalls;
 
-    @Mock private DownloadStore store;
+    @Mock
+    private DownloadStore store;
     private File existFile = new File("./p-path/filename");
 
     @BeforeClass
@@ -89,12 +91,14 @@ public class DownloadDispatcherTest {
     public void setup() throws IOException {
         initMocks(this);
 
-        readyAsyncCalls = new ArrayList<>();
+        readyAsyncCalls = spy(new ArrayList<DownloadCall>());
         runningAsyncCalls = spy(new ArrayList<DownloadCall>());
         runningSyncCalls = spy(new ArrayList<DownloadCall>());
+        finishingCalls = spy(new ArrayList<DownloadCall>());
 
         dispatcher = spy(
-                new DownloadDispatcher(readyAsyncCalls, runningAsyncCalls, runningSyncCalls));
+                new DownloadDispatcher(readyAsyncCalls, runningAsyncCalls, runningSyncCalls,
+                        finishingCalls));
         dispatcher.setDownloadStore(store);
 
         doReturn(mock(ExecutorService.class)).when(dispatcher).getExecutorService();
@@ -470,10 +474,12 @@ public class DownloadDispatcherTest {
 
     @Test
     public void cancelAll() {
-        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(1), true, store)));
-        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(2), true, store)));
-        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(3), true, store)));
-        readyAsyncCalls.add(spy(DownloadCall.create(mockTask(4), true, store)));
+        List<DownloadCall> mockReadyAsyncCalls = new ArrayList<>();
+        mockReadyAsyncCalls.add(spy(DownloadCall.create(mockTask(1), true, store)));
+        mockReadyAsyncCalls.add(spy(DownloadCall.create(mockTask(2), true, store)));
+        mockReadyAsyncCalls.add(spy(DownloadCall.create(mockTask(3), true, store)));
+        mockReadyAsyncCalls.add(spy(DownloadCall.create(mockTask(4), true, store)));
+        readyAsyncCalls.addAll(mockReadyAsyncCalls);
 
         runningAsyncCalls.add(spy(DownloadCall.create(mockTask(5), true, store)));
         runningAsyncCalls.add(spy(DownloadCall.create(mockTask(6), true, store)));
@@ -487,14 +493,24 @@ public class DownloadDispatcherTest {
 
         dispatcher.cancelAll();
 
-        for (DownloadCall call : readyAsyncCalls) {
-            verify(call).cancel();
+        // verify readyAsyncCalls
+        assertThat(readyAsyncCalls).isEmpty();
+        final ArgumentCaptor<Collection<DownloadTask>> callCaptor =
+                ArgumentCaptor.forClass(Collection.class);
+        verify(OkDownload.with().callbackDispatcher()).endTasksWithCanceled(callCaptor.capture());
+        assertThat(callCaptor.getValue()).hasSize(12);
+        for (DownloadCall call : mockReadyAsyncCalls) {
+            verify(call, never()).cancel();
         }
 
+        // verify runningAsyncCalls
+        assertThat(runningAsyncCalls).hasSize(4);
         for (DownloadCall call : runningAsyncCalls) {
             verify(call).cancel();
         }
 
+        // verify runningSyncCalls
+        assertThat(runningSyncCalls).hasSize(4);
         for (DownloadCall call : runningSyncCalls) {
             verify(call).cancel();
         }
@@ -521,6 +537,39 @@ public class DownloadDispatcherTest {
 
         final ExecutorService executorService = dispatcher.getExecutorService();
         verify(executorService).execute(mockReadyCall);
+    }
+
+    @Test
+    public void finish_removeCallFromRightList() {
+        final DownloadCall finishingSyncCall = DownloadCall.create(mockTask(1), false, store);
+        final DownloadCall finishingAsyncCall = DownloadCall.create(mockTask(2), true, store);
+        final DownloadCall runningAsyncCall = DownloadCall.create(mockTask(3), true, store);
+        final DownloadCall runningSyncCall = DownloadCall.create(mockTask(4), false, store);
+        finishingCalls.add(finishingAsyncCall);
+        finishingCalls.add(finishingSyncCall);
+        runningAsyncCalls.add(runningAsyncCall);
+        runningSyncCalls.add(runningSyncCall);
+
+        dispatcher.finish(finishingAsyncCall);
+
+        assertThat(finishingCalls).hasSize(1);
+        verify(finishingCalls).remove(finishingAsyncCall);
+        verify(runningAsyncCalls, never()).remove(any(DownloadCall.class));
+        verify(runningSyncCalls, never()).remove(any(DownloadCall.class));
+
+        dispatcher.finish(finishingSyncCall);
+
+        assertThat(finishingCalls).hasSize(0);
+        verify(finishingCalls).remove(finishingSyncCall);
+        verify(runningAsyncCalls, never()).remove(any(DownloadCall.class));
+        verify(runningSyncCalls, never()).remove(any(DownloadCall.class));
+
+        dispatcher.finish(runningAsyncCall);
+        verify(runningAsyncCalls).remove(runningAsyncCall);
+        verify(runningSyncCalls, never()).remove(any(DownloadCall.class));
+
+        dispatcher.finish(runningSyncCall);
+        verify(runningSyncCalls).remove(any(DownloadCall.class));
     }
 
     @Test
@@ -553,7 +602,8 @@ public class DownloadDispatcherTest {
         assertThat(isConflict).isFalse();
     }
 
-    @Rule public ExpectedException thrown = ExpectedException.none();
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void setMaxParallelRunningCount() {
@@ -643,6 +693,24 @@ public class DownloadDispatcherTest {
     }
 
     @Test
+    public void inspectForConflict_sameTask_isFinishing() {
+        final DownloadTask task = mock(DownloadTask.class);
+        final DownloadCall call = mock(DownloadCall.class);
+        when(call.equalsTask(task)).thenReturn(true);
+        when(call.isFinishing()).thenReturn(true);
+        final Collection<DownloadCall> calls = new ArrayList<>();
+        final Collection<DownloadTask> sameTaskList = new ArrayList<>();
+        final Collection<DownloadTask> fileBusyList = new ArrayList<>();
+        calls.add(call);
+
+        assertThat(dispatcher.inspectForConflict(task, calls, sameTaskList, fileBusyList))
+                .isFalse();
+        assertThat(fileBusyList).isEmpty();
+        assertThat(sameTaskList).isEmpty();
+        assertThat(finishingCalls).hasSize(1);
+    }
+
+    @Test
     public void inspectForConflict_fileBusy() throws IOException {
         mockOkDownload();
         final CallbackDispatcher callbackDispatcher = OkDownload.with().callbackDispatcher();
@@ -725,6 +793,119 @@ public class DownloadDispatcherTest {
     public void findSameTask_nonMatch() {
         final DownloadTask task = mock(DownloadTask.class);
         assertThat(dispatcher.findSameTask(task)).isNull();
+    }
+
+    @Test
+    public void isRunning_async_true() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(), true, store));
+        runningAsyncCalls.add(mockRunningCall);
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        final boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(true);
+    }
+
+    @Test
+    public void isRunning_async_false() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(1), true, store));
+        runningAsyncCalls.add(mockRunningCall);
+
+        // because of cancelled
+        when(mockRunningCall.isCanceled()).thenReturn(true);
+
+        boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of no running task
+        runningAsyncCalls.clear();
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of the task is not in the running list
+        runningAsyncCalls.add(mockRunningCall);
+
+        result = dispatcher.isRunning(mockTask(2));
+
+        assertThat(result).isEqualTo(false);
+    }
+
+    @Test
+    public void isRunning_sync_true() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(), false, store));
+        runningSyncCalls.add(mockRunningCall);
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        final boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(true);
+    }
+
+    @Test
+    public void isRunning_sync_false() {
+        final DownloadCall mockRunningCall = spy(DownloadCall.create(mockTask(1), false, store));
+        runningSyncCalls.add(mockRunningCall);
+
+        // because of cancelled
+        when(mockRunningCall.isCanceled()).thenReturn(true);
+
+        boolean result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of no running task
+        runningSyncCalls.clear();
+        when(mockRunningCall.isCanceled()).thenReturn(false);
+
+        result = dispatcher.isRunning(mockRunningCall.task);
+
+        assertThat(result).isEqualTo(false);
+
+        // because of the task is not in the running list
+        runningSyncCalls.add(mockRunningCall);
+
+        result = dispatcher.isRunning(mockTask(2));
+
+        assertThat(result).isEqualTo(false);
+    }
+
+    @Test
+    public void isPending_true() {
+        final DownloadCall mockReadyCall = spy(DownloadCall.create(mockTask(1), true, store));
+        when(mockReadyCall.isCanceled()).thenReturn(false);
+        readyAsyncCalls.add(mockReadyCall);
+
+        boolean result = dispatcher.isPending(mockReadyCall.task);
+
+        assertThat(result).isEqualTo(true);
+    }
+
+    @Test
+    public void isPending_false() {
+        // because of no pending task
+        boolean result = dispatcher.isPending(mockTask(0));
+
+        assertThat(result).isEqualTo(false);
+
+        // because of the task is not in pending list
+        final DownloadCall pendingCall1 = spy(DownloadCall.create(mockTask(1), true, store));
+        when(pendingCall1.isCanceled()).thenReturn(false);
+        readyAsyncCalls.add(pendingCall1);
+
+        result = dispatcher.isPending(mockTask(0));
+
+        assertThat(result).isEqualTo(false);
+
+        // because of the task is cancelled
+        when(pendingCall1.isCanceled()).thenReturn(true);
+
+        result = dispatcher.isPending(pendingCall1.task);
+
+        assertThat(result).isEqualTo(false);
     }
 
     private static class MockDownloadDispatcher extends DownloadDispatcher {
