@@ -82,7 +82,7 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
     public boolean dispatchTaskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
                                    @NonNull Listener4Assist.Listener4Model model) {
         final Listener4SpeedModel speedModel = (Listener4SpeedModel) model;
-        speedModel.taskSpeed.endTask();
+        if(speedModel.taskSpeed!=null) speedModel.taskSpeed.endTask();
 
         if (callback != null) {
             callback.taskEnd(task, cause, realCause, speedModel.taskSpeed);
