@@ -199,9 +199,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     @Override
+    @Deprecated
     public int ready() {
-        // TODO: 2018/7/25
-        return 0;
+        return asInQueueTask().enqueue();
     }
 
     @Override

@@ -225,6 +225,7 @@ public interface BaseDownloadTask {
      * to the global queue to make this task is ready to be assembled by the queue which makes up of
      * the same listener task, just invoke {@link InQueueTask#enqueue()}.
      */
+    @Deprecated
     int ready();
 
     /**
