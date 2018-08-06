@@ -525,8 +525,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public Object getPauseLock() {
-        // TODO: 2018/7/26 not supported
-        return new Object();
+        return null;
     }
 
     @Override
