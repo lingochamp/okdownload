@@ -69,6 +69,7 @@ dependencies {
     implementation project(':okdownload')
     implementation project(':sqlite')
     implementation project(':okhttp')
+    implementation project(':filedownloader')
 
     compileOnly dep.findbugsAnnotations
 }

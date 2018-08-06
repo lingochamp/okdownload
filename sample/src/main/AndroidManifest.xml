@@ -45,8 +45,6 @@
         <activity android:name=".SingleActivity"/>
         <activity android:name=".QueueActivity"/>
         <activity android:name=".EachBlockProgressActivity"/>
-        <activity android:name=".ManagerActivity"/>
-        <activity android:name=".comprehensive.ComprehensiveActivity"/>
         <activity android:name=".BunchActivity"/>
         <activity android:name=".ContentUriActivity"/>
         <activity android:name=".NotificationActivity"/>
