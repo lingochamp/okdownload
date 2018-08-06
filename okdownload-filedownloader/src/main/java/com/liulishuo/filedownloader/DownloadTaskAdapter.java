@@ -128,6 +128,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public BaseDownloadTask setTag(int key, Object tag) {
+        if (key == TAG_KEY) {
+            throw new IllegalArgumentException(key + " is used internally, please use another key");
+        }
         builder.keyOfTag = key;
         builder.tagWithKey = tag;
         return this;
