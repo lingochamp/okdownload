@@ -134,6 +134,11 @@ public class UnifiedListenerManager {
         task.execute(hostListener);
     }
 
+
+    @NonNull public DownloadListener getHostListener() {
+        return hostListener;
+    }
+
     // convenient for unit-test.
     boolean isTaskPendingOrRunning(@NonNull DownloadTask task) {
         return StatusUtil.isSameTaskPendingOrRunning(task);
