@@ -44,6 +44,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -81,16 +82,16 @@ public class CompatListenerAssistTest {
         when(mockDownloadTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(null);
 
         compatListenerAssist.taskStart(mockDownloadTask);
-        verify(callback, never()).pending(any(DownloadTaskAdapter.class), anyInt(), anyInt());
+        verify(callback, never()).pending(any(DownloadTaskAdapter.class), anyLong(), anyLong());
         verify(callback, never()).started(any(DownloadTaskAdapter.class));
 
         when(mockDownloadTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
-        when(mockTaskAdapter.getSoFarBytes()).thenReturn(1);
-        when(mockTaskAdapter.getTotalBytes()).thenReturn(2);
+        when(mockTaskAdapter.getSoFarBytesInLong()).thenReturn(1L);
+        when(mockTaskAdapter.getTotalBytesInLong()).thenReturn(2L);
 
         compatListenerAssist.taskStart(mockDownloadTask);
 
-        verify(callback).pending(mockTaskAdapter, 1, 2);
+        verify(callback).pending(mockTaskAdapter, 1L, 2L);
         verify(callback).started(mockTaskAdapter);
     }
 
@@ -106,16 +107,16 @@ public class CompatListenerAssistTest {
 
         compatListenerAssist.connectStart(mockTask);
         assertThat(compatListenerAssist.taskConnected.get()).isTrue();
-        verify(mockTaskAdapter, never()).getSoFarBytes();
-        verify(mockTaskAdapter, never()).getTotalBytes();
+        verify(mockTaskAdapter, never()).getSoFarBytesInLong();
+        verify(mockTaskAdapter, never()).getTotalBytesInLong();
         verify(mockTaskAdapter, never()).getProgressAssist();
         verify(callback, never()).connected(
-                any(DownloadTaskAdapter.class), anyString(), anyBoolean(), anyInt(), anyInt());
+                any(DownloadTaskAdapter.class), anyString(), anyBoolean(), anyLong(), anyLong());
 
         compatListenerAssist.taskConnected.set(false);
         when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
-        when(mockTaskAdapter.getSoFarBytes()).thenReturn(1);
-        when(mockTaskAdapter.getTotalBytes()).thenReturn(2);
+        when(mockTaskAdapter.getSoFarBytesInLong()).thenReturn(1L);
+        when(mockTaskAdapter.getTotalBytesInLong()).thenReturn(2L);
 
         compatListenerAssist.connectStart(mockTask);
 
@@ -123,8 +124,8 @@ public class CompatListenerAssistTest {
                 mockTaskAdapter,
                 compatListenerAssist.getEtag(),
                 compatListenerAssist.isResumable(),
-                1,
-                2);
+                1L,
+                2L);
         verify(mockProgressAssist).calculateCallbackMinIntervalBytes(2);
     }
 
@@ -242,10 +243,10 @@ public class CompatListenerAssistTest {
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
         when(mockProgressAssist.getSofarBytes()).thenReturn(1L);
-        when(mockTaskAdapter.getTotalBytes()).thenReturn(2);
+        when(mockTaskAdapter.getTotalBytesInLong()).thenReturn(2L);
 
         compatListenerAssist.handleCanceled(mockTaskAdapter);
-        verify(callback).paused(mockTaskAdapter, 1, 2);
+        verify(callback).paused(mockTaskAdapter, 1L, 2L);
     }
 
     @Test
@@ -270,7 +271,7 @@ public class CompatListenerAssistTest {
         when(mockRetryAssist.getRetriedTimes()).thenReturn(1);
 
         compatListenerAssist.handleError(mockTaskAdapter, null);
-        verify(callback).retry(mockTaskAdapter, null, 2, 1);
+        verify(callback).retry(mockTaskAdapter, null, 2, 1L);
         verify(mockRetryAssist).doRetry(mockTask);
         verify(callback, never()).error(any(DownloadTaskAdapter.class), any(Throwable.class));
     }
@@ -283,7 +284,7 @@ public class CompatListenerAssistTest {
 
         compatListenerAssist.handleError(mockTaskAdapter, netWorkPolicyException);
         verify(callback, never()).retry(
-                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyInt());
+                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyLong());
         verify(callback).error(any(DownloadTaskAdapter.class),
                 any(FileDownloadNetworkPolicyException.class));
     }
@@ -300,7 +301,7 @@ public class CompatListenerAssistTest {
         compatListenerAssist.handleError(mockTaskAdapter, mockException);
 
         verify(callback, never()).retry(
-                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyInt());
+                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyLong());
         final ArgumentCaptor<Throwable> throwableCaptor = ArgumentCaptor.forClass(Throwable.class);
         final ArgumentCaptor<DownloadTaskAdapter> taskCaptor = ArgumentCaptor
                 .forClass(DownloadTaskAdapter.class);
@@ -318,7 +319,7 @@ public class CompatListenerAssistTest {
 
         compatListenerAssist.handleError(mockTaskAdapter, exception);
         verify(callback, never()).retry(
-                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyInt());
+                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyLong());
         verify(callback).error(any(DownloadTaskAdapter.class), any(Throwable.class));
     }
 

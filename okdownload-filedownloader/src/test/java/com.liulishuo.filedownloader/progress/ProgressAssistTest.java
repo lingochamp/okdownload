@@ -27,7 +27,7 @@ import org.robolectric.annotation.Config;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -103,13 +103,13 @@ public class ProgressAssistTest {
         final DownloadTaskAdapter mockTask = spy(FileDownloader.getImpl().create("url"));
         final CompatListenerAssist.CompatListenerAssistCallback callback =
                 mock(CompatListenerAssist.CompatListenerAssistCallback.class);
-        doReturn(100).when(mockTask).getTotalBytes();
+        doReturn(100L).when(mockTask).getTotalBytesInLong();
 
         for (int i = 0; i < 100; i++) {
             progressAssist.onProgress(mockTask, 1, callback);
         }
 
-        verify(callback, times(5)).progress(eq(mockTask), anyInt(), eq(100));
+        verify(callback, times(5)).progress(eq(mockTask), anyLong(), eq(100L));
         assertThat(progressAssist.getSofarBytes()).isEqualTo(100);
     }
 
@@ -124,13 +124,13 @@ public class ProgressAssistTest {
         final DownloadTaskAdapter mockTask = spy(FileDownloader.getImpl().create("url"));
         final CompatListenerAssist.CompatListenerAssistCallback callback =
                 mock(CompatListenerAssist.CompatListenerAssistCallback.class);
-        doReturn(100).when(mockTask).getTotalBytes();
+        doReturn(100L).when(mockTask).getTotalBytesInLong();
 
         for (int i = 0; i < 100; i++) {
             progressAssist.onProgress(mockTask, 1, callback);
         }
 
-        verify(callback, never()).progress(any(DownloadTaskAdapter.class), anyInt(), anyInt());
+        verify(callback, never()).progress(any(DownloadTaskAdapter.class), anyLong(), anyLong());
         assertThat(progressAssist.getSofarBytes()).isEqualTo(100);
     }
 

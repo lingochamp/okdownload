@@ -321,11 +321,15 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getSoFarBytes() {
+        return (int) getSoFarBytesInLong();
+    }
+
+    public long getSoFarBytesInLong() {
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
-            return (int) info.getTotalOffset();
+            return info.getTotalOffset();
         }
-        return 0;
+        return 0L;
     }
 
     @Override
@@ -344,11 +348,15 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getTotalBytes() {
+        return (int) getTotalBytesInLong();
+    }
+
+    public long getTotalBytesInLong() {
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
-            return (int) info.getTotalLength();
+            return info.getTotalLength();
         }
-        return 0;
+        return 0L;
     }
 
     @Override
@@ -438,8 +446,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isLargeFile() {
-        // TODO: 2018/7/25
-        return false;
+        return listener != null && listener instanceof FileDownloadLargeFileListener;
     }
 
     @Override

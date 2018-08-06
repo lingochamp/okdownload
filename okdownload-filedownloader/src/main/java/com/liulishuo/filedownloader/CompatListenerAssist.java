@@ -72,8 +72,8 @@ public class CompatListenerAssist {
         final DownloadTaskAdapter downloadTaskAdapter =
                 FileDownloadUtils.findDownloadTaskAdapter(task);
         if (downloadTaskAdapter == null) return;
-        final int soFarBytes = downloadTaskAdapter.getSoFarBytes();
-        final int totalBytes = downloadTaskAdapter.getTotalBytes();
+        final long soFarBytes = downloadTaskAdapter.getSoFarBytesInLong();
+        final long totalBytes = downloadTaskAdapter.getTotalBytesInLong();
         callback.pending(downloadTaskAdapter, soFarBytes, totalBytes);
         callback.started(downloadTaskAdapter);
     }
@@ -99,8 +99,8 @@ public class CompatListenerAssist {
             final DownloadTaskAdapter downloadTaskAdapter =
                     FileDownloadUtils.findDownloadTaskAdapter(task);
             if (downloadTaskAdapter == null) return;
-            final int soFarBytes = downloadTaskAdapter.getSoFarBytes();
-            final int totalBytes = downloadTaskAdapter.getTotalBytes();
+            final long soFarBytes = downloadTaskAdapter.getSoFarBytesInLong();
+            final long totalBytes = downloadTaskAdapter.getTotalBytesInLong();
             downloadTaskAdapter.getProgressAssist().calculateCallbackMinIntervalBytes(totalBytes);
             callback.connected(downloadTaskAdapter, etag, resumable, soFarBytes, totalBytes);
         }
@@ -153,8 +153,8 @@ public class CompatListenerAssist {
     void handleCanceled(@NonNull DownloadTaskAdapter downloadTaskAdapter) {
         callback.paused(
                 downloadTaskAdapter,
-                (int) downloadTaskAdapter.getProgressAssist().getSofarBytes(),
-                downloadTaskAdapter.getTotalBytes());
+                downloadTaskAdapter.getProgressAssist().getSofarBytes(),
+                downloadTaskAdapter.getTotalBytesInLong());
     }
 
     void handleError(
@@ -165,7 +165,7 @@ public class CompatListenerAssist {
             Log.d(TAG, "handle retry " + Thread.currentThread().getName());
             final int retryingTime = retryAssist.getRetriedTimes() + 1;
             callback.retry(downloadTaskAdapter, realCause, retryingTime,
-                    (int) downloadTaskAdapter.getProgressAssist().getSofarBytes());
+                    downloadTaskAdapter.getProgressAssist().getSofarBytes());
             retryAssist.doRetry(downloadTaskAdapter.getDownloadTask());
             return;
         }
@@ -249,7 +249,7 @@ public class CompatListenerAssist {
         /**
          * compat with {@link FileDownloadListener#pending(BaseDownloadTask, int, int)}
          */
-        void pending(BaseDownloadTask task, int soFarBytes, int totalBytes);
+        void pending(BaseDownloadTask task, long soFarBytes, long totalBytes);
 
         /**
          * compat with {@link FileDownloadListener#started(BaseDownloadTask)}
@@ -261,12 +261,12 @@ public class CompatListenerAssist {
          * {@link FileDownloadListener#connected(BaseDownloadTask, String, boolean, int, int)}
          */
         void connected(BaseDownloadTask task, String etag, boolean isContinue,
-                       int soFarBytes, int totalBytes);
+                       long soFarBytes, long totalBytes);
 
         /**
          * compat with {@link FileDownloadListener#progress(BaseDownloadTask, int, int)}
          */
-        void progress(BaseDownloadTask task, int soFarBytes, int totalBytes);
+        void progress(BaseDownloadTask task, long soFarBytes, long totalBytes);
 
         /**
          * compat with {@link FileDownloadListener#blockComplete(BaseDownloadTask)}
@@ -277,7 +277,7 @@ public class CompatListenerAssist {
          * compat with {@link FileDownloadListener#retry(BaseDownloadTask, Throwable, int, int)}
          */
         void retry(BaseDownloadTask task, Throwable ex, int retryingTimes,
-                   int soFarBytes);
+                   long soFarBytes);
 
         /**
          * compat with {@link FileDownloadListener#completed(BaseDownloadTask)}
@@ -287,7 +287,7 @@ public class CompatListenerAssist {
         /**
          * compat with {@link FileDownloadListener#paused(BaseDownloadTask, int, int)}
          */
-        void paused(BaseDownloadTask task, int soFarBytes, int totalBytes);
+        void paused(BaseDownloadTask task, long soFarBytes, long totalBytes);
 
         /**
          * compat with {@link FileDownloadListener#error(BaseDownloadTask, Throwable)}

@@ -60,8 +60,8 @@ public class ProgressAssist {
                            CompatListenerAssist.CompatListenerAssistCallback callback) {
         final long sofar = sofarBytes.addAndGet(increaseBytes);
         if (canCallbackProgress(increaseBytes)) {
-            callback.progress(downloadTaskAdapter, (int) sofar,
-                    downloadTaskAdapter.getTotalBytes());
+            callback.progress(downloadTaskAdapter,
+                    sofar, downloadTaskAdapter.getTotalBytesInLong());
         }
     }
 

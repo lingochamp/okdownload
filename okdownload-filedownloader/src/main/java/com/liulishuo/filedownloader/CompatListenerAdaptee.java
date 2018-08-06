@@ -28,8 +28,14 @@ public class CompatListenerAdaptee implements CompatListenerAssist.CompatListene
     }
 
     @Override
-    public void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-        fileDownloadListener.pending(task, soFarBytes, totalBytes);
+    public void pending(BaseDownloadTask task, long soFarBytes, long totalBytes) {
+        if (fileDownloadListener instanceof FileDownloadLargeFileListener) {
+            final FileDownloadLargeFileListener largeFileListener =
+                    (FileDownloadLargeFileListener) fileDownloadListener;
+            largeFileListener.pending(task, soFarBytes, totalBytes);
+        } else {
+            fileDownloadListener.pending(task, (int) soFarBytes, (int) totalBytes);
+        }
     }
 
     @Override
@@ -38,14 +44,26 @@ public class CompatListenerAdaptee implements CompatListenerAssist.CompatListene
     }
 
     @Override
-    public void connected(BaseDownloadTask task, String etag, boolean isContinue, int soFarBytes,
-                          int totalBytes) {
-        fileDownloadListener.connected(task, etag, isContinue, soFarBytes, totalBytes);
+    public void connected(BaseDownloadTask task, String etag, boolean isContinue, long soFarBytes,
+                          long totalBytes) {
+        if (fileDownloadListener instanceof FileDownloadLargeFileListener) {
+            final FileDownloadLargeFileListener largeFileListener =
+                    (FileDownloadLargeFileListener) fileDownloadListener;
+            largeFileListener.connected(task, etag, isContinue, soFarBytes, totalBytes);
+        } else {
+            fileDownloadListener.connected(task, etag, isContinue, (int) soFarBytes,
+                    (int) totalBytes);
+        }
     }
 
     @Override
-    public void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-        fileDownloadListener.progress(task, soFarBytes, totalBytes);
+    public void progress(BaseDownloadTask task, long soFarBytes, long totalBytes) {
+        if (fileDownloadListener instanceof FileDownloadLargeFileListener) {
+            ((FileDownloadLargeFileListener) fileDownloadListener)
+                    .progress(task, soFarBytes, totalBytes);
+        } else {
+            fileDownloadListener.progress(task, (int) soFarBytes, (int) totalBytes);
+        }
     }
 
     @Override
@@ -54,8 +72,13 @@ public class CompatListenerAdaptee implements CompatListenerAssist.CompatListene
     }
 
     @Override
-    public void retry(BaseDownloadTask task, Throwable ex, int retryingTimes, int soFarBytes) {
-        fileDownloadListener.retry(task, ex, retryingTimes, soFarBytes);
+    public void retry(BaseDownloadTask task, Throwable ex, int retryingTimes, long soFarBytes) {
+        if (fileDownloadListener instanceof FileDownloadLargeFileListener) {
+            ((FileDownloadLargeFileListener) fileDownloadListener)
+                    .retry(task, ex, retryingTimes, soFarBytes);
+        } else {
+            fileDownloadListener.retry(task, ex, retryingTimes, (int) soFarBytes);
+        }
     }
 
     @Override
@@ -64,8 +87,13 @@ public class CompatListenerAdaptee implements CompatListenerAssist.CompatListene
     }
 
     @Override
-    public void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
-        fileDownloadListener.paused(task, soFarBytes, totalBytes);
+    public void paused(BaseDownloadTask task, long soFarBytes, long totalBytes) {
+        if (fileDownloadListener instanceof FileDownloadLargeFileListener) {
+            ((FileDownloadLargeFileListener) fileDownloadListener)
+                    .paused(task, soFarBytes, totalBytes);
+        } else {
+            fileDownloadListener.paused(task, (int) soFarBytes, (int) totalBytes);
+        }
     }
 
     @Override
