@@ -80,7 +80,6 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public BaseDownloadTask setMinIntervalUpdateSpeed(int minIntervalUpdateSpeedMs) {
-        // todo later
         return this;
     }
 
@@ -368,7 +367,6 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getSpeed() {
-        // TODO: 2018/7/25
         return 0;
     }
 
@@ -458,7 +456,6 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public ITaskHunter.IMessageHandler getMessageHandler() {
-        // TODO: 2018/7/26 not support yet
         return null;
     }
 
@@ -510,17 +507,14 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public void free() {
-        // TODO: 2018/7/26 not supported
     }
 
     @Override
     public void startTaskByQueue() {
-        // TODO: 2018/7/26 not supported
     }
 
     @Override
     public void startTaskByRescue() {
-        // TODO: 2018/7/26 not supported
     }
 
     @Override
