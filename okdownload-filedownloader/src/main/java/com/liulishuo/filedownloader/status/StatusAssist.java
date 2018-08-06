@@ -48,6 +48,7 @@ public class StatusAssist {
             case COMPLETED:
                 return FileDownloadStatus.completed;
             case IDLE:
+                return FileDownloadStatus.paused;
             case UNKNOWN:
                 return FileDownloadStatus.INVALID_STATUS;
             case PENDING:
