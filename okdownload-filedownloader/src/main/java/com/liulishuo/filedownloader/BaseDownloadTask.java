@@ -17,6 +17,8 @@
 package com.liulishuo.filedownloader;
 
 
+import android.support.annotation.Nullable;
+
 import com.liulishuo.filedownloader.model.FileDownloadStatus;
 
 /**
@@ -656,6 +658,7 @@ public interface BaseDownloadTask {
          *
          * @return the object as a lock for synchronized with the pause area.
          */
+        @Nullable
         Object getPauseLock();
 
         /**

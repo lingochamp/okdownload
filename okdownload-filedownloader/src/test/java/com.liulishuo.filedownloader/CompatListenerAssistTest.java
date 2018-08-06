@@ -79,13 +79,14 @@ public class CompatListenerAssistTest {
     public void taskStart() {
         final DownloadTask mockDownloadTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
-        when(mockDownloadTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(null);
+        when(mockDownloadTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(null);
 
         compatListenerAssist.taskStart(mockDownloadTask);
         verify(callback, never()).pending(any(DownloadTaskAdapter.class), anyLong(), anyLong());
         verify(callback, never()).started(any(DownloadTaskAdapter.class));
 
-        when(mockDownloadTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockDownloadTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER))
+                .thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getSoFarBytesInLong()).thenReturn(1L);
         when(mockTaskAdapter.getTotalBytesInLong()).thenReturn(2L);
 
@@ -100,7 +101,7 @@ public class CompatListenerAssistTest {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(null);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(null);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
 
         assertThat(compatListenerAssist.taskConnected.get()).isFalse();
@@ -114,7 +115,7 @@ public class CompatListenerAssistTest {
                 any(DownloadTaskAdapter.class), anyString(), anyBoolean(), anyLong(), anyLong());
 
         compatListenerAssist.taskConnected.set(false);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getSoFarBytesInLong()).thenReturn(1L);
         when(mockTaskAdapter.getTotalBytesInLong()).thenReturn(2L);
 
@@ -134,14 +135,14 @@ public class CompatListenerAssistTest {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(null);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(null);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
 
         compatListenerAssist.fetchProgress(mockTask, 5);
         verify(mockTaskAdapter, never()).getProgressAssist();
         verify(mockProgressAssist, never()).onProgress(mockTaskAdapter, 5, callback);
 
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
 
         compatListenerAssist.fetchProgress(mockTask, 5);
         verify(mockProgressAssist).onProgress(mockTaskAdapter, 5, callback);
@@ -150,7 +151,7 @@ public class CompatListenerAssistTest {
     @Test
     public void taskEnd_doNothing() {
         final DownloadTask mockTask = mock(DownloadTask.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(null);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(null);
 
         compatListenerAssist.taskEnd(mockTask, EndCause.CANCELED, null);
         verify(compatListenerAssist, never())
@@ -170,7 +171,7 @@ public class CompatListenerAssistTest {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
         doNothing().when(compatListenerAssist).handleError(mockTaskAdapter, null);
         doNothing().when(compatListenerAssist).onTaskFinish(mockTaskAdapter);
@@ -188,7 +189,7 @@ public class CompatListenerAssistTest {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
         doNothing().when(compatListenerAssist).handleCanceled(mockTaskAdapter);
         doNothing().when(compatListenerAssist).onTaskFinish(mockTaskAdapter);
@@ -205,7 +206,7 @@ public class CompatListenerAssistTest {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
         doNothing().when(compatListenerAssist).handleWarn(
                 any(DownloadTaskAdapter.class), any(EndCause.class), any(Exception.class));
@@ -225,7 +226,7 @@ public class CompatListenerAssistTest {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
         final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
-        when(mockTask.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(mockTaskAdapter);
+        when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
         doNothing().when(compatListenerAssist).handleComplete(mockTaskAdapter);
         doNothing().when(compatListenerAssist).onTaskFinish(mockTaskAdapter);

@@ -105,9 +105,9 @@ public class FileDownloadUtils {
             Util.w(TAG, "download task is null when find DownloadTaskAdapter");
             return null;
         }
-        final Object o = downloadTask.getTag(DownloadTaskAdapter.TAG_KEY);
+        final Object o = downloadTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER);
         if (o == null) {
-            Util.w(TAG, "no tag with DownloadTaskAdapter.TAG_KEY");
+            Util.w(TAG, "no tag with DownloadTaskAdapter.KEY_TASK_ADAPTER");
             return null;
         }
         if (o instanceof DownloadTaskAdapter) {

@@ -17,6 +17,7 @@
 package com.liulishuo.filedownloader;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.liulishuo.filedownloader.progress.ProgressAssist;
 import com.liulishuo.filedownloader.retry.RetryAssist;
@@ -38,7 +39,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private static final int DEFAULT_CALLBACK_PROGRESS_COUNT = 100;
     static final int DEFAULT_CALLBACK_PROGRESS_MIN_INTERVAL_MILLIS = 10;
     private static final String TAG = "DownloadTaskAdapter";
-    public static final int TAG_KEY = Integer.MIN_VALUE;
+    public static final int KEY_TASK_ADAPTER = Integer.MIN_VALUE;
 
     private DownloadTask downloadTask;
     Builder builder;
@@ -128,7 +129,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public BaseDownloadTask setTag(int key, Object tag) {
-        if (key == TAG_KEY) {
+        if (key == KEY_TASK_ADAPTER) {
             throw new IllegalArgumentException(key + " is used internally, please use another key");
         }
         builder.keyOfTag = key;
@@ -254,7 +255,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         progressAssist = new ProgressAssist(callbackProgressCount);
         compatListener = CompatListenerAdapter.create(listener);
         statusAssist.setDownloadTask(downloadTask);
-        downloadTask.addTag(TAG_KEY, this);
+        downloadTask.addTag(KEY_TASK_ADAPTER, this);
     }
 
     @Override
@@ -449,7 +450,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isLargeFile() {
-        return listener != null && listener instanceof FileDownloadLargeFileListener;
+        return listener instanceof FileDownloadLargeFileListener;
     }
 
     @Override
@@ -528,6 +529,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     @Override
+    @Nullable
     public Object getPauseLock() {
         return null;
     }

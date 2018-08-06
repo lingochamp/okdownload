@@ -21,7 +21,6 @@ import com.liulishuo.filedownloader.CompatListenerAdapter;
 import com.liulishuo.filedownloader.DownloadTaskAdapter;
 import com.liulishuo.filedownloader.FileDownloadList;
 import com.liulishuo.filedownloader.FileDownloader;
-import com.liulishuo.filedownloader.model.FileDownloadStatus;
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadSerialQueue;
 import com.liulishuo.okdownload.DownloadTask;
@@ -33,7 +32,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -127,9 +125,12 @@ public class FileDownloadSerialQueueTest {
         final DownloadTaskAdapter downloadTaskAdapter1 = mock(DownloadTaskAdapter.class);
         final DownloadTaskAdapter downloadTaskAdapter2 = mock(DownloadTaskAdapter.class);
         final DownloadTaskAdapter downloadTaskAdapter3 = mock(DownloadTaskAdapter.class);
-        when(downloadTask1.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(downloadTaskAdapter1);
-        when(downloadTask2.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(downloadTaskAdapter2);
-        when(downloadTask3.getTag(DownloadTaskAdapter.TAG_KEY)).thenReturn(downloadTaskAdapter3);
+        when(downloadTask1.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER))
+                .thenReturn(downloadTaskAdapter1);
+        when(downloadTask2.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER))
+                .thenReturn(downloadTaskAdapter2);
+        when(downloadTask3.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER))
+                .thenReturn(downloadTaskAdapter3);
         final DownloadTask[] downloadTasks =
                 new DownloadTask[]{downloadTask1, downloadTask2, downloadTask3};
         when(serialQueue.shutdown()).thenReturn(downloadTasks);
