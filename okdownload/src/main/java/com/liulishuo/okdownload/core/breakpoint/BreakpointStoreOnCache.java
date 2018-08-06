@@ -148,7 +148,7 @@ public class BreakpointStoreOnCache implements DownloadStore {
     }
 
     @Override public boolean markFileClear(int id) {
-        return fileDirtyList.remove((Integer) id);
+        return fileDirtyList.remove(Integer.valueOf(id));
     }
 
     @Override public synchronized void remove(int id) {
