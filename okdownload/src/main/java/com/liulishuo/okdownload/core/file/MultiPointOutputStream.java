@@ -43,6 +43,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
@@ -71,6 +72,7 @@ public class MultiPointOutputStream {
     volatile Future syncFuture;
     volatile Thread runSyncThread;
     final SparseArray<Thread> parkedRunBlockThreadMap = new SparseArray<>();
+    final AtomicInteger outputStreamCreatedBlockCounter = new AtomicInteger(0);
 
     @NonNull private final Runnable syncRunnable;
     private String path;
@@ -298,6 +300,15 @@ public class MultiPointOutputStream {
     void inspectStreamState(StreamsState state) {
         boolean isNoMoreStream = true;
         state.newNoMoreStreamBlockList.clear();
+
+        final int totalBlockCount = info.getBlockCount();
+        final int outputStreamCreatedBlockCount = outputStreamCreatedBlockCounter.get();
+        if (outputStreamCreatedBlockCount != totalBlockCount) {
+            Util.d(TAG, "total block count " + totalBlockCount
+                    + " is not equal to output stream created block count "
+                    + outputStreamCreatedBlockCount);
+            isNoMoreStream = false;
+        }
 
         final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
         final int size = streamMap.size();
@@ -528,6 +539,7 @@ public class MultiPointOutputStream {
                 // make sure the length of noSyncLengthMap is equal to outputStreamMap
                 outputStreamMap.put(blockIndex, outputStream);
                 noSyncLengthMap.put(blockIndex, new AtomicLong());
+                outputStreamCreatedBlockCounter.incrementAndGet();
             }
 
             firstOutputStream = false;
