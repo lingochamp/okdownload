@@ -463,12 +463,12 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void inspectStreamState_allBlocksOutputStreamCreate() {
+    public void inspectStreamState_allNeedFetchBlocksOutputStreamCreate() {
         final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
         multiPointOutputStream.outputStreamMap.put(0, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
         multiPointOutputStream.outputStreamCreatedBlockCounter.set(2);
-        when(info.getBlockCount()).thenReturn(2);
+        multiPointOutputStream.currentNeedFetchBlockCount = 2;
 
         // no noMoreStreamList
         multiPointOutputStream.inspectStreamState(state);
@@ -498,12 +498,12 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void inspectStreamState_onlyPartialBlocksOutputStreamCreate() {
+    public void inspectStreamState_onlyPartialNeedFetchBlocksOutputStreamCreate() {
         final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
         multiPointOutputStream.outputStreamMap.put(0, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
         multiPointOutputStream.outputStreamCreatedBlockCounter.set(1);
-        when(info.getBlockCount()).thenReturn(2);
+        multiPointOutputStream.currentNeedFetchBlockCount = 2;
 
         // no noMoreStreamList
         multiPointOutputStream.inspectStreamState(state);
@@ -530,6 +530,13 @@ public class MultiPointOutputStreamTest {
         assertThat(state.isNoMoreStream).isFalse();
         assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
         assertThat(state.newNoMoreStreamBlockList).isEmpty();
+    }
+
+    @Test
+    public void setCurrentNeedFetchBlockCount() {
+        assertThat(multiPointOutputStream.currentNeedFetchBlockCount).isEqualTo(0);
+        multiPointOutputStream.setCurrentNeedFetchBlockCount(3);
+        assertThat(multiPointOutputStream.currentNeedFetchBlockCount).isEqualTo(3);
     }
 
 

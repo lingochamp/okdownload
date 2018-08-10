@@ -80,6 +80,8 @@ public class MultiPointOutputStream {
     IOException syncException;
     @NonNull List<Integer> noMoreStreamList;
 
+    int currentNeedFetchBlockCount;
+
     MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
                            @NonNull DownloadStore store,
@@ -301,10 +303,9 @@ public class MultiPointOutputStream {
         boolean isNoMoreStream = true;
         state.newNoMoreStreamBlockList.clear();
 
-        final int totalBlockCount = info.getBlockCount();
         final int outputStreamCreatedBlockCount = outputStreamCreatedBlockCounter.get();
-        if (outputStreamCreatedBlockCount != totalBlockCount) {
-            Util.d(TAG, "total block count " + totalBlockCount
+        if (outputStreamCreatedBlockCount != currentNeedFetchBlockCount) {
+            Util.d(TAG, "current need fetch block count " + currentNeedFetchBlockCount
                     + " is not equal to output stream created block count "
                     + outputStreamCreatedBlockCount);
             isNoMoreStream = false;
@@ -327,6 +328,10 @@ public class MultiPointOutputStream {
         }
 
         state.isNoMoreStream = isNoMoreStream;
+    }
+
+    public void setCurrentNeedFetchBlockCount(int needFetchBlockCount) {
+        this.currentNeedFetchBlockCount = needFetchBlockCount;
     }
 
     static class StreamsState {

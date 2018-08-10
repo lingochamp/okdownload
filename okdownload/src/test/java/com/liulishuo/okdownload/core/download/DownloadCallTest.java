@@ -375,7 +375,9 @@ public class DownloadCallTest {
     @Test
     public void start() throws InterruptedException {
         final DownloadCache cache = mock(DownloadCache.class);
+        final MultiPointOutputStream outputStream = mock(MultiPointOutputStream.class);
         doNothing().when(call).startBlocks(ArgumentMatchers.<DownloadChain>anyList());
+        when(cache.getOutputStream()).thenReturn(outputStream);
 
         call.start(cache, info);
         ArgumentCaptor<List<DownloadChain>> captor = ArgumentCaptor.forClass(List.class);
@@ -386,6 +388,8 @@ public class DownloadCallTest {
         assertThat(chainList.get(0).getBlockIndex()).isEqualTo(0);
         assertThat(chainList.get(1).getBlockIndex()).isEqualTo(1);
         assertThat(chainList.get(2).getBlockIndex()).isEqualTo(2);
+
+        verify(outputStream).setCurrentNeedFetchBlockCount(chainList.size());
     }
 
     @Test
