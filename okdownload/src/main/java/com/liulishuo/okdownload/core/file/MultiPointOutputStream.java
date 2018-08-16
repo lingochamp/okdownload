@@ -72,7 +72,6 @@ public class MultiPointOutputStream {
     volatile Future syncFuture;
     volatile Thread runSyncThread;
     final SparseArray<Thread> parkedRunBlockThreadMap = new SparseArray<>();
-    final AtomicInteger outputStreamCreatedBlockCounter = new AtomicInteger(0);
 
     @NonNull private final Runnable syncRunnable;
     private String path;
@@ -80,7 +79,7 @@ public class MultiPointOutputStream {
     IOException syncException;
     @NonNull List<Integer> noMoreStreamList;
 
-    int currentNeedFetchBlockCount;
+    int needFetchBlockCount;
 
     MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
@@ -303,9 +302,9 @@ public class MultiPointOutputStream {
         boolean isNoMoreStream = true;
         state.newNoMoreStreamBlockList.clear();
 
-        final int outputStreamCreatedBlockCount = outputStreamCreatedBlockCounter.get();
-        if (outputStreamCreatedBlockCount != currentNeedFetchBlockCount) {
-            Util.d(TAG, "current need fetch block count " + currentNeedFetchBlockCount
+        final int outputStreamCreatedBlockCount = noMoreStreamList.size();
+        if (outputStreamCreatedBlockCount != needFetchBlockCount) {
+            Util.d(TAG, "current need fetch block count " + needFetchBlockCount
                     + " is not equal to output stream created block count "
                     + outputStreamCreatedBlockCount);
             isNoMoreStream = false;
@@ -330,8 +329,8 @@ public class MultiPointOutputStream {
         state.isNoMoreStream = isNoMoreStream;
     }
 
-    public void setCurrentNeedFetchBlockCount(int needFetchBlockCount) {
-        this.currentNeedFetchBlockCount = needFetchBlockCount;
+    public void setNeedFetchBlockCount(int needFetchBlockCount) {
+        this.needFetchBlockCount = needFetchBlockCount;
     }
 
     static class StreamsState {
@@ -544,7 +543,6 @@ public class MultiPointOutputStream {
                 // make sure the length of noSyncLengthMap is equal to outputStreamMap
                 outputStreamMap.put(blockIndex, outputStream);
                 noSyncLengthMap.put(blockIndex, new AtomicLong());
-                outputStreamCreatedBlockCounter.incrementAndGet();
             }
 
             firstOutputStream = false;

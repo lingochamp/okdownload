@@ -425,7 +425,6 @@ public class MultiPointOutputStreamTest {
 
         assertThat(outputStream).isNotNull();
         assertThat(multiPointOutputStream.outputStreamMap.get(0)).isEqualTo(outputStream);
-        assertThat(multiPointOutputStream.outputStreamCreatedBlockCounter.get()).isEqualTo(1);
         verify(outputStream).seek(eq(10L));
         verify(outputStream).setLength(eq(20L));
         final int id = task.getId();
@@ -463,12 +462,11 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void inspectStreamState_allNeedFetchBlocksOutputStreamCreate() {
+    public void inspectStreamState() {
         final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
         multiPointOutputStream.outputStreamMap.put(0, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
-        multiPointOutputStream.outputStreamCreatedBlockCounter.set(2);
-        multiPointOutputStream.currentNeedFetchBlockCount = 2;
+        multiPointOutputStream.needFetchBlockCount = 2;
 
         // no noMoreStreamList
         multiPointOutputStream.inspectStreamState(state);
@@ -493,50 +491,15 @@ public class MultiPointOutputStreamTest {
         // 1,0 noMoreStreamList again
         multiPointOutputStream.inspectStreamState(state);
         assertThat(state.isNoMoreStream).isTrue();
-        assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
-        assertThat(state.newNoMoreStreamBlockList).isEmpty();
-    }
-
-    @Test
-    public void inspectStreamState_onlyPartialNeedFetchBlocksOutputStreamCreate() {
-        final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
-        multiPointOutputStream.outputStreamMap.put(0, stream0);
-        multiPointOutputStream.outputStreamMap.put(1, stream0);
-        multiPointOutputStream.outputStreamCreatedBlockCounter.set(1);
-        multiPointOutputStream.currentNeedFetchBlockCount = 2;
-
-        // no noMoreStreamList
-        multiPointOutputStream.inspectStreamState(state);
-        assertThat(state.isNoMoreStream).isFalse();
-        assertThat(state.noMoreStreamBlockList).isEmpty();
-        assertThat(state.newNoMoreStreamBlockList).isEmpty();
-
-        // 1 noMoreStreamList
-        multiPointOutputStream.noMoreStreamList.add(1);
-        multiPointOutputStream.inspectStreamState(state);
-        assertThat(state.isNoMoreStream).isFalse();
-        assertThat(state.noMoreStreamBlockList).containsExactly(1);
-        assertThat(state.newNoMoreStreamBlockList).containsExactly(1);
-
-        // 1,0 noMoreStreamList
-        multiPointOutputStream.noMoreStreamList.add(0);
-        multiPointOutputStream.inspectStreamState(state);
-        assertThat(state.isNoMoreStream).isFalse();
-        assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
-        assertThat(state.newNoMoreStreamBlockList).containsExactly(0);
-
-        // 1,0 noMoreStreamList again
-        multiPointOutputStream.inspectStreamState(state);
-        assertThat(state.isNoMoreStream).isFalse();
         assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
         assertThat(state.newNoMoreStreamBlockList).isEmpty();
     }
 
     @Test
     public void setCurrentNeedFetchBlockCount() {
-        assertThat(multiPointOutputStream.currentNeedFetchBlockCount).isEqualTo(0);
-        multiPointOutputStream.setCurrentNeedFetchBlockCount(3);
-        assertThat(multiPointOutputStream.currentNeedFetchBlockCount).isEqualTo(3);
+        assertThat(multiPointOutputStream.needFetchBlockCount).isEqualTo(0);
+        multiPointOutputStream.setNeedFetchBlockCount(3);
+        assertThat(multiPointOutputStream.needFetchBlockCount).isEqualTo(3);
     }
 
 
