@@ -1,3 +1,17 @@
+### 1.0.4
+
+_2018-08-08_
+
+#### Feature
+
+- Provide the filedownloader interface wrapper for okdownload.
+
+#### Bug Fix
+
+- Fix unexpected response header field `content-length` raise `NumberFormatException`. closes #107
+- Fix first download for a resource and kill the process within 1.5s after task is started, then launch process again the wrong complete status raise issue. closes #82
+- Fix recieve `task-busy` status with `taskEnd` callback when invoke enqueue task instantly on the `taskEnd` callback synchronize.
+
 ### 1.0.3
 
 _2018-05-16_
