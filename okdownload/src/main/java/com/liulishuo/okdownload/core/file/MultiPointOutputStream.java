@@ -43,7 +43,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
@@ -308,6 +307,10 @@ public class MultiPointOutputStream {
                     + " is not equal to output stream created block count "
                     + outputStreamCreatedBlockCount);
             isNoMoreStream = false;
+        } else {
+            Util.d(TAG, "current need fetch block count " + needFetchBlockCount
+                    + " is equal to output stream created block count "
+                    + outputStreamCreatedBlockCount);
         }
 
         final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
@@ -331,6 +334,10 @@ public class MultiPointOutputStream {
 
     public void setNeedFetchBlockCount(int needFetchBlockCount) {
         this.needFetchBlockCount = needFetchBlockCount;
+    }
+
+    public void catchBlockConnectException(int blockIndex) {
+        noMoreStreamList.add(blockIndex);
     }
 
     static class StreamsState {
@@ -413,6 +420,8 @@ public class MultiPointOutputStream {
             flushProcess();
             nextParkMills = syncBufferIntervalMills;
         }
+
+        Util.d(TAG, "IO sync end");
     }
 
     // convenient for test.

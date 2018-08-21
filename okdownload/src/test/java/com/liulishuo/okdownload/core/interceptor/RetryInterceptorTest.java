@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -47,6 +48,7 @@ public class RetryInterceptorTest {
     @Mock private DownloadChain chain;
     @Mock private DownloadCache cache;
     @Mock private DownloadConnection.Connected connected;
+    @Mock private MultiPointOutputStream outputStream;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -58,6 +60,7 @@ public class RetryInterceptorTest {
         interceptor = spy(new RetryInterceptor());
 
         when(chain.getCache()).thenReturn(cache);
+        when(chain.getOutputStream()).thenReturn(outputStream);
     }
 
     @Test
@@ -67,6 +70,7 @@ public class RetryInterceptorTest {
         thrown.expect(InterruptException.class);
         interceptor.interceptConnect(chain);
         verify(chain, never()).processConnect();
+        verify(outputStream).catchBlockConnectException(chain.getBlockIndex());
     }
 
     @Test
@@ -78,6 +82,7 @@ public class RetryInterceptorTest {
         verify(chain, times(2)).processConnect();
         verify(chain).resetConnectForRetry();
         verify(cache, never()).catchException(any(IOException.class));
+        verify(outputStream, never()).catchBlockConnectException(chain.getBlockIndex());
     }
 
     @Test
@@ -88,6 +93,7 @@ public class RetryInterceptorTest {
         thrown.expect(InterruptException.class);
         interceptor.interceptConnect(chain);
         verify(cache).catchException(any(IOException.class));
+        verify(outputStream).catchBlockConnectException(chain.getBlockIndex());
     }
 
     @Test
@@ -100,6 +106,7 @@ public class RetryInterceptorTest {
         interceptor.interceptConnect(chain);
 
         verify(cache).catchException(any(IOException.class));
+        verify(outputStream, never()).catchBlockConnectException(anyInt());
     }
 
     @Test
@@ -112,5 +119,6 @@ public class RetryInterceptorTest {
         interceptor.interceptFetch(chain);
 
         verify(cache).catchException(any(IOException.class));
+        verify(outputStream, never()).catchBlockConnectException(anyInt());
     }
 }

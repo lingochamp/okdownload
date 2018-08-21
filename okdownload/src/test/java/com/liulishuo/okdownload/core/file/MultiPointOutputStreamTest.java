@@ -580,6 +580,13 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.inspectFreeSpace(statFs, 2);
     }
 
+    @Test
+    public void catchBlockConnectException() {
+        multiPointOutputStream.catchBlockConnectException(2);
+        assertThat(multiPointOutputStream.noMoreStreamList).hasSize(1);
+        assertThat(multiPointOutputStream.noMoreStreamList.get(0)).isEqualTo(2);
+    }
+
     private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {
         when(OkDownload.with().outputStreamFactory().supportSeek()).thenReturn(true);
         when(OkDownload.with().processFileStrategy().isPreAllocateLength(task)).thenReturn(true);
