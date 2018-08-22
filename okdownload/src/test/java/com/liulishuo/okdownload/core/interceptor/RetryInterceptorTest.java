@@ -106,7 +106,7 @@ public class RetryInterceptorTest {
         interceptor.interceptConnect(chain);
 
         verify(cache).catchException(any(IOException.class));
-        verify(outputStream, never()).catchBlockConnectException(anyInt());
+        verify(outputStream).catchBlockConnectException(anyInt());
     }
 
     @Test
@@ -119,6 +119,6 @@ public class RetryInterceptorTest {
         interceptor.interceptFetch(chain);
 
         verify(cache).catchException(any(IOException.class));
-        verify(outputStream, never()).catchBlockConnectException(anyInt());
+        verify(outputStream).catchBlockConnectException(anyInt());
     }
 }

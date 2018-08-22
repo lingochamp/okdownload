@@ -36,7 +36,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -76,7 +78,7 @@ public class MultiPointOutputStream {
     private String path;
 
     IOException syncException;
-    @NonNull List<Integer> noMoreStreamList;
+    @NonNull Set<Integer> noMoreStreamList;
 
     int needFetchBlockCount;
 
@@ -94,7 +96,7 @@ public class MultiPointOutputStream {
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
         this.isPreAllocateLength = OkDownload.with().processFileStrategy()
                 .isPreAllocateLength(task);
-        this.noMoreStreamList = new ArrayList<>();
+        this.noMoreStreamList = new HashSet<>();
 
         if (syncRunnable == null) {
             this.syncRunnable = new Runnable() {

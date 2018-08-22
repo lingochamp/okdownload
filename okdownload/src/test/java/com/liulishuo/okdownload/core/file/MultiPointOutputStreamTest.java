@@ -583,8 +583,9 @@ public class MultiPointOutputStreamTest {
     @Test
     public void catchBlockConnectException() {
         multiPointOutputStream.catchBlockConnectException(2);
+        multiPointOutputStream.catchBlockConnectException(2);
         assertThat(multiPointOutputStream.noMoreStreamList).hasSize(1);
-        assertThat(multiPointOutputStream.noMoreStreamList.get(0)).isEqualTo(2);
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(2);
     }
 
     private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {
