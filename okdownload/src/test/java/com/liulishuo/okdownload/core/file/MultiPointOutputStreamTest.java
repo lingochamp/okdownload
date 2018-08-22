@@ -465,6 +465,8 @@ public class MultiPointOutputStreamTest {
     public void inspectStreamState() {
         final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
         multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
         multiPointOutputStream.needFetchBlockCount = 2;
 
@@ -582,7 +584,6 @@ public class MultiPointOutputStreamTest {
 
     @Test
     public void catchBlockConnectException() {
-        multiPointOutputStream.catchBlockConnectException(2);
         multiPointOutputStream.catchBlockConnectException(2);
         assertThat(multiPointOutputStream.noMoreStreamList).hasSize(1);
         assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(2);

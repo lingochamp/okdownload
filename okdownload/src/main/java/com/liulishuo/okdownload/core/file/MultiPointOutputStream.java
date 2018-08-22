@@ -78,7 +78,7 @@ public class MultiPointOutputStream {
     private String path;
 
     IOException syncException;
-    @NonNull Set<Integer> noMoreStreamList;
+    @NonNull ArrayList<Integer> noMoreStreamList;
 
     int needFetchBlockCount;
 
@@ -96,7 +96,7 @@ public class MultiPointOutputStream {
         this.supportSeek = OkDownload.with().outputStreamFactory().supportSeek();
         this.isPreAllocateLength = OkDownload.with().processFileStrategy()
                 .isPreAllocateLength(task);
-        this.noMoreStreamList = new HashSet<>();
+        this.noMoreStreamList = new ArrayList<>();
 
         if (syncRunnable == null) {
             this.syncRunnable = new Runnable() {
@@ -303,7 +303,10 @@ public class MultiPointOutputStream {
         boolean isNoMoreStream = true;
         state.newNoMoreStreamBlockList.clear();
 
-        final int outputStreamCreatedBlockCount = noMoreStreamList.size();
+        @SuppressWarnings("unchecked")
+        final List<Integer> outputStreamCreatedBlockList = (List<Integer>) noMoreStreamList.clone();
+        final Set<Integer> uniqueBlockList = new HashSet<>(outputStreamCreatedBlockList);
+        final int outputStreamCreatedBlockCount = uniqueBlockList.size();
         if (outputStreamCreatedBlockCount != needFetchBlockCount) {
             Util.d(TAG, "current need fetch block count " + needFetchBlockCount
                     + " is not equal to output stream created block count "
