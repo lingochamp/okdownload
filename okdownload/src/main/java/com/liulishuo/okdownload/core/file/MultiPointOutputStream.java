@@ -421,7 +421,7 @@ public class MultiPointOutputStream {
             nextParkMills = syncBufferIntervalMills;
         }
 
-        Util.d(TAG, "IO sync end");
+        Util.d(TAG, "OutputStream stop flush looper task[" + task.getId() + "]");
     }
 
     // convenient for test.
