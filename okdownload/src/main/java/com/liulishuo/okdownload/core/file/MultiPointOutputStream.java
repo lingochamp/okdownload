@@ -304,18 +304,18 @@ public class MultiPointOutputStream {
         state.newNoMoreStreamBlockList.clear();
 
         @SuppressWarnings("unchecked")
-        final List<Integer> outputStreamCreatedBlockList = (List<Integer>) noMoreStreamList.clone();
-        final Set<Integer> uniqueBlockList = new HashSet<>(outputStreamCreatedBlockList);
-        final int outputStreamCreatedBlockCount = uniqueBlockList.size();
-        if (outputStreamCreatedBlockCount != needFetchBlockCount) {
+        final List<Integer> clonedList = (List<Integer>) noMoreStreamList.clone();
+        final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
+        final int noMoreStreamBlockCount = uniqueBlockList.size();
+        if (noMoreStreamBlockCount != needFetchBlockCount) {
             Util.d(TAG, "current need fetch block count " + needFetchBlockCount
                     + " is not equal to output stream created block count "
-                    + outputStreamCreatedBlockCount);
+                    + noMoreStreamBlockCount);
             isNoMoreStream = false;
         } else {
             Util.d(TAG, "current need fetch block count " + needFetchBlockCount
                     + " is equal to output stream created block count "
-                    + outputStreamCreatedBlockCount);
+                    + noMoreStreamBlockCount);
         }
 
         final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
