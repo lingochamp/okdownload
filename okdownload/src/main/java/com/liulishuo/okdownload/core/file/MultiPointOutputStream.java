@@ -322,13 +322,12 @@ public class MultiPointOutputStream {
         final int size = streamMap.size();
         for (int i = 0; i < size; i++) {
             final int blockIndex = streamMap.keyAt(i);
-            if (noMoreStreamList.contains(blockIndex)) {
+            if (noMoreStreamList.contains(blockIndex)
+                    && !state.noMoreStreamBlockList.contains(blockIndex)) {
                 // blockIndex indicate this block is no more stream.
-                if (!state.noMoreStreamBlockList.contains(blockIndex)) {
-                    // this is new one
-                    state.noMoreStreamBlockList.add(blockIndex);
-                    state.newNoMoreStreamBlockList.add(blockIndex);
-                }
+                // and this is new one
+                state.noMoreStreamBlockList.add(blockIndex);
+                state.newNoMoreStreamBlockList.add(blockIndex);
             }
         }
     }
