@@ -465,7 +465,10 @@ public class MultiPointOutputStreamTest {
     public void inspectStreamState() {
         final MultiPointOutputStream.StreamsState state = new MultiPointOutputStream.StreamsState();
         multiPointOutputStream.outputStreamMap.put(0, stream0);
+        multiPointOutputStream.outputStreamMap.put(0, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
+        multiPointOutputStream.outputStreamMap.put(1, stream0);
+        multiPointOutputStream.requireStreamCount = 2;
 
         // no noMoreStreamList
         multiPointOutputStream.inspectStreamState(state);
@@ -493,6 +496,14 @@ public class MultiPointOutputStreamTest {
         assertThat(state.noMoreStreamBlockList).containsExactly(1, 0);
         assertThat(state.newNoMoreStreamBlockList).isEmpty();
     }
+
+    @Test
+    public void setCurrentNeedFetchBlockCount() {
+        assertThat(multiPointOutputStream.requireStreamCount).isEqualTo(0);
+        multiPointOutputStream.setRequireStreamCount(3);
+        assertThat(multiPointOutputStream.requireStreamCount).isEqualTo(3);
+    }
+
 
     @Test
     public void outputStream_contain_returnDirectly() throws IOException {
@@ -569,6 +580,13 @@ public class MultiPointOutputStreamTest {
         when(statFs.getBlockSize()).thenReturn(2);
 
         multiPointOutputStream.inspectFreeSpace(statFs, 2);
+    }
+
+    @Test
+    public void catchBlockConnectException() {
+        multiPointOutputStream.catchBlockConnectException(2);
+        assertThat(multiPointOutputStream.noMoreStreamList).hasSize(1);
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(2);
     }
 
     private void prepareOutputStreamEnv() throws FileNotFoundException, PreAllocateException {

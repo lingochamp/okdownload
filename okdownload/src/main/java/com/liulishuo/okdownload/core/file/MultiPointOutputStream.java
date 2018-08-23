@@ -36,7 +36,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -76,7 +78,9 @@ public class MultiPointOutputStream {
     private String path;
 
     IOException syncException;
-    @NonNull List<Integer> noMoreStreamList;
+    @NonNull ArrayList<Integer> noMoreStreamList;
+
+    int requireStreamCount;
 
     MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
@@ -296,26 +300,44 @@ public class MultiPointOutputStream {
     }
 
     void inspectStreamState(StreamsState state) {
-        boolean isNoMoreStream = true;
         state.newNoMoreStreamBlockList.clear();
+
+        @SuppressWarnings("unchecked")
+        final List<Integer> clonedList = (List<Integer>) noMoreStreamList.clone();
+        final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
+        final int noMoreStreamBlockCount = uniqueBlockList.size();
+        if (noMoreStreamBlockCount != requireStreamCount) {
+            Util.d(TAG, "current need fetch block count " + requireStreamCount
+                    + " is not equal to output stream created block count "
+                    + noMoreStreamBlockCount);
+            state.isNoMoreStream = false;
+        } else {
+            Util.d(TAG, "current need fetch block count " + requireStreamCount
+                    + " is equal to output stream created block count "
+                    + noMoreStreamBlockCount);
+            state.isNoMoreStream = true;
+        }
 
         final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
         final int size = streamMap.size();
         for (int i = 0; i < size; i++) {
             final int blockIndex = streamMap.keyAt(i);
-            if (noMoreStreamList.contains(blockIndex)) {
+            if (noMoreStreamList.contains(blockIndex)
+                    && !state.noMoreStreamBlockList.contains(blockIndex)) {
                 // blockIndex indicate this block is no more stream.
-                if (!state.noMoreStreamBlockList.contains(blockIndex)) {
-                    // this is new one
-                    state.noMoreStreamBlockList.add(blockIndex);
-                    state.newNoMoreStreamBlockList.add(blockIndex);
-                }
-            } else {
-                isNoMoreStream = false;
+                // and this is new one
+                state.noMoreStreamBlockList.add(blockIndex);
+                state.newNoMoreStreamBlockList.add(blockIndex);
             }
         }
+    }
 
-        state.isNoMoreStream = isNoMoreStream;
+    public void setRequireStreamCount(int requireStreamCount) {
+        this.requireStreamCount = requireStreamCount;
+    }
+
+    public void catchBlockConnectException(int blockIndex) {
+        noMoreStreamList.add(blockIndex);
     }
 
     static class StreamsState {
@@ -398,6 +420,8 @@ public class MultiPointOutputStream {
             flushProcess();
             nextParkMills = syncBufferIntervalMills;
         }
+
+        Util.d(TAG, "OutputStream stop flush looper task[" + task.getId() + "]");
     }
 
     // convenient for test.

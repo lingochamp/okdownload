@@ -306,6 +306,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             return;
         }
 
+        cache.getOutputStream().setRequireStreamCount(blockChainList.size());
+
         startBlocks(blockChainList);
     }
 
