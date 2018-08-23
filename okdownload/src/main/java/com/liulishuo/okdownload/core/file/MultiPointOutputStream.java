@@ -80,7 +80,7 @@ public class MultiPointOutputStream {
     IOException syncException;
     @NonNull ArrayList<Integer> noMoreStreamList;
 
-    int needFetchBlockCount;
+    int requireStreamCount;
 
     MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
@@ -300,22 +300,22 @@ public class MultiPointOutputStream {
     }
 
     void inspectStreamState(StreamsState state) {
-        boolean isNoMoreStream = true;
         state.newNoMoreStreamBlockList.clear();
 
         @SuppressWarnings("unchecked")
         final List<Integer> clonedList = (List<Integer>) noMoreStreamList.clone();
         final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
         final int noMoreStreamBlockCount = uniqueBlockList.size();
-        if (noMoreStreamBlockCount != needFetchBlockCount) {
-            Util.d(TAG, "current need fetch block count " + needFetchBlockCount
+        if (noMoreStreamBlockCount != requireStreamCount) {
+            Util.d(TAG, "current need fetch block count " + requireStreamCount
                     + " is not equal to output stream created block count "
                     + noMoreStreamBlockCount);
-            isNoMoreStream = false;
+            state.isNoMoreStream = false;
         } else {
-            Util.d(TAG, "current need fetch block count " + needFetchBlockCount
+            Util.d(TAG, "current need fetch block count " + requireStreamCount
                     + " is equal to output stream created block count "
                     + noMoreStreamBlockCount);
+            state.isNoMoreStream = true;
         }
 
         final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
@@ -329,16 +329,12 @@ public class MultiPointOutputStream {
                     state.noMoreStreamBlockList.add(blockIndex);
                     state.newNoMoreStreamBlockList.add(blockIndex);
                 }
-            } else {
-                isNoMoreStream = false;
             }
         }
-
-        state.isNoMoreStream = isNoMoreStream;
     }
 
-    public void setNeedFetchBlockCount(int needFetchBlockCount) {
-        this.needFetchBlockCount = needFetchBlockCount;
+    public void setRequireStreamCount(int requireStreamCount) {
+        this.requireStreamCount = requireStreamCount;
     }
 
     public void catchBlockConnectException(int blockIndex) {

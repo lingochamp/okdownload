@@ -468,7 +468,7 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.outputStreamMap.put(0, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
-        multiPointOutputStream.needFetchBlockCount = 2;
+        multiPointOutputStream.requireStreamCount = 2;
 
         // no noMoreStreamList
         multiPointOutputStream.inspectStreamState(state);
@@ -499,9 +499,9 @@ public class MultiPointOutputStreamTest {
 
     @Test
     public void setCurrentNeedFetchBlockCount() {
-        assertThat(multiPointOutputStream.needFetchBlockCount).isEqualTo(0);
-        multiPointOutputStream.setNeedFetchBlockCount(3);
-        assertThat(multiPointOutputStream.needFetchBlockCount).isEqualTo(3);
+        assertThat(multiPointOutputStream.requireStreamCount).isEqualTo(0);
+        multiPointOutputStream.setRequireStreamCount(3);
+        assertThat(multiPointOutputStream.requireStreamCount).isEqualTo(3);
     }
 
 

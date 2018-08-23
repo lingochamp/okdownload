@@ -389,7 +389,7 @@ public class DownloadCallTest {
         assertThat(chainList.get(1).getBlockIndex()).isEqualTo(1);
         assertThat(chainList.get(2).getBlockIndex()).isEqualTo(2);
 
-        verify(outputStream).setNeedFetchBlockCount(chainList.size());
+        verify(outputStream).setRequireStreamCount(chainList.size());
     }
 
     @Test
