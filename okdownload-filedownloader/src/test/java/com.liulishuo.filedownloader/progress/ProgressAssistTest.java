@@ -145,4 +145,11 @@ public class ProgressAssistTest {
         assertThat(progressAssist.incrementBytes.get()).isEqualTo(0);
         assertThat(progressAssist.sofarBytes.get()).isEqualTo(0);
     }
+
+    @Test
+    public void initSofarBytes() {
+        final ProgressAssist progressAssist = new ProgressAssist(5);
+        progressAssist.initSofarBytes(100);
+        assertThat(progressAssist.sofarBytes.get()).isEqualTo(100);
+    }
 }
