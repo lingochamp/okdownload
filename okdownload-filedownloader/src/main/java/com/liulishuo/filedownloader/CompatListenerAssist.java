@@ -101,6 +101,7 @@ public class CompatListenerAssist {
             if (downloadTaskAdapter == null) return;
             final long soFarBytes = downloadTaskAdapter.getSoFarBytesInLong();
             final long totalBytes = downloadTaskAdapter.getTotalBytesInLong();
+            downloadTaskAdapter.getProgressAssist().initSofarBytes(soFarBytes);
             downloadTaskAdapter.getProgressAssist().calculateCallbackMinIntervalBytes(totalBytes);
             callback.connected(downloadTaskAdapter, etag, resumable, soFarBytes, totalBytes);
         }

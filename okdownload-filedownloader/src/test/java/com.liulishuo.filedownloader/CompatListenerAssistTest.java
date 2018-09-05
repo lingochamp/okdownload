@@ -128,6 +128,7 @@ public class CompatListenerAssistTest {
                 1L,
                 2L);
         verify(mockProgressAssist).calculateCallbackMinIntervalBytes(2);
+        verify(mockProgressAssist).initSofarBytes(1);
     }
 
     @Test
