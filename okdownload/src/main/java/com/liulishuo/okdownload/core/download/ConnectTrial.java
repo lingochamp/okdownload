@@ -26,6 +26,7 @@ import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
+import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -176,7 +177,8 @@ public class ConnectTrial {
         return "bytes".equals(acceptRanges);
     }
 
-    @Nullable private static String findFilename(DownloadConnection.Connected connected) {
+    @Nullable private static String findFilename(DownloadConnection.Connected connected)
+        throws IOException {
         return parseContentDisposition(connected.getResponseHeaderField(CONTENT_DISPOSITION));
     }
 
@@ -194,21 +196,31 @@ public class ConnectTrial {
      * This header provides a filename for content that is going to be
      * downloaded to the file system. We only support the attachment type.
      */
-    @Nullable private static String parseContentDisposition(String contentDisposition) {
+    @Nullable private static String parseContentDisposition(String contentDisposition)
+            throws IOException {
         if (contentDisposition == null) {
             return null;
         }
 
         try {
+            String fileName = null;
             Matcher m = CONTENT_DISPOSITION_QUOTED_PATTERN.matcher(contentDisposition);
             if (m.find()) {
-                return m.group(1);
+                fileName = m.group(1);
+            } else  {
+                m = CONTENT_DISPOSITION_NON_QUOTED_PATTERN.matcher(contentDisposition);
+                if (m.find()) {
+                    fileName = m.group(1);
+                }
             }
 
-            m = CONTENT_DISPOSITION_NON_QUOTED_PATTERN.matcher(contentDisposition);
-            if (m.find()) {
-                return m.group(1);
+            if (fileName != null && fileName.contains("../")) {
+                throw new DownloadSecurityException("The filename [" + fileName + "] from"
+                    + " the response is not allowable, because it contains '../', which "
+                    + "can raise the directory traversal vulnerability");
             }
+
+            return fileName;
         } catch (IllegalStateException ex) {
             // This function is defined as returning null when it can't parse the header
         }
