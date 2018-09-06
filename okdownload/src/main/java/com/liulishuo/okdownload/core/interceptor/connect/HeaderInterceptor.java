@@ -86,14 +86,15 @@ public class HeaderInterceptor implements Interceptor.Connect {
 
         DownloadConnection.Connected connected = chain.processConnect();
 
+        if (chain.getCache().isInterrupt()) {
+            throw InterruptException.SIGNAL;
+        }
+
         Map<String, List<String>> responseHeaderFields = connected.getResponseHeaderFields();
         if (responseHeaderFields == null) responseHeaderFields = new HashMap<>();
 
         OkDownload.with().callbackDispatcher().dispatch().connectEnd(task, blockIndex,
                 connected.getResponseCode(), responseHeaderFields);
-        if (chain.getCache().isInterrupt()) {
-            throw InterruptException.SIGNAL;
-        }
 
         // if precondition failed.
         final DownloadStrategy strategy = OkDownload.with().downloadStrategy();
