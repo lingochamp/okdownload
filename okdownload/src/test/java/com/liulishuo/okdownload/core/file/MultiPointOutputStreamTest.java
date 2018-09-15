@@ -42,6 +42,8 @@ import org.robolectric.annotation.Config;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,6 +51,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static com.liulishuo.okdownload.TestUtils.mockOkDownload;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -74,15 +77,21 @@ public class MultiPointOutputStreamTest {
 
     private final String parentPath = "./p-path/";
     private final File existFile = new File("./p-path/filename");
-    @Mock private BreakpointInfo info;
-    @Mock private DownloadTask task;
-    @Mock private DownloadStore store;
-    @Mock private Runnable syncRunnable;
+    @Mock
+    private BreakpointInfo info;
+    @Mock
+    private DownloadTask task;
+    @Mock
+    private DownloadStore store;
+    @Mock
+    private Runnable syncRunnable;
 
-    @Mock private DownloadOutputStream stream0;
-    @Mock private DownloadOutputStream stream1;
-    @Mock private Future syncFuture;
-    @Mock private Thread runSyncThread;
+    @Mock
+    private DownloadOutputStream stream0;
+    @Mock
+    private Future syncFuture;
+    @Mock
+    private Thread runSyncThread;
 
     final byte[] bytes = new byte[6];
 
@@ -135,8 +144,10 @@ public class MultiPointOutputStreamTest {
 
     @Test
     public void cancel_syncNotRun() throws IOException {
-        multiPointOutputStream.outputStreamMap.put(0, stream0);
-        multiPointOutputStream.outputStreamMap.put(1, stream1);
+        multiPointOutputStream.requireStreamBlocks = new ArrayList<Integer>() {{
+            add(0);
+            add(1);
+        }};
         multiPointOutputStream.allNoSyncLength.set(1);
         doNothing().when(multiPointOutputStream).close(anyInt());
         doNothing().when(multiPointOutputStream).ensureSync(true, -1);
@@ -158,9 +169,27 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
+    public void cancel_requireStreamBlocksNotInitial() throws IOException {
+        multiPointOutputStream.allNoSyncLength.set(1);
+        final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
+        final FileLock fileLock = mock(FileLock.class);
+        when(strategy.getFileLock()).thenReturn(fileLock);
+
+        multiPointOutputStream.cancel();
+
+        verify(multiPointOutputStream, never()).ensureSync(anyBoolean(), anyInt());
+        verify(fileLock, never()).increaseLock(eq(existFile.getAbsolutePath()));
+        verify(fileLock, never()).decreaseLock(eq(existFile.getAbsolutePath()));
+        verify(multiPointOutputStream, never()).close(anyInt());
+        verify(store, never()).onTaskEnd(anyInt(), any(EndCause.class), any(Exception.class));
+    }
+
+    @Test
     public void cancel() throws IOException {
-        multiPointOutputStream.outputStreamMap.put(0, stream0);
-        multiPointOutputStream.outputStreamMap.put(1, stream1);
+        multiPointOutputStream.requireStreamBlocks = new ArrayList<Integer>() {{
+            add(0);
+            add(1);
+        }};
         multiPointOutputStream.noSyncLengthMap.put(0, new AtomicLong());
         multiPointOutputStream.noSyncLengthMap.put(1, new AtomicLong());
         multiPointOutputStream.allNoSyncLength.set(1);
@@ -468,7 +497,10 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.outputStreamMap.put(0, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
         multiPointOutputStream.outputStreamMap.put(1, stream0);
-        multiPointOutputStream.requireStreamCount = 2;
+        multiPointOutputStream.requireStreamBlocks = new ArrayList<Integer>() {{
+            add(0);
+            add(1);
+        }};
 
         // no noMoreStreamList
         multiPointOutputStream.inspectStreamState(state);
@@ -498,10 +530,15 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void setCurrentNeedFetchBlockCount() {
-        assertThat(multiPointOutputStream.requireStreamCount).isEqualTo(0);
-        multiPointOutputStream.setRequireStreamCount(3);
-        assertThat(multiPointOutputStream.requireStreamCount).isEqualTo(3);
+    public void setRequireStreamBlocks() {
+        assertThat(multiPointOutputStream.requireStreamBlocks).isEqualTo(null);
+        final List<Integer> requireStreamBlocks = new ArrayList<Integer>(){{
+            add(0);
+            add(1);
+            add(2);
+        }};
+        multiPointOutputStream.setRequireStreamBlocks(requireStreamBlocks);
+        assertThat(multiPointOutputStream.requireStreamBlocks).isEqualTo(requireStreamBlocks);
     }
 
 
@@ -560,7 +597,8 @@ public class MultiPointOutputStreamTest {
         verify(multiPointOutputStream, never()).inspectFreeSpace(any(StatFs.class), anyLong());
     }
 
-    @Rule public ExpectedException thrown = ExpectedException.none();
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void inspectFreeSpace_freeSpaceNotEnough() throws PreAllocateException {
