@@ -73,7 +73,7 @@ public class NotificationSampleListener extends DownloadListener4WithSpeed {
             final NotificationChannel channel = new NotificationChannel(
                     channelId,
                     "OkDownloadSample",
-                    NotificationManager.IMPORTANCE_HIGH);
+                    NotificationManager.IMPORTANCE_MIN);
             manager.createNotificationChannel(channel);
         }
 
@@ -82,7 +82,8 @@ public class NotificationSampleListener extends DownloadListener4WithSpeed {
 
         builder.setDefaults(Notification.DEFAULT_LIGHTS)
                 .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setContentTitle("OkDownloadSample")
                 .setContentText("Download a task showing on notification sample")
                 .setSmallIcon(R.mipmap.ic_launcher);
