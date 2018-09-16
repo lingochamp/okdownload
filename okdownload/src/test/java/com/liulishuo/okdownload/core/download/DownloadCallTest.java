@@ -389,7 +389,15 @@ public class DownloadCallTest {
         assertThat(chainList.get(1).getBlockIndex()).isEqualTo(1);
         assertThat(chainList.get(2).getBlockIndex()).isEqualTo(2);
 
-        verify(outputStream).setRequireStreamCount(chainList.size());
+        ArgumentCaptor<List<Integer>> setRequireStreamBlocksCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(outputStream).setRequireStreamBlocks(setRequireStreamBlocksCaptor.capture());
+
+        final List<Integer> blockIndexList = setRequireStreamBlocksCaptor.getValue();
+        assertThat(blockIndexList.size()).isEqualTo(3);
+        assertThat(blockIndexList.get(0)).isEqualTo(0);
+        assertThat(blockIndexList.get(1)).isEqualTo(1);
+        assertThat(blockIndexList.get(2)).isEqualTo(2);
     }
 
     @Test
