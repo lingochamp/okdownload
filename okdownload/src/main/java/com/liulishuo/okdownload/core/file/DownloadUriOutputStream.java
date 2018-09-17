@@ -89,7 +89,8 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
                 Os.posix_fallocate(pdf.getFileDescriptor(), 0, newLength);
             } catch (Throwable e) {
                 if (e instanceof ErrnoException) {
-                    if (((ErrnoException) e).errno == OsConstants.ENOSYS || ((ErrnoException) e).errno == OsConstants.ENOTSUP) {
+                    if (((ErrnoException) e).errno == OsConstants.ENOSYS
+                            || ((ErrnoException) e).errno == OsConstants.ENOTSUP) {
                         Util.w(tag, "fallocate() not supported; falling back to ftruncate()");
                         try {
                             Os.ftruncate(pdf.getFileDescriptor(), newLength);
@@ -97,8 +98,8 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
                             Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
                                     + " version(" + Build.VERSION.SDK_INT + "), because of " + e1);
                         }
-                    }
-                }else {
+                     }
+                } else {
                     Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
                             + " version(" + Build.VERSION.SDK_INT + "), because of " + e);
                 }
