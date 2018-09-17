@@ -86,7 +86,7 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
         final String tag = "DownloadUriOutputStream";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
-                Os.posix_fallocate(pdf.getFileDescriptor(),0, newLength);
+                Os.posix_fallocate(pdf.getFileDescriptor(), 0, newLength);
             } catch (Throwable e) {
                 if (e instanceof ErrnoException) {
                     if (((ErrnoException) e).errno == OsConstants.ENOSYS || ((ErrnoException) e).errno == OsConstants.ENOTSUP) {
