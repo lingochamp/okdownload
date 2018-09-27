@@ -146,7 +146,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         inspectTaskEnd(cache, cause, realCause);
     }
 
-    private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy) throws InterruptedException {
+    private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy)
+            throws InterruptedException {
         int retryCount = 0;
         while (true) {
             // 0. check basic param before start
@@ -235,7 +236,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         }
     }
 
-    private void downloadFromBeginning(ProcessFileStrategy fileStrategy, BreakpointInfo info, BreakpointRemoteCheck remoteCheck, ResumeFailedCause cause) throws IOException {
+    private void downloadFromBeginning(ProcessFileStrategy fileStrategy, BreakpointInfo info,
+                                       BreakpointRemoteCheck remoteCheck, ResumeFailedCause cause) throws IOException {
         fileStrategy.discardProcess(task);
         assembleBlockAndCallbackFromBeginning(info, remoteCheck,
                 cause);
