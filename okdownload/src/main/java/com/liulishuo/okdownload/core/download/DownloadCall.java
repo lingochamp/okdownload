@@ -125,15 +125,30 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     public void execute() throws InterruptedException {
         currentThread = Thread.currentThread();
 
-        boolean retry;
-        int retryCount = 0;
-
         // ready param
         final OkDownload okDownload = OkDownload.with();
         final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
 
         // inspect task start
         inspectTaskStart();
+
+        tryDownloadInLoop(okDownload, fileStrategy);
+
+        // finish
+        finishing = true;
+        blockChainList.clear();
+
+        final DownloadCache cache = this.cache;
+        if (canceled || cache == null) return;
+
+        final EndCause cause = getEndCause(cache);
+        Exception realCause = realCauseOrNull(cache, cause);
+        inspectTaskEnd(cache, cause, realCause);
+    }
+
+    private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy) throws InterruptedException {
+        boolean retry;
+        int retryCount = 0;
         do {
             // 0. check basic param before start
             if (task.getUrl().length() <= 0) {
@@ -224,17 +239,6 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 retry = false;
             }
         } while (retry);
-
-        // finish
-        finishing = true;
-        blockChainList.clear();
-
-        final DownloadCache cache = this.cache;
-        if (canceled || cache == null) return;
-
-        final EndCause cause = getEndCause(cache);
-        Exception realCause = realCauseOrNull(cache, cause);
-        inspectTaskEnd(cache, cause, realCause);
     }
 
     private EndCause getEndCause(DownloadCache cache) {
