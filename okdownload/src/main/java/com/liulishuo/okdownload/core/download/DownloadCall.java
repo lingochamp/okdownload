@@ -259,7 +259,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     private Exception realCauseOrNull(DownloadCache cache, EndCause cause) {
         if (cause == EndCause.ERROR || cause == EndCause.PRE_ALLOCATE_FAILED) {
-           return cache.getRealCause();
+            return cache.getRealCause();
         }
         return null;
     }
