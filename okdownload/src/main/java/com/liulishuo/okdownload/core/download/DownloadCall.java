@@ -232,6 +232,12 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         final DownloadCache cache = this.cache;
         if (canceled || cache == null) return;
 
+        final EndCause cause = getEndCause(cache);
+        Exception realCause = realCauseOrNull(cache, cause);
+        inspectTaskEnd(cache, cause, realCause);
+    }
+
+    private EndCause getEndCause(DownloadCache cache) {
         final EndCause cause;
         if (cache.isServerCanceled() || cache.isUnknownError()
                 || cache.isPreconditionFailed()) {
@@ -244,8 +250,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         } else {
             cause = EndCause.COMPLETED;
         }
-        Exception realCause = realCauseOrNull(cache, cause);
-        inspectTaskEnd(cache, cause, realCause);
+        return cause;
     }
 
     private Exception realCauseOrNull(DownloadCache cache, EndCause cause) {
