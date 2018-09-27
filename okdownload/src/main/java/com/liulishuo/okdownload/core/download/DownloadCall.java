@@ -195,30 +195,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                     .inspectAnotherSameInfo(task, info, remoteCheck.getInstanceLength());
 
             try {
-                if (remoteCheck.isResumable()) {
-                    // 5. local check
-                    final BreakpointLocalCheck localCheck = createLocalCheck(info,
-                            remoteCheck.getInstanceLength());
-                    localCheck.check();
-                    if (localCheck.isDirty()) {
-                        Util.d(TAG, "breakpoint invalid: download from beginning because of "
-                                + "local check is dirty " + task.getId() + " " + localCheck);
-                        // 6. assemble block data
-                        fileStrategy.discardProcess(task);
-                        assembleBlockAndCallbackFromBeginning(info, remoteCheck,
-                                localCheck.getCauseOrThrow());
-                    } else {
-                        okDownload.callbackDispatcher().dispatch()
-                                .downloadFromBreakpoint(task, info);
-                    }
-                } else {
-                    Util.d(TAG, "breakpoint invalid: download from beginning because of "
-                            + "remote check not resumable " + task.getId() + " " + remoteCheck);
-                    // 6. assemble block data
-                    fileStrategy.discardProcess(task);
-                    assembleBlockAndCallbackFromBeginning(info, remoteCheck,
-                            remoteCheck.getCauseOrThrow());
-                }
+                resumeOrResetDownload(okDownload, fileStrategy, info, remoteCheck);
             } catch (IOException e) {
                 cache.setUnknownError(e);
                 break;
@@ -237,6 +214,35 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 break;
             }
         }
+    }
+
+    private void resumeOrResetDownload(OkDownload okDownload, ProcessFileStrategy fileStrategy, BreakpointInfo info, BreakpointRemoteCheck remoteCheck) throws IOException {
+        if (remoteCheck.isResumable()) {
+            // 5. local check
+            final BreakpointLocalCheck localCheck = createLocalCheck(info,
+                    remoteCheck.getInstanceLength());
+            localCheck.check();
+            if (localCheck.isDirty()) {
+                Util.d(TAG, "breakpoint invalid: download from beginning because of "
+                        + "local check is dirty " + task.getId() + " " + localCheck);
+                // 6. assemble block data
+                downloadFromBeginning(fileStrategy, info, remoteCheck, localCheck.getCauseOrThrow());
+            } else {
+                okDownload.callbackDispatcher().dispatch()
+                        .downloadFromBreakpoint(task, info);
+            }
+        } else {
+            Util.d(TAG, "breakpoint invalid: download from beginning because of "
+                    + "remote check not resumable " + task.getId() + " " + remoteCheck);
+            // 6. assemble block data
+            downloadFromBeginning(fileStrategy, info, remoteCheck, remoteCheck.getCauseOrThrow());
+        }
+    }
+
+    private void downloadFromBeginning(ProcessFileStrategy fileStrategy, BreakpointInfo info, BreakpointRemoteCheck remoteCheck, ResumeFailedCause cause) throws IOException {
+        fileStrategy.discardProcess(task);
+        assembleBlockAndCallbackFromBeginning(info, remoteCheck,
+                cause);
     }
 
     private EndCause getEndCause(DownloadCache cache) {
