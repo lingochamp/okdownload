@@ -85,4 +85,9 @@ public class ProgressAssist {
         sofarBytes.set(0);
         incrementBytes.set(0);
     }
+
+    public void initSofarBytes(long soFarBytes) {
+        Util.d(TAG, "init sofar: " + soFarBytes);
+        sofarBytes.set(soFarBytes);
+    }
 }

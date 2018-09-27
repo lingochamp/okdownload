@@ -80,7 +80,7 @@ public class MultiPointOutputStream {
     IOException syncException;
     @NonNull ArrayList<Integer> noMoreStreamList;
 
-    int requireStreamCount;
+    List<Integer> requireStreamBlocks;
 
     MultiPointOutputStream(@NonNull final DownloadTask task,
                            @NonNull BreakpointInfo info,
@@ -139,14 +139,10 @@ public class MultiPointOutputStream {
     }
 
     public void cancel() {
+        if (requireStreamBlocks == null) return;
         try {
             if (allNoSyncLength.get() <= 0) return;
-            final SparseArray<DownloadOutputStream> streamMap = outputStreamMap.clone();
-            final int size = streamMap.size();
-            for (int i = 0; i < size; i++) {
-                noMoreStreamList.add(streamMap.keyAt(i));
-            }
-
+            noMoreStreamList.addAll(requireStreamBlocks);
             if (syncFuture != null && !syncFuture.isDone()) {
                 inspectValidPath();
                 OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
@@ -158,18 +154,13 @@ public class MultiPointOutputStream {
             }
         } finally {
             // close all output stream.
-            final SparseArray<DownloadOutputStream> outputStreams;
-            synchronized (this) {
-                outputStreams = outputStreamMap.clone();
-            }
-            int outputStreamCount = outputStreams.size();
-            for (int i = 0; i < outputStreamCount; i++) {
+            for (Integer blockIndex : requireStreamBlocks) {
                 try {
-                    close(outputStreams.keyAt(i));
+                    close(blockIndex);
                 } catch (IOException e) {
                     // just ignored and print log.
                     Util.d(TAG, "OutputStream close failed task[" + task.getId()
-                            + "] block[" + i + "]" + e);
+                            + "] block[" + blockIndex + "]" + e);
                 }
             }
 
@@ -306,13 +297,13 @@ public class MultiPointOutputStream {
         final List<Integer> clonedList = (List<Integer>) noMoreStreamList.clone();
         final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
         final int noMoreStreamBlockCount = uniqueBlockList.size();
-        if (noMoreStreamBlockCount != requireStreamCount) {
-            Util.d(TAG, "current need fetch block count " + requireStreamCount
+        if (noMoreStreamBlockCount != requireStreamBlocks.size()) {
+            Util.d(TAG, "current need fetch block count " + requireStreamBlocks.size()
                     + " is not equal to output stream created block count "
                     + noMoreStreamBlockCount);
             state.isNoMoreStream = false;
         } else {
-            Util.d(TAG, "current need fetch block count " + requireStreamCount
+            Util.d(TAG, "current need fetch block count " + requireStreamBlocks.size()
                     + " is equal to output stream created block count "
                     + noMoreStreamBlockCount);
             state.isNoMoreStream = true;
@@ -332,8 +323,8 @@ public class MultiPointOutputStream {
         }
     }
 
-    public void setRequireStreamCount(int requireStreamCount) {
-        this.requireStreamCount = requireStreamCount;
+    public void setRequireStreamBlocks(List<Integer> requireStreamBlocks) {
+        this.requireStreamBlocks = requireStreamBlocks;
     }
 
     public void catchBlockConnectException(int blockIndex) {

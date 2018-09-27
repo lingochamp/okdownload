@@ -24,11 +24,13 @@ import android.util.Log;
 
 import com.liulishuo.filedownloader.exception.FileDownloadNetworkPolicyException;
 import com.liulishuo.filedownloader.exception.FileDownloadOutOfSpaceException;
+import com.liulishuo.filedownloader.exception.FileDownloadSecurityException;
 import com.liulishuo.filedownloader.retry.RetryAssist;
 import com.liulishuo.filedownloader.util.FileDownloadUtils;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
 import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
@@ -101,6 +103,7 @@ public class CompatListenerAssist {
             if (downloadTaskAdapter == null) return;
             final long soFarBytes = downloadTaskAdapter.getSoFarBytesInLong();
             final long totalBytes = downloadTaskAdapter.getTotalBytesInLong();
+            downloadTaskAdapter.getProgressAssist().initSofarBytes(soFarBytes);
             downloadTaskAdapter.getProgressAssist().calculateCallbackMinIntervalBytes(totalBytes);
             callback.connected(downloadTaskAdapter, etag, resumable, soFarBytes, totalBytes);
         }
@@ -182,6 +185,8 @@ public class CompatListenerAssist {
                     preAllocateException.getRequireSpace(),
                     downloadTaskAdapter.getProgressAssist().getSofarBytes(),
                     preAllocateException);
+        } else if (realCause instanceof DownloadSecurityException) {
+            throwable = new FileDownloadSecurityException(realCause.getMessage());
         } else {
             throwable = new Throwable(realCause);
         }
