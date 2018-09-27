@@ -147,9 +147,8 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     }
 
     private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy) throws InterruptedException {
-        boolean retry;
         int retryCount = 0;
-        do {
+        while(true) {
             // 0. check basic param before start
             if (task.getUrl().length() <= 0) {
                 this.cache = new DownloadCache.PreError(
@@ -234,11 +233,10 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.remove(task.getId());
-                retry = true;
             } else {
-                retry = false;
+                break;
             }
-        } while (retry);
+        }
     }
 
     private EndCause getEndCause(DownloadCache cache) {
