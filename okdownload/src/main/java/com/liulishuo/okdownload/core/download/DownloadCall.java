@@ -148,7 +148,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
     private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy) throws InterruptedException {
         int retryCount = 0;
-        while(true) {
+        while (true) {
             // 0. check basic param before start
             if (task.getUrl().length() <= 0) {
                 this.cache = new DownloadCache.PreError(
