@@ -22,9 +22,12 @@ import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.dispatcher.CallbackDispatcher;
+import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 
 import java.io.IOException;
@@ -67,6 +70,7 @@ public class ConnectTrialTest {
     @Mock private BreakpointInfo info;
     @Mock private DownloadConnection connection;
     @Mock private DownloadConnection.Connected connected;
+    @Rule public ExpectedException thrown= ExpectedException.none();
 
     private final String etag = "etag";
     private final String url = "https://jacksgong.com";
@@ -212,6 +216,22 @@ public class ConnectTrialTest {
                 .thenReturn("attachment; filename=genome.jpeg\nabc");
         connectTrial.executeTrial();
         assertThat(connectTrial.getResponseFilename()).isEqualTo("genome.jpeg");
+
+        when(connected.getResponseHeaderField(CONTENT_DISPOSITION))
+                .thenReturn("attachment; filename=../data/data/genome.png");
+        thrown.expect(DownloadSecurityException.class);
+        thrown.expectMessage("The filename [../data/data/genome.png] from the response is not "
+                + "allowable, because it contains '../', which can raise the directory traversal "
+                + "vulnerability");
+        connectTrial.executeTrial();
+
+        when(connected.getResponseHeaderField(CONTENT_DISPOSITION))
+                .thenReturn("attachment; filename=a/b/../abc");
+        thrown.expect(DownloadSecurityException.class);
+        thrown.expectMessage("The filename [a/b/../abc] from the response is not "
+                + "allowable, because it contains '../', which can raise the directory traversal "
+                + "vulnerability");
+        connectTrial.executeTrial();
     }
 
     @Test

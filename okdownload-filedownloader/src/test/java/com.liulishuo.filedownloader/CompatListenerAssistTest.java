@@ -20,10 +20,12 @@ import android.os.Handler;
 
 import com.liulishuo.filedownloader.exception.FileDownloadNetworkPolicyException;
 import com.liulishuo.filedownloader.exception.FileDownloadOutOfSpaceException;
+import com.liulishuo.filedownloader.exception.FileDownloadSecurityException;
 import com.liulishuo.filedownloader.progress.ProgressAssist;
 import com.liulishuo.filedownloader.retry.RetryAssist;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.core.cause.EndCause;
+import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
 import com.liulishuo.okdownload.core.exception.PreAllocateException;
 
@@ -128,6 +130,7 @@ public class CompatListenerAssistTest {
                 1L,
                 2L);
         verify(mockProgressAssist).calculateCallbackMinIntervalBytes(2);
+        verify(mockProgressAssist).initSofarBytes(1);
     }
 
     @Test
@@ -310,6 +313,28 @@ public class CompatListenerAssistTest {
         assertThat(taskCaptor.getValue()).isEqualTo(mockTaskAdapter);
         assertThat(throwableCaptor.getValue())
                 .isExactlyInstanceOf(FileDownloadOutOfSpaceException.class);
+    }
+
+    @Test
+    public void handleError_withDownloadSecurityException() {
+        final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
+        final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
+        when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
+        when(mockTaskAdapter.getRetryAssist()).thenReturn(null);
+        when(mockProgressAssist.getSofarBytes()).thenReturn(1L);
+        final Exception mockException = mock(DownloadSecurityException.class);
+
+        compatListenerAssist.handleError(mockTaskAdapter, mockException);
+
+        verify(callback, never()).retry(
+                any(DownloadTaskAdapter.class), any(Throwable.class), anyInt(), anyLong());
+        final ArgumentCaptor<Throwable> throwableCaptor = ArgumentCaptor.forClass(Throwable.class);
+        final ArgumentCaptor<DownloadTaskAdapter> taskCaptor = ArgumentCaptor
+                .forClass(DownloadTaskAdapter.class);
+        verify(callback).error(taskCaptor.capture(), throwableCaptor.capture());
+        assertThat(taskCaptor.getValue()).isEqualTo(mockTaskAdapter);
+        assertThat(throwableCaptor.getValue())
+                .isExactlyInstanceOf(FileDownloadSecurityException.class);
     }
 
     @Test

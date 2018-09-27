@@ -21,8 +21,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
+import android.system.ErrnoException;
 import android.system.Os;
-
+import android.system.OsConstants;
 import com.liulishuo.okdownload.core.Util;
 
 import java.io.BufferedOutputStream;
@@ -80,16 +81,28 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     public void seek(long offset) throws IOException {
         channel.position(offset);
     }
-
     @Override
     public void setLength(long newLength) {
         final String tag = "DownloadUriOutputStream";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
-                Os.ftruncate(pdf.getFileDescriptor(), newLength);
+                Os.posix_fallocate(pdf.getFileDescriptor(), 0, newLength);
             } catch (Throwable e) {
-                Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
-                        + " version(" + Build.VERSION.SDK_INT + "), because of " + e);
+                if (e instanceof ErrnoException) {
+                    if (((ErrnoException) e).errno == OsConstants.ENOSYS
+                            || ((ErrnoException) e).errno == OsConstants.ENOTSUP) {
+                        Util.w(tag, "fallocate() not supported; falling back to ftruncate()");
+                        try {
+                            Os.ftruncate(pdf.getFileDescriptor(), newLength);
+                        } catch (Throwable e1) {
+                            Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
+                                    + " version(" + Build.VERSION.SDK_INT + "), because of " + e1);
+                        }
+                     }
+                } else {
+                    Util.w(tag, "It can't pre-allocate length(" + newLength + ") on the sdk"
+                            + " version(" + Build.VERSION.SDK_INT + "), because of " + e);
+                }
             }
         } else {
             Util.w(tag,
