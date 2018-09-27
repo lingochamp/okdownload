@@ -125,16 +125,30 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     public void execute() throws InterruptedException {
         currentThread = Thread.currentThread();
 
-        boolean retry;
-        int retryCount = 0;
-
         // ready param
         final OkDownload okDownload = OkDownload.with();
         final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
 
         // inspect task start
         inspectTaskStart();
-        do {
+
+        tryDownloadInLoop(okDownload, fileStrategy);
+
+        // finish
+        finishing = true;
+        blockChainList.clear();
+
+        final DownloadCache cache = this.cache;
+        if (canceled || cache == null) return;
+
+        final EndCause cause = getEndCause(cache);
+        Exception realCause = realCauseOrNull(cache, cause);
+        inspectTaskEnd(cache, cause, realCause);
+    }
+
+    private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy) throws InterruptedException {
+        int retryCount = 0;
+        while (true) {
             // 0. check basic param before start
             if (task.getUrl().length() <= 0) {
                 this.cache = new DownloadCache.PreError(
@@ -190,9 +204,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                         Util.d(TAG, "breakpoint invalid: download from beginning because of "
                                 + "local check is dirty " + task.getId() + " " + localCheck);
                         // 6. assemble block data
-                        fileStrategy.discardProcess(task);
-                        assembleBlockAndCallbackFromBeginning(info, remoteCheck,
-                                localCheck.getCauseOrThrow());
+                        downloadFromBeginning(fileStrategy, info, remoteCheck, localCheck.getCauseOrThrow());
                     } else {
                         okDownload.callbackDispatcher().dispatch()
                                 .downloadFromBreakpoint(task, info);
@@ -201,9 +213,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                     Util.d(TAG, "breakpoint invalid: download from beginning because of "
                             + "remote check not resumable " + task.getId() + " " + remoteCheck);
                     // 6. assemble block data
-                    fileStrategy.discardProcess(task);
-                    assembleBlockAndCallbackFromBeginning(info, remoteCheck,
-                            remoteCheck.getCauseOrThrow());
+                    downloadFromBeginning(fileStrategy, info, remoteCheck, remoteCheck.getCauseOrThrow());
                 }
             } catch (IOException e) {
                 cache.setUnknownError(e);
@@ -219,35 +229,39 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.remove(task.getId());
-                retry = true;
             } else {
-                retry = false;
+                break;
             }
-        } while (retry);
+        }
+    }
 
-        // finish
-        finishing = true;
-        blockChainList.clear();
+    private void downloadFromBeginning(ProcessFileStrategy fileStrategy, BreakpointInfo info, BreakpointRemoteCheck remoteCheck, ResumeFailedCause cause) throws IOException {
+        fileStrategy.discardProcess(task);
+        assembleBlockAndCallbackFromBeginning(info, remoteCheck,
+                cause);
+    }
 
-        final DownloadCache cache = this.cache;
-        if (canceled || cache == null) return;
-
+    private EndCause getEndCause(DownloadCache cache) {
         final EndCause cause;
-        Exception realCause = null;
         if (cache.isServerCanceled() || cache.isUnknownError()
                 || cache.isPreconditionFailed()) {
             // error
             cause = EndCause.ERROR;
-            realCause = cache.getRealCause();
         } else if (cache.isFileBusyAfterRun()) {
             cause = EndCause.FILE_BUSY;
         } else if (cache.isPreAllocateFailed()) {
             cause = EndCause.PRE_ALLOCATE_FAILED;
-            realCause = cache.getRealCause();
         } else {
             cause = EndCause.COMPLETED;
         }
-        inspectTaskEnd(cache, cause, realCause);
+        return cause;
+    }
+
+    private Exception realCauseOrNull(DownloadCache cache, EndCause cause) {
+        if (cause == EndCause.ERROR || cause == EndCause.PRE_ALLOCATE_FAILED) {
+            return cache.getRealCause();
+        }
+        return null;
     }
 
     private void inspectTaskStart() {
