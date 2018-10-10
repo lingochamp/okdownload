@@ -82,10 +82,16 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
     public boolean dispatchTaskEnd(DownloadTask task, EndCause cause, @Nullable Exception realCause,
                                    @NonNull Listener4Assist.Listener4Model model) {
         final Listener4SpeedModel speedModel = (Listener4SpeedModel) model;
-        speedModel.taskSpeed.endTask();
+        final SpeedCalculator speedCalculator;
+        if (speedModel.taskSpeed != null) {
+            speedCalculator = speedModel.taskSpeed;
+            speedCalculator.endTask();
+        } else {
+            speedCalculator = new SpeedCalculator();
+        }
 
         if (callback != null) {
-            callback.taskEnd(task, cause, realCause, speedModel.taskSpeed);
+            callback.taskEnd(task, cause, realCause, speedCalculator);
         }
 
         return true;
@@ -98,10 +104,6 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
     public static class Listener4SpeedModel extends Listener4Assist.Listener4Model {
         SpeedCalculator taskSpeed;
         SparseArray<SpeedCalculator> blockSpeeds;
-
-        public SpeedCalculator getTaskSpeed() {
-            return taskSpeed;
-        }
 
         public SpeedCalculator getBlockSpeed(int blockIndex) {
             return blockSpeeds.get(blockIndex);

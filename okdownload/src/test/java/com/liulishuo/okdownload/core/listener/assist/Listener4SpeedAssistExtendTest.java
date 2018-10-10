@@ -27,12 +27,14 @@ import com.liulishuo.okdownload.core.cause.EndCause;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -111,5 +113,21 @@ public class Listener4SpeedAssistExtendTest {
         verify(model.taskSpeed).endTask();
         verify(callback).taskEnd(eq(task), eq(EndCause.COMPLETED), nullable(Exception.class),
                 eq(model.taskSpeed));
+    }
+
+    @Test
+    public void dispatchTaskEnd_withUnValidModel() {
+        final Listener4SpeedAssistExtend.Listener4SpeedModel invalidModel =
+                new Listener4SpeedAssistExtend.Listener4SpeedModel(1);
+
+        assertThat(invalidModel.blockSpeeds).isEqualTo(null);
+        assertThat(invalidModel.taskSpeed).isEqualTo(null);
+
+        final boolean result = assistExtend.dispatchTaskEnd(
+                task, EndCause.CANCELED, null, invalidModel);
+        assertThat(result).isTrue();
+
+        verify(callback).taskEnd(eq(task), eq(EndCause.CANCELED), nullable(Exception.class),
+                (SpeedCalculator) notNull());
     }
 }
