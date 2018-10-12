@@ -18,6 +18,9 @@ package com.liulishuo.okdownload.core.connection;
 
 import android.support.annotation.NonNull;
 
+import com.liulishuo.okdownload.RedirectUtil;
+import com.liulishuo.okdownload.core.Util;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -31,9 +34,20 @@ import java.util.Map;
 public class DownloadUrlConnection implements DownloadConnection, DownloadConnection.Connected {
 
     protected URLConnection connection;
+    private Configuration configuration;
+    private URL url;
+    private RedirectHandler redirectHandler;
+
+    private static final String TAG = "DownloadUrlConnection";
 
     DownloadUrlConnection(URLConnection connection) {
+        this(connection, new RedirectHandler());
+    }
+
+    DownloadUrlConnection(URLConnection connection, RedirectHandler redirectHandler) {
         this.connection = connection;
+        this.url = connection.getURL();
+        this.redirectHandler = redirectHandler;
     }
 
     public DownloadUrlConnection(String originUrl, Configuration configuration) throws IOException {
@@ -41,6 +55,25 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
     }
 
     public DownloadUrlConnection(URL url, Configuration configuration) throws IOException {
+        this(url, configuration, new RedirectHandler());
+    }
+
+    public DownloadUrlConnection(
+            URL url,
+            Configuration configuration,
+            RedirectHandler redirectHandler) throws IOException {
+        this.configuration = configuration;
+        this.url = url;
+        this.redirectHandler = redirectHandler;
+        prepareConnection();
+    }
+
+    public DownloadUrlConnection(String originUrl) throws IOException {
+        this(originUrl, null);
+    }
+
+    void prepareConnection() throws IOException {
+        Util.d(TAG, "prepare connection for " + url);
         if (configuration != null && configuration.proxy != null) {
             connection = url.openConnection(configuration.proxy);
         } else {
@@ -58,10 +91,6 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         }
     }
 
-    public DownloadUrlConnection(String originUrl) throws IOException {
-        this(originUrl, null);
-    }
-
     @Override
     public void addHeader(String name, String value) {
         connection.addRequestProperty(name, value);
@@ -69,7 +98,9 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     @Override
     public Connected execute() throws IOException {
+        final Map<String, List<String>> headerProperties = getRequestProperties();
         connection.connect();
+        redirectHandler.handleRedirect(this, headerProperties);
         return this;
     }
 
@@ -87,7 +118,8 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         return connection.getInputStream();
     }
 
-    @Override public boolean setRequestMethod(@NonNull String method) throws ProtocolException {
+    @Override
+    public boolean setRequestMethod(@NonNull String method) throws ProtocolException {
         if (connection instanceof HttpURLConnection) {
             ((HttpURLConnection) connection).setRequestMethod(method);
             return true;
@@ -107,20 +139,28 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
     }
 
     @Override
+    public String getRedirectLocation() {
+        return redirectHandler.redirectLocation;
+    }
+
+    @Override
     public void release() {
         // the same to response#close on okhttp
         // real execute RealBufferedSource.InputStream#close
         try {
-            connection.getInputStream().close();
+            final InputStream inputStream = connection.getInputStream();
+            if (inputStream != null) inputStream.close();
         } catch (IOException ignored) {
         }
     }
 
-    @Override public Map<String, List<String>> getRequestProperties() {
+    @Override
+    public Map<String, List<String>> getRequestProperties() {
         return connection.getRequestProperties();
     }
 
-    @Override public String getRequestProperty(String key) {
+    @Override
+    public String getRequestProperty(String key) {
         return connection.getRequestProperty(key);
     }
 
@@ -205,4 +245,34 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     }
 
+    /**
+     * handle redirect connection
+     */
+    static final class RedirectHandler {
+
+        String redirectLocation;
+
+        void handleRedirect(DownloadUrlConnection downloadUrlConnection,
+                            Map<String, List<String>> headerProperties) throws IOException {
+            int responseCode = downloadUrlConnection.getResponseCode();
+            int redirectCount = 0;
+            while (RedirectUtil.isRedirect(responseCode)) {
+                // the last connect is useless, so release it
+                downloadUrlConnection.release();
+
+                if (++redirectCount > RedirectUtil.MAX_REDIRECT_TIMES) {
+                    throw new ProtocolException("Too many redirect requests: " + redirectCount);
+                }
+
+                redirectLocation = RedirectUtil
+                        .getRedirectedUrl(downloadUrlConnection, responseCode);
+                downloadUrlConnection.url = new URL(redirectLocation);
+                downloadUrlConnection.prepareConnection();
+                Util.addUserRequestHeaderFieldWithoutInspect(headerProperties,
+                        downloadUrlConnection);
+                downloadUrlConnection.connection.connect();
+                responseCode = downloadUrlConnection.getResponseCode();
+            }
+        }
+    }
 }

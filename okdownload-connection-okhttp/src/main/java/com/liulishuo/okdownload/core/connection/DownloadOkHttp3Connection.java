@@ -103,6 +103,14 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
         return response == null ? null : response.header(name);
     }
 
+    @Override
+    public String getRedirectLocation() {
+        if (response.request() != null) {
+            return response.request().url().toString();
+        }
+        return null;
+    }
+
     public static class Factory implements DownloadConnection.Factory {
 
         private OkHttpClient.Builder clientBuilder;

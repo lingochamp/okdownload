@@ -16,8 +16,13 @@
 
 package com.liulishuo.okdownload.core.connection;
 
+import com.liulishuo.okdownload.RedirectUtil;
+
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -28,14 +33,20 @@ import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -56,7 +67,13 @@ public class DownloadUrlConnectionTest {
     @Mock
     private InputStream inputStream;
 
+    @Mock
+    private DownloadUrlConnection.RedirectHandler redirectHandler;
+
     private DownloadUrlConnection downloadUrlConnection;
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setup() throws Exception {
@@ -65,7 +82,7 @@ public class DownloadUrlConnectionTest {
         Mockito.when(url.openConnection()).thenReturn(urlConnection);
         Mockito.when(url.openConnection(proxy)).thenReturn(urlConnection);
 
-        downloadUrlConnection = new DownloadUrlConnection(urlConnection);
+        downloadUrlConnection = spy(new DownloadUrlConnection(urlConnection, redirectHandler));
     }
 
     @Test
@@ -104,8 +121,46 @@ public class DownloadUrlConnectionTest {
 
     @Test
     public void execute() throws Exception {
+        doNothing().when(redirectHandler).handleRedirect(any(DownloadUrlConnection.class),
+                ArgumentMatchers.<String, List<String>>anyMap());
         downloadUrlConnection.execute();
         verify(urlConnection).connect();
+    }
+
+    @Test
+    public void handleRedirect() throws IOException {
+        final DownloadUrlConnection.RedirectHandler handler =
+                new DownloadUrlConnection.RedirectHandler();
+        final Map<String, List<String>> headers = new HashMap<>();
+        final String redirectLocation = "http://13.png";
+        when(downloadUrlConnection.getResponseCode()).thenReturn(302).thenReturn(206);
+        when(downloadUrlConnection.getResponseHeaderField("Location")).thenReturn(redirectLocation);
+        doNothing().when(downloadUrlConnection).prepareConnection();
+        doNothing().when(urlConnection).connect();
+
+        handler.handleRedirect(downloadUrlConnection, headers);
+
+        verify(downloadUrlConnection).release();
+        verify(downloadUrlConnection).prepareConnection();
+        verify(urlConnection).connect();
+        assertThat(handler.redirectLocation).isEqualTo(redirectLocation);
+    }
+
+    @Test
+    public void handleRedirect_error() throws IOException {
+        final DownloadUrlConnection.RedirectHandler handler =
+                new DownloadUrlConnection.RedirectHandler();
+        final Map<String, List<String>> headers = new HashMap<>();
+        final String redirectLocation = "http://13.png";
+        when(downloadUrlConnection.getResponseCode()).thenReturn(302);
+        when(downloadUrlConnection.getResponseHeaderField("Location")).thenReturn(redirectLocation);
+        doNothing().when(downloadUrlConnection).prepareConnection();
+        doNothing().when(urlConnection).connect();
+
+        thrown.expect(ProtocolException.class);
+        thrown.expectMessage("Too many redirect requests: "
+                + (RedirectUtil.MAX_REDIRECT_TIMES + 1));
+        handler.handleRedirect(downloadUrlConnection, headers);
     }
 
     @Test
@@ -159,5 +214,12 @@ public class DownloadUrlConnectionTest {
         verify(httpURLConnection).setRequestMethod(eq("HEAD"));
 
         assertThat(downloadUrlConnection.setRequestMethod("GET")).isFalse();
+    }
+
+    @Test
+    public void getRedirectLocation() {
+        final String redirectLocation = "http://13.png";
+        redirectHandler.redirectLocation = redirectLocation;
+        assertThat(downloadUrlConnection.getRedirectLocation()).isEqualTo(redirectLocation);
     }
 }

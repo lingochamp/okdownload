@@ -34,7 +34,6 @@ import com.liulishuo.okdownload.core.interceptor.Interceptor;
 import com.liulishuo.okdownload.core.interceptor.RetryInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.CallServerInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.HeaderInterceptor;
-import com.liulishuo.okdownload.core.interceptor.connect.RedirectInterceptor;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -149,6 +148,8 @@ public class DownloadChain implements Runnable {
                 url = info.getUrl();
             }
 
+            Util.d(TAG, "create connection on url: " + url);
+
             connection = OkDownload.with().connectionFactory().create(url);
         }
         return connection;
@@ -172,7 +173,6 @@ public class DownloadChain implements Runnable {
         final BreakpointInterceptor breakpointInterceptor = new BreakpointInterceptor();
         connectInterceptorList.add(retryInterceptor);
         connectInterceptorList.add(breakpointInterceptor);
-        connectInterceptorList.add(new RedirectInterceptor());
         connectInterceptorList.add(new HeaderInterceptor());
         connectInterceptorList.add(new CallServerInterceptor());
 

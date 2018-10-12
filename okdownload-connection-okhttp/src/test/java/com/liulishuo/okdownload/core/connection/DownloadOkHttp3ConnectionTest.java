@@ -252,4 +252,11 @@ public class DownloadOkHttp3ConnectionTest {
                 .code(200)
                 .message("message");
     }
+
+    @Test
+    public void getRedirectLocation() {
+        final Response.Builder responseBuilder = createResponseBuilder();
+        connection.response = responseBuilder.build();
+        assertThat(connection.getRedirectLocation()).isEqualTo("http://jacksgong.com/");
+    }
 }

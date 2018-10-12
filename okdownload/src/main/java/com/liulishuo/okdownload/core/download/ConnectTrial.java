@@ -30,6 +30,7 @@ import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -86,12 +87,17 @@ public class ConnectTrial {
             listener.connectTrialStart(task, requestProperties);
 
             final DownloadConnection.Connected connected = connection.execute();
+            task.setRedirectLocation(connected.getRedirectLocation());
+            Util.d(TAG, "task[" + task.getId() + "] redirect location: "
+                    + task.getRedirectLocation());
+
             this.responseCode = connected.getResponseCode();
             this.acceptRange = isAcceptRange(connected);
             this.instanceLength = findInstanceLength(connected);
             this.responseEtag = findEtag(connected);
             this.responseFilename = findFilename(connected);
-            final Map<String, List<String>> responseHeader = connected.getResponseHeaderFields();
+            Map<String, List<String>> responseHeader = connected.getResponseHeaderFields();
+            if (responseHeader == null) responseHeader = new HashMap<>();
             listener.connectTrialEnd(task, responseCode, responseHeader);
 
             isNeedTrialHeadMethod = isNeedTrialHeadMethodForInstanceLength(instanceLength,
