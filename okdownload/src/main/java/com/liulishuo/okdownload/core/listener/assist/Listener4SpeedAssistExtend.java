@@ -105,6 +105,10 @@ public class Listener4SpeedAssistExtend implements Listener4Assist.AssistExtend,
         SpeedCalculator taskSpeed;
         SparseArray<SpeedCalculator> blockSpeeds;
 
+        public SpeedCalculator getTaskSpeed() {
+            return taskSpeed;
+        }
+
         public SpeedCalculator getBlockSpeed(int blockIndex) {
             return blockSpeeds.get(blockIndex);
         }
