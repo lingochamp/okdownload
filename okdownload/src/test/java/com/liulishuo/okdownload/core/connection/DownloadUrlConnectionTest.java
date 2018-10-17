@@ -41,12 +41,10 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -135,13 +133,13 @@ public class DownloadUrlConnectionTest {
         final String redirectLocation = "http://13.png";
         when(downloadUrlConnection.getResponseCode()).thenReturn(302).thenReturn(206);
         when(downloadUrlConnection.getResponseHeaderField("Location")).thenReturn(redirectLocation);
-        doNothing().when(downloadUrlConnection).prepareConnection();
+        doNothing().when(downloadUrlConnection).configConnection();
         doNothing().when(urlConnection).connect();
 
         handler.handleRedirect(downloadUrlConnection, headers);
 
         verify(downloadUrlConnection).release();
-        verify(downloadUrlConnection).prepareConnection();
+        verify(downloadUrlConnection).configConnection();
         verify(urlConnection).connect();
         assertThat(handler.redirectLocation).isEqualTo(redirectLocation);
     }
@@ -154,7 +152,7 @@ public class DownloadUrlConnectionTest {
         final String redirectLocation = "http://13.png";
         when(downloadUrlConnection.getResponseCode()).thenReturn(302);
         when(downloadUrlConnection.getResponseHeaderField("Location")).thenReturn(redirectLocation);
-        doNothing().when(downloadUrlConnection).prepareConnection();
+        doNothing().when(downloadUrlConnection).configConnection();
         doNothing().when(urlConnection).connect();
 
         thrown.expect(ProtocolException.class);

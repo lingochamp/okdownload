@@ -436,13 +436,13 @@ public class Util {
                                                  @NonNull DownloadConnection connection)
             throws IOException {
         inspectUserHeader(userHeaderField);
-        addUserRequestHeaderFieldWithoutInspect(userHeaderField, connection);
+        addRequestHeaderFields(userHeaderField, connection);
     }
 
-    public static void addUserRequestHeaderFieldWithoutInspect(
-            @NonNull Map<String, List<String>> userHeaderField,
+    public static void addRequestHeaderFields(
+            @NonNull Map<String, List<String>> headerFields,
             @NonNull DownloadConnection connection) {
-        for (Map.Entry<String, List<String>> entry : userHeaderField.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : headerFields.entrySet()) {
             String key = entry.getKey();
             List<String> values = entry.getValue();
             for (String value : values) {
