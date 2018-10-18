@@ -65,14 +65,14 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         this.configuration = configuration;
         this.url = url;
         this.redirectHandler = redirectHandler;
-        configConnection();
+        configUrlConnection();
     }
 
     public DownloadUrlConnection(String originUrl) throws IOException {
         this(originUrl, null);
     }
 
-    void configConnection() throws IOException {
+    void configUrlConnection() throws IOException {
         Util.d(TAG, "config connection for " + url);
         if (configuration != null && configuration.proxy != null) {
             connection = url.openConnection(configuration.proxy);
@@ -267,7 +267,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
                 redirectLocation = RedirectUtil
                         .getRedirectedUrl(downloadUrlConnection, responseCode);
                 downloadUrlConnection.url = new URL(redirectLocation);
-                downloadUrlConnection.configConnection();
+                downloadUrlConnection.configUrlConnection();
                 Util.addRequestHeaderFields(headerProperties,
                         downloadUrlConnection);
                 downloadUrlConnection.connection.connect();

@@ -133,13 +133,13 @@ public class DownloadUrlConnectionTest {
         final String redirectLocation = "http://13.png";
         when(downloadUrlConnection.getResponseCode()).thenReturn(302).thenReturn(206);
         when(downloadUrlConnection.getResponseHeaderField("Location")).thenReturn(redirectLocation);
-        doNothing().when(downloadUrlConnection).configConnection();
+        doNothing().when(downloadUrlConnection).configUrlConnection();
         doNothing().when(urlConnection).connect();
 
         handler.handleRedirect(downloadUrlConnection, headers);
 
         verify(downloadUrlConnection).release();
-        verify(downloadUrlConnection).configConnection();
+        verify(downloadUrlConnection).configUrlConnection();
         verify(urlConnection).connect();
         assertThat(handler.redirectLocation).isEqualTo(redirectLocation);
     }
@@ -152,7 +152,7 @@ public class DownloadUrlConnectionTest {
         final String redirectLocation = "http://13.png";
         when(downloadUrlConnection.getResponseCode()).thenReturn(302);
         when(downloadUrlConnection.getResponseHeaderField("Location")).thenReturn(redirectLocation);
-        doNothing().when(downloadUrlConnection).configConnection();
+        doNothing().when(downloadUrlConnection).configUrlConnection();
         doNothing().when(urlConnection).connect();
 
         thrown.expect(ProtocolException.class);
