@@ -65,7 +65,6 @@ public class DownloadUrlConnectionTest {
     @Mock
     private InputStream inputStream;
 
-    @Mock
     private DownloadUrlConnection.RedirectHandler redirectHandler;
 
     private DownloadUrlConnection downloadUrlConnection;
@@ -80,6 +79,7 @@ public class DownloadUrlConnectionTest {
         Mockito.when(url.openConnection()).thenReturn(urlConnection);
         Mockito.when(url.openConnection(proxy)).thenReturn(urlConnection);
 
+        redirectHandler = spy(new DownloadUrlConnection.RedirectHandler());
         downloadUrlConnection = spy(new DownloadUrlConnection(urlConnection, redirectHandler));
     }
 
@@ -119,7 +119,8 @@ public class DownloadUrlConnectionTest {
 
     @Test
     public void execute() throws Exception {
-        doNothing().when(redirectHandler).handleRedirect(any(DownloadUrlConnection.class),
+        doNothing().when(redirectHandler).handleRedirect(any(DownloadConnection.class),
+                any(DownloadConnection.Connected.class),
                 ArgumentMatchers.<String, List<String>>anyMap());
         downloadUrlConnection.execute();
         verify(urlConnection).connect();
@@ -136,12 +137,12 @@ public class DownloadUrlConnectionTest {
         doNothing().when(downloadUrlConnection).configUrlConnection();
         doNothing().when(urlConnection).connect();
 
-        handler.handleRedirect(downloadUrlConnection, headers);
+        handler.handleRedirect(downloadUrlConnection, downloadUrlConnection, headers);
 
         verify(downloadUrlConnection).release();
         verify(downloadUrlConnection).configUrlConnection();
         verify(urlConnection).connect();
-        assertThat(handler.redirectLocation).isEqualTo(redirectLocation);
+        assertThat(handler.getRedirectLocation()).isEqualTo(redirectLocation);
     }
 
     @Test
@@ -158,7 +159,7 @@ public class DownloadUrlConnectionTest {
         thrown.expect(ProtocolException.class);
         thrown.expectMessage("Too many redirect requests: "
                 + (RedirectUtil.MAX_REDIRECT_TIMES + 1));
-        handler.handleRedirect(downloadUrlConnection, headers);
+        handler.handleRedirect(downloadUrlConnection, downloadUrlConnection, headers);
     }
 
     @Test

@@ -17,7 +17,9 @@
 package com.liulishuo.okdownload.core.connection;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.liulishuo.okdownload.IRedirectHandler;
 import com.liulishuo.okdownload.RedirectUtil;
 import com.liulishuo.okdownload.core.Util;
 
@@ -36,7 +38,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
     protected URLConnection connection;
     private Configuration configuration;
     private URL url;
-    private RedirectHandler redirectHandler;
+    private IRedirectHandler redirectHandler;
 
     private static final String TAG = "DownloadUrlConnection";
 
@@ -44,7 +46,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         this(connection, new RedirectHandler());
     }
 
-    DownloadUrlConnection(URLConnection connection, RedirectHandler redirectHandler) {
+    DownloadUrlConnection(URLConnection connection, IRedirectHandler redirectHandler) {
         this.connection = connection;
         this.url = connection.getURL();
         this.redirectHandler = redirectHandler;
@@ -61,7 +63,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
     public DownloadUrlConnection(
             URL url,
             Configuration configuration,
-            RedirectHandler redirectHandler) throws IOException {
+            IRedirectHandler redirectHandler) throws IOException {
         this.configuration = configuration;
         this.url = url;
         this.redirectHandler = redirectHandler;
@@ -100,7 +102,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
     public Connected execute() throws IOException {
         final Map<String, List<String>> headerProperties = getRequestProperties();
         connection.connect();
-        redirectHandler.handleRedirect(this, headerProperties);
+        redirectHandler.handleRedirect(this, this, headerProperties);
         return this;
     }
 
@@ -140,7 +142,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     @Override
     public String getRedirectLocation() {
-        return redirectHandler.redirectLocation;
+        return redirectHandler.getRedirectLocation();
     }
 
     @Override
@@ -245,17 +247,19 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
 
     }
 
-    /**
-     * handle redirect connection
-     */
-    static final class RedirectHandler {
+    static final class RedirectHandler implements IRedirectHandler {
 
         String redirectLocation;
 
-        void handleRedirect(DownloadUrlConnection downloadUrlConnection,
-                            Map<String, List<String>> headerProperties) throws IOException {
-            int responseCode = downloadUrlConnection.getResponseCode();
+        @Override
+        public void handleRedirect(
+                DownloadConnection originalConnection,
+                DownloadConnection.Connected originalConnected,
+                Map<String, List<String>> headerProperties) throws IOException {
+            int responseCode = originalConnected.getResponseCode();
             int redirectCount = 0;
+            final DownloadUrlConnection downloadUrlConnection =
+                    (DownloadUrlConnection) originalConnection;
             while (RedirectUtil.isRedirect(responseCode)) {
                 // the last connect is useless, so release it
                 downloadUrlConnection.release();
@@ -265,7 +269,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
                 }
 
                 redirectLocation = RedirectUtil
-                        .getRedirectedUrl(downloadUrlConnection, responseCode);
+                        .getRedirectedUrl(originalConnected, responseCode);
                 downloadUrlConnection.url = new URL(redirectLocation);
                 downloadUrlConnection.configUrlConnection();
                 Util.addRequestHeaderFields(headerProperties,
@@ -273,6 +277,12 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
                 downloadUrlConnection.connection.connect();
                 responseCode = downloadUrlConnection.getResponseCode();
             }
+        }
+
+        @Nullable
+        @Override
+        public String getRedirectLocation() {
+            return redirectLocation;
         }
     }
 }
