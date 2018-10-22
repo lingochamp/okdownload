@@ -18,6 +18,8 @@ package com.liulishuo.okdownload.core.connection;
 
 import android.support.annotation.NonNull;
 
+import com.liulishuo.okdownload.RedirectUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ProtocolException;
@@ -105,8 +107,13 @@ public class DownloadOkHttp3Connection implements DownloadConnection, DownloadCo
 
     @Override
     public String getRedirectLocation() {
-        if (response.request() != null) {
-            return response.request().url().toString();
+        final Response priorRes = response.priorResponse();
+        if (priorRes != null
+                && response.isSuccessful()
+                && RedirectUtil.isRedirect(priorRes.code())) {
+                // prior response is a redirect response, so current response
+                // has redirect location
+                return response.request().url().toString();
         }
         return null;
     }
