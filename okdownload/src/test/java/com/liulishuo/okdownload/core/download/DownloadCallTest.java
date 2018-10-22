@@ -53,6 +53,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doNothing;
@@ -334,18 +335,22 @@ public class DownloadCallTest {
         final int id = task.getId();
         verify(store).markFileClear(eq(id));
         verify(fileStrategy).completeProcessStream(eq(multiPointOutputStream), eq(task));
+        verify(cache, times(1)).setRedirectLocation((String) any());
 
         when(cache.isPreAllocateFailed()).thenReturn(true);
         call.execute();
         verify(listener).taskEnd(task, EndCause.PRE_ALLOCATE_FAILED, iOException);
+        verify(cache, times(2)).setRedirectLocation((String) any());
 
         when(cache.isFileBusyAfterRun()).thenReturn(true);
         call.execute();
         verify(listener).taskEnd(task, EndCause.FILE_BUSY, null);
+        verify(cache, times(3)).setRedirectLocation((String) any());
 
         when(cache.isServerCanceled()).thenReturn(true);
         call.execute();
         verify(listener).taskEnd(task, EndCause.ERROR, iOException);
+        verify(cache, times(4)).setRedirectLocation((String) any());
 
 
         when(cache.isUserCanceled()).thenReturn(false);
@@ -353,6 +358,7 @@ public class DownloadCallTest {
         when(cache.isUnknownError()).thenReturn(true);
         call.execute();
         verify(listener, times(2)).taskEnd(task, EndCause.ERROR, iOException);
+        verify(cache, times(5)).setRedirectLocation((String) any());
     }
 
     @Test

@@ -91,6 +91,7 @@ public class DownloadTask extends IdentifiedTask implements Comparable<DownloadT
     @NonNull private final File directoryFile;
 
     @Nullable private File targetFile;
+    @Nullable private String redirectLocation;
 
     public DownloadTask(String url, Uri uri, int priority, int readBufferSize, int flushBufferSize,
                         int syncBufferSize, int syncBufferIntervalMills,
@@ -274,6 +275,15 @@ public class DownloadTask extends IdentifiedTask implements Comparable<DownloadT
      */
     @NonNull public String getUrl() {
         return url;
+    }
+
+    public void setRedirectLocation(@Nullable String redirectUrl) {
+        this.redirectLocation = redirectUrl;
+    }
+
+    @Nullable
+    public String getRedirectLocation() {
+        return redirectLocation;
     }
 
     @NonNull @Override protected File getProvidedPathFile() {

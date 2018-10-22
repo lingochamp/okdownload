@@ -96,6 +96,9 @@ public class ConnectTrialTest {
 
     @Test
     public void executeTrial() throws Exception {
+        final String redirectLocation = "http://location";
+        when(connected.getRedirectLocation()).thenReturn(redirectLocation);
+
         connectTrial.executeTrial();
 
         final DownloadStrategy downloadStrategy = OkDownload.with().downloadStrategy();
@@ -104,6 +107,7 @@ public class ConnectTrialTest {
         verify(connection).addHeader(eq(IF_MATCH), eq(etag));
         verify(connection).addHeader(eq(RANGE), eq("bytes=0-0"));
 
+        verify(task).setRedirectLocation(redirectLocation);
         verify(connection).execute();
         verify(connection).release();
     }

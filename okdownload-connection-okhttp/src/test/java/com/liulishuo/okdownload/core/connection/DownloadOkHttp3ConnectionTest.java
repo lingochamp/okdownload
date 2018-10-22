@@ -123,10 +123,8 @@ public class DownloadOkHttp3ConnectionTest {
                 .body(body).build();
         when(call.execute()).thenReturn(response);
 
-        final BufferedSource source = mock(BufferedSource.class);
-        when(body.source()).thenReturn(source);
         final InputStream expectedInputStream = mock(InputStream.class);
-        when(source.inputStream()).thenReturn(expectedInputStream);
+        when(body.byteStream()).thenReturn(expectedInputStream);
 
         connection.execute();
 
@@ -251,5 +249,23 @@ public class DownloadOkHttp3ConnectionTest {
                 .protocol(Protocol.HTTP_1_1)
                 .code(200)
                 .message("message");
+    }
+
+    @Test
+    public void getRedirectLocation() {
+        final Response.Builder responseBuilder = createResponseBuilder();
+        connection.response = responseBuilder.build();
+        assertThat(connection.getRedirectLocation()).isEqualTo(null);
+
+        final Response priorRes = new Response.Builder()
+                .protocol(Protocol.HTTP_1_1)
+                .code(302)
+                .request(new Request.Builder().url("http://fake.com").build())
+                .message("message")
+                .build();
+        connection.response = responseBuilder
+                .priorResponse(priorRes)
+                .build();
+        assertThat(connection.getRedirectLocation()).isEqualTo("http://jacksgong.com/");
     }
 }

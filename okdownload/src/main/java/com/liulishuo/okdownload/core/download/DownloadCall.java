@@ -172,6 +172,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 cache.catchException(e);
                 break;
             }
+            cache.setRedirectLocation(task.getRedirectLocation());
 
             // 3. waiting for file lock release after file path is confirmed.
             fileStrategy.getFileLock().waitForRelease(task.getFile().getAbsolutePath());

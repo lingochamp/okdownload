@@ -94,6 +94,13 @@ public interface DownloadConnection {
          * if there is no such field in the header.
          */
         @Nullable String getResponseHeaderField(String name);
+
+        /**
+         * Returns redirect location so that the upper layer to download target file directly and
+         * there is no need to handle redirect again
+         * @return redirect location
+         */
+        String getRedirectLocation();
     }
 
     interface Factory {

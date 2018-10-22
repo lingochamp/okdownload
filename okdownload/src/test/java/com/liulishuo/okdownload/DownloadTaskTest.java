@@ -592,5 +592,15 @@ public class DownloadTaskTest {
         assertThat(task.getParentFile()).isEqualTo(IdentifiedTask.EMPTY_FILE);
     }
 
+    @Test
+    public void redirectLocation() {
+        final String redirectLocation = "http://redirect";
+        DownloadTask task = new DownloadTask.Builder("https://jacksgong.com",
+                new File(parentPath, filename)).build();
+        task.setRedirectLocation(redirectLocation);
+        assertThat(task.getRedirectLocation()).isEqualTo(redirectLocation);
+    }
+
     @Rule public ExpectedException thrown = ExpectedException.none();
+
 }

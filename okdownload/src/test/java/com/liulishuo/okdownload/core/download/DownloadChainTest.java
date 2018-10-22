@@ -28,7 +28,6 @@ import com.liulishuo.okdownload.core.interceptor.Interceptor;
 import com.liulishuo.okdownload.core.interceptor.RetryInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.CallServerInterceptor;
 import com.liulishuo.okdownload.core.interceptor.connect.HeaderInterceptor;
-import com.liulishuo.okdownload.core.interceptor.connect.RedirectInterceptor;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -121,13 +120,12 @@ public class DownloadChainTest {
         chain.start();
 
         final List<Interceptor.Connect> connectInterceptorList = chain.connectInterceptorList;
-        assertThat(connectInterceptorList).hasSize(5);
+        assertThat(connectInterceptorList).hasSize(4);
 
         assertThat(connectInterceptorList.get(0)).isInstanceOf(RetryInterceptor.class);
         assertThat(connectInterceptorList.get(1)).isInstanceOf(BreakpointInterceptor.class);
-        assertThat(connectInterceptorList.get(2)).isInstanceOf(RedirectInterceptor.class);
-        assertThat(connectInterceptorList.get(3)).isInstanceOf(HeaderInterceptor.class);
-        assertThat(connectInterceptorList.get(4)).isInstanceOf(CallServerInterceptor.class);
+        assertThat(connectInterceptorList.get(2)).isInstanceOf(HeaderInterceptor.class);
+        assertThat(connectInterceptorList.get(3)).isInstanceOf(CallServerInterceptor.class);
 
 
         final List<Interceptor.Fetch> fetchInterceptorList = chain.fetchInterceptorList;
