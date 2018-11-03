@@ -45,6 +45,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
@@ -60,6 +61,7 @@ public class MultiPointOutputStream {
     final SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
     final AtomicLong allNoSyncLength = new AtomicLong();
     final AtomicLong lastSyncTimestamp = new AtomicLong();
+    final AtomicBoolean canceled = new AtomicBoolean(false);
 
     private final int flushBufferSize;
     private final int syncBufferSize;
@@ -120,6 +122,11 @@ public class MultiPointOutputStream {
     }
 
     public void write(int blockIndex, byte[] bytes, int length) throws IOException {
+        // if this task has been canceled, there is no need to write because of the output stream
+        // has been closed and there is no need to create a new output stream if this is a first
+        // write of this task block
+        if (canceled.get()) return;
+
         outputStream(blockIndex).write(bytes, 0, length);
 
         // because we add the length value after flush and sync,
@@ -140,9 +147,13 @@ public class MultiPointOutputStream {
 
     public void cancel() {
         if (requireStreamBlocks == null) return;
+        if (!canceled.compareAndSet(false, true)) return;
+        // must ensure sync thread is finished, then can invoke 'ensureSync(true, -1)'
+        // in try block, otherwise, try block will be blocked in 'ensureSync(true, -1)' and
+        // codes in finally block will not be invoked
+        noMoreStreamList.addAll(requireStreamBlocks);
         try {
             if (allNoSyncLength.get() <= 0) return;
-            noMoreStreamList.addAll(requireStreamBlocks);
             if (syncFuture != null && !syncFuture.isDone()) {
                 inspectValidPath();
                 OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
@@ -298,13 +309,13 @@ public class MultiPointOutputStream {
         final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
         final int noMoreStreamBlockCount = uniqueBlockList.size();
         if (noMoreStreamBlockCount != requireStreamBlocks.size()) {
-            Util.d(TAG, "current need fetch block count " + requireStreamBlocks.size()
-                    + " is not equal to output stream created block count "
+            Util.d(TAG, "task[" + task.getId() + "] current need fetching block count "
+                    + requireStreamBlocks.size() + " is not equal to no more stream block count "
                     + noMoreStreamBlockCount);
             state.isNoMoreStream = false;
         } else {
-            Util.d(TAG, "current need fetch block count " + requireStreamBlocks.size()
-                    + " is equal to output stream created block count "
+            Util.d(TAG, "task[" + task.getId() + "] current need fetching block count "
+                    + requireStreamBlocks.size() + " is equal to no more stream block count "
                     + noMoreStreamBlockCount);
             state.isNoMoreStream = true;
         }

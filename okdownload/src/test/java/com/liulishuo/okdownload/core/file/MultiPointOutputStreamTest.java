@@ -143,7 +143,17 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void cancel_syncNotRun() throws IOException {
+    public void write_notRun_withCancelled() throws IOException {
+        multiPointOutputStream.canceled.set(true);
+
+        multiPointOutputStream.write(0, bytes, 16);
+
+        verify(multiPointOutputStream, never()).outputStream(0);
+        verify(multiPointOutputStream, never()).inspectAndPersist();
+    }
+
+    @Test
+    public void cancel_syncNotRun_withSyncFutureIsNull() throws IOException {
         multiPointOutputStream.requireStreamBlocks = new ArrayList<Integer>() {{
             add(0);
             add(1);
@@ -169,7 +179,34 @@ public class MultiPointOutputStreamTest {
     }
 
     @Test
-    public void cancel_requireStreamBlocksNotInitial() throws IOException {
+    public void cancel_syncNotRun_withSyncFutureHasDone() throws IOException {
+        multiPointOutputStream.requireStreamBlocks = new ArrayList<Integer>() {{
+            add(0);
+            add(1);
+        }};
+        multiPointOutputStream.allNoSyncLength.set(1);
+        doNothing().when(multiPointOutputStream).close(anyInt());
+        doNothing().when(multiPointOutputStream).ensureSync(true, -1);
+        multiPointOutputStream.syncFuture = mock(Future.class);
+        when(multiPointOutputStream.syncFuture.isDone()).thenReturn(true);
+
+        final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
+        final FileLock fileLock = mock(FileLock.class);
+        when(strategy.getFileLock()).thenReturn(fileLock);
+
+        multiPointOutputStream.cancel();
+
+        assertThat(multiPointOutputStream.noMoreStreamList).containsExactly(0, 1);
+        verify(multiPointOutputStream, never()).ensureSync(eq(true), eq(-1));
+        verify(multiPointOutputStream).close(eq(0));
+        verify(multiPointOutputStream).close(eq(1));
+        verify(fileLock, never()).increaseLock(eq(existFile.getAbsolutePath()));
+        verify(fileLock, never()).decreaseLock(eq(existFile.getAbsolutePath()));
+        verify(store).onTaskEnd(eq(task.getId()), eq(EndCause.CANCELED), nullable(Exception.class));
+    }
+
+    @Test
+    public void cancel_notRun_withRequireStreamBlocksNotInitial() throws IOException {
         multiPointOutputStream.allNoSyncLength.set(1);
         final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
         final FileLock fileLock = mock(FileLock.class);
@@ -177,6 +214,24 @@ public class MultiPointOutputStreamTest {
 
         multiPointOutputStream.cancel();
 
+        verify(multiPointOutputStream, never()).ensureSync(anyBoolean(), anyInt());
+        verify(fileLock, never()).increaseLock(eq(existFile.getAbsolutePath()));
+        verify(fileLock, never()).decreaseLock(eq(existFile.getAbsolutePath()));
+        verify(multiPointOutputStream, never()).close(anyInt());
+        verify(store, never()).onTaskEnd(anyInt(), any(EndCause.class), any(Exception.class));
+    }
+
+    @Test
+    public void cancel_notRun_withCancelled() throws IOException {
+        multiPointOutputStream.allNoSyncLength.set(1);
+        multiPointOutputStream.canceled.set(true);
+        final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
+        final FileLock fileLock = mock(FileLock.class);
+        when(strategy.getFileLock()).thenReturn(fileLock);
+
+        multiPointOutputStream.cancel();
+
+        assertThat(multiPointOutputStream.noMoreStreamList).hasSize(0);
         verify(multiPointOutputStream, never()).ensureSync(anyBoolean(), anyInt());
         verify(fileLock, never()).increaseLock(eq(existFile.getAbsolutePath()));
         verify(fileLock, never()).decreaseLock(eq(existFile.getAbsolutePath()));
@@ -532,7 +587,7 @@ public class MultiPointOutputStreamTest {
     @Test
     public void setRequireStreamBlocks() {
         assertThat(multiPointOutputStream.requireStreamBlocks).isEqualTo(null);
-        final List<Integer> requireStreamBlocks = new ArrayList<Integer>(){{
+        final List<Integer> requireStreamBlocks = new ArrayList<Integer>() {{
             add(0);
             add(1);
             add(2);
@@ -640,4 +695,5 @@ public class MultiPointOutputStreamTest {
         when(task.getUri()).thenReturn(uri);
         when(uri.getScheme()).thenReturn("file");
     }
+
 }
