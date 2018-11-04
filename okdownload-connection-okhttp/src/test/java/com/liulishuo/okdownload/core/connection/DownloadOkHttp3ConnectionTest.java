@@ -123,8 +123,10 @@ public class DownloadOkHttp3ConnectionTest {
                 .body(body).build();
         when(call.execute()).thenReturn(response);
 
+        final BufferedSource source = mock(BufferedSource.class);
+        when(body.source()).thenReturn(source);
         final InputStream expectedInputStream = mock(InputStream.class);
-        when(body.byteStream()).thenReturn(expectedInputStream);
+        when(source.inputStream()).thenReturn(expectedInputStream);
 
         connection.execute();
 

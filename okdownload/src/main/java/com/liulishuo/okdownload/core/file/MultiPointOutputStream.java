@@ -48,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class MultiPointOutputStream {
     private static final String TAG = "MultiPointOutputStream";
     private static final ExecutorService FILE_IO_EXECUTOR = new ThreadPoolExecutor(0,
@@ -60,6 +62,7 @@ public class MultiPointOutputStream {
     final SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
     final AtomicLong allNoSyncLength = new AtomicLong();
     final AtomicLong lastSyncTimestamp = new AtomicLong();
+    boolean canceled = false;
 
     private final int flushBufferSize;
     private final int syncBufferSize;
@@ -80,6 +83,7 @@ public class MultiPointOutputStream {
     IOException syncException;
     @NonNull ArrayList<Integer> noMoreStreamList;
 
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     List<Integer> requireStreamBlocks;
 
     MultiPointOutputStream(@NonNull final DownloadTask task,
@@ -119,7 +123,12 @@ public class MultiPointOutputStream {
         this(task, info, store, null);
     }
 
-    public void write(int blockIndex, byte[] bytes, int length) throws IOException {
+    public synchronized void write(int blockIndex, byte[] bytes, int length) throws IOException {
+        // if this task has been canceled, there is no need to write because of the output stream
+        // has been closed and there is no need to create a new output stream if this is a first
+        // write of this task block
+        if (canceled) return;
+
         outputStream(blockIndex).write(bytes, 0, length);
 
         // because we add the length value after flush and sync,
@@ -138,11 +147,16 @@ public class MultiPointOutputStream {
         });
     }
 
-    public void cancel() {
+    public synchronized void cancel() {
         if (requireStreamBlocks == null) return;
+        if (canceled) return;
+        canceled = true;
+        // must ensure sync thread is finished, then can invoke 'ensureSync(true, -1)'
+        // in try block, otherwise, try block will be blocked in 'ensureSync(true, -1)' and
+        // codes in finally block will not be invoked
+        noMoreStreamList.addAll(requireStreamBlocks);
         try {
             if (allNoSyncLength.get() <= 0) return;
-            noMoreStreamList.addAll(requireStreamBlocks);
             if (syncFuture != null && !syncFuture.isDone()) {
                 inspectValidPath();
                 OkDownload.with().processFileStrategy().getFileLock().increaseLock(path);
@@ -298,13 +312,13 @@ public class MultiPointOutputStream {
         final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
         final int noMoreStreamBlockCount = uniqueBlockList.size();
         if (noMoreStreamBlockCount != requireStreamBlocks.size()) {
-            Util.d(TAG, "current need fetch block count " + requireStreamBlocks.size()
-                    + " is not equal to output stream created block count "
+            Util.d(TAG, "task[" + task.getId() + "] current need fetching block count "
+                    + requireStreamBlocks.size() + " is not equal to no more stream block count "
                     + noMoreStreamBlockCount);
             state.isNoMoreStream = false;
         } else {
-            Util.d(TAG, "current need fetch block count " + requireStreamBlocks.size()
-                    + " is equal to output stream created block count "
+            Util.d(TAG, "task[" + task.getId() + "] current need fetching block count "
+                    + requireStreamBlocks.size() + " is equal to no more stream block count "
                     + noMoreStreamBlockCount);
             state.isNoMoreStream = true;
         }
