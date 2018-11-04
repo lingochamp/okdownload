@@ -61,7 +61,7 @@ public class MultiPointOutputStream {
     final SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
     final AtomicLong allNoSyncLength = new AtomicLong();
     final AtomicLong lastSyncTimestamp = new AtomicLong();
-    final AtomicBoolean canceled = new AtomicBoolean(false);
+    Boolean canceled = false;
 
     private final int flushBufferSize;
     private final int syncBufferSize;
@@ -121,11 +121,11 @@ public class MultiPointOutputStream {
         this(task, info, store, null);
     }
 
-    public void write(int blockIndex, byte[] bytes, int length) throws IOException {
+    public synchronized void write(int blockIndex, byte[] bytes, int length) throws IOException {
         // if this task has been canceled, there is no need to write because of the output stream
         // has been closed and there is no need to create a new output stream if this is a first
         // write of this task block
-        if (canceled.get()) return;
+        if (canceled) return;
 
         outputStream(blockIndex).write(bytes, 0, length);
 
@@ -145,9 +145,10 @@ public class MultiPointOutputStream {
         });
     }
 
-    public void cancel() {
+    public synchronized void cancel() {
         if (requireStreamBlocks == null) return;
-        if (!canceled.compareAndSet(false, true)) return;
+        if (canceled) return;
+        canceled = true;
         // must ensure sync thread is finished, then can invoke 'ensureSync(true, -1)'
         // in try block, otherwise, try block will be blocked in 'ensureSync(true, -1)' and
         // codes in finally block will not be invoked

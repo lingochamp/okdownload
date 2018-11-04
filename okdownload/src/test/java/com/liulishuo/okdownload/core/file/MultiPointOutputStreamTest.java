@@ -144,7 +144,7 @@ public class MultiPointOutputStreamTest {
 
     @Test
     public void write_notRun_withCancelled() throws IOException {
-        multiPointOutputStream.canceled.set(true);
+        multiPointOutputStream.canceled = true;
 
         multiPointOutputStream.write(0, bytes, 16);
 
@@ -224,7 +224,7 @@ public class MultiPointOutputStreamTest {
     @Test
     public void cancel_notRun_withCancelled() throws IOException {
         multiPointOutputStream.allNoSyncLength.set(1);
-        multiPointOutputStream.canceled.set(true);
+        multiPointOutputStream.canceled = true;
         final ProcessFileStrategy strategy = OkDownload.with().processFileStrategy();
         final FileLock fileLock = mock(FileLock.class);
         when(strategy.getFileLock()).thenReturn(fileLock);
