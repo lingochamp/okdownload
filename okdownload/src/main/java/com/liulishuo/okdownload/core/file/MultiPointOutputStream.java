@@ -45,7 +45,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
@@ -61,7 +60,7 @@ public class MultiPointOutputStream {
     final SparseArray<AtomicLong> noSyncLengthMap = new SparseArray<>();
     final AtomicLong allNoSyncLength = new AtomicLong();
     final AtomicLong lastSyncTimestamp = new AtomicLong();
-    Boolean canceled = false;
+    boolean canceled = false;
 
     private final int flushBufferSize;
     private final int syncBufferSize;
