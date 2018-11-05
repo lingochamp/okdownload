@@ -1,3 +1,18 @@
+### 1.0.5
+
+_2018-11-05_
+
+#### Bug Fix
+
+- Fix `The current offset on block-info isn't update correct, x != y on z` issue which because of syncRunnable finished unexpected. closes #129
+- Fix progress don't start from breakpoint when restart paused task and using the `filedownloader-api` wrapper. closes #154
+- Fix small possibility of raising NPE issue when using `DownloadListener1`. closes #89
+- Fix directory traversal vulnerability. closes #83
+- Fix small posibility can make output-streams leak.
+- Fix preallocation operation is not work issue. refs #162
+- Fix small possibility of raising NEP in `Listener4SpeedAssistExtend`. closes #121
+- Fix http-redirection can't be handled on the default download-conneciton issue. 
+
 ### 1.0.4
 
 _2018-08-08_
