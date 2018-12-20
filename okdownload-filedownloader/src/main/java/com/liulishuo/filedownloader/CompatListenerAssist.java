@@ -142,7 +142,6 @@ public class CompatListenerAssist {
             default:
                 break;
         }
-        onTaskFinish(downloadTaskAdapter);
     }
 
     void handleWarn(
@@ -151,6 +150,7 @@ public class CompatListenerAssist {
             Exception realCause) {
         Util.w(TAG, "handle warn, cause: " + cause + "real cause: " + realCause);
         callback.warn(downloadTaskAdapter);
+        onTaskFinish(downloadTaskAdapter);
     }
 
     void handleCanceled(@NonNull DownloadTaskAdapter downloadTaskAdapter) {
@@ -158,6 +158,7 @@ public class CompatListenerAssist {
                 downloadTaskAdapter,
                 downloadTaskAdapter.getProgressAssist().getSofarBytes(),
                 downloadTaskAdapter.getTotalBytesInLong());
+        onTaskFinish(downloadTaskAdapter);
     }
 
     void handleError(
@@ -191,6 +192,7 @@ public class CompatListenerAssist {
             throwable = new Throwable(realCause);
         }
         callback.error(downloadTaskAdapter, throwable);
+        onTaskFinish(downloadTaskAdapter);
     }
 
     void onTaskFinish(@NonNull DownloadTaskAdapter downloadTaskAdapter) {
@@ -215,6 +217,7 @@ public class CompatListenerAssist {
             try {
                 callback.blockComplete(downloadTaskAdapter);
                 callback.completed(downloadTaskAdapter);
+                onTaskFinish(downloadTaskAdapter);
             } catch (final Throwable throwable) {
                 handleError(downloadTaskAdapter, new Exception(throwable));
             }
@@ -230,6 +233,7 @@ public class CompatListenerAssist {
                     callback.completed(downloadTaskAdapter);
                 }
             });
+            onTaskFinish(downloadTaskAdapter);
         } catch (final Throwable throwable) {
             uiHandler.post(new Runnable() {
                 @Override
