@@ -85,7 +85,7 @@ public class Listener1Assist implements ListenerAssist,
         final Listener1Model model = modelHandler.getOrRecoverModel(task, task.getInfo());
         if (model == null) return;
 
-        if (model.isFromResumed && model.isFirstConnect) {
+        if (model.isFromResumed != null && model.isFromResumed && model.isFirstConnect) {
             model.isFirstConnect = false;
         }
 
