@@ -69,6 +69,7 @@ public class DownloadUriOutputStream implements DownloadOutputStream {
     public void close() throws IOException {
         out.close();
         fos.close();
+        pdf.close();
     }
 
     @Override
