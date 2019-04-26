@@ -155,23 +155,22 @@ public class ConnectTrialTest {
     public void getInstanceLength() throws Exception {
         when(connected.getResponseHeaderField(CONTENT_RANGE))
                 .thenReturn("bytes 21010-47021/47022");
-//        when(connected.getResponseHeaderField(CONTENT_LENGTH))
-//                .thenReturn("100");
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_PARTIAL);
         connectTrial.executeTrial();
         assertThat(connectTrial.getInstanceLength()).isEqualTo(47022L);
         assertThat(connectTrial.isChunked()).isFalse();
 
-        when(connected.getResponseHeaderField(CONTENT_RANGE))
-                .thenReturn(null);
-//        connectTrial.executeTrial();
-//        assertThat(connectTrial.getInstanceLength()).isEqualTo(100L);
-//        assertThat(connectTrial.isChunked()).isFalse();
-
-//        when(connected.getResponseHeaderField(CONTENT_LENGTH))
-//                .thenReturn(null);
+        when(connected.getResponseHeaderField(CONTENT_RANGE)).thenReturn(null);
         connectTrial.executeTrial();
         assertThat(connectTrial.getInstanceLength()).isEqualTo(CHUNKED_CONTENT_LENGTH);
         assertThat(connectTrial.isChunked()).isTrue();
+
+        when(connected.getResponseCode()).thenReturn(HttpURLConnection.HTTP_PARTIAL);
+        when(connected.getResponseHeaderField(CONTENT_RANGE)).thenReturn(null);
+        when(connected.getResponseHeaderField(CONTENT_LENGTH)).thenReturn("47022");
+        connectTrial.executeTrial();
+        assertThat(connectTrial.getInstanceLength()).isEqualTo(47022L);
+        assertThat(connectTrial.isChunked()).isFalse();
     }
 
     @Test

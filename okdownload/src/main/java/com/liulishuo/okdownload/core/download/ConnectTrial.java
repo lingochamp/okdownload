@@ -80,7 +80,7 @@ public class ConnectTrial {
             }
             connection.addHeader(RANGE, "bytes=0-0");
             final Map<String, List<String>> userHeader = task.getHeaderMapFields();
-            if (userHeader != null)  Util.addUserRequestHeaderField(userHeader, connection);
+            if (userHeader != null) Util.addUserRequestHeaderField(userHeader, connection);
 
             final DownloadListener listener = OkDownload.with().callbackDispatcher().dispatch();
             final Map<String, List<String>> requestProperties = connection.getRequestProperties();
@@ -93,7 +93,7 @@ public class ConnectTrial {
 
             this.responseCode = connected.getResponseCode();
             this.acceptRange = isAcceptRange(connected);
-            this.instanceLength = findInstanceLength(connected);
+            this.instanceLength = findInstanceLength(responseCode, connected);
             this.responseEtag = findEtag(connected);
             this.responseFilename = findFilename(connected);
             Map<String, List<String>> responseHeader = connected.getResponseHeaderFields();
@@ -213,7 +213,7 @@ public class ConnectTrial {
             Matcher m = CONTENT_DISPOSITION_QUOTED_PATTERN.matcher(contentDisposition);
             if (m.find()) {
                 fileName = m.group(1);
-            } else  {
+            } else {
                 m = CONTENT_DISPOSITION_NON_QUOTED_PATTERN.matcher(contentDisposition);
                 if (m.find()) {
                     fileName = m.group(1);
@@ -222,8 +222,8 @@ public class ConnectTrial {
 
             if (fileName != null && fileName.contains("../")) {
                 throw new DownloadSecurityException("The filename [" + fileName + "] from"
-                    + " the response is not allowable, because it contains '../', which "
-                    + "can raise the directory traversal vulnerability");
+                        + " the response is not allowable, because it contains '../', which "
+                        + "can raise the directory traversal vulnerability");
             }
 
             return fileName;
@@ -237,11 +237,18 @@ public class ConnectTrial {
         return connected.getResponseHeaderField(ETAG);
     }
 
-    private static long findInstanceLength(DownloadConnection.Connected connected) {
-        // Content-Range
-        final long instanceLength = parseContentRangeFoInstanceLength(
-                connected.getResponseHeaderField(CONTENT_RANGE));
-        if (instanceLength != CHUNKED_CONTENT_LENGTH) return instanceLength;
+    private static long findInstanceLength(int responseCode, DownloadConnection.Connected connected) {
+        if (responseCode == HttpURLConnection.HTTP_PARTIAL) {
+            Util.i(TAG, "read length from Content-Range");
+            final long instanceLength = parseContentRangeFoInstanceLength(
+                    connected.getResponseHeaderField(CONTENT_RANGE));
+            if (instanceLength != CHUNKED_CONTENT_LENGTH) return instanceLength;
+        } else if (responseCode == HttpURLConnection.HTTP_OK) {
+            Util.i(TAG, "read length from Content-Length");
+            final long instanceLength = Util
+                    .parseContentLength(connected.getResponseHeaderField(CONTENT_LENGTH));
+            if (instanceLength != CHUNKED_CONTENT_LENGTH) return instanceLength;
+        }
 
         // chunked on here
         final boolean isChunked = parseTransferEncoding(connected
@@ -298,7 +305,7 @@ public class ConnectTrial {
         try {
             connection.setRequestMethod(METHOD_HEAD);
             final Map<String, List<String>> userHeader = task.getHeaderMapFields();
-            if (userHeader != null)  Util.addUserRequestHeaderField(userHeader, connection);
+            if (userHeader != null) Util.addUserRequestHeaderField(userHeader, connection);
 
             listener.connectTrialStart(task, connection.getRequestProperties());
             final DownloadConnection.Connected connectedForContentLength = connection.execute();
