@@ -18,7 +18,7 @@ package com.liulishuo.okdownload.sample;
 
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.sample.base.BaseListActivity;

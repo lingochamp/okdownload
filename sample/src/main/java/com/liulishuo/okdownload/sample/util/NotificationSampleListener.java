@@ -23,8 +23,8 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 
 import com.liulishuo.okdownload.DownloadTask;
@@ -163,7 +163,7 @@ public class NotificationSampleListener extends DownloadListener4WithSpeed {
     }
 
     @Override public void taskEnd(@NonNull final DownloadTask task, @NonNull EndCause cause,
-                                  @android.support.annotation.Nullable Exception realCause,
+                                  @androidx.annotation.Nullable Exception realCause,
                                   @NonNull SpeedCalculator taskSpeed) {
         Log.d("NotificationActivity", "taskEnd " + cause + " " + realCause);
         builder.setOngoing(false);

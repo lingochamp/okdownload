@@ -16,7 +16,7 @@
 
 package com.liulishuo.okdownload.core.download;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause;

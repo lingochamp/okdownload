@@ -16,7 +16,7 @@
 
 package com.liulishuo.filedownloader.util;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.liulishuo.filedownloader.BaseDownloadTask;
 import com.liulishuo.filedownloader.DownloadTaskAdapter;

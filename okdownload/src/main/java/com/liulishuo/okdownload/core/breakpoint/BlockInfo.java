@@ -16,7 +16,7 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
-import android.support.annotation.IntRange;
+import androidx.annotation.IntRange;
 
 import java.util.concurrent.atomic.AtomicLong;
 

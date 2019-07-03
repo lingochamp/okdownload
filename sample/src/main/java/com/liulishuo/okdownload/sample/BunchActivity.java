@@ -16,11 +16,8 @@
 
 package com.liulishuo.okdownload.sample;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.annotation.IdRes;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -28,9 +25,13 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import androidx.annotation.IdRes;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.liulishuo.okdownload.DownloadContext;
-import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadContextListener;
+import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.cause.EndCause;
@@ -142,7 +143,7 @@ public class BunchActivity extends BaseSampleActivity {
             }
 
             @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
-                                          @android.support.annotation.Nullable Exception realCause,
+                                          @androidx.annotation.Nullable Exception realCause,
                                           @NonNull Listener1Assist.Listener1Model model) {
                 fillPbInfo(task, "end " + cause);
 
@@ -258,7 +259,7 @@ public class BunchActivity extends BaseSampleActivity {
 
         int id = 0;
 
-        TaskViews(Activity activity, @IdRes int tvId, @IdRes int pbId) {
+        TaskViews(AppCompatActivity activity, @IdRes int tvId, @IdRes int pbId) {
             progressBar = activity.findViewById(pbId);
             infoTv = activity.findViewById(tvId);
         }

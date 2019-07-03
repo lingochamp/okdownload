@@ -16,8 +16,8 @@
 
 package com.liulishuo.okdownload.core.interceptor;
 
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
 
 import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.core.Util;

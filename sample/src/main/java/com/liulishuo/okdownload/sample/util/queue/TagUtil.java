@@ -16,7 +16,7 @@
 
 package com.liulishuo.okdownload.sample.util.queue;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.liulishuo.okdownload.DownloadTask;
 

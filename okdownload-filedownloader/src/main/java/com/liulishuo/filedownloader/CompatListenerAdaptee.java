@@ -16,7 +16,7 @@
 
 package com.liulishuo.filedownloader;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public class CompatListenerAdaptee implements CompatListenerAssist.CompatListenerAssistCallback {
 

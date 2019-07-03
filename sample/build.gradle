@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    compileSdkVersion 28
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     compileOptions {
@@ -66,10 +66,10 @@ dependencies {
     implementation dep.kotlinxCoroutines
     implementation dep.supportConstraintLayout
     testImplementation dep.junit
-    implementation project(':okdownload')
-    implementation project(':sqlite')
-    implementation project(':okhttp')
-    implementation project(':filedownloader')
+    implementation dep.okdownloadcore
+    implementation dep.okdownloadsqlite
+    implementation dep.okdownloadokhttp
+    implementation dep.okhttp
 
     compileOnly dep.findbugsAnnotations
 }

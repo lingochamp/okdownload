@@ -17,11 +17,11 @@
 package com.liulishuo.okdownload.sample;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.AppCompatRadioButton;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatRadioButton;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
@@ -86,7 +86,7 @@ public class QueueActivity extends BaseSampleActivity {
             @Override
             public void taskEnd(@NonNull DownloadContext context, @NonNull DownloadTask task,
                                 @NonNull EndCause cause,
-                                @android.support.annotation.Nullable Exception realCause,
+                                @androidx.annotation.Nullable Exception realCause,
                                 int remainCount) {
             }
 

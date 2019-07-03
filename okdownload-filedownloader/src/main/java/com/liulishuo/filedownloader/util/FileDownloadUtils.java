@@ -17,7 +17,7 @@
 package com.liulishuo.filedownloader.util;
 
 import android.os.Environment;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.liulishuo.filedownloader.DownloadTaskAdapter;

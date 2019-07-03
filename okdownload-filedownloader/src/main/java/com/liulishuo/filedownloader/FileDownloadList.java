@@ -16,7 +16,7 @@
 
 package com.liulishuo.filedownloader;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.liulishuo.filedownloader.message.MessageSnapshot;
 import com.liulishuo.okdownload.OkDownload;

@@ -22,4 +22,5 @@ dependencies {
     testImplementation dep.junit
     testImplementation dep.mockito
     testImplementation dep.assertj
+    implementation 'com.android.support:appcompat-v7'
 }

@@ -17,7 +17,7 @@
 package com.liulishuo.okdownload.sample;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -303,7 +303,7 @@ public class EachBlockProgressActivity extends BaseSampleActivity {
 
 
             @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
-                                          @android.support.annotation.Nullable Exception realCause,
+                                          @androidx.annotation.Nullable Exception realCause,
                                           @NonNull SpeedCalculator taskSpeed) {
                 statusTv.setText(cause.toString());
                 taskSpeedTv.setText(taskSpeed.averageSpeed());

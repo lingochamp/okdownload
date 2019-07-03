@@ -16,7 +16,7 @@
 
 package com.liulishuo.okdownload;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 

@@ -16,7 +16,7 @@
 
 package com.liulishuo.filedownloader.retry;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import com.liulishuo.okdownload.DownloadTask;
 
 import java.util.concurrent.atomic.AtomicInteger;

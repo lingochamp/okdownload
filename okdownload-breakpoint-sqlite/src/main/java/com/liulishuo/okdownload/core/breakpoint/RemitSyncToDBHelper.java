@@ -16,7 +16,7 @@
 
 package com.liulishuo.okdownload.core.breakpoint;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 class RemitSyncToDBHelper {
 

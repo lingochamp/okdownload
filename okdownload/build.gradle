@@ -31,6 +31,7 @@ dependencies {
     implementation dep.supportAnnotations
 
     compileOnly dep.findbugsAnnotations
+    implementation 'androidx.appcompat:appcompat:1.0.0'
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

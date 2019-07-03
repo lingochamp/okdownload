@@ -17,7 +17,7 @@
 package com.liulishuo.okdownload.sample.util;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.widget.ProgressBar;
 
 import java.io.File;
