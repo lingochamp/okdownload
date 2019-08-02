@@ -11,6 +11,7 @@ android:
     - extra
 
 script:
+  - rm -fr $HOME/.m2/repository/org/robolectric/android-all
   - ./gradlew -PignoreOkcheckDiff -PisCI clean okcheckDebug
 
 sudo: false
