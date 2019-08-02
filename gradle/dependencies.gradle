@@ -3,8 +3,8 @@ ext {
     buildToolsVersion = '28.0.2'
     minSdkVersion = 14
     targetSdkVersion = 27
-    sourceCompatibilityVersion = JavaVersion.VERSION_1_7
-    targetCompatibilityVersion = JavaVersion.VERSION_1_7
+    sourceCompatibilityVersion = JavaVersion.VERSION_1_8
+    targetCompatibilityVersion = JavaVersion.VERSION_1_8
     kotlin_version = '1.2.51'
     anko_version = '0.10.1'
     coroutines_version = '0.18'
