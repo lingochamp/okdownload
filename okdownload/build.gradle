@@ -2,7 +2,6 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         versionName VERSION_NAME as String
@@ -19,6 +18,16 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+        unitTests.all {
+            systemProperty 'robolectric.dependency.repo.url', 'http://maven.aliyun.com/nexus/content/groups/public/'
+            systemProperty 'robolectric.dependency.repo.id', 'alimaven'
+        }
     }
 }
 
