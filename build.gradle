@@ -16,14 +16,14 @@ apply from: rootProject.file('gradle/dependencies.gradle')
 
 buildscript {
     repositories {
-        jcenter()
         google()
+        jcenter()
     }
     dependencies {
-        classpath 'com.liulishuo.okcheck:gradle:0.2.8'
-        classpath 'com.android.tools.build:gradle:3.4.0'
+        classpath 'com.liulishuo.okcheck:gradle:0.2.3'
+        classpath 'com.android.tools.build:gradle:3.4.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.11"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.31"
     }
 }
 
@@ -36,6 +36,12 @@ allprojects {
 
     okcheck {
         destination = buildDir
+        pmd {
+            // Because of the bug of https://github.com/pmd/pmd/issues/1794
+            // and current pmd version is 6.8.0, pmd 6.14.0 will solve this problem.
+            // Disable pmd temporary and we need update okcheck either.
+            enabled = false
+        }
     }
 }
 

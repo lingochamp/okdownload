@@ -33,16 +33,6 @@
         </value>
       </option>
     </JavaCodeStyleSettings>
-    <DBN-PSQL>
-      <case-options enabled="true">
-        <option name="KEYWORD_CASE" value="lower" />
-        <option name="FUNCTION_CASE" value="lower" />
-        <option name="PARAMETER_CASE" value="lower" />
-        <option name="DATATYPE_CASE" value="lower" />
-        <option name="OBJECT_CASE" value="preserve" />
-      </case-options>
-      <formatting-settings enabled="false" />
-    </DBN-PSQL>
     <DBN-SQL>
       <case-options enabled="true">
         <option name="KEYWORD_CASE" value="lower" />
