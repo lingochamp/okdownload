@@ -1,14 +1,13 @@
 ext {
-    compileSdkVersion = 27
-    buildToolsVersion = '28.0.2'
+    compileSdkVersion = 28
     minSdkVersion = 14
-    targetSdkVersion = 27
+    targetSdkVersion = 28
     sourceCompatibilityVersion = JavaVersion.VERSION_1_8
     targetCompatibilityVersion = JavaVersion.VERSION_1_8
-    kotlin_version = '1.2.51'
+    kotlin_version = '1.3.50'
     anko_version = '0.10.1'
     coroutines_version = '0.18'
-    supportLibrariesVersion = '27.1.0'
+    supportLibrariesVersion = '28.0.0'
 
     dep = [
             androidPlugin               : 'com.android.tools.build:gradle:3.0.0-beta6',
@@ -21,7 +20,7 @@ ext {
             assertj                     : 'org.assertj:assertj-core:2.8.0',
             mockito                     : 'org.mockito:mockito-core:2.10.0',
 
-            kotlin                      : "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version",
+            kotlin                      : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version",
             kotlinPlugin                : "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version",
             kotlinxCoroutines           : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version",
 
