@@ -98,16 +98,23 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         final DownloadCache cache = this.cache;
         if (cache != null) cache.setUserCanceled();
 
-        final List<DownloadChain> chains = (List<DownloadChain>) blockChainList.clone();
-        for (DownloadChain chain : chains) {
-            chain.cancel();
-        }
+        synchronized (blockChainList) {
+            // ArrayList#clone is not a thread safe operation,
+            // so chains#size may > chains#elementData.length and this will cause
+            // ConcurrentModificationException during iterate the ArrayList(ArrayList#next).
+            // This is a reproduce example:
+            // https://repl.it/talk/share/ConcurrentModificationException/18566.
+            // So don't use clone anymore.
+            for (DownloadChain chain : blockChainList) {
+                chain.cancel();
+            }
 
-        if (chains.isEmpty() && currentThread != null) {
-            Util.d(TAG,
-                    "interrupt thread with cancel operation because of chains are not running "
-                            + task.getId());
-            currentThread.interrupt();
+            if (blockChainList.isEmpty() && currentThread != null) {
+                Util.d(TAG,
+                        "interrupt thread with cancel operation because of chains are not running "
+                                + task.getId());
+                currentThread.interrupt();
+            }
         }
 
         if (cache != null) cache.getOutputStream().cancelAsync();
@@ -228,7 +235,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
 
         // finish
         finishing = true;
-        blockChainList.clear();
+        synchronized (blockChainList) {
+            blockChainList.clear();
+        }
 
         final DownloadCache cache = this.cache;
         if (canceled || cache == null) return;
@@ -332,7 +341,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
                 futures.add(submitChain(chain));
             }
 
-            blockChainList.addAll(tasks);
+            synchronized (blockChainList) {
+                blockChainList.addAll(tasks);
+            }
 
             for (Future future : futures) {
                 if (!future.isDone()) {
@@ -347,7 +358,9 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
             throw t;
         } finally {
-            blockChainList.removeAll(tasks);
+            synchronized (blockChainList) {
+                blockChainList.removeAll(tasks);
+            }
         }
     }
 
