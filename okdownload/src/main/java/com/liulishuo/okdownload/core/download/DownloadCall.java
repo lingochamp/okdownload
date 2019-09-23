@@ -56,13 +56,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     static final int MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED = 1;
     public final DownloadTask task;
     public final boolean asyncExecuted;
-    @NonNull private final ArrayList<DownloadChain> blockChainList;
+    @NonNull final ArrayList<DownloadChain> blockChainList;
 
     @Nullable volatile DownloadCache cache;
     volatile boolean canceled;
     volatile boolean finishing;
 
-    private volatile Thread currentThread;
+    volatile Thread currentThread;
     @NonNull private final DownloadStore store;
 
     private DownloadCall(DownloadTask task, boolean asyncExecuted, @NonNull DownloadStore store) {
