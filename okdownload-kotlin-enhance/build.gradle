@@ -25,3 +25,4 @@ dependencies {
     compileOnly project(':okdownload')
 }
 
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
