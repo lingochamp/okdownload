@@ -21,8 +21,15 @@ android {
 
 dependencies {
     testImplementation dep.junit
+    testImplementation dep.mockk
+    testImplementation dep.assertj
+    testCompileOnly project(':okdownload')
+
     implementation dep.kotlin
     compileOnly project(':okdownload')
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+if (hasProperty("isCI")) {
+    apply from: rootProject.file('gradle/codecov.gradle')
+}
