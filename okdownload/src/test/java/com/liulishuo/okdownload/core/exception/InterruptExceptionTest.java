@@ -16,6 +16,8 @@
 
 package com.liulishuo.okdownload.core.exception;
 
+import com.liulishuo.okdownload.core.NamedRunnable;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -24,7 +26,8 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 
 public class InterruptExceptionTest {
 
-    @Rule public ExpectedException thrown = ExpectedException.none();
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void printStackTrace() {
@@ -33,5 +36,35 @@ public class InterruptExceptionTest {
         thrown.expect(IllegalAccessError.class);
         thrown.expectMessage("Stack is ignored for signal");
         InterruptException.SIGNAL.printStackTrace();
+    }
+
+    @Test
+    public void testInterruptedStatus() {
+        Thread r1 = new Thread(new NamedRunnable("test runnable") {
+            @Override
+            protected void execute() throws InterruptedException {
+                Thread.sleep(1000);
+            }
+
+            @Override
+            protected void interrupted(InterruptedException e) {
+            }
+
+            @Override
+            protected void finished() {
+                if (!Thread.currentThread().isInterrupted()) {
+                    assertThat("").isEqualTo("Failed in get interrupted status");
+                }
+            }
+        });
+        r1.start();
+        try {
+            Thread.sleep(100);
+            r1.interrupt();
+            r1.join();
+        } catch (Exception e) {
+            assertThat("").isEqualTo("Failed in unknown exception");
+            e.printStackTrace();
+        }
     }
 }
