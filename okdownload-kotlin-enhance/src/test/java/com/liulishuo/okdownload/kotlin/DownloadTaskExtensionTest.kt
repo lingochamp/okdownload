@@ -171,7 +171,7 @@ class DownloadTaskExtensionTest {
     }
 
     @Test
-    fun `execute download task with callback functions`() {
+    fun `execute DownloadTask with DownloadListener`() {
         val mockTask = mockk<DownloadTask>(relaxed = true)
         mockTask.execute { _, _, _ -> }
 
