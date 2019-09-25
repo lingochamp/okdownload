@@ -31,6 +31,7 @@ public abstract class NamedRunnable implements Runnable {
         try {
             execute();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             interrupted(e);
         } finally {
             Thread.currentThread().setName(oldName);
