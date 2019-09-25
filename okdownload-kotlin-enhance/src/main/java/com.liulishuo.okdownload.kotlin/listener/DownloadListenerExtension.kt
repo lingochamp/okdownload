@@ -22,7 +22,6 @@ import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
 import java.lang.Exception
 
-
 /**
  * Correspond to [com.liulishuo.okdownload.DownloadListener.taskStart]
  */
@@ -32,26 +31,26 @@ typealias onTaskStart = (task: DownloadTask) -> Unit
  * Correspond to [com.liulishuo.okdownload.DownloadListener.connectTrialStart]
  */
 typealias onConnectTrialStart = (
-        task: DownloadTask,
-        requestHeaderFields: Map<String, List<String>>
+    task: DownloadTask,
+    requestHeaderFields: Map<String, List<String>>
 ) -> Unit
 
 /**
  * Correspond to [com.liulishuo.okdownload.DownloadListener.connectTrialEnd]
  */
 typealias onConnectTrialEnd = (
-        task: DownloadTask,
-        responseCode: Int,
-        responseHeaderFields: Map<String, List<String>>
+    task: DownloadTask,
+    responseCode: Int,
+    responseHeaderFields: Map<String, List<String>>
 ) -> Unit
 
 /**
  * Correspond to [com.liulishuo.okdownload.DownloadListener.downloadFromBeginning]
  */
 typealias onDownloadFromBeginning = (
-        task: DownloadTask,
-        info: BreakpointInfo,
-        cause: ResumeFailedCause
+    task: DownloadTask,
+    info: BreakpointInfo,
+    cause: ResumeFailedCause
 ) -> Unit
 
 /**
@@ -63,19 +62,19 @@ typealias onDownloadFromBreakpoint = (task: DownloadTask, info: BreakpointInfo) 
  * Correspond to [com.liulishuo.okdownload.DownloadListener.connectStart]
  */
 typealias onConnectStart = (
-        task: DownloadTask,
-        blockIndex: Int,
-        requestHeaderFields: Map<String, List<String>>
+    task: DownloadTask,
+    blockIndex: Int,
+    requestHeaderFields: Map<String, List<String>>
 ) -> Unit
 
 /**
  * Correspond to [com.liulishuo.okdownload.DownloadListener.connectEnd]
  */
 typealias onConnectEnd = (
-        task: DownloadTask,
-        blockIndex: Int,
-        responseCode: Int,
-        responseHeaderFields: Map<String, List<String>>
+    task: DownloadTask,
+    blockIndex: Int,
+    responseCode: Int,
+    responseHeaderFields: Map<String, List<String>>
 ) -> Unit
 
 /**

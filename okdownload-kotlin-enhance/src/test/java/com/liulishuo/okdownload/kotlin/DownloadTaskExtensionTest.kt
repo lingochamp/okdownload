@@ -20,13 +20,26 @@ import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
-import com.liulishuo.okdownload.kotlin.listener.*
-import io.mockk.*
+import com.liulishuo.okdownload.kotlin.listener.onConnectEnd
+import com.liulishuo.okdownload.kotlin.listener.onConnectStart
+import com.liulishuo.okdownload.kotlin.listener.onConnectTrialEnd
+import com.liulishuo.okdownload.kotlin.listener.onConnectTrialStart
+import com.liulishuo.okdownload.kotlin.listener.onDownloadFromBeginning
+import com.liulishuo.okdownload.kotlin.listener.onDownloadFromBreakpoint
+import com.liulishuo.okdownload.kotlin.listener.onFetchEnd
+import com.liulishuo.okdownload.kotlin.listener.onFetchProgress
+import com.liulishuo.okdownload.kotlin.listener.onFetchStart
+import com.liulishuo.okdownload.kotlin.listener.onTaskEnd
+import com.liulishuo.okdownload.kotlin.listener.onTaskStart
+import io.mockk.MockKAnnotations
+import io.mockk.confirmVerified
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import java.lang.Exception
-
 
 class DownloadTaskExtensionTest {
 
@@ -74,17 +87,17 @@ class DownloadTaskExtensionTest {
     fun `create a download listener with all callbacks`() {
         val mockTask = mockk<DownloadTask>()
         val listener = mockTask.createListener(
-                onTaskStart,
-                onConnectTrialStart,
-                onConnectTrialEnd,
-                onDownloadFromBeginning,
-                onDownloadFromBreakpoint,
-                onConnectStart,
-                onConnectEnd,
-                onFetchStart,
-                onFetchProgress,
-                onFetchEnd,
-                onTaskEnd
+            onTaskStart,
+            onConnectTrialStart,
+            onConnectTrialEnd,
+            onDownloadFromBeginning,
+            onDownloadFromBreakpoint,
+            onConnectStart,
+            onConnectEnd,
+            onFetchStart,
+            onFetchProgress,
+            onFetchEnd,
+            onTaskEnd
         )
 
         every { onTaskStart.invoke(mockTask) } returns Unit
