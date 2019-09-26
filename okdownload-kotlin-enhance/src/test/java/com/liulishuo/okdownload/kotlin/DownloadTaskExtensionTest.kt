@@ -102,16 +102,33 @@ class DownloadTaskExtensionTest {
     lateinit var onWarn: onWarn
     @MockK
     lateinit var onError: onError
+    @MockK
+    lateinit var mockMapHeaderFields: Map<String, List<String>>
+    @MockK
+    lateinit var breakInfo: BreakpointInfo
+    @MockK
+    lateinit var mockTask: DownloadTask
+    @MockK
+    lateinit var mockListener1Model: Listener1Assist.Listener1Model
 
     @Before
     fun setup() = MockKAnnotations.init(this, relaxed = true)
 
     @Test
     fun `create a download listener only reacting task end callback`() {
-        val mockTask = mockk<DownloadTask>()
         val listener = mockTask.createListener { task, cause, realCause ->
             onTaskEnd(task, cause, realCause)
         }
+        listener.taskStart(mockTask)
+        listener.connectTrialStart(mockTask, mockMapHeaderFields)
+        listener.connectTrialEnd(mockTask, 200, mockMapHeaderFields)
+        listener.downloadFromBeginning(mockTask, breakInfo, resumeFailedCause)
+        listener.downloadFromBreakpoint(mockTask, breakInfo)
+        listener.connectStart(mockTask, 1, mockMapHeaderFields)
+        listener.connectEnd(mockTask, 1, 200, mockMapHeaderFields)
+        listener.fetchStart(mockTask, 1, 100)
+        listener.fetchProgress(mockTask, 1, 200)
+        listener.fetchEnd(mockTask, 1, 200)
         listener.taskEnd(mockTask, mockCause, mockException)
 
         verify { onTaskEnd.invoke(mockTask, mockCause, mockException) }
@@ -120,7 +137,6 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `create a download listener with all callbacks`() {
-        val mockTask = mockk<DownloadTask>()
         val listener = mockTask.createListener(
             onTaskStart,
             onConnectTrialStart,
@@ -140,7 +156,6 @@ class DownloadTaskExtensionTest {
         verify { onTaskStart.invoke(mockTask) }
         confirmVerified(onTaskStart)
 
-        val mockMapHeaderFields = mockk<Map<String, List<String>>>()
         every { onConnectTrialStart.invoke(mockTask, mockMapHeaderFields) } returns Unit
         listener.connectTrialStart(mockTask, mockMapHeaderFields)
         verify { onConnectTrialStart.invoke(mockTask, mockMapHeaderFields) }
@@ -154,7 +169,6 @@ class DownloadTaskExtensionTest {
         verify { onConnectTrialEnd.invoke(mockTask, responseCode, mockMapHeaderFields) }
         confirmVerified(onConnectTrialEnd)
 
-        val breakInfo = mockk<BreakpointInfo>()
         every {
             onDownloadFromBeginning.invoke(mockTask, breakInfo, resumeFailedCause)
         } returns Unit
@@ -204,7 +218,6 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `execute DownloadTask with DownloadListener`() {
-        val mockTask = mockk<DownloadTask>(relaxed = true)
         mockTask.execute { _, _, _ -> }
 
         verify { mockTask.execute(any()) }
@@ -212,9 +225,23 @@ class DownloadTaskExtensionTest {
     }
 
     @Test
-    fun `create DownloadListener1`() {
-        val mockTask = mockk<DownloadTask>(relaxed = true)
-        val mockModel = mockk<Listener1Assist.Listener1Model>()
+    fun `create DownloadListener1 with only end call back`() {
+        val listener1 = mockTask.createListener1 { task, cause, realCause, model ->
+            onTaskEndWithModel(task, cause, realCause, model)
+        }
+
+        listener1.taskStart(mockTask, mockListener1Model)
+        listener1.connected(mockTask, 3, 100, 300)
+        listener1.retry(mockTask, resumeFailedCause)
+        listener1.progress(mockTask, 100, 300)
+        listener1.taskEnd(mockTask, mockCause, mockException, mockListener1Model)
+
+        verify { onTaskEndWithModel(mockTask, mockCause, mockException, mockListener1Model) }
+        confirmVerified(onTaskEndWithModel)
+    }
+
+    @Test
+    fun `create DownloadListener1 with all callbacks`() {
         val blockCount = 3
         val currentOffset = 100L
         val totalLength = 300L
@@ -226,13 +253,13 @@ class DownloadTaskExtensionTest {
             onTaskEndWithModel
         )
 
-        every { onTaskStartWithModel.invoke(mockTask, mockModel) } returns Unit
+        every { onTaskStartWithModel.invoke(mockTask, mockListener1Model) } returns Unit
         every { onRetry.invoke(mockTask, resumeFailedCause) } returns Unit
         every { onConnected.invoke(mockTask, blockCount, currentOffset, totalLength) } returns Unit
         every { onProgress.invoke(mockTask, currentOffset, totalLength) } returns Unit
 
-        listener1.taskStart(mockTask, mockModel)
-        verify { onTaskStartWithModel.invoke(mockTask, mockModel) }
+        listener1.taskStart(mockTask, mockListener1Model)
+        verify { onTaskStartWithModel.invoke(mockTask, mockListener1Model) }
         confirmVerified(onTaskStartWithModel)
 
         listener1.retry(mockTask, resumeFailedCause)
@@ -247,14 +274,13 @@ class DownloadTaskExtensionTest {
         verify { onProgress.invoke(mockTask, currentOffset, totalLength) }
         confirmVerified(onProgress)
 
-        listener1.taskEnd(mockTask, mockCause, mockException, mockModel)
-        verify { onTaskEndWithModel(mockTask, mockCause, mockException, mockModel) }
+        listener1.taskEnd(mockTask, mockCause, mockException, mockListener1Model)
+        verify { onTaskEndWithModel(mockTask, mockCause, mockException, mockListener1Model) }
         confirmVerified(onTaskEndWithModel)
     }
 
     @Test
     fun `execute DownloadTask with DownloadListener1`() {
-        val mockTask = mockk<DownloadTask>(relaxed = true)
         mockTask.execute1 { _, _, _, _ -> }
 
         verify { mockTask.execute(any()) }
@@ -262,9 +288,32 @@ class DownloadTaskExtensionTest {
     }
 
     @Test
-    fun `create DownloadTaskListener3`() {
-        val mockTask = mockk<DownloadTask>(relaxed = true)
-        val mockModel = mockk<Listener1Assist.Listener1Model>()
+    fun `create DownloadTaskListener3 with only terminal callback`() {
+        val mockTerminal = mockk<() -> Unit>()
+        val listener3 = mockTask.createListener3 {
+            mockTerminal.invoke()
+        }
+        val blockCount = 3
+        val currentOffset = 100L
+        val totalLength = 300L
+
+        every { mockTerminal.invoke() } returns Unit
+
+        listener3.taskEnd(mockTask, EndCause.SAME_TASK_BUSY, mockException, mockListener1Model)
+        listener3.retry(mockTask, resumeFailedCause)
+        listener3.connected(mockTask, blockCount, currentOffset, totalLength)
+        listener3.taskStart(mockTask, mockListener1Model)
+        listener3.taskEnd(mockTask, EndCause.COMPLETED, null, mockListener1Model)
+        listener3.taskEnd(mockTask, EndCause.CANCELED, null, mockListener1Model)
+        listener3.taskEnd(mockTask, EndCause.ERROR, mockException, mockListener1Model)
+        listener3.progress(mockTask, currentOffset, totalLength)
+
+        verify(exactly = 4) { mockTerminal.invoke() }
+        confirmVerified(mockTerminal)
+    }
+
+    @Test
+    fun `create DownloadTaskListener3 with all callbacks`() {
         val mockTerminal = mockk<() -> Unit>()
         val listener3 = mockTask.createListener3(
             onStarted,
@@ -291,7 +340,7 @@ class DownloadTaskExtensionTest {
         every { onError.invoke(mockTask, mockException) } returns Unit
         every { onProgress.invoke(mockTask, currentOffset, totalLength) } returns Unit
 
-        listener3.taskEnd(mockTask, EndCause.SAME_TASK_BUSY, mockException, mockModel)
+        listener3.taskEnd(mockTask, EndCause.SAME_TASK_BUSY, mockException, mockListener1Model)
         verify { onWarn.invoke(mockTask) }
         verify { mockTerminal.invoke() }
         confirmVerified(onWarn)
@@ -305,23 +354,23 @@ class DownloadTaskExtensionTest {
         verify { onConnected.invoke(mockTask, blockCount, currentOffset, totalLength) }
         confirmVerified(onConnected)
 
-        listener3.taskStart(mockTask, mockModel)
+        listener3.taskStart(mockTask, mockListener1Model)
         verify { onStarted.invoke(mockTask) }
         confirmVerified(onStarted)
 
-        listener3.taskEnd(mockTask, EndCause.COMPLETED, null, mockModel)
+        listener3.taskEnd(mockTask, EndCause.COMPLETED, null, mockListener1Model)
         verify { onCompleted.invoke(mockTask) }
         verify(exactly = 2) { mockTerminal.invoke() }
         confirmVerified(onCompleted)
         confirmVerified(mockTerminal)
 
-        listener3.taskEnd(mockTask, EndCause.CANCELED, null, mockModel)
+        listener3.taskEnd(mockTask, EndCause.CANCELED, null, mockListener1Model)
         verify { onCanceled.invoke(mockTask) }
         verify(exactly = 3) { mockTerminal.invoke() }
         confirmVerified(onCanceled)
         confirmVerified(mockTerminal)
 
-        listener3.taskEnd(mockTask, EndCause.ERROR, mockException, mockModel)
+        listener3.taskEnd(mockTask, EndCause.ERROR, mockException, mockListener1Model)
         verify { onError.invoke(mockTask, mockException) }
         verify(exactly = 4) { mockTerminal.invoke() }
         confirmVerified(onError)
@@ -334,7 +383,6 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `execute DownloadTask with DownloadListener3`() {
-        val mockTask = mockk<DownloadTask>(relaxed = true)
         mockTask.execute3 { }
 
         verify { mockTask.execute(any()) }
