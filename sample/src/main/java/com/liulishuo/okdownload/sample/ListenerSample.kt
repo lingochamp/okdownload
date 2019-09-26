@@ -32,6 +32,7 @@ import com.liulishuo.okdownload.core.listener.assist.Listener4Assist
 import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend
 import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.createListener1
+import com.liulishuo.okdownload.kotlin.listener.createListener2
 import com.liulishuo.okdownload.kotlin.listener.createListener3
 
 class ListenerSample {
@@ -51,17 +52,8 @@ class ListenerSample {
 
     fun lisetner1(): DownloadListener1 = createListener1 { _, _, _, _ -> log("taskEnd") }
 
-    fun lisetner2(): DownloadListener2 {
-        return object : DownloadListener2() {
-            override fun taskStart(task: DownloadTask) {
-                log("taskStart")
-            }
-
-            override fun taskEnd(task: DownloadTask, cause: EndCause,
-                                 realCause: Exception?) {
-                log("taskEnd")
-            }
-        }
+    fun lisetner2(): DownloadListener2 = createListener2({ log("taskStart") }) { _, _, _ ->
+        log("taskEnd")
     }
 
     fun listener3(): DownloadListener3 = createListener3 { log("taskEnd") }
