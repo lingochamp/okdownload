@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.kotlin.listener
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
+import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist
 import java.lang.Exception
 
@@ -56,3 +57,39 @@ typealias onTaskEndWithModel = (
     realCause: Exception?,
     model: Listener1Assist.Listener1Model
 ) -> Unit
+
+fun createListener1(
+    taskStart: onTaskStartWithModel? = null,
+    retry: onRetry? = null,
+    connected: onConnected? = null,
+    progress: onProgress? = null,
+    taskEnd: onTaskEndWithModel
+): DownloadListener1 = object : DownloadListener1() {
+    override fun taskStart(task: DownloadTask, model: Listener1Assist.Listener1Model) {
+        taskStart?.invoke(task, model)
+    }
+
+    override fun retry(task: DownloadTask, cause: ResumeFailedCause) {
+        retry?.invoke(task, cause)
+    }
+
+    override fun connected(
+        task: DownloadTask,
+        blockCount: Int,
+        currentOffset: Long,
+        totalLength: Long
+    ) {
+        connected?.invoke(task, blockCount, currentOffset, totalLength)
+    }
+
+    override fun progress(task: DownloadTask, currentOffset: Long, totalLength: Long) {
+        progress?.invoke(task, currentOffset, totalLength)
+    }
+
+    override fun taskEnd(
+        task: DownloadTask,
+        cause: EndCause,
+        realCause: Exception?,
+        model: Listener1Assist.Listener1Model
+    ) = taskEnd(task, cause, realCause, model)
+}

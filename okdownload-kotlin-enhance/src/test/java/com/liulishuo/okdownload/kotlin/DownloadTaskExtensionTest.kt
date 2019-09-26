@@ -21,6 +21,9 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist
+import com.liulishuo.okdownload.kotlin.listener.createListener
+import com.liulishuo.okdownload.kotlin.listener.createListener1
+import com.liulishuo.okdownload.kotlin.listener.createListener3
 import com.liulishuo.okdownload.kotlin.listener.onCanceled
 import com.liulishuo.okdownload.kotlin.listener.onCompleted
 import com.liulishuo.okdownload.kotlin.listener.onConnectEnd
@@ -116,7 +119,7 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `create a download listener only reacting task end callback`() {
-        val listener = mockTask.createListener { task, cause, realCause ->
+        val listener = createListener { task, cause, realCause ->
             onTaskEnd(task, cause, realCause)
         }
         listener.taskStart(mockTask)
@@ -137,7 +140,7 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `create a download listener with all callbacks`() {
-        val listener = mockTask.createListener(
+        val listener = createListener(
             onTaskStart,
             onConnectTrialStart,
             onConnectTrialEnd,
@@ -226,7 +229,7 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `create DownloadListener1 with only end call back`() {
-        val listener1 = mockTask.createListener1 { task, cause, realCause, model ->
+        val listener1 = createListener1 { task, cause, realCause, model ->
             onTaskEndWithModel(task, cause, realCause, model)
         }
 
@@ -245,7 +248,7 @@ class DownloadTaskExtensionTest {
         val blockCount = 3
         val currentOffset = 100L
         val totalLength = 300L
-        val listener1 = mockTask.createListener1(
+        val listener1 = createListener1(
             onTaskStartWithModel,
             onRetry,
             onConnected,
@@ -290,7 +293,7 @@ class DownloadTaskExtensionTest {
     @Test
     fun `create DownloadTaskListener3 with only terminal callback`() {
         val mockTerminal = mockk<() -> Unit>()
-        val listener3 = mockTask.createListener3 {
+        val listener3 = createListener3 {
             mockTerminal.invoke()
         }
         val blockCount = 3
@@ -315,7 +318,7 @@ class DownloadTaskExtensionTest {
     @Test
     fun `create DownloadTaskListener3 with all callbacks`() {
         val mockTerminal = mockk<() -> Unit>()
-        val listener3 = mockTask.createListener3(
+        val listener3 = createListener3(
             onStarted,
             onConnected,
             onProgress,
