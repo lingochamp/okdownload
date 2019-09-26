@@ -18,9 +18,13 @@ package com.liulishuo.okdownload.core.exception;
 
 import com.liulishuo.okdownload.core.NamedRunnable;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -40,10 +44,12 @@ public class InterruptExceptionTest {
 
     @Test
     public void testInterruptedStatus() {
-        Thread r1 = new Thread(new NamedRunnable("test runnable") {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Thread r1 = new Thread(new NamedRunnable("test runnable") {
             @Override
             protected void execute() throws InterruptedException {
-                Thread.sleep(1000);
+                latch.countDown();
+                Thread.sleep(100);
             }
 
             @Override
@@ -52,18 +58,15 @@ public class InterruptExceptionTest {
 
             @Override
             protected void finished() {
-                if (!Thread.currentThread().isInterrupted()) {
-                    assertThat("").isEqualTo("Failed in get interrupted status");
-                }
+                Assert.assertTrue(Thread.currentThread().isInterrupted());
             }
         });
         r1.start();
         try {
-            Thread.sleep(100);
+            latch.await(100, TimeUnit.MILLISECONDS);
             r1.interrupt();
             r1.join();
         } catch (Exception e) {
-            assertThat("").isEqualTo("Failed in unknown exception");
             e.printStackTrace();
         }
     }
