@@ -66,8 +66,7 @@ public class InterruptExceptionTest {
             latch.await(100, TimeUnit.MILLISECONDS);
             r1.interrupt();
             r1.join();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         }
     }
 }
