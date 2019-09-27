@@ -82,4 +82,49 @@ class DownloadTaskExtensionTest {
         verify { mockTask.execute(any()) }
         confirmVerified(mockTask)
     }
+
+    @Test
+    fun `enqueue DownloadTask with DownloadListener`() {
+        mockTask.enqueue { _, _, _ -> }
+
+        verify { mockTask.enqueue(any()) }
+        confirmVerified(mockTask)
+    }
+
+    @Test
+    fun `enqueue DownloadTask with DownloadListener1`() {
+        mockTask.enqueue1 { _, _, _, _ -> }
+
+        verify { mockTask.enqueue(any()) }
+        confirmVerified(mockTask)
+    }
+
+    @Test
+    fun `enqueue DownloadTask with DownloadListener3`() {
+        mockTask.enqueue3 { }
+
+        verify { mockTask.enqueue(any()) }
+        confirmVerified(mockTask)
+    }
+
+    @Test
+    fun `enqueue DownloadTask with DownloadListener2`() {
+        mockTask.enqueue2(onTaskStart, onTaskEnd)
+        verify { mockTask.enqueue(any()) }
+        confirmVerified(mockTask)
+    }
+
+    @Test
+    fun `enqueue DownloadTask with DownloadListener4`() {
+        mockTask.enqueue4 { _, _, _, _ -> }
+        verify { mockTask.enqueue(any()) }
+        confirmVerified(mockTask)
+    }
+
+    @Test
+    fun `enqueue DownloadTask with DownloadListener4WithSpeed`() {
+        mockTask.enqueue4WithSpeed { _, _, _, _ -> }
+        verify { mockTask.enqueue(any()) }
+        confirmVerified(mockTask)
+    }
 }

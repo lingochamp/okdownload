@@ -184,3 +184,133 @@ fun DownloadTask.execute4WithSpeed(
     onBlockEndWithSpeed,
     onTaskEndWithSpeed
 ))
+
+/**
+ * Correspond to [DownloadTask.enqueue].
+ * This method will create a [com.liulishuo.okdownload.DownloadListener] instance internally.
+ */
+fun DownloadTask.enqueue(
+    onTaskStart: onTaskStart? = null,
+    onConnectTrialStart: onConnectTrialStart? = null,
+    onConnectTrialEnd: onConnectTrialEnd? = null,
+    onDownloadFromBeginning: onDownloadFromBeginning? = null,
+    onDownloadFromBreakpoint: onDownloadFromBreakpoint? = null,
+    onConnectStart: onConnectStart? = null,
+    onConnectEnd: onConnectEnd? = null,
+    onFetchStart: onFetchStart? = null,
+    onFetchProgress: onFetchProgress? = null,
+    onFetchEnd: onFetchEnd? = null,
+    onTaskEnd: onTaskEnd
+) = enqueue(createListener(
+    onTaskStart,
+    onConnectTrialStart,
+    onConnectTrialEnd,
+    onDownloadFromBeginning,
+    onDownloadFromBreakpoint,
+    onConnectStart,
+    onConnectEnd,
+    onFetchStart,
+    onFetchProgress,
+    onFetchEnd,
+    onTaskEnd
+))
+
+/**
+ * Correspond to [DownloadTask.enqueue].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener1]
+ * instance internally.
+ */
+fun DownloadTask.enqueue1(
+    taskStart: onTaskStartWithModel? = null,
+    retry: onRetry? = null,
+    connected: onConnected? = null,
+    progress: onProgress? = null,
+    taskEnd: onTaskEndWithModel
+) = enqueue(createListener1(taskStart, retry, connected, progress, taskEnd))
+
+/**
+ * Correspond to [DownloadTask.enqueue].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener2]
+ * instance internally.
+ */
+fun DownloadTask.enqueue2(
+    onTaskStart: onTaskStart = {},
+    onTaskEnd: onTaskEnd
+) = enqueue(createListener2(onTaskStart, onTaskEnd))
+
+/**
+ * Correspond to [DownloadTask.enqueue].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener3]
+ * instance internally.
+ */
+fun DownloadTask.enqueue3(
+    onStarted: onStarted? = null,
+    onConnected: onConnected? = null,
+    onProgress: onProgress? = null,
+    onCompleted: onCompleted? = null,
+    onCanceled: onCanceled? = null,
+    onWarn: onWarn? = null,
+    onRetry: onRetry? = null,
+    onError: onError? = null,
+    onTerminal: () -> Unit = {}
+) = enqueue(createListener3(
+    onStarted,
+    onConnected,
+    onProgress,
+    onCompleted,
+    onCanceled,
+    onWarn,
+    onRetry,
+    onError,
+    onTerminal
+))
+
+/**
+ * Correspond to [DownloadTask.enqueue].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener4]
+ * instance internally.
+ */
+fun DownloadTask.enqueue4(
+    onTaskStart: onTaskStart? = null,
+    onConnectStart: onConnectStart? = null,
+    onConnectEnd: onConnectEnd? = null,
+    onInfoReady: onInfoReady? = null,
+    onProgressBlock: onProgressBlock? = null,
+    onProgressWithoutTotalLength: onProgressWithoutTotalLength? = null,
+    onBlockEnd: onBlockEnd? = null,
+    onTaskEndWithListener4Model: onTaskEndWithListener4Model
+) = enqueue(createListener4(
+    onTaskStart,
+    onConnectStart,
+    onConnectEnd,
+    onInfoReady,
+    onProgressBlock,
+    onProgressWithoutTotalLength,
+    onBlockEnd,
+    onTaskEndWithListener4Model
+))
+
+/**
+ * Correspond to [DownloadTask.enqueue].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed]
+ * instance internally.
+ */
+fun DownloadTask.enqueue4WithSpeed(
+    onTaskStart: onTaskStart? = null,
+    onConnectStart: onConnectStart? = null,
+    onConnectEnd: onConnectEnd? = null,
+    onInfoReadyWithSpeed: onInfoReadyWithSpeed? = null,
+    onProgressBlockWithSpeed: onProgressBlockWithSpeed? = null,
+    onProgressWithSpeed: onProgressWithSpeed? = null,
+    onBlockEndWithSpeed: onBlockEndWithSpeed? = null,
+    onTaskEndWithSpeed: onTaskEndWithSpeed
+) = enqueue(createListener4WithSpeed(
+    onTaskStart,
+    onConnectStart,
+    onConnectEnd,
+    onInfoReadyWithSpeed,
+    onProgressBlockWithSpeed,
+    onProgressWithSpeed,
+    onBlockEndWithSpeed,
+    onTaskEndWithSpeed
+))
