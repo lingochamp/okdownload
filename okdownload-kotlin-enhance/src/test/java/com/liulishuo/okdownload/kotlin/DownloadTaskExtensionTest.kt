@@ -75,4 +75,11 @@ class DownloadTaskExtensionTest {
         verify { mockTask.execute(any()) }
         confirmVerified(mockTask)
     }
+
+    @Test
+    fun `execute DownloadTask with DownloadListener4WithSpeed`() {
+        mockTask.execute4WithSpeed { _, _, _, _ -> }
+        verify { mockTask.execute(any()) }
+        confirmVerified(mockTask)
+    }
 }

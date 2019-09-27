@@ -76,7 +76,8 @@ fun createListener4(
         task: DownloadTask,
         info: BreakpointInfo,
         fromBreakpoint: Boolean,
-        model: Listener4Assist.Listener4Model) {
+        model: Listener4Assist.Listener4Model
+    ) {
         onInfoReady?.invoke(task, info, fromBreakpoint, model)
     }
 

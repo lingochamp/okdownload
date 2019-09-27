@@ -22,7 +22,9 @@ import com.liulishuo.okdownload.kotlin.listener.createListener1
 import com.liulishuo.okdownload.kotlin.listener.createListener2
 import com.liulishuo.okdownload.kotlin.listener.createListener3
 import com.liulishuo.okdownload.kotlin.listener.createListener4
+import com.liulishuo.okdownload.kotlin.listener.createListener4WithSpeed
 import com.liulishuo.okdownload.kotlin.listener.onBlockEnd
+import com.liulishuo.okdownload.kotlin.listener.onBlockEndWithSpeed
 import com.liulishuo.okdownload.kotlin.listener.onCanceled
 import com.liulishuo.okdownload.kotlin.listener.onCompleted
 import com.liulishuo.okdownload.kotlin.listener.onConnectEnd
@@ -37,14 +39,18 @@ import com.liulishuo.okdownload.kotlin.listener.onFetchEnd
 import com.liulishuo.okdownload.kotlin.listener.onFetchProgress
 import com.liulishuo.okdownload.kotlin.listener.onFetchStart
 import com.liulishuo.okdownload.kotlin.listener.onInfoReady
+import com.liulishuo.okdownload.kotlin.listener.onInfoReadyWithSpeed
 import com.liulishuo.okdownload.kotlin.listener.onProgress
 import com.liulishuo.okdownload.kotlin.listener.onProgressBlock
+import com.liulishuo.okdownload.kotlin.listener.onProgressBlockWithSpeed
+import com.liulishuo.okdownload.kotlin.listener.onProgressWithSpeed
 import com.liulishuo.okdownload.kotlin.listener.onProgressWithoutTotalLength
 import com.liulishuo.okdownload.kotlin.listener.onRetry
 import com.liulishuo.okdownload.kotlin.listener.onStarted
 import com.liulishuo.okdownload.kotlin.listener.onTaskEnd
 import com.liulishuo.okdownload.kotlin.listener.onTaskEndWithListener4Model
 import com.liulishuo.okdownload.kotlin.listener.onTaskEndWithModel
+import com.liulishuo.okdownload.kotlin.listener.onTaskEndWithSpeed
 import com.liulishuo.okdownload.kotlin.listener.onTaskStart
 import com.liulishuo.okdownload.kotlin.listener.onTaskStartWithModel
 import com.liulishuo.okdownload.kotlin.listener.onWarn
@@ -146,4 +152,27 @@ fun DownloadTask.execute4(
         onTaskEndWithListener4Model
     )
     execute(listener4)
+}
+
+fun DownloadTask.execute4WithSpeed(
+    onTaskStart: onTaskStart? = null,
+    onConnectStart: onConnectStart? = null,
+    onConnectEnd: onConnectEnd? = null,
+    onInfoReadyWithSpeed: onInfoReadyWithSpeed? = null,
+    onProgressBlockWithSpeed: onProgressBlockWithSpeed? = null,
+    onProgressWithSpeed: onProgressWithSpeed? = null,
+    onBlockEndWithSpeed: onBlockEndWithSpeed? = null,
+    onTaskEndWithSpeed: onTaskEndWithSpeed
+) {
+    val listener4WithSpeed = createListener4WithSpeed(
+        onTaskStart,
+        onConnectStart,
+        onConnectEnd,
+        onInfoReadyWithSpeed,
+        onProgressBlockWithSpeed,
+        onProgressWithSpeed,
+        onBlockEndWithSpeed,
+        onTaskEndWithSpeed
+    )
+    execute(listener4WithSpeed)
 }
