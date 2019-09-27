@@ -18,23 +18,17 @@ package com.liulishuo.okdownload.sample
 
 import android.util.Log
 import com.liulishuo.okdownload.DownloadListener
-import com.liulishuo.okdownload.DownloadTask
-import com.liulishuo.okdownload.SpeedCalculator
-import com.liulishuo.okdownload.core.breakpoint.BlockInfo
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
-import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.core.listener.DownloadListener2
 import com.liulishuo.okdownload.core.listener.DownloadListener3
 import com.liulishuo.okdownload.core.listener.DownloadListener4
 import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed
-import com.liulishuo.okdownload.core.listener.assist.Listener4Assist
-import com.liulishuo.okdownload.core.listener.assist.Listener4SpeedAssistExtend
 import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.createListener1
 import com.liulishuo.okdownload.kotlin.listener.createListener2
 import com.liulishuo.okdownload.kotlin.listener.createListener3
 import com.liulishuo.okdownload.kotlin.listener.createListener4
+import com.liulishuo.okdownload.kotlin.listener.createListener4WithSpeed
 
 class ListenerSample {
 
@@ -61,50 +55,8 @@ class ListenerSample {
 
     fun listener4(): DownloadListener4 = createListener4 { _, _, _, _ -> log("taskEnd") }
 
-    fun listener4WithSpeed(): DownloadListener4WithSpeed {
-        return object : DownloadListener4WithSpeed() {
-            override fun taskStart(task: DownloadTask) {
-                log("taskStart")
-            }
-
-            override fun infoReady(task: DownloadTask, info: BreakpointInfo,
-                                   fromBreakpoint: Boolean,
-                                   model: Listener4SpeedAssistExtend.Listener4SpeedModel) {
-                log("infoReady")
-            }
-
-            override fun connectStart(task: DownloadTask, blockIndex: Int,
-                                      requestHeader: Map<String, List<String>>) {
-                log("connectStart")
-            }
-
-            override fun connectEnd(task: DownloadTask, blockIndex: Int, responseCode: Int,
-                                    responseHeader: Map<String, List<String>>) {
-                log("connectEnd")
-            }
-
-            override fun progressBlock(task: DownloadTask, blockIndex: Int,
-                                       currentBlockOffset: Long,
-                                       blockSpeed: SpeedCalculator) {
-                log("progressBlock")
-            }
-
-            override fun progress(task: DownloadTask, currentOffset: Long,
-                                  taskSpeed: SpeedCalculator) {
-                log("progress")
-            }
-
-            override fun blockEnd(task: DownloadTask, blockIndex: Int, info: BlockInfo,
-                                  blockSpeed: SpeedCalculator) {
-                log("blockEnd")
-            }
-
-            override fun taskEnd(task: DownloadTask, cause: EndCause,
-                                 realCause: Exception?,
-                                 taskSpeed: SpeedCalculator) {
-                log("taskEnd")
-            }
-        }
+    fun listener4WithSpeed(): DownloadListener4WithSpeed = createListener4WithSpeed { _, _, _, _ ->
+        log("taskEnd")
     }
 
     companion object {
