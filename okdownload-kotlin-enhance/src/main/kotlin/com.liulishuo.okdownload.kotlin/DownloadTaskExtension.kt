@@ -56,7 +56,8 @@ import com.liulishuo.okdownload.kotlin.listener.onTaskStartWithModel
 import com.liulishuo.okdownload.kotlin.listener.onWarn
 
 /**
- * Correspond to [DownloadTask.execute]
+ * Correspond to [DownloadTask.execute].
+ * This method will create a [com.liulishuo.okdownload.DownloadListener] instance internally.
  */
 fun DownloadTask.execute(
     onTaskStart: onTaskStart? = null,
@@ -70,42 +71,48 @@ fun DownloadTask.execute(
     onFetchProgress: onFetchProgress? = null,
     onFetchEnd: onFetchEnd? = null,
     onTaskEnd: onTaskEnd
-) {
-    val listener = createListener(
-        onTaskStart,
-        onConnectTrialStart,
-        onConnectTrialEnd,
-        onDownloadFromBeginning,
-        onDownloadFromBreakpoint,
-        onConnectStart,
-        onConnectEnd,
-        onFetchStart,
-        onFetchProgress,
-        onFetchEnd,
-        onTaskEnd
-    )
-    execute(listener)
-}
+) = execute(createListener(
+    onTaskStart,
+    onConnectTrialStart,
+    onConnectTrialEnd,
+    onDownloadFromBeginning,
+    onDownloadFromBreakpoint,
+    onConnectStart,
+    onConnectEnd,
+    onFetchStart,
+    onFetchProgress,
+    onFetchEnd,
+    onTaskEnd
+))
 
+/**
+ * Correspond to [DownloadTask.execute].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener1]
+ * instance internally.
+ */
 fun DownloadTask.execute1(
     taskStart: onTaskStartWithModel? = null,
     retry: onRetry? = null,
     connected: onConnected? = null,
     progress: onProgress? = null,
     taskEnd: onTaskEndWithModel
-) {
-    val listener1 = createListener1(taskStart, retry, connected, progress, taskEnd)
-    execute(listener1)
-}
+) = execute(createListener1(taskStart, retry, connected, progress, taskEnd))
 
+/**
+ * Correspond to [DownloadTask.execute].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener2]
+ * instance internally.
+ */
 fun DownloadTask.execute2(
     onTaskStart: onTaskStart = {},
     onTaskEnd: onTaskEnd
-) {
-    val listener2 = createListener2(onTaskStart, onTaskEnd)
-    execute(listener2)
-}
+) = execute(createListener2(onTaskStart, onTaskEnd))
 
+/**
+ * Correspond to [DownloadTask.execute].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener3]
+ * instance internally.
+ */
 fun DownloadTask.execute3(
     onStarted: onStarted? = null,
     onConnected: onConnected? = null,
@@ -116,21 +123,23 @@ fun DownloadTask.execute3(
     onRetry: onRetry? = null,
     onError: onError? = null,
     onTerminal: () -> Unit = {}
-) {
-    val listener3 = createListener3(
-        onStarted,
-        onConnected,
-        onProgress,
-        onCompleted,
-        onCanceled,
-        onWarn,
-        onRetry,
-        onError,
-        onTerminal
-    )
-    execute(listener3)
-}
+) = execute(createListener3(
+    onStarted,
+    onConnected,
+    onProgress,
+    onCompleted,
+    onCanceled,
+    onWarn,
+    onRetry,
+    onError,
+    onTerminal
+))
 
+/**
+ * Correspond to [DownloadTask.execute].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener4]
+ * instance internally.
+ */
 fun DownloadTask.execute4(
     onTaskStart: onTaskStart? = null,
     onConnectStart: onConnectStart? = null,
@@ -140,20 +149,22 @@ fun DownloadTask.execute4(
     onProgressWithoutTotalLength: onProgressWithoutTotalLength? = null,
     onBlockEnd: onBlockEnd? = null,
     onTaskEndWithListener4Model: onTaskEndWithListener4Model
-) {
-    val listener4 = createListener4(
-        onTaskStart,
-        onConnectStart,
-        onConnectEnd,
-        onInfoReady,
-        onProgressBlock,
-        onProgressWithoutTotalLength,
-        onBlockEnd,
-        onTaskEndWithListener4Model
-    )
-    execute(listener4)
-}
+) = execute(createListener4(
+    onTaskStart,
+    onConnectStart,
+    onConnectEnd,
+    onInfoReady,
+    onProgressBlock,
+    onProgressWithoutTotalLength,
+    onBlockEnd,
+    onTaskEndWithListener4Model
+))
 
+/**
+ * Correspond to [DownloadTask.execute].
+ * This method will create a [com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed]
+ * instance internally.
+ */
 fun DownloadTask.execute4WithSpeed(
     onTaskStart: onTaskStart? = null,
     onConnectStart: onConnectStart? = null,
@@ -163,16 +174,13 @@ fun DownloadTask.execute4WithSpeed(
     onProgressWithSpeed: onProgressWithSpeed? = null,
     onBlockEndWithSpeed: onBlockEndWithSpeed? = null,
     onTaskEndWithSpeed: onTaskEndWithSpeed
-) {
-    val listener4WithSpeed = createListener4WithSpeed(
-        onTaskStart,
-        onConnectStart,
-        onConnectEnd,
-        onInfoReadyWithSpeed,
-        onProgressBlockWithSpeed,
-        onProgressWithSpeed,
-        onBlockEndWithSpeed,
-        onTaskEndWithSpeed
-    )
-    execute(listener4WithSpeed)
-}
+) = execute(createListener4WithSpeed(
+    onTaskStart,
+    onConnectStart,
+    onConnectEnd,
+    onInfoReadyWithSpeed,
+    onProgressBlockWithSpeed,
+    onProgressWithSpeed,
+    onBlockEndWithSpeed,
+    onTaskEndWithSpeed
+))
