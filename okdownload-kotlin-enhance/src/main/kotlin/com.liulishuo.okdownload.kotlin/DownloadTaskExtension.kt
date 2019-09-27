@@ -19,6 +19,7 @@ package com.liulishuo.okdownload.kotlin
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.createListener1
+import com.liulishuo.okdownload.kotlin.listener.createListener2
 import com.liulishuo.okdownload.kotlin.listener.createListener3
 import com.liulishuo.okdownload.kotlin.listener.onCanceled
 import com.liulishuo.okdownload.kotlin.listener.onCompleted
@@ -83,6 +84,14 @@ fun DownloadTask.execute1(
 ) {
     val listener1 = createListener1(taskStart, retry, connected, progress, taskEnd)
     execute(listener1)
+}
+
+fun DownloadTask.execute2(
+    onTaskStart: onTaskStart = {},
+    onTaskEnd: onTaskEnd
+) {
+    val listener2 = createListener2(onTaskStart, onTaskEnd)
+    execute(listener2)
 }
 
 fun DownloadTask.execute3(
