@@ -34,6 +34,7 @@ import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.createListener1
 import com.liulishuo.okdownload.kotlin.listener.createListener2
 import com.liulishuo.okdownload.kotlin.listener.createListener3
+import com.liulishuo.okdownload.kotlin.listener.createListener4
 
 class ListenerSample {
 
@@ -58,47 +59,7 @@ class ListenerSample {
 
     fun listener3(): DownloadListener3 = createListener3 { log("taskEnd") }
 
-    fun listener4(): DownloadListener4 {
-        return object : DownloadListener4() {
-            override fun taskStart(task: DownloadTask) {
-                log("taskStart")
-            }
-
-            override fun infoReady(task: DownloadTask, info: BreakpointInfo,
-                                   fromBreakpoint: Boolean,
-                                   model: Listener4Assist.Listener4Model) {
-                log("infoReady")
-            }
-
-            override fun connectStart(task: DownloadTask, blockIndex: Int,
-                                      requestHeader: Map<String, List<String>>) {
-                log("connectStart")
-            }
-
-            override fun connectEnd(task: DownloadTask, blockIndex: Int, responseCode: Int,
-                                    responseHeader: Map<String, List<String>>) {
-                log("connectEnd")
-            }
-
-
-            override fun progressBlock(task: DownloadTask, blockIndex: Int, currentBlockOffset: Long) {
-                log("progressBlock")
-            }
-
-            override fun progress(task: DownloadTask, currentOffset: Long) {
-                log("progress")
-            }
-
-            override fun blockEnd(task: DownloadTask, blockIndex: Int, info: BlockInfo) {
-                log("blockEnd")
-            }
-
-            override fun taskEnd(task: DownloadTask, cause: EndCause, realCause: Exception?,
-                                 model: Listener4Assist.Listener4Model) {
-                log("taskEnd")
-            }
-        }
-    }
+    fun listener4(): DownloadListener4 = createListener4 { _, _, _, _ -> log("taskEnd") }
 
     fun listener4WithSpeed(): DownloadListener4WithSpeed {
         return object : DownloadListener4WithSpeed() {
