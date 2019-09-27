@@ -21,6 +21,8 @@ import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.createListener1
 import com.liulishuo.okdownload.kotlin.listener.createListener2
 import com.liulishuo.okdownload.kotlin.listener.createListener3
+import com.liulishuo.okdownload.kotlin.listener.createListener4
+import com.liulishuo.okdownload.kotlin.listener.onBlockEnd
 import com.liulishuo.okdownload.kotlin.listener.onCanceled
 import com.liulishuo.okdownload.kotlin.listener.onCompleted
 import com.liulishuo.okdownload.kotlin.listener.onConnectEnd
@@ -34,10 +36,14 @@ import com.liulishuo.okdownload.kotlin.listener.onError
 import com.liulishuo.okdownload.kotlin.listener.onFetchEnd
 import com.liulishuo.okdownload.kotlin.listener.onFetchProgress
 import com.liulishuo.okdownload.kotlin.listener.onFetchStart
+import com.liulishuo.okdownload.kotlin.listener.onInfoReady
 import com.liulishuo.okdownload.kotlin.listener.onProgress
+import com.liulishuo.okdownload.kotlin.listener.onProgressBlock
+import com.liulishuo.okdownload.kotlin.listener.onProgressWithoutTotalLength
 import com.liulishuo.okdownload.kotlin.listener.onRetry
 import com.liulishuo.okdownload.kotlin.listener.onStarted
 import com.liulishuo.okdownload.kotlin.listener.onTaskEnd
+import com.liulishuo.okdownload.kotlin.listener.onTaskEndWithListener4Model
 import com.liulishuo.okdownload.kotlin.listener.onTaskEndWithModel
 import com.liulishuo.okdownload.kotlin.listener.onTaskStart
 import com.liulishuo.okdownload.kotlin.listener.onTaskStartWithModel
@@ -117,4 +123,27 @@ fun DownloadTask.execute3(
         onTerminal
     )
     execute(listener3)
+}
+
+fun DownloadTask.execute4(
+    onTaskStart: onTaskStart? = null,
+    onConnectStart: onConnectStart? = null,
+    onConnectEnd: onConnectEnd? = null,
+    onInfoReady: onInfoReady? = null,
+    onProgressBlock: onProgressBlock? = null,
+    onProgressWithoutTotalLength: onProgressWithoutTotalLength? = null,
+    onBlockEnd: onBlockEnd? = null,
+    onTaskEndWithListener4Model: onTaskEndWithListener4Model
+) {
+    val listener4 = createListener4(
+        onTaskStart,
+        onConnectStart,
+        onConnectEnd,
+        onInfoReady,
+        onProgressBlock,
+        onProgressWithoutTotalLength,
+        onBlockEnd,
+        onTaskEndWithListener4Model
+    )
+    execute(listener4)
 }
