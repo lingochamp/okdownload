@@ -30,6 +30,7 @@ dependencies {
     testImplementation project(':okdownload')
 
     implementation dep.kotlin
+    implementation dep.kotlinxCoroutines
     compileOnly project(':okdownload')
 }
 
