@@ -16,12 +16,19 @@
 
 package com.liulishuo.okdownload.kotlin
 
+import android.net.Uri
 import com.liulishuo.okdownload.DownloadTask
+import com.liulishuo.okdownload.OkDownload
+import com.liulishuo.okdownload.core.breakpoint.BreakpointStore
+import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.kotlin.listener.onTaskEnd
 import com.liulishuo.okdownload.kotlin.listener.onTaskStart
 import io.mockk.MockKAnnotations
 import io.mockk.confirmVerified
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
@@ -126,5 +133,27 @@ class DownloadTaskExtensionTest {
         mockTask.enqueue4WithSpeed { _, _, _, _ -> }
         verify { mockTask.enqueue(any()) }
         confirmVerified(mockTask)
+    }
+
+    @Test
+    fun `get progress channel without previous listener`() {
+        val mockOkDownload = mockk<OkDownload>()
+        OkDownload.setSingletonInstance(mockOkDownload)
+        val mockBreakpointStore = mockk<BreakpointStore>()
+        every { mockBreakpointStore.findOrCreateId(any()) } returns 0
+        every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
+        val mockUri = mockk<Uri>()
+        every { mockUri.scheme } returns "test"
+        every { mockUri.path } returns "path"
+
+        val spiedTask = spyk(DownloadTask.Builder("url", mockUri).build())
+
+        val broadcastChannel = spiedTask.spBroadcast()
+        verify { spiedTask.replaceListener(any()) }
+
+        (spiedTask.listener as DownloadListener1).progress(spiedTask, 200, 400)
+        val p = broadcastChannel.openSubscription().poll()
+        assert(p != null)
+        assert(p!!.progress() == 0.5f)
     }
 }

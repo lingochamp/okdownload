@@ -16,6 +16,7 @@
 
 package com.liulishuo.okdownload.kotlin
 
+import com.liulishuo.okdownload.DownloadListener
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.createListener1
@@ -54,6 +55,10 @@ import com.liulishuo.okdownload.kotlin.listener.onTaskEndWithSpeed
 import com.liulishuo.okdownload.kotlin.listener.onTaskStart
 import com.liulishuo.okdownload.kotlin.listener.onTaskStartWithModel
 import com.liulishuo.okdownload.kotlin.listener.onWarn
+import com.liulishuo.okdownload.kotlin.listener.switchToExceptProgressListener
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.channels.Channel
 
 /**
  * Correspond to [DownloadTask.execute].
@@ -314,3 +319,72 @@ fun DownloadTask.enqueue4WithSpeed(
     onBlockEndWithSpeed,
     onTaskEndWithSpeed
 ))
+
+fun DownloadTask.spChannel(): Channel<DownloadProgress> {
+    val channel = Channel<DownloadProgress>(Channel.CONFLATED)
+    val oldListener = listener
+    val progressListener = createListener1(
+        progress = { task, currentOffset, totalLength ->
+            channel.offer(DownloadProgress(task, currentOffset, totalLength))
+        }
+    ) { _, _, _, _ -> channel.cancel() }
+    val replaceListener = createReplaceListener(oldListener, progressListener)
+    replaceListener(replaceListener)
+    return channel
+}
+
+@ExperimentalCoroutinesApi
+fun DownloadTask.spBroadcast(): BroadcastChannel<DownloadProgress> {
+    val channel = BroadcastChannel<DownloadProgress>(Channel.CONFLATED)
+    val oldListener = listener
+    val progressListener = createListener1(
+        progress = { task, currentOffset, totalLength ->
+            channel.offer(DownloadProgress(task, currentOffset, totalLength))
+        }
+    ) { _, _, _, _ -> channel.cancel() }
+    val replaceListener = createReplaceListener(oldListener, progressListener)
+    replaceListener(replaceListener)
+    return channel
+}
+
+internal fun createReplaceListener(
+    oldListener: DownloadListener?,
+    progressListener: DownloadListener
+): DownloadListener {
+    if (oldListener == null) {
+        return progressListener
+    }
+    val exceptProgressListener = oldListener.switchToExceptProgressListener()
+    return createListener(
+        onTaskStart = { exceptProgressListener.taskStart(it) },
+        onConnectTrialStart = { task, requestFields ->
+            exceptProgressListener.connectTrialStart(task, requestFields)
+        },
+        onConnectTrialEnd = { task, responseCode, responseHeaderFields ->
+            exceptProgressListener.connectTrialEnd(task, responseCode, responseHeaderFields)
+        },
+        onDownloadFromBeginning = { task, info, cause ->
+            exceptProgressListener.downloadFromBeginning(task, info, cause)
+        },
+        onDownloadFromBreakpoint = { task, info ->
+            exceptProgressListener.downloadFromBreakpoint(task, info)
+        },
+        onConnectStart = { task, blockIndex, requestHeaderFields ->
+            exceptProgressListener.connectStart(task, blockIndex, requestHeaderFields)
+        },
+        onConnectEnd = { task, blockIndex, responseCode, responseHeaderFields ->
+            exceptProgressListener.connectEnd(task, blockIndex, responseCode, responseHeaderFields)
+        },
+        onFetchStart = { task, blockIndex, contentLength ->
+            exceptProgressListener.fetchStart(task, blockIndex, contentLength)
+        },
+        onFetchEnd = { task, blockIndex, contentLength ->
+            exceptProgressListener.fetchEnd(task, blockIndex, contentLength)
+        },
+        onFetchProgress = { task, blockIndex, increaseBytes ->
+            progressListener.fetchProgress(task, blockIndex, increaseBytes)
+        }
+    ) { task, cause, realCause ->
+        exceptProgressListener.taskEnd(task, cause, realCause)
+    }
+}

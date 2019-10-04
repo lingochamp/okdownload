@@ -101,6 +101,7 @@ class DownloadListener4WithSpeedExtensionTest {
         confirmVerified(onTaskEndWithSpeed)
     }
 
+    @Test
     fun `create DownloadListener4WithSpeed with all callbacks`() {
         val listener4WithSpeed = createListener4WithSpeed(
             onTaskStart,

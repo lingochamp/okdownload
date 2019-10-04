@@ -21,6 +21,11 @@ import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
+import com.liulishuo.okdownload.core.listener.DownloadListener1
+import com.liulishuo.okdownload.core.listener.DownloadListener2
+import com.liulishuo.okdownload.core.listener.DownloadListener3
+import com.liulishuo.okdownload.core.listener.DownloadListener4
+import com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed
 import java.lang.Exception
 
 /**
@@ -175,5 +180,100 @@ fun createListener(
         override fun taskEnd(task: DownloadTask, cause: EndCause, realCause: Exception?) {
             onTaskEnd.invoke(task, cause, realCause)
         }
+    }
+}
+
+fun DownloadListener.switchToExceptProgressListener(): DownloadListener = when (this) {
+    is DownloadListener4WithSpeed -> createListener4WithSpeed(
+        onTaskStart = { this.taskStart(it) },
+        onConnectStart = { task, blockIndex, requestHeaderFields ->
+            this.connectStart(task, blockIndex, requestHeaderFields)
+        },
+        onConnectEnd = { task, blockIndex, responseCode, responseHeaderFields ->
+            this.connectEnd(task, blockIndex, responseCode, responseHeaderFields)
+        },
+        onInfoReadyWithSpeed = { task, info, fromBreakpoint, model ->
+            this.infoReady(task, info, fromBreakpoint, model)
+        },
+        onProgressBlockWithSpeed = { task, blockIndex, currentBlockOffset, blockSpeed ->
+            this.progressBlock(task, blockIndex, currentBlockOffset, blockSpeed)
+        },
+        onBlockEndWithSpeed = { task, blockIndex, info, blockSpeed ->
+            this.blockEnd(task, blockIndex, info, blockSpeed)
+        }
+    ) { task, cause, realCause, taskSpeed ->
+        this.taskEnd(task, cause, realCause, taskSpeed)
+    }
+    is DownloadListener4 -> createListener4(
+        onTaskStart = { this.taskStart(it) },
+        onConnectStart = { task, blockIndex, requestHeaderFields ->
+            this.connectStart(task, blockIndex, requestHeaderFields)
+        },
+        onConnectEnd = { task, blockIndex, responseCode, responseHeaderFields ->
+            this.connectEnd(task, blockIndex, responseCode, responseHeaderFields)
+        },
+        onInfoReady = { task, info, fromBreakpoint, model ->
+            this.infoReady(task, info, fromBreakpoint, model)
+        },
+        onProgressBlock = { task, blockIndex, currentBlockOffset ->
+            this.progressBlock(task, blockIndex, currentBlockOffset)
+        },
+        onBlockEnd = { task, blockIndex, info ->
+            this.blockEnd(task, blockIndex, info)
+        }
+    ) { task, cause, realCause, model ->
+        this.taskEnd(task, cause, realCause, model)
+    }
+    is DownloadListener3 -> createListener3(
+        onStarted = { this.taskStart(it) },
+        onConnected = { task, blockCount, currentOffset, totalLength ->
+            this.connected(task, blockCount, currentOffset, totalLength)
+        },
+        onCompleted = { this.taskEnd(it, EndCause.COMPLETED, null) },
+        onCanceled = { this.taskEnd(it, EndCause.CANCELED, null) },
+        onWarn = { this.taskEnd(it, EndCause.SAME_TASK_BUSY, null) },
+        onRetry = { task, cause -> this.retry(task, cause) },
+        onError = { task, e -> this.taskEnd(task, EndCause.ERROR, e) }
+    )
+    is DownloadListener1 -> createListener1(
+        taskStart = { task, model -> this.taskStart(task, model) },
+        retry = { task, cause -> this.retry(task, cause) },
+        connected = { task, blockIndex, currentOffset, totalLength ->
+            this.connected(task, blockIndex, currentOffset, totalLength)
+        }
+    ) { task, cause, realCause, model ->
+        this.taskEnd(task, cause, realCause, model)
+    }
+    // DownloadListener2 doesn't concern progress originally
+    is DownloadListener2 -> this
+    // the origin download listener is DownloadListener or DownloadListenerBunch
+    else -> createListener(
+        onTaskStart = { this.taskStart(it) },
+        onConnectTrialStart = { task, requestFields ->
+            this.connectTrialStart(task, requestFields)
+        },
+        onConnectTrialEnd = { task, responseCode, responseHeaderFields ->
+            this.connectTrialEnd(task, responseCode, responseHeaderFields)
+        },
+        onDownloadFromBeginning = { task, info, cause ->
+            this.downloadFromBeginning(task, info, cause)
+        },
+        onDownloadFromBreakpoint = { task, info ->
+            this.downloadFromBreakpoint(task, info)
+        },
+        onConnectStart = { task, blockIndex, requestHeaderFields ->
+            this.connectStart(task, blockIndex, requestHeaderFields)
+        },
+        onConnectEnd = { task, blockIndex, responseCode, responseHeaderFields ->
+            this.connectEnd(task, blockIndex, responseCode, responseHeaderFields)
+        },
+        onFetchStart = { task, blockIndex, contentLength ->
+            this.fetchStart(task, blockIndex, contentLength)
+        },
+        onFetchEnd = { task, blockIndex, contentLength ->
+            this.fetchEnd(task, blockIndex, contentLength)
+        }
+    ) { task, cause, realCause ->
+        this.taskEnd(task, cause, realCause)
     }
 }
