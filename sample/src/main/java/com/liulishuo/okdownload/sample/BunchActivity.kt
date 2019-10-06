@@ -37,6 +37,7 @@ import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
 import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist
+import com.liulishuo.okdownload.kotlin.listener.createDownloadContextListener
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity
 import com.liulishuo.okdownload.sample.util.DemoUtil
 import com.liulishuo.okdownload.sample.util.ProgressUtil
@@ -159,20 +160,11 @@ class BunchActivity : BaseSampleActivity() {
                 totalCount = urls.size
                 currentCount = 0
 
-                downloadContext = builder.setListener(object : DownloadContextListener {
-                    override fun taskEnd(context: DownloadContext,
-                                         task: DownloadTask,
-                                         cause: EndCause,
-                                         realCause: Exception?,
-                                         remainCount: Int) {
-                    }
-
-                    override fun queueEnd(context: DownloadContext) {
-                        v.tag = null
-                        radioGroup!!.isEnabled = true
-                        deleteContainerView!!.isEnabled = true
-                        startOrCancelTv!!.setText(R.string.start)
-                    }
+                downloadContext = builder.setListener(createDownloadContextListener {
+                    v.tag = null
+                    radioGroup!!.isEnabled = true
+                    deleteContainerView!!.isEnabled = true
+                    startOrCancelTv!!.setText(R.string.start)
                 }).build()
 
                 speedCalculator = SpeedCalculator()
