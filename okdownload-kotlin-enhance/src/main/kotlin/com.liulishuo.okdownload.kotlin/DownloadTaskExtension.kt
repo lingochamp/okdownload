@@ -327,7 +327,7 @@ fun DownloadTask.spChannel(): Channel<DownloadProgress> {
         progress = { task, currentOffset, totalLength ->
             channel.offer(DownloadProgress(task, currentOffset, totalLength))
         }
-    ) { _, _, _, _ -> channel.cancel() }
+    ) { _, _, _, _ -> channel.close() }.also { it.setAlwaysRecoverAssistModelIfNotSet(true) }
     val replaceListener = createReplaceListener(oldListener, progressListener)
     replaceListener(replaceListener)
     return channel
@@ -341,7 +341,7 @@ fun DownloadTask.spBroadcast(): BroadcastChannel<DownloadProgress> {
         progress = { task, currentOffset, totalLength ->
             channel.offer(DownloadProgress(task, currentOffset, totalLength))
         }
-    ) { _, _, _, _ -> channel.cancel() }
+    ) { _, _, _, _ -> channel.close() }.also { it.setAlwaysRecoverAssistModelIfNotSet(true) }
     val replaceListener = createReplaceListener(oldListener, progressListener)
     replaceListener(replaceListener)
     return channel
@@ -386,5 +386,6 @@ internal fun createReplaceListener(
         }
     ) { task, cause, realCause ->
         exceptProgressListener.taskEnd(task, cause, realCause)
+        progressListener.taskEnd(task, cause, realCause)
     }
 }

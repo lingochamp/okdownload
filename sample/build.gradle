@@ -64,6 +64,7 @@ dependencies {
     implementation dep.ankoRecyclerviewV7
     implementation dep.ankoRecyclerviewV7Coroutines
     implementation dep.kotlinxCoroutines
+    implementation dep.kotlinxCoroutineAndroid
     implementation dep.supportConstraintLayout
     testImplementation dep.junit
     implementation project(':okdownload')

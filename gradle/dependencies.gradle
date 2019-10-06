@@ -23,6 +23,7 @@ ext {
 
             kotlin                      : "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
             kotlinxCoroutines           : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version",
+            kotlinxCoroutineAndroid     : "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version",
 
             // anko commons
             ankoSdk                     : "org.jetbrains.anko:anko-sdk25:$anko_version",

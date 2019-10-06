@@ -23,13 +23,19 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.liulishuo.okdownload.DownloadTask
+import com.liulishuo.okdownload.SpeedCalculator
 import com.liulishuo.okdownload.StatusUtil
 import com.liulishuo.okdownload.core.Util
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.kotlin.enqueue4WithSpeed
+import com.liulishuo.okdownload.kotlin.spChannel
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity
 import com.liulishuo.okdownload.sample.util.DemoUtil
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import java.io.FileInputStream
 import java.io.InputStream
 import java.security.MessageDigest
@@ -48,12 +54,11 @@ class SingleActivity : BaseSampleActivity() {
             findViewById<View>(R.id.statusTv) as TextView,
             findViewById<View>(R.id.progressBar) as ProgressBar,
             findViewById(R.id.actionView),
-            findViewById<View>(R.id.actionTv) as TextView)
+            findViewById<View>(R.id.actionTv) as TextView
+        )
     }
 
-    override fun titleRes(): Int {
-        return R.string.single_download_title
-    }
+    override fun titleRes(): Int = R.string.single_download_title
 
     override fun onDestroy() {
         super.onDestroy()
@@ -133,17 +138,18 @@ class SingleActivity : BaseSampleActivity() {
                 readableTotalLength = Util.humanReadableBytes(totalLength, true)
                 DemoUtil.calcProgressToView(progressBar, info.totalOffset, totalLength)
             },
+            // First way to show progress.
+//            onProgressWithSpeed = { _, currentOffset, taskSpeed ->
+//                val readableOffset = Util.humanReadableBytes(currentOffset, true)
+//                val progressStatus = "$readableOffset/$readableTotalLength"
+//                val speed = taskSpeed.speed()
+//                val progressStatusWithSpeed = "$progressStatus($speed)"
+//                statusTv.text = progressStatusWithSpeed
+//                DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength)
+//            },
             onConnectStart = { _, blockIndex, _ ->
                 val status = "Connect End $blockIndex"
                 statusTv.text = status
-            },
-            onProgressWithSpeed = { _, currentOffset, taskSpeed ->
-                val readableOffset = Util.humanReadableBytes(currentOffset, true)
-                val progressStatus = "$readableOffset/$readableTotalLength"
-                val speed = taskSpeed.speed()
-                val progressStatusWithSpeed = "$progressStatus($speed)"
-                statusTv.text = progressStatusWithSpeed
-                DemoUtil.calcProgressToView(progressBar, currentOffset, totalLength)
             }
         ) { task, cause, realCause, taskSpeed ->
             val statusWithSpeed = cause.toString() + " " + taskSpeed.averageSpeed()
@@ -159,6 +165,26 @@ class SingleActivity : BaseSampleActivity() {
             }
             realCause?.let {
                 Log.e(TAG, "download error", it)
+            }
+        }
+
+        // Second way to show progress.
+        val speedCalculator = SpeedCalculator()
+        CoroutineScope(Dispatchers.Main).launch {
+            var lastOffset = 0L
+            task?.spChannel()?.consumeEach { dp ->
+                val increase = when (lastOffset) {
+                    0L -> 0L
+                    else -> dp.currentOffset - lastOffset
+                }
+                lastOffset = dp.currentOffset
+                speedCalculator.downloading(increase)
+                val readableOffset = Util.humanReadableBytes(dp.currentOffset, true)
+                val progressStatus = "$readableOffset/$readableTotalLength"
+                val speed = speedCalculator.speed()
+                val progressStatusWithSpeed = "$progressStatus($speed)"
+                statusTv.text = progressStatusWithSpeed
+                DemoUtil.calcProgressToView(progressBar, dp.currentOffset, totalLength)
             }
         }
     }
