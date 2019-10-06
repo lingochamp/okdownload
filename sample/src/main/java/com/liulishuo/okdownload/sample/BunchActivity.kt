@@ -27,21 +27,14 @@ import android.widget.ProgressBar
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
-
 import com.liulishuo.okdownload.DownloadContext
-import com.liulishuo.okdownload.DownloadListener
-import com.liulishuo.okdownload.DownloadContextListener
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.SpeedCalculator
-import com.liulishuo.okdownload.core.cause.EndCause
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause
-import com.liulishuo.okdownload.core.listener.DownloadListener1
-import com.liulishuo.okdownload.core.listener.assist.Listener1Assist
 import com.liulishuo.okdownload.kotlin.listener.createDownloadContextListener
+import com.liulishuo.okdownload.kotlin.listener.createListener1
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity
 import com.liulishuo.okdownload.sample.util.DemoUtil
 import com.liulishuo.okdownload.sample.util.ProgressUtil
-
 import java.io.File
 
 class BunchActivity : BaseSampleActivity() {
@@ -97,48 +90,6 @@ class BunchActivity : BaseSampleActivity() {
         )
     }
 
-    private fun initListener(): DownloadListener {
-        return object : DownloadListener1() {
-
-            override fun taskStart(task: DownloadTask,
-                                   model: Listener1Assist.Listener1Model) {
-                fillPbInfo(task, "start")
-            }
-
-            override fun retry(task: DownloadTask, cause: ResumeFailedCause) {
-                fillPbInfo(task, "retry")
-            }
-
-            override fun connected(task: DownloadTask, blockCount: Int, currentOffset: Long,
-                                   totalLength: Long) {
-                fillPbInfo(task, "connected")
-            }
-
-            override fun progress(task: DownloadTask, currentOffset: Long, totalLength: Long) {
-                calcSpeed(task, currentOffset)
-
-                fillPbInfo(task, "progress")
-                // progress
-                val id = task.id
-                task.addTag(CURRENT_PROGRESS, currentOffset)
-                val taskViews = findValidTaskViewsWithId(id) ?: return
-                val progressBar = taskViews.progressBar ?: return
-                ProgressUtil.calcProgressToViewAndMark(progressBar, currentOffset, totalLength)
-            }
-
-            override fun taskEnd(task: DownloadTask, cause: EndCause,
-                                 realCause: Exception?,
-                                 model: Listener1Assist.Listener1Model) {
-                fillPbInfo(task, "end $cause")
-
-                currentCount += 1
-                updateBunchInfoAndProgress()
-
-                releaseTaskViewsWithId(task.id)
-            }
-        }
-    }
-
     private fun initAction() {
         startOrCancelView?.setOnClickListener { v ->
             if (v.tag == null) {
@@ -172,10 +123,39 @@ class BunchActivity : BaseSampleActivity() {
                     "BunchActivity",
                     "before bunch task consume ${SystemClock.uptimeMillis() - startTime} ms"
                 )
-                downloadContext?.start(initListener(), serialRb!!.isChecked)
-                deleteContainerView!!.isEnabled = false
-                radioGroup!!.isEnabled = false
-                startOrCancelTv!!.setText(R.string.cancel)
+                downloadContext?.start(
+                    createListener1(
+                        taskStart = { task, _ -> fillPbInfo(task, "start") },
+                        retry = { task, _ -> fillPbInfo(task, "retry") },
+                        connected = { task, _, _, _ -> fillPbInfo(task, "connected") },
+                        progress = { task, currentOffset, totalLength ->
+                            calcSpeed(task, currentOffset)
+                            fillPbInfo(task, "progress")
+                            // progress
+                            val id = task.id
+                            task.addTag(CURRENT_PROGRESS, currentOffset)
+                            val taskViews = findValidTaskViewsWithId(id)
+                            taskViews?.progressBar?.let {
+                                ProgressUtil.calcProgressToViewAndMark(
+                                    it,
+                                    currentOffset,
+                                    totalLength
+                                )
+                            }
+                        }
+                    ) { task, cause, _, _ ->
+                        fillPbInfo(task, "end $cause")
+
+                        currentCount += 1
+                        updateBunchInfoAndProgress()
+
+                        releaseTaskViewsWithId(task.id)
+                    },
+                    serialRb?.isChecked == true
+                )
+                deleteContainerView?.isEnabled = false
+                radioGroup?.isEnabled = false
+                startOrCancelTv?.setText(R.string.cancel)
                 Log.d(
                     "BunchActivity",
                     "start bunch task consume ${SystemClock.uptimeMillis() - startTime} ms"
@@ -237,7 +217,7 @@ class BunchActivity : BaseSampleActivity() {
         internal var id = 0
     }
 
-    internal fun findValidTaskViewsWithId(taskId: Int): TaskViews? {
+    private fun findValidTaskViewsWithId(taskId: Int): TaskViews? {
         for (taskViews in taskViewsArray) {
             if (taskViews.id == taskId) return taskViews
         }
@@ -252,7 +232,7 @@ class BunchActivity : BaseSampleActivity() {
         return null
     }
 
-    internal fun releaseTaskViewsWithId(taskId: Int) {
+    private fun releaseTaskViewsWithId(taskId: Int) {
         for (taskViews in taskViewsArray) {
             if (taskViews.id == taskId) taskViews.id = 0
         }
