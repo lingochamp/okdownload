@@ -24,10 +24,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
 
-import com.liulishuo.okdownload.DownloadContext
-import com.liulishuo.okdownload.DownloadContextListener
-import com.liulishuo.okdownload.DownloadTask
-import com.liulishuo.okdownload.core.cause.EndCause
+import com.liulishuo.okdownload.kotlin.listener.createDownloadContextListener
 import com.liulishuo.okdownload.sample.base.BaseSampleActivity
 import com.liulishuo.okdownload.sample.util.queue.QueueController
 import com.liulishuo.okdownload.sample.util.queue.QueueRecyclerAdapter
@@ -86,34 +83,21 @@ class QueueActivity : BaseSampleActivity() {
     ) {
         val controller = QueueController()
         this.controller = controller
-        controller.initTasks(
-            this,
-            object : DownloadContextListener {
-                override fun taskEnd(
-                    context: DownloadContext,
-                    task: DownloadTask,
-                    cause: EndCause,
-                    realCause: Exception?,
-                    remainCount: Int) {
-                }
+        controller.initTasks(this, createDownloadContextListener {
+            actionView.tag = null
+            actionTv.setText(R.string.start)
+            // to cancel
+            controller.stop()
 
-                override fun queueEnd(context: DownloadContext) {
-                    actionView.tag = null
-                    actionTv.setText(R.string.start)
-                    // to cancel
-                    controller.stop()
+            serialRb.isEnabled = true
+            parallelRb.isEnabled = true
 
-                    serialRb.isEnabled = true
-                    parallelRb.isEnabled = true
+            deleteActionView.isEnabled = true
+            deleteActionView.cardElevation = deleteActionView.tag as Float
+            deleteActionTv.isEnabled = true
 
-                    deleteActionView.isEnabled = true
-                    deleteActionView.cardElevation = deleteActionView.tag as Float
-                    deleteActionTv.isEnabled = true
-
-                    adapter?.notifyDataSetChanged()
-                }
-            }
-        )
+            adapter?.notifyDataSetChanged()
+        })
     }
 
     private fun initRecyclerView(recyclerView: RecyclerView) {
