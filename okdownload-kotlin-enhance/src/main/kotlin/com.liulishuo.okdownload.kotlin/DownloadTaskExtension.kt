@@ -56,8 +56,6 @@ import com.liulishuo.okdownload.kotlin.listener.onTaskStart
 import com.liulishuo.okdownload.kotlin.listener.onTaskStartWithModel
 import com.liulishuo.okdownload.kotlin.listener.onWarn
 import com.liulishuo.okdownload.kotlin.listener.switchToExceptProgressListener
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
 
 /**
@@ -333,20 +331,6 @@ fun DownloadTask.spChannel(): Channel<DownloadProgress> {
     return channel
 }
 
-@ExperimentalCoroutinesApi
-fun DownloadTask.spBroadcast(): BroadcastChannel<DownloadProgress> {
-    val channel = BroadcastChannel<DownloadProgress>(Channel.CONFLATED)
-    val oldListener = listener
-    val progressListener = createListener1(
-        progress = { task, currentOffset, totalLength ->
-            channel.offer(DownloadProgress(task, currentOffset, totalLength))
-        }
-    ) { _, _, _, _ -> channel.close() }.also { it.setAlwaysRecoverAssistModelIfNotSet(true) }
-    val replaceListener = createReplaceListener(oldListener, progressListener)
-    replaceListener(replaceListener)
-    return channel
-}
-
 internal fun createReplaceListener(
     oldListener: DownloadListener?,
     progressListener: DownloadListener
@@ -356,7 +340,10 @@ internal fun createReplaceListener(
     }
     val exceptProgressListener = oldListener.switchToExceptProgressListener()
     return createListener(
-        onTaskStart = { exceptProgressListener.taskStart(it) },
+        onTaskStart = {
+            exceptProgressListener.taskStart(it)
+            progressListener.taskStart(it)
+        },
         onConnectTrialStart = { task, requestFields ->
             exceptProgressListener.connectTrialStart(task, requestFields)
         },
@@ -365,9 +352,11 @@ internal fun createReplaceListener(
         },
         onDownloadFromBeginning = { task, info, cause ->
             exceptProgressListener.downloadFromBeginning(task, info, cause)
+            progressListener.downloadFromBeginning(task, info, cause)
         },
         onDownloadFromBreakpoint = { task, info ->
             exceptProgressListener.downloadFromBreakpoint(task, info)
+            progressListener.downloadFromBreakpoint(task, info)
         },
         onConnectStart = { task, blockIndex, requestHeaderFields ->
             exceptProgressListener.connectStart(task, blockIndex, requestHeaderFields)

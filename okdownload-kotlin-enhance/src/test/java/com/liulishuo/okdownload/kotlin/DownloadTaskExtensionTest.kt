@@ -19,8 +19,11 @@ package com.liulishuo.okdownload.kotlin
 import android.net.Uri
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.OkDownload
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore
+import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher
 import com.liulishuo.okdownload.core.listener.DownloadListener1
+import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.onTaskEnd
 import com.liulishuo.okdownload.kotlin.listener.onTaskStart
 import io.mockk.MockKAnnotations
@@ -41,9 +44,19 @@ class DownloadTaskExtensionTest {
     lateinit var onTaskEnd: onTaskEnd
     @MockK
     lateinit var mockTask: DownloadTask
+    @MockK
+    lateinit var breakInfo: BreakpointInfo
+    @MockK
+    lateinit var mockOkDownload: OkDownload
 
     @Before
-    fun setup() = MockKAnnotations.init(this, relaxed = true)
+    fun setup() {
+        MockKAnnotations.init(this, relaxed = true)
+        try {
+            OkDownload.setSingletonInstance(mockOkDownload)
+        } catch (ignore: IllegalArgumentException) {
+        }
+    }
 
     @Test
     fun `execute DownloadTask with DownloadListener`() {
@@ -137,8 +150,6 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `get progress channel without previous listener`() {
-        val mockOkDownload = mockk<OkDownload>()
-        OkDownload.setSingletonInstance(mockOkDownload)
         val mockBreakpointStore = mockk<BreakpointStore>()
         every { mockBreakpointStore.findOrCreateId(any()) } returns 0
         every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
@@ -148,12 +159,38 @@ class DownloadTaskExtensionTest {
 
         val spiedTask = spyk(DownloadTask.Builder("url", mockUri).build())
 
-        val broadcastChannel = spiedTask.spBroadcast()
+        val spChannel = spiedTask.spChannel()
         verify { spiedTask.replaceListener(any()) }
 
         (spiedTask.listener as DownloadListener1).progress(spiedTask, 200, 400)
-        val p = broadcastChannel.openSubscription().poll()
+        val p = spChannel.poll()
         assert(p != null)
         assert(p!!.progress() == 0.5f)
+    }
+
+    @Test
+    fun `get progress channel with previous listener`() {
+        val mockBreakpointStore = mockk<BreakpointStore>()
+        val mockDownloadDispatcher = mockk<DownloadDispatcher>()
+        every { mockBreakpointStore.findOrCreateId(any()) } returns 0
+        every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
+        every { mockOkDownload.downloadDispatcher() } returns mockDownloadDispatcher
+        every { mockDownloadDispatcher.enqueue(any<DownloadTask>()) } returns Unit
+        val mockUri = mockk<Uri>()
+        every { mockUri.scheme } returns "test"
+        every { mockUri.path } returns "path"
+
+        val spiedTask = spyk(DownloadTask.Builder("url", mockUri).build())
+        val oldListener = createListener { _, _, _ -> }
+        spiedTask.enqueue(oldListener)
+
+        val spChannel = spiedTask.spChannel()
+        verify { spiedTask.replaceListener(any()) }
+
+        spiedTask.listener.taskStart(mockTask)
+        spiedTask.listener.downloadFromBreakpoint(mockTask, breakInfo)
+        spiedTask.listener.fetchProgress(mockTask, 0, 200)
+        assert(spChannel.poll()?.currentOffset == 200L)
+        spiedTask.listener.taskEnd(mockTask, mockk(), mockk())
     }
 }
