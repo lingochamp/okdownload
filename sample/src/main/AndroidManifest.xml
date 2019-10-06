@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2017 LingoChamp Inc.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,38 +15,41 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.liulishuo.okdownload.sample">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.liulishuo.okdownload.sample">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- When you invoke BaseDownloadTask#setWifiRequired(true), you need declare ACCESS_NETWORK_STATE permission -->
-    <!-- The permission of ACCESS_NETWORK_STATE is not required, but if you add this permission we will check whether network is valid before start it-->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:targetApi="n">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".SingleActivity"/>
-        <activity android:name=".QueueActivity"/>
-        <activity android:name=".EachBlockProgressActivity"/>
-        <activity android:name=".BunchActivity"/>
-        <activity android:name=".ContentUriActivity"/>
-        <activity android:name=".NotificationActivity"/>
+        <activity android:name=".SingleActivity" />
+        <activity android:name=".QueueActivity" />
+        <activity android:name=".EachBlockProgressActivity" />
+        <activity android:name=".BunchActivity" />
+        <activity android:name=".ContentUriActivity" />
+        <activity android:name=".NotificationActivity" />
     </application>
+    <!-- When you invoke BaseDownloadTask#setWifiRequired(true), you need declare ACCESS_NETWORK_STATE permission -->
+    <!-- The permission of ACCESS_NETWORK_STATE is not required, but if you add this permission we will check whether network is valid before start it-->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>
