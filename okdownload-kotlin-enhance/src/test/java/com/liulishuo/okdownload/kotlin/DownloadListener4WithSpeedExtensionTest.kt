@@ -132,6 +132,14 @@ class DownloadListener4WithSpeedExtensionTest {
         every {
             onBlockEndWithSpeed.invoke(mockTask, blockIndex, mockBlockInfo, mockSpeedCalculator)
         } returns Unit
+        every {
+            onProgressBlockWithSpeed.invoke(
+                mockTask,
+                blockIndex,
+                currentOffset,
+                mockSpeedCalculator
+            )
+        } returns Unit
 
         listener4WithSpeed.taskStart(mockTask)
         listener4WithSpeed.connectStart(mockTask, blockIndex, mockHeaderFields)
@@ -154,6 +162,14 @@ class DownloadListener4WithSpeedExtensionTest {
         }
         verify {
             onTaskEndWithSpeed.invoke(mockTask, mockCause, mockRealCause, mockSpeedCalculator)
+        }
+        verify {
+            onProgressBlockWithSpeed.invoke(
+                mockTask,
+                blockIndex,
+                currentOffset,
+                mockSpeedCalculator
+            )
         }
 
         confirmVerified(onTaskStart)
