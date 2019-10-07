@@ -73,6 +73,10 @@ typealias onTaskEndWithSpeed = (
     taskSpeed: SpeedCalculator
 ) -> Unit
 
+/**
+ * A concise way to create a [DownloadListener4WithSpeed],
+ * only the [DownloadListener4WithSpeed.taskEnd] is necessary.
+ */
 fun createListener4WithSpeed(
     onTaskStart: onTaskStart? = null,
     onConnectStart: onConnectStart? = null,

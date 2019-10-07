@@ -18,6 +18,9 @@ package com.liulishuo.okdownload.kotlin
 
 import com.liulishuo.okdownload.core.cause.EndCause
 
+/**
+ * This class only represents download successful.
+ */
 data class DownloadResult(val cause: EndCause) {
     fun becauseOfCompleted(): Boolean = cause == EndCause.COMPLETED
     fun becauseOfRepeatedTask(): Boolean =

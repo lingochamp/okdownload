@@ -58,6 +58,8 @@ import com.liulishuo.okdownload.kotlin.listener.onWarn
 import com.liulishuo.okdownload.kotlin.listener.switchToExceptProgressListener
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -322,6 +324,25 @@ fun DownloadTask.enqueue4WithSpeed(
     onTaskEndWithSpeed
 ))
 
+/**
+ * This method will create a [Channel] to represents a single download task's progress.
+ * In this way, the DownloadTask is a producer and the returned [Channel] can be consumed
+ * by specific consumer.
+ *
+ * Note: This method must be invoked after the DownloadTask is started, otherwise, there is no any
+ * effect. For example:
+ * ```
+ * val task = DownloadTask.Builder().build()
+ * task.enqueue() { task, cause, realCause ->   }
+ *
+ * val progressChannel = task.spChannel()
+ * runBlocking {
+ *     for (dp in progressChannel) {
+ *         // show progress
+ *     }
+ * }
+ * ```
+ */
 fun DownloadTask.spChannel(): Channel<DownloadProgress> {
     val channel = Channel<DownloadProgress>(Channel.CONFLATED)
     val oldListener = listener
@@ -335,6 +356,11 @@ fun DownloadTask.spChannel(): Channel<DownloadProgress> {
     return channel
 }
 
+/**
+ * Returns a [DownloadListener] to replace old listener in [DownloadTask].
+ * @param oldListener responses all callbacks except progress.
+ * @param progressListener only responses progress callback.
+ */
 internal fun createReplaceListener(
     oldListener: DownloadListener?,
     progressListener: DownloadListener
@@ -386,6 +412,14 @@ internal fun createReplaceListener(
 internal fun CancellableContinuation<*>.cancelDownloadOnCancellation(task: DownloadTask) =
     invokeOnCancellation { task.cancel() }
 
+/**
+ * Awaits for completion of the [DownloadTask] without blocking current thread.
+ * Returns [DownloadResult] or throws corresponding exception if there is any error occurred.
+ *
+ * This suspending function is cancellable.
+ * If the [Job] of the current coroutine is cancelled or completed while this suspending function
+ * is waiting, this function immediately resumes with [CancellationException]
+ */
 suspend fun DownloadTask.await(): DownloadResult = suspendCancellableCoroutine { cont ->
     val listener2 = createListener2({
         cont.cancelDownloadOnCancellation(this)

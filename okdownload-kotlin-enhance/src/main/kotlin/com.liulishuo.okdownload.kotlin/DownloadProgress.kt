@@ -18,7 +18,15 @@ package com.liulishuo.okdownload.kotlin
 
 import com.liulishuo.okdownload.DownloadTask
 
-data class DownloadProgress(val task: DownloadTask, val currentOffset: Long, val totalOffset: Long) {
+/**
+ * This data class presents a single task progress and
+ * provides some methods to get the progress info.
+ */
+data class DownloadProgress(
+    val task: DownloadTask,
+    val currentOffset: Long,
+    val totalOffset: Long
+) {
     companion object {
         private const val UNKNOWN_TOTAL_OFFSET = -1L
         const val UNKNOWN_PROGRESS = 0f

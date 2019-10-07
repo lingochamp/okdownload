@@ -103,6 +103,9 @@ typealias onFetchEnd = onFetchStart
  */
 typealias onTaskEnd = (task: DownloadTask, cause: EndCause, realCause: Exception?) -> Unit
 
+/**
+ * A concise way to create a [DownloadListener], only the [DownloadListener.taskEnd] is necessary.
+ */
 fun createListener(
     onTaskStart: onTaskStart? = null,
     onConnectTrialStart: onConnectTrialStart? = null,
@@ -183,6 +186,10 @@ fun createListener(
     }
 }
 
+/**
+ * This method will create a new [DownloadListener] base on the receiver DownloadListener.
+ * The difference is that the DownloadListener will not invoke progress callback.
+ */
 fun DownloadListener.switchToExceptProgressListener(): DownloadListener = when (this) {
     is DownloadListener4WithSpeed -> createListener4WithSpeed(
         onTaskStart = { this.taskStart(it) },

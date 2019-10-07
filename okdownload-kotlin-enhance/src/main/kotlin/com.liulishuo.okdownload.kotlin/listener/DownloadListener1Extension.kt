@@ -58,6 +58,10 @@ typealias onTaskEndWithModel = (
     model: Listener1Assist.Listener1Model
 ) -> Unit
 
+/**
+ * A concise way to create a [DownloadListener1], only the
+ * [DownloadListener1.taskEnd] is necessary.
+ */
 fun createListener1(
     taskStart: onTaskStartWithModel? = null,
     retry: onRetry? = null,

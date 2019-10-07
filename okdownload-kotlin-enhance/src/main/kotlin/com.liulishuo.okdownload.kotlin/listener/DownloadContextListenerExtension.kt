@@ -38,6 +38,10 @@ typealias onQueueTaskEnd = (
  */
 typealias onQueueEnd = (context: DownloadContext) -> Unit
 
+/**
+ * A concise way to create a [DownloadContextListener], only the
+ * [DownloadContextListener.queueEnd] is necessary.
+ */
 fun createDownloadContextListener(
     onQueueTaskEnd: onQueueTaskEnd? = null,
     onQueueEnd: onQueueEnd
