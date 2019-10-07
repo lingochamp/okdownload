@@ -20,7 +20,6 @@ import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.breakpoint.BlockInfo
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.cause.EndCause
-import com.liulishuo.okdownload.core.listener.DownloadListener2
 import com.liulishuo.okdownload.core.listener.DownloadListener4
 import com.liulishuo.okdownload.core.listener.assist.Listener4Assist
 

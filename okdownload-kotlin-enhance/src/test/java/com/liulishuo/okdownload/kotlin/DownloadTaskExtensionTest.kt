@@ -17,6 +17,7 @@
 package com.liulishuo.okdownload.kotlin
 
 import android.net.Uri
+import com.liulishuo.okdownload.DownloadListener
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.OkDownload
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
@@ -205,60 +206,44 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `DownloadTask await success`() {
-        val mockBreakpointStore = mockk<BreakpointStore>()
-        val mockDownloadDispatcher = mockk<DownloadDispatcher>()
-        every { mockBreakpointStore.findOrCreateId(any()) } returns 0
-        every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
-        every { mockOkDownload.downloadDispatcher() } returns mockDownloadDispatcher
-        val mockUri = mockk<Uri>()
-        every { mockUri.scheme } returns "test"
-        every { mockUri.path } returns "path"
-        val downloadTask = DownloadTask.Builder("url", mockUri).build()
-
-        every { mockDownloadDispatcher.enqueue(any<DownloadTask>()) } answers {
-            downloadTask.listener.taskEnd(downloadTask, EndCause.COMPLETED, null)
+        every { mockTask.enqueue(any()) } answers {
+            val listener = it.invocation.args[0] as DownloadListener
+            listener.taskEnd(mockTask, EndCause.COMPLETED, null)
         }
         runBlocking {
-            val result = downloadTask.await()
+            val result = mockTask.await()
             assert(result.becauseOfCompleted())
         }
 
-        every { mockDownloadDispatcher.enqueue(any<DownloadTask>()) } answers {
-            downloadTask.listener.taskEnd(downloadTask, EndCause.FILE_BUSY, null)
+        every { mockTask.enqueue(any()) } answers {
+            val listener = it.invocation.args[0] as DownloadListener
+            listener.taskEnd(mockTask, EndCause.FILE_BUSY, null)
         }
         runBlocking {
-            val result = downloadTask.await()
+            val result = mockTask.await()
             assert(result.becauseOfRepeatedTask())
         }
 
-        every { mockDownloadDispatcher.enqueue(any<DownloadTask>()) } answers {
-            downloadTask.listener.taskEnd(downloadTask, EndCause.SAME_TASK_BUSY, null)
+        every { mockTask.enqueue(any()) } answers {
+            val listener = it.invocation.args[0] as DownloadListener
+            listener.taskEnd(mockTask, EndCause.SAME_TASK_BUSY, null)
         }
         runBlocking {
-            val result = downloadTask.await()
+            val result = mockTask.await()
             assert(result.becauseOfRepeatedTask())
         }
     }
 
     @Test
     fun `DownloadTask await failed`() {
-        val mockBreakpointStore = mockk<BreakpointStore>()
-        val mockDownloadDispatcher = mockk<DownloadDispatcher>()
-        every { mockBreakpointStore.findOrCreateId(any()) } returns 0
-        every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
-        every { mockOkDownload.downloadDispatcher() } returns mockDownloadDispatcher
-        val mockUri = mockk<Uri>()
-        every { mockUri.scheme } returns "test"
-        every { mockUri.path } returns "path"
-        val downloadTask = DownloadTask.Builder("url", mockUri).build()
         val exception = IllegalStateException("test error")
-
-        every { mockDownloadDispatcher.enqueue(any<DownloadTask>()) } answers {
-            downloadTask.listener.taskEnd(downloadTask, EndCause.ERROR, exception)
+        every { mockTask.enqueue(any()) } answers {
+            val listener = it.invocation.args[0] as DownloadListener
+            listener.taskEnd(mockTask, EndCause.ERROR, exception)
         }
         runBlocking {
             try {
-                downloadTask.await()
+                mockTask.await()
                 error("should failed")
             } catch (e: Exception) {
                 assert(e is IllegalStateException)
@@ -269,18 +254,9 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `DownloadTask await cancelled`() {
-        val mockBreakpointStore = mockk<BreakpointStore>()
-        val mockDownloadDispatcher = mockk<DownloadDispatcher>()
-        every { mockBreakpointStore.findOrCreateId(any()) } returns 0
-        every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
-        every { mockOkDownload.downloadDispatcher() } returns mockDownloadDispatcher
-        val mockUri = mockk<Uri>()
-        every { mockUri.scheme } returns "test"
-        every { mockUri.path } returns "path"
-        val downloadTask = DownloadTask.Builder("url", mockUri).build()
-
-        every { mockDownloadDispatcher.enqueue(any<DownloadTask>()) } answers {
-            downloadTask.listener.taskStart(downloadTask)
+        every { mockTask.enqueue(any()) } answers {
+            val listener = it.invocation.args[0] as DownloadListener
+            listener.taskStart(mockTask)
         }
         runBlocking {
             try {
@@ -288,7 +264,7 @@ class DownloadTaskExtensionTest {
                     delay(100)
                     cancel("test cancel")
                 }
-                downloadTask.await()
+                mockTask.await()
                 error("should be cancelled")
             } catch (e: Exception) {
                 assert(e is CancellationException)
