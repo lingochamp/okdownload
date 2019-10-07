@@ -114,7 +114,9 @@ class QueueActivity : BaseSampleActivity() {
         actionTv: TextView,
         serialRb: AppCompatRadioButton,
         parallelRb: AppCompatRadioButton,
-        deleteActionView: CardView, deleteActionTv: View) {
+        deleteActionView: CardView,
+        deleteActionTv: View
+    ) {
         deleteActionView.setOnClickListener {
             controller?.deleteFiles()
             adapter?.notifyDataSetChanged()

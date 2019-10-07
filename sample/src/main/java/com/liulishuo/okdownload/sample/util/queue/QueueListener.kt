@@ -21,7 +21,6 @@ import android.util.SparseArray
 
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.StatusUtil
-import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
 import com.liulishuo.okdownload.core.listener.DownloadListener1
@@ -96,7 +95,6 @@ internal class QueueListener : DownloadListener1() {
                         holder.progressBar.progress = 0
                     }
                 }
-
             }
         }
     }
@@ -161,7 +159,8 @@ internal class QueueListener : DownloadListener1() {
     }
 
     override fun taskEnd(
-        task: DownloadTask, cause: EndCause,
+        task: DownloadTask,
+        cause: EndCause,
         realCause: Exception?,
         model: Listener1Assist.Listener1Model
     ) {

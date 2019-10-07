@@ -56,7 +56,6 @@ class BunchActivity : BaseSampleActivity() {
 
     private var downloadContext: DownloadContext? = null
 
-
     override fun titleRes(): Int = R.string.bunch_download_title
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -206,7 +205,6 @@ class BunchActivity : BaseSampleActivity() {
         updateBunchInfoAndProgress()
     }
 
-
     internal class TaskViews internal constructor(
         activity: Activity,
         @IdRes tvId: Int,
@@ -290,7 +288,6 @@ class BunchActivity : BaseSampleActivity() {
             "http://cdn.llsapp.com/forum/image/2f003721ddb74ea1a84b2a6e603d6a44_1435046970863.jpg",
             "http://cdn.llsapp.com/crm_test_1447219868528.jpg",
             "http://cdn.llsapp.com/crm_test_1438658295447.jpg",
-
 
             // ---------------
             "http://imgsrc.baidu.com/forum/w%3D580/sign=2d51fcce8ad4b31cf03c94b3b7d7276f/48084b36acaf2eddc470ae648c1001e9380193bf.jpg",
