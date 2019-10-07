@@ -57,6 +57,10 @@ import com.liulishuo.okdownload.kotlin.listener.onTaskStartWithModel
 import com.liulishuo.okdownload.kotlin.listener.onWarn
 import com.liulishuo.okdownload.kotlin.listener.switchToExceptProgressListener
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Correspond to [DownloadTask.execute].
@@ -377,4 +381,20 @@ internal fun createReplaceListener(
         exceptProgressListener.taskEnd(task, cause, realCause)
         progressListener.taskEnd(task, cause, realCause)
     }
+}
+
+internal fun CancellableContinuation<*>.cancelDownloadOnCancellation(task: DownloadTask) =
+    invokeOnCancellation { task.cancel() }
+
+suspend fun DownloadTask.await(): DownloadResult = suspendCancellableCoroutine { cont ->
+    val listener2 = createListener2({
+        cont.cancelDownloadOnCancellation(this)
+    }) { _, cause, realCause ->
+        if (realCause != null) {
+            cont.resumeWithException(realCause)
+        } else {
+            cont.resume(DownloadResult(cause))
+        }
+    }
+    enqueue(listener2)
 }
