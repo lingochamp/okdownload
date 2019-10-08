@@ -418,17 +418,32 @@ internal fun CancellableContinuation<*>.cancelDownloadOnCancellation(task: Downl
  *
  * This suspending function is cancellable.
  * If the [Job] of the current coroutine is cancelled or completed while this suspending function
- * is waiting, this function immediately resumes with [CancellationException]
+ * is waiting, this function immediately resumes with [CancellationException].
+ *
+ * @param block does something after the [DownloadTask] start immediately.
+ *
+ * Show progress using channel after await, for example:
+ * ```
+ * val task = DownloadTask.Builder().build()
+ * GlobalScope.lunch {
+ *     val downloadResult = task.await {
+ *         val progressChannel = task.spChannel()
+ *         // do progress showing with progressChannel
+ *     }
+ * }
+ * ```
  */
-suspend fun DownloadTask.await(): DownloadResult = suspendCancellableCoroutine { cont ->
-    val listener2 = createListener2({
-        cont.cancelDownloadOnCancellation(this)
-    }) { _, cause, realCause ->
-        if (realCause != null) {
-            cont.resumeWithException(realCause)
-        } else {
-            cont.resume(DownloadResult(cause))
+suspend fun DownloadTask.await(block: () -> Unit = {}): DownloadResult =
+    suspendCancellableCoroutine { cont ->
+        val listener2 = createListener2({
+            cont.cancelDownloadOnCancellation(this)
+        }) { _, cause, realCause ->
+            if (realCause != null) {
+                cont.resumeWithException(realCause)
+            } else {
+                cont.resume(DownloadResult(cause))
+            }
         }
+        enqueue(listener2)
+        block()
     }
-    enqueue(listener2)
-}

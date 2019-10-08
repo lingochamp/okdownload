@@ -206,13 +206,15 @@ class DownloadTaskExtensionTest {
 
     @Test
     fun `DownloadTask await success`() {
+        val spiedBlock: () -> Unit = spyk({})
         every { mockTask.enqueue(any()) } answers {
             val listener = it.invocation.args[0] as DownloadListener
             listener.taskEnd(mockTask, EndCause.COMPLETED, null)
         }
         runBlocking {
-            val result = mockTask.await()
+            val result = mockTask.await(spiedBlock)
             assert(result.becauseOfCompleted())
+            verify { spiedBlock.invoke() }
         }
 
         every { mockTask.enqueue(any()) } answers {
