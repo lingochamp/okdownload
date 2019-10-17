@@ -17,11 +17,24 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
     }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 }
 
 dependencies {
     testImplementation dep.junit
+    testImplementation dep.mockk
+    testImplementation dep.assertj
+    testImplementation project(':okdownload')
+
     implementation dep.kotlin
+    implementation dep.kotlinxCoroutines
     compileOnly project(':okdownload')
 }
 
+apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
+if (hasProperty("isCI")) {
+    apply from: rootProject.file('gradle/codecov.gradle')
+}

@@ -3,11 +3,11 @@ ext {
     buildToolsVersion = '28.0.3'
     minSdkVersion = 14
     targetSdkVersion = 28
-    sourceCompatibilityVersion = JavaVersion.VERSION_1_7
-    targetCompatibilityVersion = JavaVersion.VERSION_1_7
-    kotlin_version = '1.2.51'
+    sourceCompatibilityVersion = JavaVersion.VERSION_1_8
+    targetCompatibilityVersion = JavaVersion.VERSION_1_8
+    kotlin_version = '1.3.50'
     anko_version = '0.10.1'
-    coroutines_version = '0.18'
+    coroutines_version = '1.3.1'
     supportLibrariesVersion = '28.0.0'
 
     dep = [
@@ -19,10 +19,11 @@ ext {
             robolectric                 : 'org.robolectric:robolectric:3.3.2',
             assertj                     : 'org.assertj:assertj-core:2.8.0',
             mockito                     : 'org.mockito:mockito-core:2.10.0',
+            mockk                       : 'io.mockk:mockk:1.9.3',
 
-            kotlin                      : "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version",
-            kotlinPlugin                : "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version",
+            kotlin                      : "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
             kotlinxCoroutines           : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version",
+            kotlinxCoroutineAndroid     : "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version",
 
             // anko commons
             ankoSdk                     : "org.jetbrains.anko:anko-sdk25:$anko_version",

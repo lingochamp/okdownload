@@ -14,278 +14,232 @@
  * limitations under the License.
  */
 
-package com.liulishuo.okdownload.sample;
+package com.liulishuo.okdownload.sample
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.os.SystemClock;
-import android.support.annotation.IdRes;
-import android.support.annotation.NonNull;
-import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.TextView;
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.os.Bundle
+import android.os.SystemClock
+import android.support.annotation.IdRes
+import android.util.Log
+import android.view.View
+import android.widget.ProgressBar
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.TextView
+import com.liulishuo.okdownload.DownloadContext
+import com.liulishuo.okdownload.DownloadTask
+import com.liulishuo.okdownload.SpeedCalculator
+import com.liulishuo.okdownload.kotlin.listener.createDownloadContextListener
+import com.liulishuo.okdownload.kotlin.listener.createListener1
+import com.liulishuo.okdownload.sample.base.BaseSampleActivity
+import com.liulishuo.okdownload.sample.util.DemoUtil
+import com.liulishuo.okdownload.sample.util.ProgressUtil
+import java.io.File
 
-import com.liulishuo.okdownload.DownloadContext;
-import com.liulishuo.okdownload.DownloadListener;
-import com.liulishuo.okdownload.DownloadContextListener;
-import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.SpeedCalculator;
-import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause;
-import com.liulishuo.okdownload.core.listener.DownloadListener1;
-import com.liulishuo.okdownload.core.listener.assist.Listener1Assist;
-import com.liulishuo.okdownload.sample.base.BaseSampleActivity;
-import com.liulishuo.okdownload.sample.util.DemoUtil;
-import com.liulishuo.okdownload.sample.util.ProgressUtil;
+class BunchActivity : BaseSampleActivity() {
 
-import org.jetbrains.annotations.Nullable;
+    private var startOrCancelTv: TextView? = null
+    private var startOrCancelView: View? = null
+    private var deleteContainerView: View? = null
+    private var serialRb: RadioButton? = null
+    private var radioGroup: RadioGroup? = null
+    private var bunchInfoTv: TextView? = null
+    private var bunchProgressBar: ProgressBar? = null
+    private lateinit var taskViewsArray: Array<TaskViews>
 
-import java.io.File;
+    private var totalCount: Int = 0
+    private var currentCount: Int = 0
+    private var speedCalculator: SpeedCalculator? = null
 
-@SuppressWarnings("LineLength")
-public class BunchActivity extends BaseSampleActivity {
+    private lateinit var bunchDir: File
 
-    private static final int INDEX_TAG = 1;
-    private static final int CURRENT_PROGRESS = 2;
+    private var downloadContext: DownloadContext? = null
 
-    private TextView startOrCancelTv;
-    private View startOrCancelView;
-    private View deleteContainerView;
-    private RadioButton serialRb;
-    private RadioGroup radioGroup;
+    override fun titleRes(): Int = R.string.bunch_download_title
 
-    private TextView bunchInfoTv;
-    private ProgressBar bunchProgressBar;
-    private TaskViews[] taskViewsArray;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_bunch)
 
-    private int totalCount;
-    private int currentCount;
-    private SpeedCalculator speedCalculator;
+        initViews()
 
-    private File bunchDir;
+        bunchDir = File(DemoUtil.getParentFile(this), "bunch")
 
-    private DownloadContext downloadContext;
-    private DownloadListener listener;
-
-
-    @Override public int titleRes() {
-        return R.string.bunch_download_title;
+        initAction()
     }
 
-    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bunch);
+    private fun initViews() {
+        startOrCancelTv = findViewById(R.id.startOrCancelTv)
+        startOrCancelView = findViewById(R.id.startOrCancelView)
 
-        initViews();
+        deleteContainerView = findViewById(R.id.deleteActionView)
 
-        bunchDir = new File(DemoUtil.getParentFile(this), "bunch");
+        radioGroup = findViewById(R.id.radioGroup)
+        serialRb = findViewById(R.id.serialRb)
 
-        initListener();
-        initAction();
+        bunchInfoTv = findViewById(R.id.bunch_info_tv)
+        bunchProgressBar = findViewById(R.id.progressBar)
+        taskViewsArray = arrayOf(
+            TaskViews(this, R.id.pb1_info_tv, R.id.progressBar1),
+            TaskViews(this, R.id.pb2_info_tv, R.id.progressBar2),
+            TaskViews(this, R.id.pb3_info_tv, R.id.progressBar3),
+            TaskViews(this, R.id.pb4_info_tv, R.id.progressBar4),
+            TaskViews(this, R.id.pb5_info_tv, R.id.progressBar5)
+        )
     }
 
-    private void initViews() {
-        startOrCancelTv = findViewById(R.id.startOrCancelTv);
-        startOrCancelView = findViewById(R.id.startOrCancelView);
-
-        deleteContainerView = findViewById(R.id.deleteActionView);
-
-        radioGroup = findViewById(R.id.radioGroup);
-        serialRb = findViewById(R.id.serialRb);
-
-        bunchInfoTv = findViewById(R.id.bunch_info_tv);
-        bunchProgressBar = findViewById(R.id.progressBar);
-        taskViewsArray = new TaskViews[5];
-        taskViewsArray[0] = new TaskViews(this, R.id.pb1_info_tv, R.id.progressBar1);
-        taskViewsArray[1] = new TaskViews(this, R.id.pb2_info_tv, R.id.progressBar2);
-        taskViewsArray[2] = new TaskViews(this, R.id.pb3_info_tv, R.id.progressBar3);
-        taskViewsArray[3] = new TaskViews(this, R.id.pb4_info_tv, R.id.progressBar4);
-        taskViewsArray[4] = new TaskViews(this, R.id.pb5_info_tv, R.id.progressBar5);
-    }
-
-    private void initListener() {
-        listener = new DownloadListener1() {
-
-            @Override
-            public void taskStart(@NonNull DownloadTask task,
-                                  @NonNull Listener1Assist.Listener1Model model) {
-                fillPbInfo(task, "start");
-            }
-
-            @Override
-            public void retry(@NonNull DownloadTask task, @NonNull ResumeFailedCause cause) {
-                fillPbInfo(task, "retry");
-            }
-
-            @Override
-            public void connected(@NonNull DownloadTask task, int blockCount, long currentOffset,
-                                  long totalLength) {
-                fillPbInfo(task, "connected");
-            }
-
-            @Override
-            public void progress(@NonNull DownloadTask task, long currentOffset, long totalLength) {
-                calcSpeed(task, currentOffset);
-
-                fillPbInfo(task, "progress");
-                // progress
-                final int id = task.getId();
-                task.addTag(CURRENT_PROGRESS, currentOffset);
-                final TaskViews taskViews = findValidTaskViewsWithId(id);
-                if (taskViews == null) return;
-                final ProgressBar progressBar = taskViews.progressBar;
-                if (progressBar == null) return;
-                ProgressUtil.calcProgressToViewAndMark(progressBar, currentOffset, totalLength);
-            }
-
-            @Override public void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
-                                          @android.support.annotation.Nullable Exception realCause,
-                                          @NonNull Listener1Assist.Listener1Model model) {
-                fillPbInfo(task, "end " + cause);
-
-                currentCount += 1;
-                updateBunchInfoAndProgress();
-
-                releaseTaskViewsWithId(task.getId());
-            }
-        };
-    }
-
-    private void initAction() {
-        startOrCancelView.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(final View v) {
-                if (v.getTag() == null) {
-                    // start
-                    final long startTime = SystemClock.uptimeMillis();
-                    v.setTag(new Object());
-                    final DownloadContext.Builder builder = new DownloadContext.QueueSet()
-                            .setParentPathFile(bunchDir)
-                            .setMinIntervalMillisCallbackProcess(300)
-                            .commit();
-                    Log.d("BunchActivity", "before bind bunch task consume "
-                            + (SystemClock.uptimeMillis() - startTime) + "ms");
-                    for (int i = 0; i < urls.length; i++) {
-                        builder.bind(urls[i]).addTag(INDEX_TAG, i);
-                    }
-
-                    totalCount = urls.length;
-                    currentCount = 0;
-
-                    Log.d("BunchActivity", "before build bunch task consume "
-                            + (SystemClock.uptimeMillis() - startTime) + "ms");
-                    downloadContext = builder.setListener(new DownloadContextListener() {
-                        @Override public void taskEnd(@NonNull DownloadContext context,
-                                                      @NonNull DownloadTask task,
-                                                      @NonNull EndCause cause,
-                                                      @Nullable Exception realCause,
-                                                      int remainCount) {
-                        }
-
-                        @Override public void queueEnd(@NonNull DownloadContext context) {
-                            v.setTag(null);
-                            radioGroup.setEnabled(true);
-                            deleteContainerView.setEnabled(true);
-                            startOrCancelTv.setText(R.string.start);
-                        }
-                    }).build();
-
-                    speedCalculator = new SpeedCalculator();
-                    Log.d("BunchActivity", "before bunch task consume "
-                            + (SystemClock.uptimeMillis() - startTime) + "ms");
-                    downloadContext.start(listener, serialRb.isChecked());
-                    deleteContainerView.setEnabled(false);
-                    radioGroup.setEnabled(false);
-                    startOrCancelTv.setText(R.string.cancel);
-                    Log.d("BunchActivity",
-                            "start bunch task consume " + (SystemClock
-                                    .uptimeMillis() - startTime) + "ms");
-                } else {
-                    // stop
-                    downloadContext.stop();
+    private fun initAction() {
+        startOrCancelView?.setOnClickListener { v ->
+            if (v.tag == null) {
+                // start
+                val startTime = SystemClock.uptimeMillis()
+                v.tag = Any()
+                val builder = DownloadContext.QueueSet()
+                    .setParentPathFile(bunchDir)
+                    .setMinIntervalMillisCallbackProcess(300)
+                    .commit()
+                Log.d(
+                    "BunchActivity",
+                    "before bind bunch task consume ${SystemClock.uptimeMillis() - startTime} ms"
+                )
+                for (i in urls.indices) {
+                    builder.bind(urls[i]).addTag(INDEX_TAG, i)
                 }
-            }
-        });
 
-        deleteContainerView.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                String[] children = bunchDir.list();
-                if (children != null) {
-                    for (String child : children) {
-                        if (!new File(bunchDir, child).delete()) {
-                            Log.w("BunchActivity", "delete " + child + " failed!");
+                totalCount = urls.size
+                currentCount = 0
+
+                downloadContext = builder.setListener(createDownloadContextListener {
+                    v.tag = null
+                    radioGroup!!.isEnabled = true
+                    deleteContainerView!!.isEnabled = true
+                    startOrCancelTv!!.setText(R.string.start)
+                }).build()
+
+                speedCalculator = SpeedCalculator()
+                Log.d(
+                    "BunchActivity",
+                    "before bunch task consume ${SystemClock.uptimeMillis() - startTime} ms"
+                )
+                downloadContext?.start(
+                    createListener1(
+                        taskStart = { task, _ -> fillPbInfo(task, "start") },
+                        retry = { task, _ -> fillPbInfo(task, "retry") },
+                        connected = { task, _, _, _ -> fillPbInfo(task, "connected") },
+                        progress = { task, currentOffset, totalLength ->
+                            calcSpeed(task, currentOffset)
+                            fillPbInfo(task, "progress")
+                            // progress
+                            val id = task.id
+                            task.addTag(CURRENT_PROGRESS, currentOffset)
+                            val taskViews = findValidTaskViewsWithId(id)
+                            taskViews?.progressBar?.let {
+                                ProgressUtil.calcProgressToViewAndMark(
+                                    it,
+                                    currentOffset,
+                                    totalLength
+                                )
+                            }
                         }
+                    ) { task, cause, _, _ ->
+                        fillPbInfo(task, "end $cause")
+
+                        currentCount += 1
+                        updateBunchInfoAndProgress()
+
+                        releaseTaskViewsWithId(task.id)
+                    },
+                    serialRb?.isChecked == true
+                )
+                deleteContainerView?.isEnabled = false
+                radioGroup?.isEnabled = false
+                startOrCancelTv?.setText(R.string.cancel)
+                Log.d(
+                    "BunchActivity",
+                    "start bunch task consume ${SystemClock.uptimeMillis() - startTime} ms"
+                )
+            } else {
+                // stop
+                downloadContext?.stop()
+            }
+        }
+
+        deleteContainerView?.setOnClickListener {
+            val children = bunchDir.list()
+            if (children != null) {
+                for (child in children) {
+                    if (!File(bunchDir, child).delete()) {
+                        Log.w("BunchActivity", "delete $child failed!")
                     }
                 }
-
-                if (!bunchDir.delete()) {
-                    Log.w("BunchActivity", "delete " + bunchDir + " failed!");
-                }
             }
-        });
-    }
 
-    private void fillPbInfo(DownloadTask task, String info) {
-        final int index = (int) task.getTag(INDEX_TAG);
-        final TaskViews taskViews = findValidTaskViewsWithId(task.getId());
-        if (taskViews == null) return;
-        taskViews.infoTv.setText("Task: " + index + " [" + info + "]");
-    }
-
-    private void updateBunchInfoAndProgress() {
-        bunchInfoTv.setText(
-                "Total Progress: " + currentCount + "/" + totalCount + "(" + speedCalculator
-                        .speed() + ")");
-        bunchProgressBar.setMax(totalCount);
-        bunchProgressBar.setProgress(currentCount);
-    }
-
-    private void calcSpeed(DownloadTask task, long currentOffset) {
-        final Object progressValue = task.getTag(CURRENT_PROGRESS);
-        final long preOffset = progressValue == null ? 0 : (long) progressValue;
-        final long increase = currentOffset - preOffset;
-        speedCalculator.downloading(increase);
-
-        updateBunchInfoAndProgress();
-    }
-
-
-    private static class TaskViews {
-        final ProgressBar progressBar;
-        final TextView infoTv;
-
-        int id = 0;
-
-        TaskViews(Activity activity, @IdRes int tvId, @IdRes int pbId) {
-            progressBar = activity.findViewById(pbId);
-            infoTv = activity.findViewById(tvId);
+            if (!bunchDir.delete()) {
+                Log.w("BunchActivity", "delete $bunchDir failed!")
+            }
         }
     }
 
-    TaskViews findValidTaskViewsWithId(int taskId) {
-        for (TaskViews taskViews : taskViewsArray) {
-            if (taskViews.id == taskId) return taskViews;
+    @SuppressLint("SetTextI18n")
+    private fun fillPbInfo(task: DownloadTask, info: String) {
+        val index = task.getTag(INDEX_TAG) as Int
+        val taskViews = findValidTaskViewsWithId(task.id) ?: return
+        taskViews.infoTv.text = "Task: $index [$info]"
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateBunchInfoAndProgress() {
+        bunchInfoTv?.text =
+            "Total Progress: $currentCount/$totalCount(" + speedCalculator!!.speed() + ")"
+        bunchProgressBar?.max = totalCount
+        bunchProgressBar?.progress = currentCount
+    }
+
+    private fun calcSpeed(task: DownloadTask, currentOffset: Long) {
+        val progressValue = task.getTag(CURRENT_PROGRESS)
+        val preOffset = if (progressValue == null) 0 else progressValue as Long
+        val increase = currentOffset - preOffset
+        speedCalculator!!.downloading(increase)
+
+        updateBunchInfoAndProgress()
+    }
+
+    internal class TaskViews internal constructor(
+        activity: Activity,
+        @IdRes tvId: Int,
+        @IdRes pbId: Int
+    ) {
+        internal val progressBar: ProgressBar = activity.findViewById(pbId)
+        internal val infoTv: TextView = activity.findViewById(tvId)
+        internal var id = 0
+    }
+
+    private fun findValidTaskViewsWithId(taskId: Int): TaskViews? {
+        for (taskViews in taskViewsArray) {
+            if (taskViews.id == taskId) return taskViews
         }
 
-        for (TaskViews taskViews : taskViewsArray) {
+        for (taskViews in taskViewsArray) {
             if (taskViews.id == 0) {
-                taskViews.id = taskId;
-                return taskViews;
+                taskViews.id = taskId
+                return taskViews
             }
         }
 
-        return null;
+        return null
     }
 
-    void releaseTaskViewsWithId(int taskId) {
-        for (TaskViews taskViews : taskViewsArray) {
-            if (taskViews.id == taskId) taskViews.id = 0;
+    private fun releaseTaskViewsWithId(taskId: Int) {
+        for (taskViews in taskViewsArray) {
+            if (taskViews.id == taskId) taskViews.id = 0
         }
     }
 
-    private String[] urls = {
+    companion object {
+        private const val INDEX_TAG = 1
+        private const val CURRENT_PROGRESS = 2
+        private val urls = arrayOf(
             // 随机小资源一般不超过10
             "http://girlatlas.b0.upaiyun.com/35/20150106/19152b4c633b321f4479.jpg!mid",
             "http://cdn-l.llsapp.com/connett/25183b40-22f2-0133-6e99-029df5130f9e",
@@ -334,7 +288,6 @@ public class BunchActivity extends BaseSampleActivity {
             "http://cdn.llsapp.com/forum/image/2f003721ddb74ea1a84b2a6e603d6a44_1435046970863.jpg",
             "http://cdn.llsapp.com/crm_test_1447219868528.jpg",
             "http://cdn.llsapp.com/crm_test_1438658295447.jpg",
-
 
             // ---------------
             "http://imgsrc.baidu.com/forum/w%3D580/sign=2d51fcce8ad4b31cf03c94b3b7d7276f/48084b36acaf2eddc470ae648c1001e9380193bf.jpg",
@@ -1176,7 +1129,7 @@ public class BunchActivity extends BaseSampleActivity {
             "http://imgsrc.baidu.com/forum/w%3D580/sign=6e97343091529822053339cbe7cb7b3b/77550923dd54564ebaececceb2de9c82d0584fb8.jpg",
             "http://imgsrc.baidu.com/forum/w%3D580/sign=7fab4f4c4610b912bfc1f6f6f3fcfcb5/b412632762d0f70323359d2b09fa513d2797c547.jpg",
             "http://imgsrc.baidu.com/forum/w%3D580/sign=de0bf3dc9c16fdfad86cc6e6848d8cea/9a0e4bfbfbedab647aab4537f636afc378311e68.jpg",
-            "http://imgsrc.baidu.com/forum/w%3D580/sign=d2aece19b58f8c54e3d3c5270a2b2dee/3d4e78f0f736afc304ce3792b219ebc4b6451203.jpg",
-    };
-
+            "http://imgsrc.baidu.com/forum/w%3D580/sign=d2aece19b58f8c54e3d3c5270a2b2dee/3d4e78f0f736afc304ce3792b219ebc4b6451203.jpg"
+        )
+    }
 }
