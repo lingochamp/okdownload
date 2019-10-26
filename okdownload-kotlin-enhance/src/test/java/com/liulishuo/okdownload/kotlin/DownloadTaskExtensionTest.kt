@@ -24,7 +24,6 @@ import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo
 import com.liulishuo.okdownload.core.breakpoint.BreakpointStore
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.dispatcher.DownloadDispatcher
-import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.kotlin.listener.createListener
 import com.liulishuo.okdownload.kotlin.listener.onTaskEnd
 import com.liulishuo.okdownload.kotlin.listener.onTaskStart
@@ -43,9 +42,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.lang.Exception
 import java.lang.IllegalStateException
 
+@RunWith(RobolectricTestRunner::class)
 class DownloadTaskExtensionTest {
 
     @MockK
@@ -159,26 +161,6 @@ class DownloadTaskExtensionTest {
     }
 
     @Test
-    fun `get progress channel without previous listener`() {
-        val mockBreakpointStore = mockk<BreakpointStore>()
-        every { mockBreakpointStore.findOrCreateId(any()) } returns 0
-        every { mockOkDownload.breakpointStore() } returns mockBreakpointStore
-        val mockUri = mockk<Uri>()
-        every { mockUri.scheme } returns "test"
-        every { mockUri.path } returns "path"
-
-        val spiedTask = spyk(DownloadTask.Builder("url", mockUri).build())
-
-        val spChannel = spiedTask.spChannel()
-        verify { spiedTask.replaceListener(any()) }
-
-        (spiedTask.listener as DownloadListener1).progress(spiedTask, 200, 400)
-        val p = spChannel.poll()
-        assert(p != null)
-        assert(p!!.progress() == 0.5f)
-    }
-
-    @Test
     fun `get progress channel with previous listener`() {
         val mockBreakpointStore = mockk<BreakpointStore>()
         val mockDownloadDispatcher = mockk<DownloadDispatcher>()
@@ -202,6 +184,9 @@ class DownloadTaskExtensionTest {
         spiedTask.listener.fetchProgress(mockTask, 0, 200)
         assert(spChannel.poll()?.currentOffset == 200L)
         spiedTask.listener.taskEnd(mockTask, mockk(), mockk())
+        // don't offer any progress after channel is closed
+        spiedTask.listener.fetchProgress(mockTask, 0, 300)
+        assert(spChannel.poll() == null)
     }
 
     @Test

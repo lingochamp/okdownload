@@ -61,6 +61,7 @@ import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -346,11 +347,16 @@ fun DownloadTask.enqueue4WithSpeed(
 fun DownloadTask.spChannel(): Channel<DownloadProgress> {
     val channel = Channel<DownloadProgress>(Channel.CONFLATED)
     val oldListener = listener
+    val channelClosed = AtomicBoolean(false)
     val progressListener = createListener1(
         progress = { task, currentOffset, totalLength ->
+            if (channelClosed.get()) return@createListener1
             channel.offer(DownloadProgress(task, currentOffset, totalLength))
         }
-    ) { _, _, _, _ -> channel.close() }.also { it.setAlwaysRecoverAssistModelIfNotSet(true) }
+    ) { _, _, _, _ ->
+        channelClosed.set(true)
+        channel.close()
+    }.also { it.setAlwaysRecoverAssistModelIfNotSet(true) }
     val replaceListener = createReplaceListener(oldListener, progressListener)
     replaceListener(replaceListener)
     return channel

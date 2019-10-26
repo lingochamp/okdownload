@@ -28,6 +28,7 @@ dependencies {
     testImplementation dep.mockk
     testImplementation dep.assertj
     testImplementation project(':okdownload')
+    testImplementation dep.robolectric
 
     implementation dep.kotlin
     implementation dep.kotlinxCoroutines
