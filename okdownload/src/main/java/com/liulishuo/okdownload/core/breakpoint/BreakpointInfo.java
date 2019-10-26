@@ -124,12 +124,13 @@ public class BreakpointInfo {
 
     public long getTotalOffset() {
         long offset = 0;
-        ArrayList<BlockInfo> list = (ArrayList<BlockInfo>) ((ArrayList) blockInfoList).clone();
-
-        final int count = list.size();
-        for (int i = 0; i < count; i++) {
-            final BlockInfo info = list.get(i);
-            offset += info.getCurrentOffset();
+        final Object[] blocks = blockInfoList.toArray();
+        if (blocks != null) {
+            for (Object block : blocks) {
+                if (block instanceof BlockInfo) {
+                    offset += ((BlockInfo) block).getCurrentOffset();
+                }
+            }
         }
         return offset;
     }
@@ -138,9 +139,13 @@ public class BreakpointInfo {
         if (isChunked()) return getTotalOffset();
 
         long length = 0;
-        ArrayList<BlockInfo> list = (ArrayList<BlockInfo>) ((ArrayList) blockInfoList).clone();
-        for (BlockInfo info : list) {
-            length += info.getContentLength();
+        final Object[] blocks = blockInfoList.toArray();
+        if (blocks != null) {
+            for (Object block : blocks) {
+                if (block instanceof BlockInfo) {
+                    length += ((BlockInfo) block).getContentLength();
+                }
+            }
         }
 
         return length;
