@@ -56,13 +56,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     static final int MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED = 1;
     public final DownloadTask task;
     public final boolean asyncExecuted;
-    @NonNull private final ArrayList<DownloadChain> blockChainList;
+    @NonNull final ArrayList<DownloadChain> blockChainList;
 
     @Nullable volatile DownloadCache cache;
     volatile boolean canceled;
     volatile boolean finishing;
 
-    private volatile Thread currentThread;
+    volatile Thread currentThread;
     @NonNull private final DownloadStore store;
 
     private DownloadCall(DownloadTask task, boolean asyncExecuted, @NonNull DownloadStore store) {
@@ -98,16 +98,26 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         final DownloadCache cache = this.cache;
         if (cache != null) cache.setUserCanceled();
 
-        final List<DownloadChain> chains = (List<DownloadChain>) blockChainList.clone();
-        for (DownloadChain chain : chains) {
-            chain.cancel();
-        }
-
-        if (chains.isEmpty() && currentThread != null) {
-            Util.d(TAG,
-                    "interrupt thread with cancel operation because of chains are not running "
-                            + task.getId());
-            currentThread.interrupt();
+        // ArrayList#clone is not a thread safe operation,
+        // so chains#size may > chains#elementData.length and this will cause
+        // ConcurrentModificationException during iterate the ArrayList(ArrayList#next).
+        // This is a reproduce example:
+        // https://repl.it/talk/share/ConcurrentModificationException/18566.
+        // So don't use clone anymore.
+        final Object[] chains = blockChainList.toArray();
+        if (chains == null || chains.length == 0) {
+            if (currentThread != null) {
+                Util.d(TAG,
+                        "interrupt thread with cancel operation because of chains are not running "
+                                + task.getId());
+                currentThread.interrupt();
+            }
+        } else {
+            for (Object chain : chains) {
+                if (chain instanceof DownloadChain) {
+                    ((DownloadChain) chain).cancel();
+                }
+            }
         }
 
         if (cache != null) cache.getOutputStream().cancelAsync();

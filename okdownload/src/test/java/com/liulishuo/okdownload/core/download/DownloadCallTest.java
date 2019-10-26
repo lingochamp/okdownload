@@ -80,6 +80,7 @@ public class DownloadCallTest {
     private DownloadStore store;
     @Mock
     private FileLock fileLock;
+    private ArrayList<DownloadChain> blockChainList;
 
     @BeforeClass
     public static void setupClass() throws IOException {
@@ -92,7 +93,8 @@ public class DownloadCallTest {
         when(task.getUri()).thenReturn(mock(Uri.class));
         when(task.getFile()).thenReturn(mock(File.class));
         when(task.getListener()).thenReturn(mock(DownloadListener.class));
-        call = spy(DownloadCall.create(task, false, store));
+        blockChainList = spy(new ArrayList<DownloadChain>());
+        call = spy(new DownloadCall(task, false, blockChainList, store));
 
         final Future mockFuture = mock(Future.class);
         doReturn(mockFuture).when(call).submitChain(any(DownloadChain.class));
@@ -451,6 +453,30 @@ public class DownloadCallTest {
         assertThat(call.cancel()).isFalse();
         final DownloadDispatcher dispatcher = OkDownload.with().downloadDispatcher();
         verify(dispatcher, never()).flyingCanceled(eq(call));
+    }
+
+    @Test
+    public void cancel_chains() {
+        final DownloadChain mockChain = mock(DownloadChain.class);
+        call.blockChainList.add(mockChain);
+        call.blockChainList.add(null);
+        assertThat(call.cancel()).isTrue();
+        verify(mockChain).cancel();
+        call.blockChainList.clear();
+    }
+
+    @Test
+    public void cancel_current_thread_interrupt() {
+        final Thread mockThread = mock(Thread.class);
+        call.currentThread = mockThread;
+        call.cancel();
+        verify(mockThread).interrupt();
+
+        call.currentThread = null;
+        call.canceled = false;
+        call.finishing = false;
+        doReturn(null).when(blockChainList).toArray();
+        assertThat(call.cancel()).isTrue();
     }
 
     @Test
