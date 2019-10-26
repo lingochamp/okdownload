@@ -45,3 +45,6 @@
         public com.liulishuo.okdownload.core.breakpoint.BreakpointStoreOnSQLite(android.content.Context);
 }
 # ------- end com.liulishuo.okdownload:sqlite proguard rules ----
+
+# don't warn SuppressFBWarnings annotation used in com.liulishuo.okdownload.DownloadContex.java
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
