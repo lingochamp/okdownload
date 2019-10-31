@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.dokka'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -33,6 +34,16 @@ dependencies {
     implementation dep.kotlin
     implementation dep.kotlinxCoroutines
     compileOnly project(':okdownload')
+}
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/docs/javadoc"
+}
+
+tasks.withType(Javadoc).all {
+    excludes = ['**/*.kt']
+    dependsOn dokka
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
