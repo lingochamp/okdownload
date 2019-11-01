@@ -81,6 +81,9 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
         } else {
             connection = url.openConnection();
         }
+        if (connection instanceof HttpURLConnection) {
+            ((HttpURLConnection) connection).setInstanceFollowRedirects(false);
+        }
 
         if (configuration != null) {
             if (configuration.readTimeout != null) {
