@@ -1,3 +1,16 @@
+### 1.0.6
+
+_2019-10-30_
+
+#### Feature
+
+- Add kotlin enhance the library to make OkDownload more concise.
+
+#### Bug Fix
+
+- Fix cannot read instance length with range 0-0 and response code 200. closes #256
+- Fix `ConcurrentModificationException` in `DownloadCall`. closes #304
+
 ### 1.0.5
 
 _2018-11-05_
