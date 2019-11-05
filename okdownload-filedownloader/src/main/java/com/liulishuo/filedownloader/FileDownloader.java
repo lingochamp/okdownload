@@ -74,15 +74,9 @@ public class FileDownloader {
         }
         if (okHttpClient != null) {
             builder = new OkDownload.Builder(context);
-            builder.connectionFactory(new DownloadConnection.Factory() {
-                @Override
-                public DownloadConnection create(String url) throws IOException {
-                    Util.d(TAG, "create a okhttp connection with " + url);
-                    return new DownloadOkHttp3Connection.Factory()
-                            .setBuilder(okHttpClient.newBuilder())
-                            .create(url);
-                }
-            });
+            builder.connectionFactory(url -> new DownloadOkHttp3Connection.Factory()
+                    .setBuilder(okHttpClient.newBuilder())
+                    .create(url));
         }
         final DownloadMonitor downloadMonitor = FileDownloadMonitor.getDownloadMonitor();
         if (downloadMonitor != null) {
