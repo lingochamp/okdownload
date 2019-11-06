@@ -49,10 +49,10 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private int autoRetryTimes;
     private int callbackProgressCount = DEFAULT_CALLBACK_PROGRESS_COUNT;
     StatusAssist statusAssist = new StatusAssist();
-    ProgressAssist progressAssist;
-    RetryAssist retryAssist;
-    volatile int attachKey;
-    volatile boolean isAddedToList;
+    private ProgressAssist progressAssist;
+    private RetryAssist retryAssist;
+    private volatile int attachKey;
+    private volatile boolean isAddedToList;
 
     public DownloadTaskAdapter(String url) {
         this.builder = new Builder();
@@ -379,7 +379,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getSpeed() {
-        return 0;
+        return (int) progressAssist.getSpeed();
     }
 
     @Override

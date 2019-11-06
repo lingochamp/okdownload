@@ -18,6 +18,7 @@ package com.liulishuo.filedownloader.progress;
 
 import com.liulishuo.filedownloader.CompatListenerAssist;
 import com.liulishuo.filedownloader.DownloadTaskAdapter;
+import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.Util;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,11 +33,17 @@ public class ProgressAssist {
     private final int maxProgressCount;
     final AtomicLong sofarBytes;
     final AtomicLong incrementBytes;
+    final SpeedCalculator speedCalculator;
 
     long callbackMinIntervalBytes = CALLBACK_SAFE_MIN_INTERVAL_BYTES;
 
     public ProgressAssist(int maxProgressCount) {
+        this(maxProgressCount, new SpeedCalculator());
+    }
+
+    public ProgressAssist(int maxProgressCount, SpeedCalculator speedCalculator) {
         this.maxProgressCount = maxProgressCount;
+        this.speedCalculator = speedCalculator;
         sofarBytes = new AtomicLong(0);
         incrementBytes = new AtomicLong(0);
     }
@@ -58,6 +65,7 @@ public class ProgressAssist {
 
     public void onProgress(DownloadTaskAdapter downloadTaskAdapter, long increaseBytes,
                            CompatListenerAssist.CompatListenerAssistCallback callback) {
+        speedCalculator.downloading(increaseBytes);
         final long sofar = sofarBytes.addAndGet(increaseBytes);
         if (canCallbackProgress(increaseBytes)) {
             callback.progress(downloadTaskAdapter,
@@ -84,10 +92,15 @@ public class ProgressAssist {
                 + " increment: " + incrementBytes.get());
         sofarBytes.set(0);
         incrementBytes.set(0);
+        speedCalculator.flush();
     }
 
     public void initSofarBytes(long soFarBytes) {
         Util.d(TAG, "init sofar: " + soFarBytes);
         sofarBytes.set(soFarBytes);
+    }
+
+    public long getSpeed() {
+        return speedCalculator.getBytesPerSecondAndFlush() / 1024;
     }
 }

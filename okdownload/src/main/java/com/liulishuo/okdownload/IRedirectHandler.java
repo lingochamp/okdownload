@@ -37,6 +37,7 @@ public interface IRedirectHandler {
      * @param headerProperties   request headers of the connection, these headers should be added in
      *                           the new connection during handle redirect
      */
+    // FIXME: The http method name should be a parameter.
     void handleRedirect(
             DownloadConnection originalConnection,
             DownloadConnection.Connected originalConnected,
