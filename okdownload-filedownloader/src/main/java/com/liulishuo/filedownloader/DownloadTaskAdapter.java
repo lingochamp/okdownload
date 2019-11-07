@@ -18,6 +18,7 @@ package com.liulishuo.filedownloader;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.SparseArray;
 
 import com.liulishuo.filedownloader.progress.ProgressAssist;
 import com.liulishuo.filedownloader.retry.RetryAssist;
@@ -54,6 +55,8 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private volatile int attachKey;
     private volatile boolean isAddedToList;
     private final Object insureDownloadTaskAssembledLock = new Object();
+    private Object tag;
+    private SparseArray<Object> tagWithKey;
 
     public DownloadTaskAdapter(String url) {
         this.builder = new Builder();
@@ -127,17 +130,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public BaseDownloadTask setTag(Object tag) {
-        builder.tag = tag;
+        this.tag = tag;
         return this;
     }
 
     @Override
     public BaseDownloadTask setTag(int key, Object tag) {
-        if (key == KEY_TASK_ADAPTER) {
-            throw new IllegalArgumentException(key + " is used internally, please use another key");
+        if (tagWithKey == null) {
+            tagWithKey = new SparseArray<>();
         }
-        builder.keyOfTag = key;
-        builder.tagWithKey = tag;
+        tagWithKey.put(key, tag);
         return this;
     }
 
@@ -428,14 +430,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public Object getTag() {
-        insureAssembleDownloadTask();
-        return downloadTask.getTag();
+        return tag;
     }
 
     @Override
     public Object getTag(int key) {
-        insureAssembleDownloadTask();
-        return downloadTask.getTag(key);
+        if (tagWithKey == null) {
+            return null;
+        } else {
+            return tagWithKey.get(key);
+        }
     }
 
     @Override
@@ -569,9 +573,6 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         boolean pathAsDirectory;
         private int minIntervalMillisCallbackProgress
                 = DEFAULT_CALLBACK_PROGRESS_MIN_INTERVAL_MILLIS;
-        private Object tag;
-        private Integer keyOfTag;
-        private Object tagWithKey;
         private boolean forceReDownload;
         Map<String, String> headerMap = new HashMap<>();
         private boolean isWifiRequired;
@@ -594,10 +595,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
                 builder.addHeader(entry.getKey(), entry.getValue());
             }
             builder.setAutoCallbackToUIThread(autoCallbackToUIThread);
-            DownloadTask task = builder.build();
-            if (tag != null) task.setTag(tag);
-            if (keyOfTag != null) task.addTag(keyOfTag, tagWithKey);
-            return task;
+            return builder.build();
         }
     }
 
