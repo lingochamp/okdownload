@@ -41,7 +41,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private static final String TAG = "DownloadTaskAdapter";
     public static final int KEY_TASK_ADAPTER = Integer.MIN_VALUE;
 
-    private DownloadTask downloadTask;
+    DownloadTask downloadTask;
     Builder builder;
     private List<FinishListener> finishListeners = new ArrayList<>();
     FileDownloadListener listener;
@@ -53,6 +53,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private RetryAssist retryAssist;
     private volatile int attachKey;
     private volatile boolean isAddedToList;
+    private final Object insureDownloadTaskAssembledLock = new Object();
 
     public DownloadTaskAdapter(String url) {
         this.builder = new Builder();
@@ -71,7 +72,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         return compatListener;
     }
 
+    @NonNull
     public DownloadTask getDownloadTask() {
+        insureAssembleDownloadTask();
         return downloadTask;
     }
 
@@ -231,6 +234,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isRunning() {
+        insureAssembleDownloadTask();
         return OkDownload.with().downloadDispatcher().isRunning(downloadTask);
     }
 
@@ -241,13 +245,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int start() {
-        assembleDownloadTask();
+        insureAssembleDownloadTask();
         FileDownloadList.getImpl().addIndependentTask(this);
         downloadTask.enqueue(compatListener);
         return downloadTask.getId();
     }
 
-    public void assembleDownloadTask() {
+    public void insureAssembleDownloadTask() {
+        synchronized (insureDownloadTaskAssembledLock) {
+            if (downloadTask != null) return;
+        }
         downloadTask = builder.build();
         if (autoRetryTimes > 0) {
             retryAssist = new RetryAssist(autoRetryTimes);
@@ -274,7 +281,8 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getId() {
-        return downloadTask != null ? downloadTask.getId() : -1;
+        insureAssembleDownloadTask();
+        return downloadTask.getId();
     }
 
     @Override
@@ -284,6 +292,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public String getUrl() {
+        insureAssembleDownloadTask();
         return downloadTask.getUrl();
     }
 
@@ -294,6 +303,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getCallbackProgressMinInterval() {
+        insureAssembleDownloadTask();
         return downloadTask.getMinIntervalMillisCallbackProcess();
     }
 
@@ -309,11 +319,13 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public String getFilename() {
+        insureAssembleDownloadTask();
         return downloadTask.getFilename();
     }
 
     @Override
     public String getTargetFilePath() {
+        insureAssembleDownloadTask();
         File file = downloadTask.getFile();
         if (file != null) {
             return file.getPath();
@@ -333,6 +345,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     public long getSoFarBytesInLong() {
+        insureAssembleDownloadTask();
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalOffset();
@@ -360,6 +373,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     public long getTotalBytesInLong() {
+        insureAssembleDownloadTask();
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalLength();
@@ -374,6 +388,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public long getLargeFileTotalBytes() {
+        insureAssembleDownloadTask();
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalLength();
@@ -413,11 +428,13 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public Object getTag() {
+        insureAssembleDownloadTask();
         return downloadTask.getTag();
     }
 
     @Override
     public Object getTag(int key) {
+        insureAssembleDownloadTask();
         return downloadTask.getTag(key);
     }
 
@@ -449,6 +466,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isSyncCallback() {
+        insureAssembleDownloadTask();
         return !downloadTask.isAutoCallbackToUIThread();
     }
 
@@ -459,6 +477,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isWifiRequired() {
+        insureAssembleDownloadTask();
         return downloadTask.isWifiRequired();
     }
 

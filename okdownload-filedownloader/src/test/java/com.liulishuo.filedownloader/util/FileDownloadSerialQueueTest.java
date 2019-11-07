@@ -82,11 +82,11 @@ public class FileDownloadSerialQueueTest {
         doReturn(taskId).when(mockBaseTask).getId();
         doReturn(mockDownloadTask).when(mockBaseTask).getDownloadTask();
         doReturn(mockCompatListener).when(mockBaseTask).getCompatListener();
-        doNothing().when(mockBaseTask).assembleDownloadTask();
+        doNothing().when(mockBaseTask).insureAssembleDownloadTask();
 
         fileDownloadSerialQueue.enqueue(mockBaseTask);
 
-        verify(mockBaseTask).assembleDownloadTask();
+        verify(mockBaseTask).insureAssembleDownloadTask();
         verify(fileDownloadList).addIndependentTask(mockBaseTask);
         verify(listenerManager).addAutoRemoveListenersWhenTaskEnd(taskId);
         verify(listenerManager).attachListener(mockDownloadTask, mockCompatListener);

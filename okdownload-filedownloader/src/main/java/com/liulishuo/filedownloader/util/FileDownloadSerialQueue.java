@@ -56,7 +56,7 @@ public class FileDownloadSerialQueue {
      */
     public void enqueue(BaseDownloadTask task) {
         final DownloadTaskAdapter downloadTaskAdapter = (DownloadTaskAdapter) task;
-        downloadTaskAdapter.assembleDownloadTask();
+        downloadTaskAdapter.insureAssembleDownloadTask();
         FileDownloadList.getImpl().addIndependentTask(downloadTaskAdapter);
         serialQueue.enqueue(downloadTaskAdapter.getDownloadTask());
         listenerManager.addAutoRemoveListenersWhenTaskEnd(downloadTaskAdapter.getId());

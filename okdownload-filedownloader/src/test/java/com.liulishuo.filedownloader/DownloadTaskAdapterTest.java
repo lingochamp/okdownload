@@ -54,7 +54,7 @@ public class DownloadTaskAdapterTest {
                         .setAutoRetryTimes(4)
                         .setSyncCallback(true)
                         .setWifiRequired(true);
-        taskAdapter.assembleDownloadTask();
+        taskAdapter.insureAssembleDownloadTask();
 
         assertThat(taskAdapter.getPath()).isEqualTo("/path/p");
         assertThat(taskAdapter.getUrl()).isEqualTo("url");
@@ -73,7 +73,7 @@ public class DownloadTaskAdapterTest {
                 (DownloadTaskAdapter) FileDownloader.getImpl().create("url")
                         .setListener(mockListener)
                         .setPath("pp", true);
-        anotherTask.assembleDownloadTask();
+        anotherTask.insureAssembleDownloadTask();
 
         assertThat(anotherTask.isPathAsDirectory()).isTrue();
     }
@@ -84,7 +84,7 @@ public class DownloadTaskAdapterTest {
         final DownloadTaskAdapter taskAdapter = (DownloadTaskAdapter) FileDownloader.getImpl()
                 .create("url").setListener(mockListener);
         FileDownloadUtils.setDefaultSaveRootPath("/sdcard");
-        taskAdapter.assembleDownloadTask();
+        taskAdapter.insureAssembleDownloadTask();
 
         assertThat(taskAdapter.getPath())
                 .isEqualTo(FileDownloadUtils.getDefaultSaveFilePath("url"));
@@ -136,7 +136,7 @@ public class DownloadTaskAdapterTest {
                 .create("url").setPath("path");
         taskAdapter.setListener(mockListener);
 
-        taskAdapter.assembleDownloadTask();
+        taskAdapter.insureAssembleDownloadTask();
 
         assertThat(taskAdapter.getDownloadTask()).isNotNull();
         assertThat(taskAdapter.getCompatListener()).isNotNull();
@@ -147,9 +147,10 @@ public class DownloadTaskAdapterTest {
         assertThat(FileDownloadUtils.findDownloadTaskAdapter(taskAdapter.getDownloadTask()))
                 .isEqualTo(taskAdapter);
 
+        taskAdapter.downloadTask = null;
         taskAdapter.setAutoRetryTimes(3);
 
-        taskAdapter.assembleDownloadTask();
+        taskAdapter.insureAssembleDownloadTask();
 
         assertThat(taskAdapter.getDownloadTask()).isNotNull();
         assertThat(taskAdapter.getCompatListener()).isNotNull();

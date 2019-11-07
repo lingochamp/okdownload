@@ -117,7 +117,7 @@ public class FileDownloadList {
 
         synchronized (list) {
             task.markAdded2List();
-            task.assembleDownloadTask();
+            task.insureAssembleDownloadTask();
             list.add(task);
             Util.d(TAG, "add list in all " + task + " " + list.size());
         }
