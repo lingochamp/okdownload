@@ -109,6 +109,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     @Override
     public BaseDownloadTask setCallbackProgressTimes(int callbackProgressCount) {
         this.callbackProgressCount = callbackProgressCount;
+        progressAssist = new ProgressAssist(callbackProgressCount);
         return this;
     }
 
@@ -168,6 +169,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     @Override
     public BaseDownloadTask setAutoRetryTimes(int autoRetryTimes) {
         this.autoRetryTimes = autoRetryTimes;
+        if (autoRetryTimes > 0) {
+            retryAssist = new RetryAssist(autoRetryTimes);
+        }
         return this;
     }
 
@@ -256,10 +260,6 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
             if (downloadTask != null) return;
         }
         downloadTask = builder.build();
-        if (autoRetryTimes > 0) {
-            retryAssist = new RetryAssist(autoRetryTimes);
-        }
-        progressAssist = new ProgressAssist(callbackProgressCount);
         compatListener = CompatListenerAdapter.create(listener);
         statusAssist.setDownloadTask(downloadTask);
         downloadTask.addTag(KEY_TASK_ADAPTER, this);
