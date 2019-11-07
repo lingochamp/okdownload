@@ -95,27 +95,35 @@ public class DownloadConnectionAdapter implements DownloadConnection, DownloadCo
 
     @Override
     public int getResponseCode() throws IOException {
-        if (redirectConnectAdapter != null) redirectConnectAdapter.getResponseCode();
+        if (redirectConnectAdapter != null) {
+            return redirectConnectAdapter.getResponseCode();
+        }
         return fileDownloadConnection.getResponseCode();
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        if (redirectConnectAdapter != null) redirectConnectAdapter.getInputStream();
+        if (redirectConnectAdapter != null) {
+            return redirectConnectAdapter.getInputStream();
+        }
         return fileDownloadConnection.getInputStream();
     }
 
     @Nullable
     @Override
     public Map<String, List<String>> getResponseHeaderFields() {
-        if (redirectConnectAdapter != null) redirectConnectAdapter.getResponseHeaderFields();
+        if (redirectConnectAdapter != null) {
+            return redirectConnectAdapter.getResponseHeaderFields();
+        }
         return fileDownloadConnection.getResponseHeaderFields();
     }
 
     @Nullable
     @Override
     public String getResponseHeaderField(String name) {
-        if (redirectConnectAdapter != null) redirectConnectAdapter.getResponseHeaderField(name);
+        if (redirectConnectAdapter != null) {
+            return redirectConnectAdapter.getResponseHeaderField(name);
+        }
         return fileDownloadConnection.getResponseHeaderField(name);
     }
 
