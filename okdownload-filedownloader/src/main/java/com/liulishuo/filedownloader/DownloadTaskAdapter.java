@@ -240,8 +240,11 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isRunning() {
-        insureAssembleDownloadTask();
-        return OkDownload.with().downloadDispatcher().isRunning(downloadTask);
+        if (downloadTask == null) {
+            return false;
+        } else {
+            return OkDownload.with().downloadDispatcher().isRunning(downloadTask);
+        }
     }
 
     @Override
@@ -263,6 +266,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         }
         downloadTask = builder.build();
         compatListener = CompatListenerAdapter.create(listener);
+        if (progressAssist == null) {
+            progressAssist = new ProgressAssist(callbackProgressCount);
+        }
         statusAssist.setDownloadTask(downloadTask);
         downloadTask.addTag(KEY_TASK_ADAPTER, this);
     }
@@ -294,8 +300,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public String getUrl() {
-        insureAssembleDownloadTask();
-        return downloadTask.getUrl();
+        return builder.url;
     }
 
     @Override
@@ -305,8 +310,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getCallbackProgressMinInterval() {
-        insureAssembleDownloadTask();
-        return downloadTask.getMinIntervalMillisCallbackProcess();
+        return builder.minIntervalMillisCallbackProgress;
     }
 
     @Override
@@ -321,19 +325,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public String getFilename() {
-        insureAssembleDownloadTask();
-        return downloadTask.getFilename();
+        if (builder.pathAsDirectory) {
+            return null;
+        }
+        return new File(builder.path).getName();
     }
 
     @Override
     public String getTargetFilePath() {
-        insureAssembleDownloadTask();
-        File file = downloadTask.getFile();
-        if (file != null) {
-            return file.getPath();
-        } else {
-            return null;
-        }
+        return FileDownloadUtils
+                .getTargetFilePath(builder.path, builder.pathAsDirectory, getFilename());
     }
 
     @Override
@@ -347,7 +348,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     public long getSoFarBytesInLong() {
-        insureAssembleDownloadTask();
+        if (downloadTask == null) {
+            return 0L;
+        }
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalOffset();
@@ -375,7 +378,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     public long getTotalBytesInLong() {
-        insureAssembleDownloadTask();
+        if (downloadTask == null) return 0L;
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalLength();
@@ -390,7 +393,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public long getLargeFileTotalBytes() {
-        insureAssembleDownloadTask();
+        if (downloadTask == null) return 0L;
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalLength();
@@ -470,8 +473,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isSyncCallback() {
-        insureAssembleDownloadTask();
-        return !downloadTask.isAutoCallbackToUIThread();
+        return !builder.autoCallbackToUIThread;
     }
 
     @Override
@@ -481,8 +483,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isWifiRequired() {
-        insureAssembleDownloadTask();
-        return downloadTask.isWifiRequired();
+        return builder.isWifiRequired;
     }
 
     // implement BaseDownload.IRunningTask
