@@ -567,6 +567,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         return !finishListeners.isEmpty();
     }
 
+    public void replaceListener(FileDownloadListener fileDownloadListener) {
+        setListener(fileDownloadListener);
+        if (downloadTask == null) {
+            return;
+        }
+
+        compatListener = CompatListenerAdapter.create(listener);
+        downloadTask.replaceListener(compatListener);
+    }
+
     static final class Builder {
 
         private String url;

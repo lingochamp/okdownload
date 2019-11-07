@@ -472,8 +472,9 @@ public class FileDownloader {
             return 0;
         }
 
-        task.getOrigin().setListener(listener);
-        return task.getOrigin().getId();
+        final DownloadTaskAdapter downloadTask = (DownloadTaskAdapter) task.getOrigin();
+        downloadTask.replaceListener(listener);
+        return downloadTask.getId();
     }
 
     /**
