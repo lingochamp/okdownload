@@ -265,7 +265,11 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean cancel() {
-        return OkDownload.with().downloadDispatcher().cancel(downloadTask);
+        if (downloadTask == null) {
+            return true;
+        } else {
+            return OkDownload.with().downloadDispatcher().cancel(downloadTask);
+        }
     }
 
     @Override
