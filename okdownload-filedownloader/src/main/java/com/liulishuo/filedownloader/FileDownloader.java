@@ -387,11 +387,13 @@ public class FileDownloader {
     }
 
     /**
-     * @param id The downloadId.
+     * Task id will change in OkDownload, so cannot use id to get status.
+     * Please use {@linkplain #getStatus(String, String)}
      * @return The downloading status without cover the completed status (if completed you will
      * receive
      * {@link FileDownloadStatus#INVALID_STATUS} ).
      */
+    @Deprecated
     public byte getStatusIgnoreCompleted(final int id) {
         byte status = getStatus(id, null);
         if (status == FileDownloadStatus.completed) status = FileDownloadStatus.INVALID_STATUS;
@@ -413,30 +415,15 @@ public class FileDownloader {
     }
 
     /**
-     * @param id   The downloadId.
-     * @param path The target file path.
-     * @return the downloading status.
-     * @see FileDownloadStatus
-     * @see #getStatus(String, String)
-     * @see #getStatusIgnoreCompleted(int)
+     * Task id will change in OkDownload, so cannot use id to get status.
+     * Please use {@linkplain #getStatus(String, String)}
      */
+    @Deprecated
     public byte getStatus(final int id, final String path) {
         byte status;
         BaseDownloadTask.IRunningTask task = FileDownloadList.getImpl().get(id);
         if (task == null) {
-            final BreakpointInfo breakpointInfo = OkDownload.with().breakpointStore().get(id);
-            if (breakpointInfo == null) {
-                status = FileDownloadStatus.INVALID_STATUS;
-            } else {
-                if (path != null) {
-                    final File f = new File(path);
-                    final StatusUtil.Status downloadStatus = StatusUtil
-                            .getStatus(breakpointInfo.getUrl(), f.getParent(), f.getName());
-                    status = FileDownloadUtils.convertDownloadStatus(downloadStatus);
-                } else {
-                    status = FileDownloadStatus.INVALID_STATUS;
-                }
-            }
+            return FileDownloadStatus.INVALID_STATUS;
         } else {
             status = task.getOrigin().getStatus();
         }
