@@ -33,6 +33,8 @@ import java.net.ProtocolException;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.internal.http.HttpMethod;
+
 public class DownloadConnectionAdapter implements DownloadConnection, DownloadConnection.Connected {
 
     @NonNull
@@ -41,6 +43,8 @@ public class DownloadConnectionAdapter implements DownloadConnection, DownloadCo
     private final IRedirectHandler redirectHandler;
     @Nullable
     private DownloadConnectionAdapter redirectConnectAdapter;
+    @NonNull
+    private String requestMethod = "GET";
 
     private static final String TAG = "DownloadConnectionAdapter";
 
@@ -58,6 +62,7 @@ public class DownloadConnectionAdapter implements DownloadConnection, DownloadCo
 
     @Override
     public boolean setRequestMethod(@NonNull String method) throws ProtocolException {
+        requestMethod = method;
         return fileDownloadConnection.setRequestMethod(method);
     }
 
@@ -142,6 +147,8 @@ public class DownloadConnectionAdapter implements DownloadConnection, DownloadCo
                 Connected originalConnected,
                 Map<String, List<String>> headerProperties) throws IOException {
             if (!(originalConnection instanceof DownloadConnectionAdapter)) return;
+            final String requestMethod =
+                    ((DownloadConnectionAdapter) originalConnection).requestMethod;
             int responseCode = originalConnected.getResponseCode();
             int redirectCount = 0;
             DownloadConnectionAdapter redirectConnectAdapter = null;
@@ -157,7 +164,9 @@ public class DownloadConnectionAdapter implements DownloadConnection, DownloadCo
                         .connectionFactory().create(redirectLocation);
                 if (redirectConnection instanceof DownloadConnectionAdapter) {
                     Util.addRequestHeaderFields(headerProperties, redirectConnection);
+                    redirectConnection.setRequestMethod(requestMethod);
                     redirectConnectAdapter = (DownloadConnectionAdapter) redirectConnection;
+                    Util.d(TAG, "connect redirect location with method: " + requestMethod);
                     redirectConnectAdapter.fileDownloadConnection.execute();
                     responseCode = redirectConnectAdapter.getResponseCode();
                     checkingDownloadConnection = redirectConnection;
