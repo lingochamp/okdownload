@@ -83,7 +83,7 @@ public class FileDownloadListTest {
         assertNull(task);
 
         final DownloadTaskAdapter firstAddedTask = FileDownloadList.getImpl().list.get(0);
-        firstAddedTask.assembleDownloadTask();
+        firstAddedTask.insureAssembleDownloadTask();
         final DownloadDispatcher downloadDispatcher = OkDownload.with().downloadDispatcher();
         when(downloadDispatcher.isRunning(firstAddedTask.getDownloadTask())).thenReturn(false);
         task = FileDownloadList.getImpl().get(firstAddedTask.getId());
@@ -105,13 +105,13 @@ public class FileDownloadListTest {
         assertThat(FileDownloadList.getImpl().list).hasSize(oldSize);
 
         final DownloadTaskAdapter newTask = spy(FileDownloader.getImpl().create("url"));
-        doNothing().when(newTask).assembleDownloadTask();
+        doNothing().when(newTask).insureAssembleDownloadTask();
 
         FileDownloadList.getImpl().addQueueTask(newTask);
 
         assertThat(FileDownloadList.getImpl().list).hasSize(oldSize + 1);
         verify(newTask).markAdded2List();
-        verify(newTask).assembleDownloadTask();
+        verify(newTask).insureAssembleDownloadTask();
     }
 
     @Test

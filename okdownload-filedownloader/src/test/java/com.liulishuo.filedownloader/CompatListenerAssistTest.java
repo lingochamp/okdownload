@@ -24,6 +24,7 @@ import com.liulishuo.filedownloader.exception.FileDownloadSecurityException;
 import com.liulishuo.filedownloader.progress.ProgressAssist;
 import com.liulishuo.filedownloader.retry.RetryAssist;
 import com.liulishuo.okdownload.DownloadTask;
+import com.liulishuo.okdownload.SpeedCalculator;
 import com.liulishuo.okdownload.core.cause.EndCause;
 import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
 import com.liulishuo.okdownload.core.exception.NetworkPolicyException;
@@ -208,7 +209,8 @@ public class CompatListenerAssistTest {
     public void taskEnd_handleWarn() {
         final DownloadTask mockTask = mock(DownloadTask.class);
         final DownloadTaskAdapter mockTaskAdapter = mock(DownloadTaskAdapter.class);
-        final ProgressAssist mockProgressAssist = mock(ProgressAssist.class);
+        final SpeedCalculator mockSpeedCalculator = mock(SpeedCalculator.class);
+        final ProgressAssist mockProgressAssist = spy(new ProgressAssist(-1, mockSpeedCalculator));
         when(mockTask.getTag(DownloadTaskAdapter.KEY_TASK_ADAPTER)).thenReturn(mockTaskAdapter);
         when(mockTaskAdapter.getProgressAssist()).thenReturn(mockProgressAssist);
         doNothing().when(compatListenerAssist).handleWarn(
@@ -222,6 +224,7 @@ public class CompatListenerAssistTest {
         verify(compatListenerAssist).handleWarn(mockTaskAdapter, EndCause.SAME_TASK_BUSY, null);
         verify(compatListenerAssist, times(2)).onTaskFinish(mockTaskAdapter);
         verify(mockProgressAssist, times(2)).clearProgress();
+        verify(mockSpeedCalculator, times(2)).flush();
     }
 
     @Test

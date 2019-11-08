@@ -17,6 +17,7 @@
 package com.liulishuo.filedownloader.status;
 
 import com.liulishuo.filedownloader.model.FileDownloadStatus;
+import com.liulishuo.filedownloader.util.FileDownloadUtils;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.StatusUtil;
 
@@ -43,21 +44,8 @@ public class StatusAssist {
         return status;
     }
 
-    synchronized byte convert(StatusUtil.Status status) {
-        switch (status) {
-            case COMPLETED:
-                return FileDownloadStatus.completed;
-            case IDLE:
-                return FileDownloadStatus.paused;
-            case UNKNOWN:
-                return FileDownloadStatus.INVALID_STATUS;
-            case PENDING:
-                return FileDownloadStatus.pending;
-            case RUNNING:
-                return FileDownloadStatus.progress;
-            default:
-                return FileDownloadStatus.INVALID_STATUS;
-        }
+    private synchronized byte convert(StatusUtil.Status status) {
+        return FileDownloadUtils.convertDownloadStatus(status);
     }
 
     public synchronized boolean isUsing() {

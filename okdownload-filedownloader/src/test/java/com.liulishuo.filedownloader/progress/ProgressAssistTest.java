@@ -19,6 +19,7 @@ package com.liulishuo.filedownloader.progress;
 import com.liulishuo.filedownloader.CompatListenerAssist;
 import com.liulishuo.filedownloader.DownloadTaskAdapter;
 import com.liulishuo.filedownloader.FileDownloader;
+import com.liulishuo.okdownload.SpeedCalculator;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -115,7 +116,8 @@ public class ProgressAssistTest {
 
     @Test
     public void onProgress_noAnyProgress() {
-        final ProgressAssist progressAssist = new ProgressAssist(-1);
+        final SpeedCalculator mockSpeedCalculator = mock(SpeedCalculator.class);
+        final ProgressAssist progressAssist = new ProgressAssist(-1, mockSpeedCalculator);
         progressAssist.calculateCallbackMinIntervalBytes(100);
 
         assertThat(progressAssist.callbackMinIntervalBytes)
@@ -130,6 +132,7 @@ public class ProgressAssistTest {
             progressAssist.onProgress(mockTask, 1, callback);
         }
 
+        verify(mockSpeedCalculator, times(100)).downloading(1);
         verify(callback, never()).progress(any(DownloadTaskAdapter.class), anyLong(), anyLong());
         assertThat(progressAssist.getSofarBytes()).isEqualTo(100);
     }

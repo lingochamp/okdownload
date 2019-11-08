@@ -16,33 +16,17 @@
 
 package com.liulishuo.filedownloader;
 
-import com.liulishuo.filedownloader.event.IDownloadEvent;
-import com.liulishuo.filedownloader.event.IDownloadListener;
+import android.app.Notification;
 
 /**
- * The listener for listening whether the service establishes connection or disconnected.
- *
+ * The FileDownloader asynchronous line.
  */
 @Deprecated
-public abstract class FileDownloadConnectListener extends IDownloadListener {
+public class FileDownloadLineAsync {
 
-
-    public FileDownloadConnectListener() {
-    }
-
-    @Override
-    public boolean callback(IDownloadEvent event) {
+    @Deprecated
+    public boolean startForeground(final int id, final Notification notification) {
         return false;
     }
-
-    /**
-     * connected file download service
-     */
-    public abstract void connected();
-
-    /**
-     * disconnected file download service
-     */
-    public abstract void disconnected();
 
 }

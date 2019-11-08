@@ -18,6 +18,7 @@ package com.liulishuo.filedownloader;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.SparseArray;
 
 import com.liulishuo.filedownloader.progress.ProgressAssist;
 import com.liulishuo.filedownloader.retry.RetryAssist;
@@ -41,7 +42,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private static final String TAG = "DownloadTaskAdapter";
     public static final int KEY_TASK_ADAPTER = Integer.MIN_VALUE;
 
-    private DownloadTask downloadTask;
+    DownloadTask downloadTask;
     Builder builder;
     private List<FinishListener> finishListeners = new ArrayList<>();
     FileDownloadListener listener;
@@ -49,10 +50,13 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     private int autoRetryTimes;
     private int callbackProgressCount = DEFAULT_CALLBACK_PROGRESS_COUNT;
     StatusAssist statusAssist = new StatusAssist();
-    ProgressAssist progressAssist;
-    RetryAssist retryAssist;
-    volatile int attachKey;
-    volatile boolean isAddedToList;
+    private ProgressAssist progressAssist;
+    private RetryAssist retryAssist;
+    private volatile int attachKey;
+    private volatile boolean isAddedToList;
+    private final Object insureDownloadTaskAssembledLock = new Object();
+    private Object tag;
+    private SparseArray<Object> tagWithKey;
 
     public DownloadTaskAdapter(String url) {
         this.builder = new Builder();
@@ -71,7 +75,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         return compatListener;
     }
 
+    @NonNull
     public DownloadTask getDownloadTask() {
+        insureAssembleDownloadTask();
         return downloadTask;
     }
 
@@ -106,6 +112,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     @Override
     public BaseDownloadTask setCallbackProgressTimes(int callbackProgressCount) {
         this.callbackProgressCount = callbackProgressCount;
+        progressAssist = new ProgressAssist(callbackProgressCount);
         return this;
     }
 
@@ -123,17 +130,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public BaseDownloadTask setTag(Object tag) {
-        builder.tag = tag;
+        this.tag = tag;
         return this;
     }
 
     @Override
     public BaseDownloadTask setTag(int key, Object tag) {
-        if (key == KEY_TASK_ADAPTER) {
-            throw new IllegalArgumentException(key + " is used internally, please use another key");
+        if (tagWithKey == null) {
+            tagWithKey = new SparseArray<>();
         }
-        builder.keyOfTag = key;
-        builder.tagWithKey = tag;
+        tagWithKey.put(key, tag);
         return this;
     }
 
@@ -165,6 +171,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     @Override
     public BaseDownloadTask setAutoRetryTimes(int autoRetryTimes) {
         this.autoRetryTimes = autoRetryTimes;
+        if (autoRetryTimes > 0) {
+            retryAssist = new RetryAssist(autoRetryTimes);
+        }
         return this;
     }
 
@@ -231,7 +240,11 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isRunning() {
-        return OkDownload.with().downloadDispatcher().isRunning(downloadTask);
+        if (downloadTask == null) {
+            return false;
+        } else {
+            return OkDownload.with().downloadDispatcher().isRunning(downloadTask);
+        }
     }
 
     @Override
@@ -241,19 +254,21 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int start() {
-        assembleDownloadTask();
+        insureAssembleDownloadTask();
         FileDownloadList.getImpl().addIndependentTask(this);
         downloadTask.enqueue(compatListener);
         return downloadTask.getId();
     }
 
-    public void assembleDownloadTask() {
-        downloadTask = builder.build();
-        if (autoRetryTimes > 0) {
-            retryAssist = new RetryAssist(autoRetryTimes);
+    public void insureAssembleDownloadTask() {
+        synchronized (insureDownloadTaskAssembledLock) {
+            if (downloadTask != null) return;
         }
-        progressAssist = new ProgressAssist(callbackProgressCount);
+        downloadTask = builder.build();
         compatListener = CompatListenerAdapter.create(listener);
+        if (progressAssist == null) {
+            progressAssist = new ProgressAssist(callbackProgressCount);
+        }
         statusAssist.setDownloadTask(downloadTask);
         downloadTask.addTag(KEY_TASK_ADAPTER, this);
     }
@@ -265,12 +280,17 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean cancel() {
-        return OkDownload.with().downloadDispatcher().cancel(downloadTask);
+        if (downloadTask == null) {
+            return true;
+        } else {
+            return OkDownload.with().downloadDispatcher().cancel(downloadTask);
+        }
     }
 
     @Override
     public int getId() {
-        return downloadTask != null ? downloadTask.getId() : -1;
+        insureAssembleDownloadTask();
+        return downloadTask.getId();
     }
 
     @Override
@@ -280,7 +300,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public String getUrl() {
-        return downloadTask.getUrl();
+        return builder.url;
     }
 
     @Override
@@ -290,7 +310,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getCallbackProgressMinInterval() {
-        return downloadTask.getMinIntervalMillisCallbackProcess();
+        return builder.minIntervalMillisCallbackProgress;
     }
 
     @Override
@@ -305,17 +325,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public String getFilename() {
-        return downloadTask.getFilename();
+        if (builder.pathAsDirectory) {
+            return null;
+        }
+        return new File(builder.path).getName();
     }
 
     @Override
     public String getTargetFilePath() {
-        File file = downloadTask.getFile();
-        if (file != null) {
-            return file.getPath();
-        } else {
-            return null;
-        }
+        return FileDownloadUtils
+                .getTargetFilePath(builder.path, builder.pathAsDirectory, getFilename());
     }
 
     @Override
@@ -329,6 +348,9 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     public long getSoFarBytesInLong() {
+        if (downloadTask == null) {
+            return 0L;
+        }
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalOffset();
@@ -356,6 +378,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
     }
 
     public long getTotalBytesInLong() {
+        if (downloadTask == null) return 0L;
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalLength();
@@ -370,6 +393,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public long getLargeFileTotalBytes() {
+        if (downloadTask == null) return 0L;
         BreakpointInfo info = downloadTask.getInfo();
         if (info != null) {
             return info.getTotalLength();
@@ -379,7 +403,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public int getSpeed() {
-        return 0;
+        return (int) progressAssist.getSpeed();
     }
 
     @Override
@@ -409,12 +433,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public Object getTag() {
-        return downloadTask.getTag();
+        return tag;
     }
 
     @Override
     public Object getTag(int key) {
-        return downloadTask.getTag(key);
+        if (tagWithKey == null) {
+            return null;
+        } else {
+            return tagWithKey.get(key);
+        }
     }
 
     @Override
@@ -445,7 +473,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isSyncCallback() {
-        return !downloadTask.isAutoCallbackToUIThread();
+        return !builder.autoCallbackToUIThread;
     }
 
     @Override
@@ -455,7 +483,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
 
     @Override
     public boolean isWifiRequired() {
-        return downloadTask.isWifiRequired();
+        return builder.isWifiRequired;
     }
 
     // implement BaseDownload.IRunningTask
@@ -539,6 +567,16 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         return !finishListeners.isEmpty();
     }
 
+    public void replaceListener(FileDownloadListener fileDownloadListener) {
+        setListener(fileDownloadListener);
+        if (downloadTask == null) {
+            return;
+        }
+
+        compatListener = CompatListenerAdapter.create(listener);
+        downloadTask.replaceListener(compatListener);
+    }
+
     static final class Builder {
 
         private String url;
@@ -546,9 +584,6 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
         boolean pathAsDirectory;
         private int minIntervalMillisCallbackProgress
                 = DEFAULT_CALLBACK_PROGRESS_MIN_INTERVAL_MILLIS;
-        private Object tag;
-        private Integer keyOfTag;
-        private Object tagWithKey;
         private boolean forceReDownload;
         Map<String, String> headerMap = new HashMap<>();
         private boolean isWifiRequired;
@@ -571,10 +606,7 @@ public class DownloadTaskAdapter implements BaseDownloadTask, BaseDownloadTask.I
                 builder.addHeader(entry.getKey(), entry.getValue());
             }
             builder.setAutoCallbackToUIThread(autoCallbackToUIThread);
-            DownloadTask task = builder.build();
-            if (tag != null) task.setTag(tag);
-            if (keyOfTag != null) task.addTag(keyOfTag, tagWithKey);
-            return task;
+            return builder.build();
         }
     }
 

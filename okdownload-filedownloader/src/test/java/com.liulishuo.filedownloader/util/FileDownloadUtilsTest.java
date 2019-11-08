@@ -19,10 +19,8 @@ package com.liulishuo.filedownloader.util;
 import com.liulishuo.filedownloader.DownloadTaskAdapter;
 import com.liulishuo.filedownloader.FileDownloader;
 import com.liulishuo.okdownload.DownloadTask;
-import com.liulishuo.okdownload.OkDownload;
 import com.liulishuo.okdownload.TestUtils;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,14 +53,14 @@ public class FileDownloadUtilsTest {
         final String path = "path";
         final DownloadTaskAdapter mockDownloadTaskAdapter =
                 (DownloadTaskAdapter) FileDownloader.getImpl().create(url).setPath(path);
-        mockDownloadTaskAdapter.assembleDownloadTask();
+        mockDownloadTaskAdapter.insureAssembleDownloadTask();
         downloadTaskAdapter = FileDownloadUtils
                 .findDownloadTaskAdapter(mockDownloadTaskAdapter.getDownloadTask());
         assertThat(downloadTaskAdapter).isEqualTo(mockDownloadTaskAdapter);
 
         final DownloadTaskAdapter sameIdTask =
                 (DownloadTaskAdapter) FileDownloader.getImpl().create(url).setPath(path);
-        sameIdTask.assembleDownloadTask();
+        sameIdTask.insureAssembleDownloadTask();
         assertThat(sameIdTask.getId()).isEqualTo(mockDownloadTaskAdapter.getId());
         downloadTaskAdapter = FileDownloadUtils
                 .findDownloadTaskAdapter(sameIdTask.getDownloadTask());

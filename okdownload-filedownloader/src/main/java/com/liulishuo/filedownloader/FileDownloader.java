@@ -16,10 +16,14 @@
 
 package com.liulishuo.filedownloader;
 
+import android.app.Application;
+import android.app.Notification;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.liulishuo.filedownloader.model.FileDownloadStatus;
+import com.liulishuo.filedownloader.services.DownloadMgrInitialParams;
 import com.liulishuo.filedownloader.util.FileDownloadHelper;
 import com.liulishuo.filedownloader.util.FileDownloadUtils;
 import com.liulishuo.okdownload.DownloadContext;
@@ -27,12 +31,13 @@ import com.liulishuo.okdownload.DownloadContextListener;
 import com.liulishuo.okdownload.DownloadMonitor;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
+import com.liulishuo.okdownload.StatusUtil;
 import com.liulishuo.okdownload.core.Util;
+import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.cause.EndCause;
-import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.connection.DownloadOkHttp3Connection;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +46,9 @@ import okhttp3.OkHttpClient;
 public class FileDownloader {
 
     private static final String TAG = "FileDownloader";
+    private static final String FILEDOWNLOADER_DATABASE_NAME = "filedownloader.db";
+    private static final int DEFAULT_INTERVAL = 10;
+    private static int globalPost2UIInterval = -1;
 
     private static final class HolderClass {
         private static final FileDownloader INSTANCE = new FileDownloader();
@@ -60,11 +68,29 @@ public class FileDownloader {
         init(context, okHttpClientCustomMaker, 0);
     }
 
+    /**
+     * Initial a OkDownload instance.
+     * This method and {@link #setupOnApplicationOnCreate(Application)}
+     * cannot be invoked int the same time.
+     *
+     * @param context                 Android context.
+     * @param okHttpClientCustomMaker a maker to build a OkHttpClient.
+     * @param maxNetworkThreadCount   the max thread count of thread pool for downloading.
+     *                                This parameter is deprecated in OkDownload.
+     */
     public static void init(
             @NonNull Context context,
             @Nullable final FileDownloadHelper.OkHttpClientCustomMaker okHttpClientCustomMaker,
             int maxNetworkThreadCount) {
         setup(context);
+        OkDownload.Builder builder = okDownloadBuilder(context, okHttpClientCustomMaker);
+        if (builder != null) OkDownload.setSingletonInstance(builder.build());
+    }
+
+    @Nullable
+    public static OkDownload.Builder okDownloadBuilder(
+            @NonNull Context context,
+            @Nullable final FileDownloadHelper.OkHttpClientCustomMaker okHttpClientCustomMaker) {
         OkDownload.Builder builder = null;
         final OkHttpClient okHttpClient;
         if (okHttpClientCustomMaker == null) {
@@ -74,22 +100,16 @@ public class FileDownloader {
         }
         if (okHttpClient != null) {
             builder = new OkDownload.Builder(context);
-            builder.connectionFactory(new DownloadConnection.Factory() {
-                @Override
-                public DownloadConnection create(String url) throws IOException {
-                    Util.d(TAG, "create a okhttp connection with " + url);
-                    return new DownloadOkHttp3Connection.Factory()
-                            .setBuilder(okHttpClient.newBuilder())
-                            .create(url);
-                }
-            });
+            builder.connectionFactory(url -> new DownloadOkHttp3Connection.Factory()
+                    .setBuilder(okHttpClient.newBuilder())
+                    .create(url));
         }
         final DownloadMonitor downloadMonitor = FileDownloadMonitor.getDownloadMonitor();
         if (downloadMonitor != null) {
             if (builder == null) builder = new OkDownload.Builder(context);
             builder.monitor(downloadMonitor);
         }
-        if (builder != null) OkDownload.setSingletonInstance(builder.build());
+        return builder;
     }
 
     /**
@@ -102,9 +122,48 @@ public class FileDownloader {
         FileDownloadHelper.holdContext(context.getApplicationContext());
     }
 
+    /**
+     * Using this method to setup the FileDownloader only you want to register your own customize
+     * components for Filedownloader, otherwise just using {@link #setup(Context)} instead.
+     * <p/>
+     * Please invoke this method on the {@link Application#onCreate()} because of the customize
+     * components must be assigned before FileDownloader is running.
+     * <p/>
+     * Such as:
+     * <p/>
+     * class MyApplication extends Application {
+     * ...
+     * public void onCreate() {
+     * ...
+     * FileDownloader.setupOnApplicationOnCreate(this)
+     * .idGenerator(new MyIdGenerator())
+     * .database(new MyDatabase())
+     * ...
+     * .commit();
+     * ...
+     * }
+     * ...
+     * }
+     *
+     * @param application the application.
+     * @return the customize components maker.
+     */
+    public static DownloadMgrInitialParams.InitCustomMaker setupOnApplicationOnCreate(
+            Application application) {
+        final Context context = application.getApplicationContext();
+
+        DownloadMgrInitialParams.InitCustomMaker customMaker =
+                new DownloadMgrInitialParams.InitCustomMaker(context);
+        return customMaker;
+    }
+
 
     public DownloadTaskAdapter create(String url) {
-        return new DownloadTaskAdapter(url);
+        final DownloadTaskAdapter taskAdapter = new DownloadTaskAdapter(url);
+        if (globalPost2UIInterval > 0) {
+            taskAdapter.setCallbackProgressMinInterval(globalPost2UIInterval);
+        }
+        return taskAdapter;
     }
 
 
@@ -192,6 +251,32 @@ public class FileDownloader {
         // do nothing
     }
 
+    @Deprecated
+    public void startForeground(int id, Notification notification) {
+        // do nothing
+    }
+
+    @Deprecated
+    public void stopForeground(boolean removeNotification) {
+        // do nothing
+    }
+
+    @Deprecated
+    public boolean setMaxNetworkThreadCount(final int count) {
+        // do nothing
+        return false;
+    }
+
+
+
+    /**
+     * No need to bind any service.
+     */
+    @Deprecated
+    public void bindService(final Runnable runnable) {
+        runnable.run();
+    }
+
     public void pause(final FileDownloadListener listener) {
         final List<DownloadTaskAdapter> taskAdapters =
                 FileDownloadList.getImpl().getByFileDownloadListener(listener);
@@ -209,5 +294,209 @@ public class FileDownloader {
     public int pause(final int id) {
         OkDownload.with().downloadDispatcher().cancel(id);
         return 0;
+    }
+
+    /**
+     * For avoiding missing screen frames.
+     * <p/>
+     * This mechanism is used for avoid methods in {@link FileDownloadListener} is invoked too
+     * frequent in result the system missing screen frames in the main thread.
+     * <p>
+     */
+    public static void setGlobalPost2UIInterval(final int intervalMillisecond) {
+        globalPost2UIInterval = intervalMillisecond;
+    }
+
+    /**
+     * Only use {@link BaseDownloadTask#setCallbackProgressMinInterval(int)} in OkDownload.
+     */
+    @Deprecated
+    public static void setGlobalHandleSubPackageSize(final int packageSize) {
+    }
+
+    /**
+     * Avoid missing screen frames, this leads to all callbacks in {@link FileDownloadListener} do
+     * not be invoked at once when it has already achieved to ensure callbacks don't be too frequent
+     */
+    public static void enableAvoidDropFrame() {
+        setGlobalPost2UIInterval(DEFAULT_INTERVAL);
+    }
+
+    /**
+     * Disable avoiding missing screen frames, let all callbacks in {@link FileDownloadListener}
+     * can be invoked at once when it achieve.
+     */
+    public static void disableAvoidDropFrame() {
+        setGlobalPost2UIInterval(-1);
+    }
+
+    /**
+     * @return {@code true} if enabled the function of avoiding missing screen frames.
+     */
+    public static boolean isEnabledAvoidDropFrame() {
+        return globalPost2UIInterval > 0;
+    }
+
+    /**
+     * Get downloaded bytes so far by the downloadId.
+     */
+    public long getSoFar(final int downloadId) {
+        final BreakpointInfo info = OkDownload.with().breakpointStore().get(downloadId);
+        if (info == null) return 0;
+        return info.getTotalOffset();
+    }
+
+    /**
+     * Get the total bytes of the target file for the task with the {code id}.
+     */
+    public long getTotal(final int id) {
+        final BreakpointInfo info = OkDownload.with().breakpointStore().get(id);
+        if (info == null) return 0;
+        return info.getTotalLength();
+    }
+
+    /**
+     * Clear all data in the filedownloader database.
+     * {@link com.liulishuo.okdownload.core.breakpoint.BreakpointStore} doesn't provide clear all
+     * data api, and it's no need to clear database manually in fact.
+     */
+    @Deprecated
+    public void clearAllTaskData() {
+        pauseAll();
+    }
+
+    /**
+     * Clear the data with the provided {@code id}.
+     * Normally used to deleting the data in OkDownload database, when it is paused or in
+     * downloading status. If you want to re-download it clearly.
+     * <p/>
+     * <strong>Note:</strong> YOU NO NEED to clear the data when it is already completed downloading
+     * because the data would be deleted when it completed downloading automatically by
+     * OkDownload.
+     * <p>
+     */
+    public boolean clear(final int id, final String targetFilePath) {
+        pause(id);
+        OkDownload.with().breakpointStore().remove(id);
+        final File targetFile = new File(targetFilePath);
+        if (targetFile.exists()) {
+            //noinspection
+            return targetFile.delete();
+        }
+        return true;
+    }
+
+    /**
+     * Task id will change in OkDownload, so cannot use id to get status.
+     * Please use {@linkplain #getStatus(String, String)}
+     * @return The downloading status without cover the completed status (if completed you will
+     * receive
+     * {@link FileDownloadStatus#INVALID_STATUS} ).
+     */
+    @Deprecated
+    public byte getStatusIgnoreCompleted(final int id) {
+        byte status = getStatus(id, null);
+        if (status == FileDownloadStatus.completed) status = FileDownloadStatus.INVALID_STATUS;
+        return status;
+    }
+
+    /**
+     * @param url  The downloading URL.
+     * @param path The downloading file's path.
+     * @return The downloading status.
+     * @see #getStatus(int, String)
+     * @see #getStatusIgnoreCompleted(int)
+     */
+    public byte getStatus(final String url, final String path) {
+        final File file = new File(path);
+        final StatusUtil.Status okDownloadStatus =
+                StatusUtil.getStatus(url, file.getParent(), file.getName());
+        return FileDownloadUtils.convertDownloadStatus(okDownloadStatus);
+    }
+
+    /**
+     * Task id will change in OkDownload, so cannot use id to get status.
+     * Please use {@linkplain #getStatus(String, String)}
+     */
+    @Deprecated
+    public byte getStatus(final int id, final String path) {
+        byte status;
+        BaseDownloadTask.IRunningTask task = FileDownloadList.getImpl().get(id);
+        if (task == null) {
+            return FileDownloadStatus.INVALID_STATUS;
+        } else {
+            status = task.getOrigin().getStatus();
+        }
+
+        return status;
+    }
+
+    /**
+     * Find the running task by {@code url} and default path, and replace its listener with
+     * the new one {@code listener}.
+     *
+     * @return The target task's DownloadId, if not exist target task, and replace failed, will be 0
+     * @see #replaceListener(int, FileDownloadListener)
+     * @see #replaceListener(String, String, FileDownloadListener)
+     */
+    public int replaceListener(String url, FileDownloadListener listener) {
+        return replaceListener(url, FileDownloadUtils.getDefaultSaveFilePath(url), listener);
+    }
+
+    /**
+     * Find the running task by {@code url} and {@code path}, and replace its listener with
+     * the new one {@code listener}.
+     *
+     * @return The target task's DownloadId, if not exist target task, and replace failed, will be 0
+     * @see #replaceListener(String, FileDownloadListener)
+     * @see #replaceListener(int, FileDownloadListener)
+     */
+    public int replaceListener(String url, String path, FileDownloadListener listener) {
+        final File file = new File(path);
+        final DownloadTask downloadTask = new DownloadTask.Builder(url, file).build();
+        return replaceListener(downloadTask.getId(), listener);
+    }
+
+    /**
+     * Find the running task by {@code id}, and replace its listener width the new one
+     * {@code listener}.
+     *
+     * @return The target task's DownloadId, if not exist target task, and replace failed, will be 0
+     * @see #replaceListener(String, FileDownloadListener)
+     * @see #replaceListener(String, String, FileDownloadListener)
+     */
+    public int replaceListener(int id, FileDownloadListener listener) {
+        final BaseDownloadTask.IRunningTask task = FileDownloadList.getImpl().get(id);
+        if (task == null) {
+            OkDownload.with().breakpointStore().remove(id);
+            return 0;
+        }
+
+        final DownloadTaskAdapter downloadTask = (DownloadTaskAdapter) task.getOrigin();
+        downloadTask.replaceListener(listener);
+        return downloadTask.getId();
+    }
+
+    /**
+     * Because there is no any service, the FileDownloadLine will not do any wait action.
+     * @see FileDownloadLine
+     * @see #bindService(Runnable)
+     */
+    public FileDownloadLine insureServiceBind() {
+        return new FileDownloadLine();
+    }
+
+    @Deprecated
+    public FileDownloadLineAsync insureServiceBindAsync() {
+        return new FileDownloadLineAsync();
+    }
+
+    /**
+     * Because the FileDownloader database cannot be compatible with OkDownload database,
+     * provide this method to discard the database of FileDownloader. It's better to invoke this
+     * method at work thread.
+     */
+    public void discardFileDownloadDatabase(Context context) {
+        context.deleteDatabase(FILEDOWNLOADER_DATABASE_NAME);
     }
 }
