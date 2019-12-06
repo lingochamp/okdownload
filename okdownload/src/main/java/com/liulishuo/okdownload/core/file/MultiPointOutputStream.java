@@ -77,11 +77,13 @@ public class MultiPointOutputStream {
     volatile Thread runSyncThread;
     final SparseArray<Thread> parkedRunBlockThreadMap = new SparseArray<>();
 
-    @NonNull private final Runnable syncRunnable;
+    @NonNull
+    private final Runnable syncRunnable;
     private String path;
 
     IOException syncException;
-    @NonNull ArrayList<Integer> noMoreStreamList;
+    @NonNull
+    ArrayList<Integer> noMoreStreamList;
 
     @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     List<Integer> requireStreamBlocks;
@@ -141,7 +143,8 @@ public class MultiPointOutputStream {
 
     public void cancelAsync() {
         FILE_IO_EXECUTOR.execute(new Runnable() {
-            @Override public void run() {
+            @Override
+            public void run() {
                 cancel();
             }
         });
@@ -185,8 +188,8 @@ public class MultiPointOutputStream {
     final StreamsState doneState = new StreamsState();
 
     public void done(int blockIndex) throws IOException {
+        flushProcess();
         noMoreStreamList.add(blockIndex);
-
         try {
             if (syncException != null) throw syncException;
 
@@ -307,8 +310,7 @@ public class MultiPointOutputStream {
     void inspectStreamState(StreamsState state) {
         state.newNoMoreStreamBlockList.clear();
 
-        @SuppressWarnings("unchecked")
-        final List<Integer> clonedList = (List<Integer>) noMoreStreamList.clone();
+        @SuppressWarnings("unchecked") final List<Integer> clonedList = (List<Integer>) noMoreStreamList.clone();
         final Set<Integer> uniqueBlockList = new HashSet<>(clonedList);
         final int noMoreStreamBlockCount = uniqueBlockList.size();
         if (noMoreStreamBlockCount != requireStreamBlocks.size()) {
