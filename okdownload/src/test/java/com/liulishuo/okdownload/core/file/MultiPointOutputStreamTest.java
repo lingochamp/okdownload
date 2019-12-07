@@ -488,6 +488,17 @@ public class MultiPointOutputStreamTest {
         multiPointOutputStream.inspectComplete(1);
     }
 
+    @Test
+    public void inspectComplete_ignoreWithChunkResource() throws IOException {
+        final BlockInfo blockInfo = mock(BlockInfo.class);
+        when(info.getBlock(1)).thenReturn(blockInfo);
+
+        when(blockInfo.getContentLength()).thenReturn(-1L);
+        when(blockInfo.getCurrentOffset()).thenReturn(10L);
+
+        multiPointOutputStream.inspectComplete(1);
+    }
+
     @Test(expected = IOException.class)
     public void inspectComplete_syncException() throws IOException {
         multiPointOutputStream.syncException = new IOException();

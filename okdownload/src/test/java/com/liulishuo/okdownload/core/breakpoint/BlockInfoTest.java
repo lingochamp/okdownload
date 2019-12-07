@@ -60,5 +60,6 @@ public class BlockInfoTest {
     public void chunked() {
         BlockInfo info = new BlockInfo(0, CHUNKED_CONTENT_LENGTH);
         assertThat(info.getContentLength()).isEqualTo(CHUNKED_CONTENT_LENGTH);
+        assertThat(info.getRangeRight()).isEqualTo(CHUNKED_CONTENT_LENGTH);
     }
 }

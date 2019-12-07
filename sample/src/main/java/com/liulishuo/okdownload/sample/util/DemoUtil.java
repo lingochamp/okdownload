@@ -28,8 +28,16 @@ public class DemoUtil {
             "https://cdn.llscdn.com/yy/files/tkzpx40x-lls-LLS-5.7-785-20171108-111118.apk";
 
     public static void calcProgressToView(ProgressBar progressBar, long offset, long total) {
-        final float percent = (float) offset / total;
-        progressBar.setProgress((int) (percent * progressBar.getMax()));
+        if (total < 0) {
+            progressBar.setIndeterminate(true);
+        } else if (total > 0) {
+            progressBar.setIndeterminate(false);
+            final float percent = (float) offset / total;
+            progressBar.setProgress((int) (percent * progressBar.getMax()));
+        } else {
+            progressBar.setIndeterminate(false);
+            progressBar.setProgress(progressBar.getMax());
+        }
     }
 
 

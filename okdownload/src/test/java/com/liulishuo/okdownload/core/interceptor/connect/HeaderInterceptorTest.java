@@ -118,6 +118,29 @@ public class HeaderInterceptorTest {
         assertThat(nameCaptor.getAllValues()).containsExactlyInAnyOrder(RANGE, USER_AGENT);
         assertThat(valueCaptor.getAllValues())
                 .containsExactlyInAnyOrder("bytes=20-29", "OkDownload/" + BuildConfig.VERSION_NAME);
+
+    }
+
+    @Test
+    public void interceptConnect_chunkResourceRange() throws IOException {
+        final DownloadChain chain = mockDownloadChain();
+        DownloadConnection connection = chain.getConnectionOrCreate();
+        final BreakpointInfo info = chain.getInfo();
+
+        when(info.isChunked()).thenReturn(true);
+        when(info.getBlockCount()).thenReturn(1);
+        when(info.getBlock(0)).thenReturn(new BlockInfo(0, -1));
+
+        interceptor.interceptConnect(chain);
+
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(connection, times(2)).addHeader(nameCaptor.capture(), valueCaptor.capture());
+
+        assertThat(nameCaptor.getAllValues()).containsExactlyInAnyOrder(RANGE, USER_AGENT);
+        assertThat(valueCaptor.getAllValues())
+                .containsExactlyInAnyOrder("bytes=0-", "OkDownload/" + BuildConfig.VERSION_NAME);
     }
 
     @Test

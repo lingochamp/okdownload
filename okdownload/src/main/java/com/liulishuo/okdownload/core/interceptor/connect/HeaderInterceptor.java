@@ -64,7 +64,9 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         String range = "bytes=" + blockInfo.getRangeLeft() + "-";
-        range += blockInfo.getRangeRight();
+        if (!info.isChunked()) {
+            range += blockInfo.getRangeRight();
+        }
 
         connection.addHeader(RANGE, range);
         Util.d(TAG, "AssembleHeaderRange (" + task.getId() + ") block(" + blockIndex + ") "

@@ -258,6 +258,7 @@ public class MultiPointOutputStream {
 
     public void inspectComplete(int blockIndex) throws IOException {
         final BlockInfo blockInfo = info.getBlock(blockIndex);
+        if (blockInfo.getContentLength() == Util.CHUNKED_CONTENT_LENGTH) return;
         if (!Util.isCorrectFull(blockInfo.getCurrentOffset(), blockInfo.getContentLength())) {
             throw new IOException("The current offset on block-info isn't update correct, "
                     + blockInfo.getCurrentOffset() + " != " + blockInfo.getContentLength()

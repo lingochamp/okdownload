@@ -76,6 +76,10 @@ class SingleActivity : BaseSampleActivity() {
         initAction(actionView, actionTv, statusTv, progressBar)
     }
 
+    // http://www.fyuniot.com:1885/Tools/Down.ashx?Code=93d698e8-674f-4324-8707-9282e8e07802, this
+    // url return 200 with range 0-0 get method.
+    // http://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx?0.04400023248109086, this url
+    // is chunked resource.
     private fun initTask() {
         val filename = "single-test"
         val url = "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk"
@@ -128,13 +132,15 @@ class SingleActivity : BaseSampleActivity() {
         progressBar: ProgressBar,
         actionTv: TextView
     ) {
-        var totalLength: Long = 0
+        var totalLength: Long = -1
         var readableTotalLength: String? = null
         task?.enqueue4WithSpeed(
             onTaskStart = { statusTv.setText(R.string.task_start) },
             onInfoReadyWithSpeed = { _, info, _, _ ->
                 statusTv.setText(R.string.info_ready)
-                totalLength = info.totalLength
+                if (!info.isChunked) {
+                    totalLength = info.totalLength
+                }
                 readableTotalLength = Util.humanReadableBytes(totalLength, true)
                 DemoUtil.calcProgressToView(progressBar, info.totalOffset, totalLength)
             },
@@ -155,6 +161,9 @@ class SingleActivity : BaseSampleActivity() {
             val statusWithSpeed = cause.toString() + " " + taskSpeed.averageSpeed()
             statusTv.text = statusWithSpeed
             actionTv.setText(R.string.start)
+            if (task.info?.isChunked == true) {
+                DemoUtil.calcProgressToView(progressBar, 1, 1)
+            }
             // remove mark
             task.tag = null
             if (cause == EndCause.COMPLETED) {
