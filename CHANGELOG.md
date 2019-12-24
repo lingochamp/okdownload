@@ -1,3 +1,12 @@
+### 1.0.7
+
+_2019-11-24_
+
+#### Feature
+
+- Adapter `FileDownloader` 1.7.7
+- Public `OkDownloadProvider#context` because it is `null` on non-main process
+
 ### 1.0.6
 
 _2019-10-30_
