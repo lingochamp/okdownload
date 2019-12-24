@@ -29,7 +29,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class OkDownloadProvider extends ContentProvider {
     @SuppressFBWarnings(value = "ST")
-    @SuppressLint("StaticFieldLeak") static Context context;
+    @SuppressLint("StaticFieldLeak")
+    public static Context context;
 
     @Override
     public boolean onCreate() {
