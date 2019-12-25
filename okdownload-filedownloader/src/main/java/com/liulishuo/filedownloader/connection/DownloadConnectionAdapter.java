@@ -33,8 +33,6 @@ import java.net.ProtocolException;
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.internal.http.HttpMethod;
-
 public class DownloadConnectionAdapter implements DownloadConnection, DownloadConnection.Connected {
 
     @NonNull
