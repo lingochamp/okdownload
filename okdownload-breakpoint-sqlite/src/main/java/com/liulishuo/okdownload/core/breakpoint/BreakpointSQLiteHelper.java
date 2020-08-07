@@ -60,7 +60,8 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         super(context, NAME, null, VERSION);
     }
 
-    @Override public void onOpen(SQLiteDatabase db) {
+    @Override
+    public void onOpen(SQLiteDatabase db) {
         super.onOpen(db);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -70,56 +71,30 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    @Override public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS "
-                + BREAKPOINT_TABLE_NAME + "( "
-                + ID + " INTEGER PRIMARY KEY, "
-                + URL + " VARCHAR NOT NULL, "
-                + ETAG + " VARCHAR, "
-                + PARENT_PATH + " VARCHAR NOT NULL, "
-                + FILENAME + " VARCHAR, "
-                + TASK_ONLY_PARENT_PATH + " TINYINT(1) DEFAULT 0, "
-                + CHUNKED + " TINYINT(1) DEFAULT 0)"
-        );
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CreateTable.BREAKPOINT);
 
-        db.execSQL("CREATE TABLE IF NOT EXISTS "
-                + BLOCK_TABLE_NAME + "( "
-                + ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + HOST_ID + " INTEGER, "
-                + BLOCK_INDEX + " INTEGER, "
-                + START_OFFSET + " INTEGER, "
-                + CONTENT_LENGTH + " INTEGER, "
-                + CURRENT_OFFSET + " INTEGER)"
-        );
+        db.execSQL(CreateTable.BLOCK);
 
-        db.execSQL("CREATE TABLE IF NOT EXISTS "
-                + RESPONSE_FILENAME_TABLE_NAME + "( "
-                + URL + " VARCHAR NOT NULL PRIMARY KEY, "
-                + FILENAME + " VARCHAR NOT NULL)"
-        );
+        db.execSQL(CreateTable.RESPONSE_FILENAME);
 
-        db.execSQL("CREATE TABLE IF NOT EXISTS "
-                + TASK_FILE_DIRTY_TABLE_NAME + "( "
-                + ID + " INTEGER PRIMARY KEY)");
+        db.execSQL(CreateTable.TASK_FILE_DIRTY);
     }
 
-    @Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion == 1 && newVersion == 2) {
-            db.execSQL("CREATE TABLE IF NOT EXISTS "
-                    + RESPONSE_FILENAME_TABLE_NAME + "( "
-                    + URL + " VARCHAR NOT NULL PRIMARY KEY, "
-                    + FILENAME + " VARCHAR NOT NULL)"
-            );
+            db.execSQL(Migration.RESPONSE_FILENAME_1_TO_2);
         }
 
         if (oldVersion <= 2) {
-            db.execSQL("CREATE TABLE IF NOT EXISTS "
-                    + TASK_FILE_DIRTY_TABLE_NAME + "( "
-                    + ID + " INTEGER PRIMARY KEY)");
+            db.execSQL(Migration.TASK_FILE_DIRTY_NONE_TO_2);
         }
     }
 
-    @Override public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     }
 
     public void markFileDirty(int id) {
@@ -138,7 +113,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         final List<Integer> dirtyFileList = new ArrayList<>();
         Cursor cursor = null;
         try {
-            cursor = getWritableDatabase().rawQuery("SELECT * FROM " + TASK_FILE_DIRTY_TABLE_NAME,
+            cursor = getWritableDatabase().rawQuery(Select.ALL_FROM_TASK_FILE_DIRTY,
                     null);
             while (cursor.moveToNext()) {
                 dirtyFileList.add(cursor.getInt(cursor.getColumnIndex(ID)));
@@ -159,11 +134,11 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         final List<BlockInfoRow> blockInfoRows = new ArrayList<>();
 
         try {
-            breakpointCursor = db.rawQuery("SELECT * FROM " + BREAKPOINT_TABLE_NAME, null);
+            breakpointCursor = db.rawQuery(Select.ALL_FROM_BREAKPOINT, null);
             while (breakpointCursor.moveToNext()) {
                 breakpointInfoRows.add(new BreakpointInfoRow(breakpointCursor));
             }
-            blockCursor = db.rawQuery("SELECT * FROM " + BLOCK_TABLE_NAME, null);
+            blockCursor = db.rawQuery(Select.ALL_FROM_BLOCK, null);
             while (blockCursor.moveToNext()) {
                 blockInfoRows.add(new BlockInfoRow(blockCursor));
             }
@@ -196,7 +171,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         final HashMap<String, String> urlFilenameMap = new HashMap<>();
 
         try {
-            cursor = db.rawQuery("SELECT * FROM " + RESPONSE_FILENAME_TABLE_NAME, null);
+            cursor = db.rawQuery(Select.ALL_FROM_RESPONSE_FILENAME, null);
             while (cursor.moveToNext()) {
                 final String url = cursor.getString(cursor.getColumnIndex(URL));
                 final String filename = cursor.getString(cursor.getColumnIndex(FILENAME));
@@ -218,9 +193,7 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         Cursor c = null;
         synchronized (url.intern()) {
             try {
-                final String query = "SELECT " + FILENAME + " FROM " + RESPONSE_FILENAME_TABLE_NAME
-                        + " WHERE " + URL + " = ?";
-                c = db.rawQuery(query, new String[]{url});
+                c = db.rawQuery(Select.FILENAME_FROM_RESPONSE_FILENAME_BY_URL, new String[]{url});
                 if (c.moveToFirst()) {
                     // exist
                     if (!filename.equals(c.getString(c.getColumnIndex(FILENAME)))) {
@@ -267,10 +240,8 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         Cursor cursor = null;
         db.beginTransaction();
         try {
-            cursor = getWritableDatabase().rawQuery(
-                    "SELECT " + ID + " FROM " + BREAKPOINT_TABLE_NAME + " WHERE " + ID + " ="
-                            + info.id + " LIMIT 1",
-                    null);
+            cursor = getWritableDatabase().rawQuery(Select.ID_FROM_BREAKPOINT_BY_ID,
+                    new String[]{Integer.toString(info.id)});
             if (!cursor.moveToNext()) return; // not exist
 
             // update
@@ -317,4 +288,52 @@ public class BreakpointSQLiteHelper extends SQLiteOpenHelper {
         values.put(CURRENT_OFFSET, info.getCurrentOffset());
         return values;
     }
+
+
+    private interface CreateTable {
+        static final String BREAKPOINT = "CREATE TABLE IF NOT EXISTS "
+                + BREAKPOINT_TABLE_NAME + "( "
+                + ID + " INTEGER PRIMARY KEY, "
+                + URL + " VARCHAR NOT NULL, "
+                + ETAG + " VARCHAR, "
+                + PARENT_PATH + " VARCHAR NOT NULL, "
+                + FILENAME + " VARCHAR, "
+                + TASK_ONLY_PARENT_PATH + " TINYINT(1) DEFAULT 0, "
+                + CHUNKED + " TINYINT(1) DEFAULT 0)";
+
+        static final String BLOCK = "CREATE TABLE IF NOT EXISTS "
+                + BLOCK_TABLE_NAME + "( "
+                + ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + HOST_ID + " INTEGER, "
+                + BLOCK_INDEX + " INTEGER, "
+                + START_OFFSET + " INTEGER, "
+                + CONTENT_LENGTH + " INTEGER, "
+                + CURRENT_OFFSET + " INTEGER)";
+
+        static final String RESPONSE_FILENAME = "CREATE TABLE IF NOT EXISTS "
+                + RESPONSE_FILENAME_TABLE_NAME + "( "
+                + URL + " VARCHAR NOT NULL PRIMARY KEY, "
+                + FILENAME + " VARCHAR NOT NULL)";
+
+        static final String TASK_FILE_DIRTY = "CREATE TABLE IF NOT EXISTS "
+                + TASK_FILE_DIRTY_TABLE_NAME + "( "
+                + ID + " INTEGER PRIMARY KEY)";
+    }
+
+    private interface Migration {
+        static final String RESPONSE_FILENAME_1_TO_2 = CreateTable.RESPONSE_FILENAME;
+        static final String TASK_FILE_DIRTY_NONE_TO_2 = CreateTable.TASK_FILE_DIRTY;
+    }
+
+    private interface Select {
+        static final String ALL_FROM_TASK_FILE_DIRTY = "SELECT * FROM " + TASK_FILE_DIRTY_TABLE_NAME;
+        static final String ALL_FROM_BREAKPOINT = "SELECT * FROM " + BREAKPOINT_TABLE_NAME;
+        static final String ALL_FROM_BLOCK = "SELECT * FROM " + BLOCK_TABLE_NAME;
+        static final String ALL_FROM_RESPONSE_FILENAME = "SELECT * FROM " + RESPONSE_FILENAME_TABLE_NAME;
+        static final String FILENAME_FROM_RESPONSE_FILENAME_BY_URL = "SELECT " + FILENAME + " FROM " + RESPONSE_FILENAME_TABLE_NAME
+                + " WHERE " + URL + " = ?";
+        static final String ID_FROM_BREAKPOINT_BY_ID = "SELECT " + ID + " FROM " + BREAKPOINT_TABLE_NAME + " WHERE " + ID + " = ? LIMIT 1";
+    }
+
 }
+
