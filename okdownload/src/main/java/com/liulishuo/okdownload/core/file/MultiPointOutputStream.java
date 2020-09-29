@@ -280,7 +280,11 @@ public class MultiPointOutputStream {
         final DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
         if (outputStream != null) {
             outputStream.close();
-            outputStreamMap.remove(blockIndex);
+            synchronized (noSyncLengthMap){
+                // make sure the length of noSyncLengthMap is equal to outputStreamMap
+                outputStreamMap.remove(blockIndex);
+                noSyncLengthMap.remove(blockIndex);
+            }
             Util.d(TAG, "OutputStream close task[" + task.getId() + "] block[" + blockIndex + "]");
         }
     }
