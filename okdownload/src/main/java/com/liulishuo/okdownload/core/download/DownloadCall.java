@@ -135,16 +135,31 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     public void execute() throws InterruptedException {
         currentThread = Thread.currentThread();
 
-        boolean retry;
-        int retryCount = 0;
-
         // ready param
         final OkDownload okDownload = OkDownload.with();
         final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
 
         // inspect task start
         inspectTaskStart();
-        do {
+
+        tryDownloadInLoop(okDownload, fileStrategy);
+
+        // finish
+        finishing = true;
+        blockChainList.clear();
+
+        final DownloadCache cache = this.cache;
+        if (canceled || cache == null) return;
+
+        final EndCause cause = getEndCause(cache);
+        Exception realCause = realCauseOrNull(cache, cause);
+        inspectTaskEnd(cache, cause, realCause);
+    }
+
+    private void tryDownloadInLoop(OkDownload okDownload, ProcessFileStrategy fileStrategy)
+            throws InterruptedException {
+        int retryCount = 0;
+        while (true) {
             // 0. check basic param before start
             if (task.getUrl().length() <= 0) {
                 this.cache = new DownloadCache.PreError(
@@ -230,35 +245,31 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.remove(task.getId());
-                retry = true;
             } else {
-                retry = false;
+                break;
             }
-        } while (retry);
+        }
+    }
 
-        // finish
-        finishing = true;
-        blockChainList.clear();
-
-        final DownloadCache cache = this.cache;
-        if (canceled || cache == null) return;
-
-        final EndCause cause;
-        Exception realCause = null;
+    private EndCause getEndCause(DownloadCache cache) {
         if (cache.isServerCanceled() || cache.isUnknownError()
                 || cache.isPreconditionFailed()) {
             // error
-            cause = EndCause.ERROR;
-            realCause = cache.getRealCause();
+            return EndCause.ERROR;
         } else if (cache.isFileBusyAfterRun()) {
-            cause = EndCause.FILE_BUSY;
+            return EndCause.FILE_BUSY;
         } else if (cache.isPreAllocateFailed()) {
-            cause = EndCause.PRE_ALLOCATE_FAILED;
-            realCause = cache.getRealCause();
+            return EndCause.PRE_ALLOCATE_FAILED;
         } else {
-            cause = EndCause.COMPLETED;
+            return EndCause.COMPLETED;
         }
-        inspectTaskEnd(cache, cause, realCause);
+    }
+
+    private Exception realCauseOrNull(DownloadCache cache, EndCause cause) {
+        if (cause == EndCause.ERROR || cause == EndCause.PRE_ALLOCATE_FAILED) {
+            return cache.getRealCause();
+        }
+        return null;
     }
 
     private void inspectTaskStart() {
