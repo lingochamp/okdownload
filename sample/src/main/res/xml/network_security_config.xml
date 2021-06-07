@@ -19,5 +19,7 @@
         <domain includeSubdomains="true">d1.music.126.net</domain>
         <domain includeSubdomains="true">dldir1.qq.com</domain>
         <domain includeSubdomains="true">imgsrc.baidu.com</domain>
+        <domain includeSubdomains="true">www.fyuniot.com</domain>
+        <domain includeSubdomains="true">www.httpwatch.com</domain>
     </domain-config>
 </network-security-config>
