@@ -156,6 +156,7 @@ public class DownloadUrlConnection implements DownloadConnection, DownloadConnec
             final InputStream inputStream = connection.getInputStream();
             if (inputStream != null) inputStream.close();
         } catch (IOException ignored) {
+        } catch (Exception exception) {
         }
     }
 
