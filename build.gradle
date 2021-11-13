@@ -29,6 +29,10 @@ buildscript {
 }
 
 allprojects {
+    tasks.withType(Test).configureEach {
+        forkEvery = 100
+    }
+
     apply plugin: 'okcheck'
     repositories {
         jcenter()
@@ -43,4 +47,3 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
-
