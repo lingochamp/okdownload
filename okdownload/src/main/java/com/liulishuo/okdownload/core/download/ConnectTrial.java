@@ -19,7 +19,6 @@ package com.liulishuo.okdownload.core.download;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.liulishuo.okdownload.DownloadListener;
 import com.liulishuo.okdownload.DownloadTask;
 import com.liulishuo.okdownload.OkDownload;
@@ -27,7 +26,6 @@ import com.liulishuo.okdownload.core.Util;
 import com.liulishuo.okdownload.core.breakpoint.BreakpointInfo;
 import com.liulishuo.okdownload.core.connection.DownloadConnection;
 import com.liulishuo.okdownload.core.exception.DownloadSecurityException;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
@@ -238,9 +236,13 @@ public class ConnectTrial {
     }
 
     private static long findInstanceLength(DownloadConnection.Connected connected) {
-        // Content-Range
-        final long instanceLength = parseContentRangeFoInstanceLength(
+        //content length
+        long instanceLength = convertContentLengthString(connected.getResponseHeaderField(CONTENT_LENGTH));
+        if (instanceLength == CHUNKED_CONTENT_LENGTH){
+            // Content-Range
+            instanceLength = parseContentRangeFoInstanceLength(
                 connected.getResponseHeaderField(CONTENT_RANGE));
+        }
         if (instanceLength != CHUNKED_CONTENT_LENGTH) return instanceLength;
 
         // chunked on here
@@ -253,6 +255,16 @@ public class ConnectTrial {
 
         return CHUNKED_CONTENT_LENGTH;
     }
+
+    public static long convertContentLengthString(String s) {
+        if (s == null) return -1;
+        try {
+            return Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
 
     boolean isNeedTrialHeadMethodForInstanceLength(
             long oldInstanceLength, @NonNull DownloadConnection.Connected connected) {
