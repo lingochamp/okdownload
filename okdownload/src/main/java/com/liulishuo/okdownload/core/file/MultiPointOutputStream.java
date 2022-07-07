@@ -279,8 +279,11 @@ public class MultiPointOutputStream {
     synchronized void close(int blockIndex) throws IOException {
         final DownloadOutputStream outputStream = outputStreamMap.get(blockIndex);
         if (outputStream != null) {
-            outputStream.close();
-            outputStreamMap.remove(blockIndex);
+            synchronized (noSyncLengthMap) {
+                outputStream.close();
+                outputStreamMap.remove(blockIndex);
+                noSyncLengthMap.remove(blockIndex);
+            }
             Util.d(TAG, "OutputStream close task[" + task.getId() + "] block[" + blockIndex + "]");
         }
     }
@@ -447,50 +450,46 @@ public class MultiPointOutputStream {
 
     void flushProcess() throws IOException {
         boolean success;
-        final int size;
         synchronized (noSyncLengthMap) {
             // make sure the length of noSyncLengthMap is equal to outputStreamMap
-            size = noSyncLengthMap.size();
-        }
-
-        final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
-
-        try {
-            for (int i = 0; i < size; i++) {
-                final int blockIndex = outputStreamMap.keyAt(i);
-                // because we get no sync length value before flush and sync,
-                // so the length only possible less than or equal to the real persist
-                // length.
-                final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
-                if (noSyncLength > 0) {
-                    increaseLengthMap.put(blockIndex, noSyncLength);
-                    final DownloadOutputStream outputStream = outputStreamMap
-                            .get(blockIndex);
-                    outputStream.flushAndSync();
+            final int size = noSyncLengthMap.size();
+            final SparseArray<Long> increaseLengthMap = new SparseArray<>(size);
+            try {
+                for (int i = 0; i < size; i++) {
+                    final int blockIndex = noSyncLengthMap.keyAt(i);
+                    // because we get no sync length value before flush and sync,
+                    // so the length only possible less than or equal to the real persist
+                    // length.
+                    final long noSyncLength = noSyncLengthMap.get(blockIndex).get();
+                    if (noSyncLength > 0) {
+                        increaseLengthMap.put(blockIndex, noSyncLength);
+                        final DownloadOutputStream outputStream = outputStreamMap
+                                .get(blockIndex);
+                        outputStream.flushAndSync();
+                    }
                 }
+                success = true;
+            } catch (IOException ex) {
+                Util.w(TAG, "OutputStream flush and sync data to filesystem failed " + ex);
+                success = false;
             }
-            success = true;
-        } catch (IOException ex) {
-            Util.w(TAG, "OutputStream flush and sync data to filesystem failed " + ex);
-            success = false;
-        }
-
-        if (success) {
-            final int increaseLengthSize = increaseLengthMap.size();
-            long allIncreaseLength = 0;
-            for (int i = 0; i < increaseLengthSize; i++) {
-                final int blockIndex = increaseLengthMap.keyAt(i);
-                final long noSyncLength = increaseLengthMap.valueAt(i);
-                store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
-                allIncreaseLength += noSyncLength;
-                noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
-                Util.d(TAG, "OutputStream sync success (" + task.getId() + ") "
-                        + "block(" + blockIndex + ") " + " syncLength(" + noSyncLength + ")"
-                        + " currentOffset(" + info.getBlock(blockIndex).getCurrentOffset()
-                        + ")");
+            if (success) {
+                final int increaseLengthSize = increaseLengthMap.size();
+                long allIncreaseLength = 0;
+                for (int i = 0; i < increaseLengthSize; i++) {
+                    final int blockIndex = increaseLengthMap.keyAt(i);
+                    final long noSyncLength = increaseLengthMap.valueAt(i);
+                    store.onSyncToFilesystemSuccess(info, blockIndex, noSyncLength);
+                    allIncreaseLength += noSyncLength;
+                    noSyncLengthMap.get(blockIndex).addAndGet(-noSyncLength);
+                    Util.d(TAG, "OutputStream sync success (" + task.getId() + ") "
+                            + "block(" + blockIndex + ") " + " syncLength(" + noSyncLength + ")"
+                            + " currentOffset(" + info.getBlock(blockIndex).getCurrentOffset()
+                            + ")");
+                }
+                allNoSyncLength.addAndGet(-allIncreaseLength);
+                lastSyncTimestamp.set(SystemClock.uptimeMillis());
             }
-            allNoSyncLength.addAndGet(-allIncreaseLength);
-            lastSyncTimestamp.set(SystemClock.uptimeMillis());
         }
     }
 
