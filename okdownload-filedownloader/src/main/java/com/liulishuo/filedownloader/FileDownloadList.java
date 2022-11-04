@@ -100,8 +100,10 @@ public class FileDownloadList {
     }
 
     public boolean remove(DownloadTaskAdapter downloadTaskAdapter) {
-        Util.d(TAG, "remove task: " + downloadTaskAdapter.getId());
-        return list.remove(downloadTaskAdapter);
+        synchronized (list) {
+            Util.d(TAG, "remove task: " + downloadTaskAdapter.getId());
+            return list.remove(downloadTaskAdapter);
+        }
     }
 
     /**
